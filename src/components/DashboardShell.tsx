@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sidebar } from "../components/Sidebar";
-import { Dashboard } from "../components/Dashboard";
-import { Transactions } from "../components/Transactions";
-import { Budgets } from "../components/Budgets";
-import { Accounts } from "../components/Accounts";
-import { VectrAI } from "../components/VectrAI";
+import { Sidebar } from "./Sidebar";
+import { Dashboard } from "./Dashboard";
+import { Transactions } from "./Transactions";
+import { Budgets } from "./Budgets";
+import { Accounts } from "./Accounts";
+import { VectrAI } from "./VectrAI";
 
-export default function Home() {
+export default function DashboardShell() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const renderContent = () => {
