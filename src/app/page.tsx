@@ -1,37 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { Sidebar } from "../components/Sidebar";
-import { Dashboard } from "../components/Dashboard";
-import { Transactions } from "../components/Transactions";
-import { Budgets } from "../components/Budgets";
-import { Accounts } from "../components/Accounts";
-import { VectrAI } from "../components/VectrAI";
-
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("dashboard");
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return <Dashboard />;
-      case "transactions":
-        return <Transactions />;
-      case "budgets":
-        return <Budgets />;
-      case "accounts":
-        return <Accounts />;
-      case "vectr-ai":
-        return <VectrAI />;
-      default:
-        return <Dashboard />;
-    }
-  };
-
   return (
-    <div className="flex h-screen bg-background-subtle">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="flex-1 overflow-auto">{renderContent()}</main>
-    </div>
+    <main className="flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-4xl font-bold mb-4">Welcome to Vectr</h1>
+      <p className="text-lg text-muted">Your modern finance suite.</p>
+    </main>
   );
 }
