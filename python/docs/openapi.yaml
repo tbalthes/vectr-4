@@ -1,0 +1,26 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "FastAPI", "version": "0.1.0" },
+  "paths":
+    {
+      "/": { "get": { "summary": "Read Root", "operationId": "read_root__get", "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } } } }, "post": { "summary": "Categorize Endpoint", "operationId": "categorize_endpoint__post", "requestBody": { "content": { "application/json": { "schema": { "additionalProperties": true, "type": "object", "title": "Transaction" } } }, "required": true }, "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }, "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } } } } },
+      "/transactions/process-upload-local":
+        {
+          "post":
+            {
+              "tags": [ "transactions" ],
+              "summary": "Process Upload And Return Locally",
+              "description": "Receives a list of transactions, processes them using in-memory cached lookup tables,
+
+                and returns the enriched results without saving them to the database.
+
+                If any transaction has original_description == \"refresh data tables\", refreshes the cache first.",
+              "operationId": "process_upload_and_return_locally_transactions_process_upload_local_post",
+              "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProcessUploadPayload" } } }, "required": true },
+              "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "items": { "additionalProperties": true, "type": "object" }, "type": "array", "title": "Response Process Upload And Return Locally Transactions Process Upload Local Post" } } } }, "422": { "description": "Validation Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } } } }
+            }
+        },
+      "/data-table-status/": { "get": { "tags": [ "data-table-status" ], "summary": "Get Status", "operationId": "get_status_data_table_status__get", "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } } } } }
+    },
+  "components": { "schemas": { "HTTPValidationError": { "properties": { "detail": { "items": { "$ref": "#/components/schemas/ValidationError" }, "type": "array", "title": "Detail" } }, "type": "object", "title": "HTTPValidationError" }, "ProcessUploadPayload": { "properties": { "account_id": { "type": "string", "title": "Account Id" }, "transactions": { "items": { "$ref": "#/components/schemas/Transaction" }, "type": "array", "title": "Transactions" } }, "type": "object", "required": [ "account_id", "transactions" ], "title": "ProcessUploadPayload" }, "Transaction": { "properties": { "date": { "type": "string", "title": "Date" }, "transaction_number": { "type": "string", "title": "Transaction Number" }, "description": { "type": "string", "title": "Description" }, "amount": { "type": "number", "title": "Amount" }, "balance": { "anyOf": [ { "type": "number" }, { "type": "null" } ], "title": "Balance" } }, "additionalProperties": true, "type": "object", "required": [ "date", "transaction_number", "description", "amount" ], "title": "Transaction" }, "ValidationError": { "properties": { "loc": { "items": { "anyOf": [ { "type": "string" }, { "type": "integer" } ] }, "type": "array", "title": "Location" }, "msg": { "type": "string", "title": "Message" }, "type": { "type": "string", "title": "Error Type" } }, "type": "object", "required": [ "loc", "msg", "type" ], "title": "ValidationError" } } }
+}

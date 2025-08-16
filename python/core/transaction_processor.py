@@ -61,72 +61,49 @@ def _parse_merchant_name(text: str) -> str:
     # Collapse extra whitespace that may have been created
     return re.sub(r'\s+', ' ', text).strip()
 
-def _fetch_category_name(category_id: str, supabase_client: Any) -> Optional[str]:
+def _fetch_category_name(category_id: str, categories: list) -> Optional[str]:
     """
-    Fetches the category name from the category table using the category_id.
+    Fetches the category name from the in-memory categories list using the category_id.
     """
-    try:
-        response = supabase_client.table('categories').select('name').eq('id', category_id).single().execute()
-        if response.data:
-            return response.data.get('name')
-    except Exception as e:
-        print(f"Error querying categories table for category_id {category_id}: {e}")
+    for cat in categories:
+        if str(cat.get('id')) == str(category_id):
+            return cat.get('name')
     return None
 
-def _match_by_regex_rules(cleaned_memo: str, supabase_client: Any) -> Optional[Dict[str, Any]]:
+def _match_by_regex_rules(cleaned_memo: str, global_regex_rules: list, categories: list) -> Optional[Dict[str, Any]]:
     """
-    Matches the memo against the `global_regex_rules` table by querying Supabase.
+    Matches the memo against the in-memory global_regex_rules list.
     This is the highest confidence matching method.
     """
-    try:
-        # This query fetches all rules and joins them with their associated merchant data.
-        response = supabase_client.table('global_regex_rules').select(
-            'regex_pattern, merchants(id, name, default_category_id)'
-        ).execute()
-
-        if not response.data:
-            return None
-
-        all_rules = response.data
-
-        for rule in all_rules:
-            # Ensure the rule and its merchant data are valid before proceeding
-            if re.search(rule['regex_pattern'], cleaned_memo) and rule.get('merchants'):
-                merchant = rule['merchants']
-                category_id = merchant.get('default_category_id')
-                category_name = _fetch_category_name(category_id, supabase_client) if category_id else None
-                return {
-                    "merchant_id": merchant.get('id'),
-                    "merchant_name": merchant.get('name'),
-                    "category_id": category_id,
-                    "category_name": category_name,
-                    "confidence": 1.0,
-                    "match_method": "global_regex"
-                }
-    except Exception as e:
-        print(f"Error querying global_regex_rules: {e}")
-        return None
-        
+    for rule in global_regex_rules:
+        if re.search(rule['regex_pattern'], cleaned_memo) and rule.get('merchants'):
+            merchant = rule['merchants']
+            category_id = merchant.get('default_category_id')
+            category_name = _fetch_category_name(category_id, categories) if category_id else None
+            return {
+                "merchant_id": merchant.get('id'),
+                "merchant_name": merchant.get('name'),
+                "category_id": category_id,
+                "category_name": category_name,
+                "confidence": 1.0,
+                "match_method": "global_regex"
+            }
     return None
 
-def _match_by_mcc_and_parsing(cleaned_memo: str, supabase_client: Any) -> Optional[Dict[str, Any]]:
+def _match_by_mcc_and_parsing(cleaned_memo: str, mcc_category_map: list, categories: list) -> Optional[Dict[str, Any]]:
     """
-    Fallback method: Extracts MCC, looks up category in Supabase, and parses merchant name.
+    Fallback method: Extracts MCC, looks up category in the in-memory mcc_category_map, and parses merchant name.
     """
     mcc = _extract_mcc(cleaned_memo)
     if not mcc:
         return None
 
     category_id = None
-    try:
-        # Query the mcc_category_map table for the extracted MCC
-        response = supabase_client.table('mcc_category_map').select('category_id').eq('mcc', int(mcc)).single().execute()
-        if response.data:
-            category_id = response.data.get('category_id')
-    except Exception as e:
-        print(f"Error querying mcc_category_map for MCC {mcc}: {e}")
-        return None
-    
+    for row in mcc_category_map:
+        if str(row.get('mcc')) == str(mcc):
+            category_id = row.get('category_id')
+            break
+
     if not category_id:
         return None
 
@@ -138,7 +115,7 @@ def _match_by_mcc_and_parsing(cleaned_memo: str, supabase_client: Any) -> Option
         "merchant_id": None,  # No specific merchant matched, but we can suggest a name
         "merchant_name": parsed_name.title() if parsed_name else "Uncategorized", # Title case
         "category_id": category_id,
-        "category_name": _fetch_category_name(category_id, supabase_client) if category_id else None,
+        "category_name": _fetch_category_name(category_id, categories) if category_id else None,
         "confidence": 0.7 if parsed_name else 0.5, # Confidence is lower if name parsing fails
         "match_method": "mcc_and_parse" if parsed_name else "mcc_only"
     }
@@ -146,7 +123,7 @@ def _match_by_mcc_and_parsing(cleaned_memo: str, supabase_client: Any) -> Option
 
 # --- Main Orchestrator Function ---
 
-def process_transaction(transaction_data: Dict[str, Any], supabase_client: Any) -> Dict[str, Any]:
+def process_transaction(transaction_data: Dict[str, Any], data_cache: Any) -> Dict[str, Any]:
     """
     Processes a single raw transaction to enrich it with merchant and category info.
     
@@ -163,11 +140,19 @@ def process_transaction(transaction_data: Dict[str, Any], supabase_client: Any) 
     cleaned_memo = _clean_and_normalize_description(original_memo)
 
     # 2. Strategy 1: Attempt to match with high-confidence global regex rules
-    match_result = _match_by_regex_rules(cleaned_memo, supabase_client)
-    
+    match_result = _match_by_regex_rules(
+        cleaned_memo,
+        data_cache.global_regex_rules,
+        data_cache.categories
+    )
+
     # 3. Strategy 2: If no regex match, fall back to MCC parsing
     if not match_result:
-        match_result = _match_by_mcc_and_parsing(cleaned_memo, supabase_client)
+        match_result = _match_by_mcc_and_parsing(
+            cleaned_memo,
+            data_cache.mcc_category_map,
+            data_cache.categories
+        )
 
     # 4. Consolidate the results
     user_metadata = {k: v for k, v in transaction_data.items() 
@@ -176,12 +161,15 @@ def process_transaction(transaction_data: Dict[str, Any], supabase_client: Any) 
     processed_data = {
         "date": transaction_data.get('date'),
         "transaction_number": transaction_data.get('transaction_number'),
+        "description": transaction_data.get('description'),
         "amount": transaction_data.get('amount'),
+        "balance": transaction_data.get('balance'),  # Pass-through balance field
         "original_description": original_memo,
         "user_metadata": user_metadata,
 
         # Matched data from our strategies
         "merchant_id": match_result.get('merchant_id') if match_result else None,
+        "merchant_name": match_result.get('merchant_name') if match_result else None,
         "category_id": match_result.get('category_id') if match_result else None,
         "category_name": match_result.get('category_name') if match_result else None,
         "clean_description": (match_result.get('merchant_name') if match_result
