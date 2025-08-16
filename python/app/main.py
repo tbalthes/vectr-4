@@ -2,8 +2,13 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=".env")  # This loads variables from .env into os.environ
 
 from fastapi import FastAPI
-from app.routers import categorize
+from .routers import categorize, transactions # <-- IS THIS IMPORT HERE?
 
 app = FastAPI()
 
-app.include_router(categorize.router, prefix="/categorize")
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Transaction Processing API"}
+
+app.include_router(categorize.router)
+app.include_router(transactions.router)
