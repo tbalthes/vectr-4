@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Print Project Structure",
+      "type": "shell",
+      "command": "function Write-Tree { param([string]$Path, [string]$Prefix = '') $items = Get-ChildItem -LiteralPath $Path -Force | Where-Object { ($_.Name -notlike '.*' -and $_.Name -ne 'node_modules') }; if ($items) { $count = $items.Count; for ($i = 0; $i -lt $count; $i++) { $item = $items[$i]; $isLast = ($i -eq $count - 1); $pointer = ''; $newPrefix = $Prefix; if ($isLast) { $pointer = '└── '; $newPrefix = $Prefix + '    '; } else { $pointer = '├── '; $newPrefix = $Prefix + '│   '; } Write-Output ($Prefix + $pointer + $($item.Name)); if ($item.PSIsContainer) { Write-Tree -Path $item.FullName -Prefix $newPrefix; } } } } '@ ROOT' | Out-File -Encoding utf8 project_tree.txt; Write-Tree . | Out-File -Encoding utf8 -Append project_tree.txt; '@ PUBLIC' | Out-File -Encoding utf8 -Append project_tree.txt; Write-Tree public | Out-File -Encoding utf8 -Append project_tree.txt; '@ PYTHON' | Out-File -Encoding utf8 -Append project_tree.txt; Write-Tree python | Out-File -Encoding utf8 -Append project_tree.txt; '@ SRC' | Out-File -Encoding utf8 -Append project_tree.txt; Write-Tree src | Out-File -Encoding utf8 -Append project_tree.txt",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    }
+  ]
+}
