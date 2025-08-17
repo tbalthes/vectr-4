@@ -1,7 +1,94 @@
 # In python/core/transaction_processor.py
-
+from typing import Dict, Any, Optional
 import re
-from typing import Dict, Any, List, Optional
+
+def _match_by_user_rules(transaction_data: Dict[str, Any], user_rules: list, categories: list) -> Optional[Dict[str, Any]]:
+    """
+    Checks if the transaction matches any user-defined rules.
+    """
+    print(f"DEBUG: Checking {len(user_rules)} user rules for transaction: {transaction_data.get('description', '')}")
+    print(f"DEBUG: Available transaction fields: {list(transaction_data.keys())}")
+
+    # Sort rules by priority (lower number = higher priority)
+    sorted_rules = sorted(user_rules, key=lambda r: r.get('priority', 1000))
+
+    def match_operator(op, field_value, rule_value):
+        if field_value is None:
+            return False
+        field_value = str(field_value)
+        rule_value = str(rule_value)
+        op = (op or 'equals').lower()
+        if op == 'equals':
+            return field_value.lower() == rule_value.lower()
+        elif op == 'contains':
+            return rule_value.lower() in field_value.lower()
+        elif op == 'startswith':
+            return field_value.lower().startswith(rule_value.lower())
+        elif op == 'endswith':
+            return field_value.lower().endswith(rule_value.lower())
+        elif op == 'regex':
+            try:
+                return re.search(rule_value, field_value, re.IGNORECASE) is not None
+            except Exception as e:
+                print(f"DEBUG: Invalid regex in rule: {rule_value} ({e})")
+                return False
+        return False
+
+    for rule in sorted_rules:
+        if not rule.get('enabled', True):
+            continue
+        field = rule.get('match_field')
+        value = rule.get('match_value')
+        operator = rule.get('match_operator', 'equals')
+        amount_min = rule.get('amount_min')
+        amount_max = rule.get('amount_max')
+        transaction_field_value = transaction_data.get(field, '')
+        transaction_amount = transaction_data.get('amount')
+
+        print(f"DEBUG: Rule - field: {field}, value: {value}, operator: {operator}, amount_min: {amount_min}, amount_max: {amount_max}")
+        print(f"DEBUG: Transaction field value: {transaction_field_value}, amount: {transaction_amount}")
+
+        # Field/operator match
+        field_match = False
+        if field and value:
+            field_match = match_operator(operator, transaction_field_value, value)
+        elif field and not value:
+            # If value is not set, skip field match (could be amount-only rule)
+            field_match = True
+        else:
+            field_match = True  # No field specified, allow amount-only rule
+
+        # Amount match
+        amount_match = True
+        if (amount_min is not None or amount_max is not None):
+            if transaction_amount is None:
+                amount_match = False
+            else:
+                try:
+                    amt = float(transaction_amount)
+                    if amount_min is not None and amt < float(amount_min):
+                        amount_match = False
+                    if amount_max is not None and amt > float(amount_max):
+                        amount_match = False
+                except Exception as e:
+                    print(f"DEBUG: Error parsing amount for rule: {e}")
+                    amount_match = False
+
+        if field_match and amount_match:
+            print(f"DEBUG: RULE MATCHED! Applying category: {rule.get('category_id')}")
+            category_id = rule.get('category_id')
+            category_name = None
+            if category_id:
+                category_name = next((c.get('name') for c in categories if str(c.get('id')) == str(category_id)), None)
+            return {
+                "category_id": category_id,
+                "category_name": category_name,
+                "confidence": 1.0,
+                "match_method": "user_rule"
+            }
+
+    print("DEBUG: No user rules matched")
+    return None
 # Note: Using Any for supabase client type to avoid import conflicts with local supabase module
 
 # --- Helper Function Implementations ---
@@ -76,7 +163,7 @@ def _match_by_regex_rules(cleaned_memo: str, global_regex_rules: list, categorie
     """
 
 
-    for i, rule in enumerate(global_regex_rules):
+    for rule in global_regex_rules:
         pattern = rule.get('regex_pattern', '')
         if re.search(pattern, cleaned_memo):
             merchant_id = rule.get('merchant_id')
@@ -137,7 +224,7 @@ def _match_by_mcc_and_parsing(cleaned_memo: str, mcc_category_map: list, categor
 
 # --- Main Orchestrator Function ---
 
-def process_transaction(transaction_data: Dict[str, Any], data_cache: Any) -> Dict[str, Any]:
+def process_transaction(transaction_data: Dict[str, Any], data_cache: Any, user_rules: Optional[list] = None) -> Dict[str, Any]:
     """
     Processes a single raw transaction to enrich it with merchant and category info.
     
@@ -152,6 +239,9 @@ def process_transaction(transaction_data: Dict[str, Any], data_cache: Any) -> Di
     
     # 1. Clean and Normalize the Memo
     cleaned_memo = _clean_and_normalize_description(original_memo)
+
+    if user_rules is None:
+        user_rules = []
 
     # 2. Strategy 1: Attempt to match with high-confidence global regex rules
     match_result = _match_by_regex_rules(
@@ -201,5 +291,16 @@ def process_transaction(transaction_data: Dict[str, Any], data_cache: Any) -> Di
         "match_method": match_result.get('match_method', 'no_match') if match_result else 'no_match',
         "needs_review": not match_result or match_result.get('confidence', 0.0) < 0.9
     }
+    
+    # FINAL CHECK: User rules override everything else
+    user_rule_result = _match_by_user_rules(processed_data, user_rules, data_cache.categories)
+    if user_rule_result:
+        print(f"DEBUG: User rule override applied! New category: {user_rule_result.get('category_name')}")
+        processed_data.update({
+            "category_id": user_rule_result.get('category_id'),
+            "category_name": user_rule_result.get('category_name'),
+            "confidence": 1.0,
+            "match_method": "user_rule_override"
+        })
     
     return processed_data

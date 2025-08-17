@@ -73,12 +73,18 @@ def transaction_upload(
             data_cache.refresh()
             break
 
+    # Fetch user rules once for this user (sorted by priority)
+    user_rules = supabase.table("user_rules").select("*").eq("user_id", payload.user_id).eq("enabled", True).order("priority", desc=True).execute().data or []
+    print(f"DEBUG: Fetched {len(user_rules)} user rules for user {payload.user_id}")
+    for rule in user_rules:
+        print(f"DEBUG: Rule - {rule.get('match_field')}={rule.get('match_value')} -> category {rule.get('category_id')}")
+
     # Prepare all payloads for upsert
     upsert_payloads = []
     category_links = []
     for raw_tx in raw_transactions:
         tx_dict = raw_tx.dict()
-        processed_tx = process_transaction(tx_dict, data_cache)
+        processed_tx = process_transaction(tx_dict, data_cache, user_rules)
         processed_tx['account_id'] = payload.account_id
         processed_tx['user_id'] = payload.user_id
         upsert_payload = {
@@ -99,8 +105,6 @@ def transaction_upload(
         if category_id:
             category_links.append((upsert_payload, category_id))
 
-    print("UPSERT PAYLOADS:", upsert_payloads)
-    print("TYPES:", [(type(tx['transaction_number']), type(tx['date']), type(tx['amount'])) for tx in upsert_payloads])
 
     # Batch upsert
     response = supabase.table("transactions").upsert(
