@@ -4,6 +4,7 @@ load_dotenv(dotenv_path=".env")  # This loads variables from .env into os.enviro
 from fastapi import FastAPI
 from .routers import categorize, transactions
 from .routers import data_status
+from .routers import transaction_upload
 
 app = FastAPI()
 
@@ -14,3 +15,4 @@ def read_root():
 app.include_router(categorize.router)
 app.include_router(transactions.router)
 app.include_router(data_status.router)
+app.include_router(transaction_upload.router)

@@ -74,13 +74,11 @@ def _match_by_regex_rules(cleaned_memo: str, global_regex_rules: list, categorie
     Matches the memo against the in-memory global_regex_rules list.
     This is the highest confidence matching method.
     """
-    print(f"DEBUG: Checking regex rules for cleaned memo: '{cleaned_memo}'")
-    print(f"DEBUG: Number of regex rules loaded: {len(global_regex_rules)}")
+
 
     for i, rule in enumerate(global_regex_rules):
         pattern = rule.get('regex_pattern', '')
         if re.search(pattern, cleaned_memo):
-            print(f"DEBUG: Rule {i+1} matched! Rule object: {rule}")
             merchant_id = rule.get('merchant_id')
             merchant = None
             if merchant_id:
@@ -95,8 +93,6 @@ def _match_by_regex_rules(cleaned_memo: str, global_regex_rules: list, categorie
                 category_name = None
                 merchant_name = None
                 logo_url = None
-            print(f"DEBUG: merchant_id: {merchant_id}, merchant: {merchant}")
-            print(f"DEBUG: category_id: {category_id}, category_name: {category_name}")
             return {
                 "merchant_id": merchant_id,
                 "merchant_name": merchant_name,
@@ -106,8 +102,6 @@ def _match_by_regex_rules(cleaned_memo: str, global_regex_rules: list, categorie
                 "confidence": 1.0 if merchant_id else 0.9,
                 "match_method": "regex"
             }
-
-    print(f"DEBUG: No regex rules matched for '{cleaned_memo}'")
     return None
 
 def _match_by_mcc_and_parsing(cleaned_memo: str, mcc_category_map: list, categories: list) -> Optional[Dict[str, Any]]:
