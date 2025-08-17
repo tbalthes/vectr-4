@@ -1,0 +1,334 @@
+@ ROOT
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── project_tree.txt
+│   ├── vercel.svg
+│   └── window.svg
+├── python
+│   ├── app
+│   │   ├── routers
+│   │   │   └── categorize.py
+│   │   └── main.py
+│   ├── core
+│   │   ├── matching.py
+│   │   └── parser.py
+│   ├── data
+│   │   └── bank_transactions - Export (3) (1).csv
+│   ├── supabase
+│   │   └── client.py
+│   └── tests
+├── src
+│   ├── app
+│   │   ├── private
+│   │   │   ├── accounts
+│   │   │   │   └── page.tsx
+│   │   │   ├── budgets
+│   │   │   │   └── page.tsx
+│   │   │   ├── dashboard
+│   │   │   │   └── page.tsx
+│   │   │   ├── transactions
+│   │   │   │   └── page.tsx
+│   │   │   ├── vectr-ai
+│   │   │   │   └── page.tsx
+│   │   │   └── layout.tsx
+│   │   ├── public
+│   │   │   ├── about
+│   │   │   │   └── page.tsx
+│   │   │   ├── landing
+│   │   │   │   └── page.tsx
+│   │   │   ├── login
+│   │   │   │   └── page.tsx
+│   │   │   ├── pricing
+│   │   │   │   └── page.tsx
+│   │   │   └── register
+│   │   │       └── page.tsx
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── figma
+│   │   │   ├── FigmaImport.tsx
+│   │   │   └── ImageWithFallback.tsx
+│   │   ├── private
+│   │   │   ├── accounts
+│   │   │   ├── budgets
+│   │   │   │   ├── AddBudgetModal.tsx
+│   │   │   │   ├── budget-utils.ts
+│   │   │   │   ├── BudgetCard.tsx
+│   │   │   │   ├── BudgetCardList.tsx
+│   │   │   │   ├── BudgetInsights.tsx
+│   │   │   │   ├── BudgetOverview.tsx
+│   │   │   │   ├── BudgetStatusIcon.tsx
+│   │   │   │   └── CreateBudgetModal.tsx
+│   │   │   ├── dashboard
+│   │   │   │   ├── IncomeVsSpending.tsx
+│   │   │   │   ├── PageHeader.tsx
+│   │   │   │   ├── RecentTransactions.tsx
+│   │   │   │   ├── SpendingByCategory.tsx
+│   │   │   │   └── StatCards.tsx
+│   │   │   ├── transactions
+│   │   │   │   ├── AddTransactionModal.tsx
+│   │   │   │   ├── PageHeader.tsx
+│   │   │   │   ├── SearchBar.tsx
+│   │   │   │   └── TransactionTable.tsx
+│   │   │   ├── vectr-ai
+│   │   │   │   ├── ChatInterface.tsx
+│   │   │   │   ├── GoalTrackingCard.tsx
+│   │   │   │   ├── InsightsCard.tsx
+│   │   │   │   ├── PredictionsCard.tsx
+│   │   │   │   └── TabSelector.tsx
+│   │   │   └── PageHeader.tsx
+│   │   ├── public
+│   │   │   ├── about
+│   │   │   ├── landing
+│   │   │   ├── login
+│   │   │   ├── pricing
+│   │   │   └── register
+│   │   ├── shared
+│   │   ├── ui
+│   │   │   ├── accordion.tsx
+│   │   │   ├── alert-dialog.tsx
+│   │   │   ├── alert.tsx
+│   │   │   ├── aspect-ratio.tsx
+│   │   │   ├── avatar.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── breadcrumb.tsx
+│   │   │   ├── button.tsx
+│   │   │   ├── calendar.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── carousel.tsx
+│   │   │   ├── chart.tsx
+│   │   │   ├── checkbox.tsx
+│   │   │   ├── collapsible.tsx
+│   │   │   ├── command.tsx
+│   │   │   ├── context-menu.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── drawer.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   ├── form.tsx
+│   │   │   ├── hover-card.tsx
+│   │   │   ├── input-otp.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── label.tsx
+│   │   │   ├── menubar.tsx
+│   │   │   ├── navigation-menu.tsx
+│   │   │   ├── pagination.tsx
+│   │   │   ├── popover.tsx
+│   │   │   ├── progress.tsx
+│   │   │   ├── radio-group.tsx
+│   │   │   ├── resizable.tsx
+│   │   │   ├── scroll-area.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── separator.tsx
+│   │   │   ├── sheet.tsx
+│   │   │   ├── sidebar.tsx
+│   │   │   ├── skeleton.tsx
+│   │   │   ├── slider.tsx
+│   │   │   ├── sonner.tsx
+│   │   │   ├── switch.tsx
+│   │   │   ├── table.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── textarea.tsx
+│   │   │   ├── toggle-group.tsx
+│   │   │   ├── toggle.tsx
+│   │   │   ├── tooltip.tsx
+│   │   │   └── utils.ts
+│   │   ├── AuthForm.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── TestIcon.tsx
+│   ├── data
+│   │   ├── budget-data.ts
+│   │   ├── dashboard-data.ts
+│   │   ├── transaction-data.ts
+│   │   └── vectrai-data.ts
+│   ├── hooks
+│   ├── lib
+│   │   ├── bank_transactions.csv
+│   │   ├── batch_categorize.js
+│   │   ├── description_cleaner.js
+│   │   ├── transaction_processing.js
+│   │   └── utils.ts
+│   ├── pages
+│   ├── types
+│   │   ├── budgets.ts
+│   │   ├── dashboard.ts
+│   │   ├── transactions.ts
+│   │   └── vectrai.ts
+│   ├── project_tree.txt
+│   └── requirements.txt
+├── components.json
+├── eslint.config.mjs
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── postcss.config.mjs
+├── print_project_tree.js
+├── project_tree.txt
+├── README.md
+├── tailwind.config.js
+└── tsconfig.json
+@ PUBLIC
+├── file.svg
+├── globe.svg
+├── next.svg
+├── project_tree.txt
+├── vercel.svg
+└── window.svg
+@ PYTHON
+├── app
+│   ├── routers
+│   │   └── categorize.py
+│   └── main.py
+├── core
+│   ├── matching.py
+│   └── parser.py
+├── data
+│   └── bank_transactions - Export (3) (1).csv
+├── supabase
+│   └── client.py
+└── tests
+@ SRC
+├── app
+│   ├── private
+│   │   ├── accounts
+│   │   │   └── page.tsx
+│   │   ├── budgets
+│   │   │   └── page.tsx
+│   │   ├── dashboard
+│   │   │   └── page.tsx
+│   │   ├── transactions
+│   │   │   └── page.tsx
+│   │   ├── vectr-ai
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── public
+│   │   ├── about
+│   │   │   └── page.tsx
+│   │   ├── landing
+│   │   │   └── page.tsx
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── pricing
+│   │   │   └── page.tsx
+│   │   └── register
+│   │       └── page.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components
+│   ├── figma
+│   │   ├── FigmaImport.tsx
+│   │   └── ImageWithFallback.tsx
+│   ├── private
+│   │   ├── accounts
+│   │   ├── budgets
+│   │   │   ├── AddBudgetModal.tsx
+│   │   │   ├── budget-utils.ts
+│   │   │   ├── BudgetCard.tsx
+│   │   │   ├── BudgetCardList.tsx
+│   │   │   ├── BudgetInsights.tsx
+│   │   │   ├── BudgetOverview.tsx
+│   │   │   ├── BudgetStatusIcon.tsx
+│   │   │   └── CreateBudgetModal.tsx
+│   │   ├── dashboard
+│   │   │   ├── IncomeVsSpending.tsx
+│   │   │   ├── PageHeader.tsx
+│   │   │   ├── RecentTransactions.tsx
+│   │   │   ├── SpendingByCategory.tsx
+│   │   │   └── StatCards.tsx
+│   │   ├── transactions
+│   │   │   ├── AddTransactionModal.tsx
+│   │   │   ├── PageHeader.tsx
+│   │   │   ├── SearchBar.tsx
+│   │   │   └── TransactionTable.tsx
+│   │   ├── vectr-ai
+│   │   │   ├── ChatInterface.tsx
+│   │   │   ├── GoalTrackingCard.tsx
+│   │   │   ├── InsightsCard.tsx
+│   │   │   ├── PredictionsCard.tsx
+│   │   │   └── TabSelector.tsx
+│   │   └── PageHeader.tsx
+│   ├── public
+│   │   ├── about
+│   │   ├── landing
+│   │   ├── login
+│   │   ├── pricing
+│   │   └── register
+│   ├── shared
+│   ├── ui
+│   │   ├── accordion.tsx
+│   │   ├── alert-dialog.tsx
+│   │   ├── alert.tsx
+│   │   ├── aspect-ratio.tsx
+│   │   ├── avatar.tsx
+│   │   ├── badge.tsx
+│   │   ├── breadcrumb.tsx
+│   │   ├── button.tsx
+│   │   ├── calendar.tsx
+│   │   ├── card.tsx
+│   │   ├── carousel.tsx
+│   │   ├── chart.tsx
+│   │   ├── checkbox.tsx
+│   │   ├── collapsible.tsx
+│   │   ├── command.tsx
+│   │   ├── context-menu.tsx
+│   │   ├── dialog.tsx
+│   │   ├── drawer.tsx
+│   │   ├── dropdown-menu.tsx
+│   │   ├── form.tsx
+│   │   ├── hover-card.tsx
+│   │   ├── input-otp.tsx
+│   │   ├── input.tsx
+│   │   ├── label.tsx
+│   │   ├── menubar.tsx
+│   │   ├── navigation-menu.tsx
+│   │   ├── pagination.tsx
+│   │   ├── popover.tsx
+│   │   ├── progress.tsx
+│   │   ├── radio-group.tsx
+│   │   ├── resizable.tsx
+│   │   ├── scroll-area.tsx
+│   │   ├── select.tsx
+│   │   ├── separator.tsx
+│   │   ├── sheet.tsx
+│   │   ├── sidebar.tsx
+│   │   ├── skeleton.tsx
+│   │   ├── slider.tsx
+│   │   ├── sonner.tsx
+│   │   ├── switch.tsx
+│   │   ├── table.tsx
+│   │   ├── tabs.tsx
+│   │   ├── textarea.tsx
+│   │   ├── toggle-group.tsx
+│   │   ├── toggle.tsx
+│   │   ├── tooltip.tsx
+│   │   └── utils.ts
+│   ├── AuthForm.tsx
+│   ├── Sidebar.tsx
+│   └── TestIcon.tsx
+├── data
+│   ├── budget-data.ts
+│   ├── dashboard-data.ts
+│   ├── transaction-data.ts
+│   └── vectrai-data.ts
+├── hooks
+├── lib
+│   ├── bank_transactions.csv
+│   ├── batch_categorize.js
+│   ├── description_cleaner.js
+│   ├── transaction_processing.js
+│   └── utils.ts
+├── pages
+├── types
+│   ├── budgets.ts
+│   ├── dashboard.ts
+│   ├── transactions.ts
+│   └── vectrai.ts
+├── project_tree.txt
+└── requirements.txt

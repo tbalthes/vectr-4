@@ -1,4 +1,8 @@
+"use client";
+
 import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
@@ -13,97 +17,102 @@ import {
   User,
 } from "lucide-react";
 
-interface SidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
-
-export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+export function Sidebar() {
+  const pathname = usePathname();
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "transactions", label: "Transactions", icon: Receipt },
-    { id: "budgets", label: "Budgets", icon: PiggyBank },
-    { id: "accounts", label: "Accounts", icon: CreditCard },
-    { id: "vectr-ai", label: "Vectr AI", icon: Bot, badge: "New" },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/private/dashboard",
+    },
+    {
+      id: "transactions",
+      label: "Transactions",
+      icon: Receipt,
+      href: "/private/transactions",
+    },
+    {
+      id: "budgets",
+      label: "Budgets",
+      icon: PiggyBank,
+      href: "/private/budgets",
+    },
+    {
+      id: "accounts",
+      label: "Accounts",
+      icon: CreditCard,
+      href: "/private/accounts",
+    },
+    {
+      id: "vectr-ai",
+      label: "Vectr AI",
+      icon: Bot,
+      href: "/private/vectr-ai",
+      badge: "New",
+    },
   ];
 
   return (
     <div
-      className="w-64 bg-white border-r border-border flex flex-col h-full"
+      className="w-64 bg-white border-r border-slate-200 flex flex-col h-full"
       style={{ width: "var(--sidebar-width)" }}
     >
       {/* Premium Logo */}
-      <div className="h-20 flex items-center px-6 border-b border-border-subtle bg-gradient-to-r from-blue-50/60 to-purple-50/40">
-        <div className="flex items-center space-x-4">
+      <div className="h-16 flex items-center px-4 border-b border-slate-200 bg-gradient-to-r from-violet-50/60 to-purple-50/40">
+        <div className="flex items-center space-x-3">
           <div className="relative">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-violet-500 ring-2 ring-white/80">
-              <span className="text-white font-extrabold text-2xl drop-shadow-lg tracking-tight select-none">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-md bg-gradient-to-br from-violet-600 via-violet-700 to-purple-600 ring-1 ring-white/80">
+              <span className="text-white font-bold text-sm drop-shadow-sm tracking-tight select-none">
                 V
               </span>
             </div>
-            <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-success border-2 border-white rounded-full shadow-md animate-pulse"></div>
           </div>
           <div>
-              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-indigo-600 to-violet-500 bg-clip-text text-transparent tracking-tight drop-shadow-sm">
-              Vectr
-            </h1>
-            <p className="text-xs text-muted font-semibold mt-0.5 tracking-wide">
-              Finance Suite
-            </p>
+            <div className="font-semibold text-sm text-black">Vectr</div>
+            <div className="text-xs text-gray-600">Finance Suite</div>
           </div>
         </div>
       </div>
-
-      {/* Navigation */}
-      <div className="flex-1 p-4 py-6">
-        <nav className="space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-
-            return (
-              <Button
-                key={item.id}
-                variant={isActive ? "default" : "ghost"}
-                className={`w-full justify-start h-9 px-3 text-sm transition-smooth ${
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-none"
-                    : "text-foreground-muted hover:text-foreground hover:bg-accent"
-                }`}
-                onClick={() => setActiveTab(item.id)}
-              >
-                <Icon className="mr-3 h-4 w-4" />
-                <span className="flex-1 text-left">{item.label}</span>
-                {item.badge && (
-                  <Badge
-                    variant="secondary"
-                    className="ml-2 text-xs h-5 px-1.5"
-                  >
-                    {item.badge}
-                  </Badge>
-                )}
-              </Button>
-            );
-          })}
-        </nav>
-      </div>
-
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={`flex items-center px-3 py-2 rounded-md transition-colors font-medium text-sm ${
+                isActive
+                  ? "bg-violet-50 text-violet-700 border border-violet-200"
+                  : "text-black hover:bg-slate-50 hover:text-black"
+              }`}
+            >
+              <item.icon className="h-4 w-4 mr-3" />
+              {item.label}
+              {item.badge && (
+                <Badge className="ml-2 bg-yellow-100 text-yellow-800 text-xs">
+                  {item.badge}
+                </Badge>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
       <Separator />
-
       {/* Bottom Section */}
-      <div className="p-4 space-y-1">
+      <div className="p-3 space-y-1">
         <Button
           variant="ghost"
-          className="w-full justify-start h-9 px-3 text-sm text-foreground-muted hover:text-foreground hover:bg-accent transition-smooth"
+          className="w-full justify-start h-8 px-3 text-xs text-gray-600 hover:text-black hover:bg-slate-50"
         >
-          <Settings className="mr-3 h-4 w-4" />
+          <Settings className="mr-2 h-3 w-3" />
           Settings
         </Button>
         <Button
           variant="ghost"
-          className="w-full justify-start h-9 px-3 text-sm text-foreground-muted hover:text-foreground hover:bg-accent transition-smooth"
+          className="w-full justify-start h-8 px-3 text-xs text-gray-600 hover:text-black hover:bg-slate-50"
         >
-          <HelpCircle className="mr-3 h-4 w-4" />
+          <HelpCircle className="mr-2 h-3 w-3" />
           Help
         </Button>
       </div>
@@ -111,16 +120,14 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       <Separator />
 
       {/* User Profile */}
-      <div className="p-4">
-        <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-accent transition-smooth cursor-pointer">
-          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-            <User className="h-4 w-4 text-primary" />
+      <div className="p-3">
+        <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-50 transition-colors cursor-pointer">
+          <div className="w-6 h-6 bg-violet-100 rounded-full flex items-center justify-center">
+            <User className="h-3 w-3 text-violet-700" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">
-              John Doe
-            </p>
-            <p className="text-xs text-muted truncate">john@example.com</p>
+            <p className="text-xs font-medium text-black truncate">John Doe</p>
+            <p className="text-xs text-gray-600 truncate">john@example.com</p>
           </div>
         </div>
       </div>

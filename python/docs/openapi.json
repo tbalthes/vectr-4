@@ -1,0 +1,321 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "FastAPI", "version": "0.1.0" },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Read Root",
+        "operationId": "read_root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["categorize"],
+        "summary": "Categorize a single transaction",
+        "description": "Categorizes a single transaction using cleaning, regex, MCC, and other logic. Returns enrichment fields and match details.",
+        "operationId": "categorize_endpoint__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CategorizeRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategorizeResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/process-upload-local": {
+      "post": {
+        "tags": ["transactions", "transactions"],
+        "summary": "Process a batch of bank transactions and return enriched results",
+        "description": "Receives a list of transactions, processes them using in-memory cached lookup tables, and returns the enriched results without saving them to the database. If any transaction has original_description == 'refresh data tables', refreshes the cache first.",
+        "operationId": "process_upload_and_return_locally_transactions_process_upload_local_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProcessUploadPayload" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProcessedTransaction"
+                  },
+                  "type": "array",
+                  "title": "Response Process Upload And Return Locally Transactions Process Upload Local Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data-table-status/": {
+      "get": {
+        "tags": ["data-table-status"],
+        "summary": "Get Status",
+        "operationId": "get_status_data_table_status__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CategorizeRequest": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "Transaction date (YYYY-MM-DD)"
+          },
+          "transaction_number": {
+            "type": "string",
+            "title": "Transaction Number",
+            "description": "Unique transaction number"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Transaction description/memo"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount",
+            "description": "Transaction amount"
+          },
+          "balance": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Balance",
+            "description": "Bank-provided balance (optional)"
+          }
+        },
+        "type": "object",
+        "required": ["date", "transaction_number", "description", "amount"],
+        "title": "CategorizeRequest"
+      },
+      "CategorizeResponse": {
+        "properties": {
+          "merchant_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Merchant Id",
+            "description": "Matched merchant ID"
+          },
+          "merchant_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Merchant Name",
+            "description": "Matched merchant name"
+          },
+          "category_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Category Id",
+            "description": "Matched category ID"
+          },
+          "category_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Category Name",
+            "description": "Matched category name"
+          },
+          "confidence": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Confidence",
+            "description": "Confidence score (0-1)"
+          },
+          "match_method": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Match Method",
+            "description": "Match method used"
+          },
+          "clean_description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Clean Description",
+            "description": "Parsed/cleaned merchant name"
+          },
+          "needs_review": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Needs Review",
+            "description": "Flag if transaction needs review"
+          },
+          "original_description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Original Description",
+            "description": "Original description from input"
+          },
+          "user_metadata": {
+            "anyOf": [
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "User Metadata",
+            "description": "Any extra fields from input"
+          }
+        },
+        "type": "object",
+        "title": "CategorizeResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ProcessUploadPayload": {
+        "properties": {
+          "account_id": { "type": "string", "title": "Account Id" },
+          "transactions": {
+            "items": { "$ref": "#/components/schemas/Transaction" },
+            "type": "array",
+            "title": "Transactions"
+          }
+        },
+        "type": "object",
+        "required": ["account_id", "transactions"],
+        "title": "ProcessUploadPayload"
+      },
+      "ProcessedTransaction": {
+        "properties": {
+          "date": { "type": "string", "title": "Date" },
+          "transaction_number": {
+            "type": "string",
+            "title": "Transaction Number"
+          },
+          "description": { "type": "string", "title": "Description" },
+          "amount": { "type": "number", "title": "Amount" },
+          "balance": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Balance"
+          },
+          "merchant_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Merchant Id"
+          },
+          "merchant_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Merchant Name"
+          },
+          "category_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Category Id"
+          },
+          "category_name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Category Name"
+          },
+          "confidence": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Confidence"
+          },
+          "match_method": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Match Method"
+          },
+          "clean_description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Clean Description"
+          },
+          "needs_review": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Needs Review"
+          },
+          "account_id": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Account Id"
+          },
+          "original_description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Original Description"
+          },
+          "user_metadata": {
+            "anyOf": [
+              { "additionalProperties": true, "type": "object" },
+              { "type": "null" }
+            ],
+            "title": "User Metadata"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["date", "transaction_number", "description", "amount"],
+        "title": "ProcessedTransaction"
+      },
+      "Transaction": {
+        "properties": {
+          "date": { "type": "string", "title": "Date" },
+          "transaction_number": {
+            "type": "string",
+            "title": "Transaction Number"
+          },
+          "description": { "type": "string", "title": "Description" },
+          "amount": { "type": "number", "title": "Amount" },
+          "balance": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Balance"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": ["date", "transaction_number", "description", "amount"],
+        "title": "Transaction"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
