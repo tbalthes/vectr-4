@@ -69,25 +69,45 @@ def _fetch_category_name(category_id: str, categories: list) -> Optional[str]:
         if str(cat.get('id')) == str(category_id):
             return cat.get('name')
     return None
-
-def _match_by_regex_rules(cleaned_memo: str, global_regex_rules: list, categories: list) -> Optional[Dict[str, Any]]:
+def _match_by_regex_rules(cleaned_memo: str, global_regex_rules: list, categories: list, merchants: list) -> Optional[Dict[str, Any]]:
     """
     Matches the memo against the in-memory global_regex_rules list.
     This is the highest confidence matching method.
     """
-    for rule in global_regex_rules:
-        if re.search(rule['regex_pattern'], cleaned_memo) and rule.get('merchants'):
-            merchant = rule['merchants']
-            category_id = merchant.get('default_category_id')
-            category_name = _fetch_category_name(category_id, categories) if category_id else None
+    print(f"DEBUG: Checking regex rules for cleaned memo: '{cleaned_memo}'")
+    print(f"DEBUG: Number of regex rules loaded: {len(global_regex_rules)}")
+
+    for i, rule in enumerate(global_regex_rules):
+        pattern = rule.get('regex_pattern', '')
+        if re.search(pattern, cleaned_memo):
+            print(f"DEBUG: Rule {i+1} matched! Rule object: {rule}")
+            merchant_id = rule.get('merchant_id')
+            merchant = None
+            if merchant_id:
+                merchant = next((m for m in merchants if str(m.get('id')) == str(merchant_id)), None)
+            if merchant:
+                category_id = merchant.get('default_category_id')
+                category_name = _fetch_category_name(category_id, categories) if category_id else None
+                merchant_name = merchant.get('name')
+                logo_url = merchant.get('logo_url')
+            else:
+                category_id = None
+                category_name = None
+                merchant_name = None
+                logo_url = None
+            print(f"DEBUG: merchant_id: {merchant_id}, merchant: {merchant}")
+            print(f"DEBUG: category_id: {category_id}, category_name: {category_name}")
             return {
-                "merchant_id": merchant.get('id'),
-                "merchant_name": merchant.get('name'),
+                "merchant_id": merchant_id,
+                "merchant_name": merchant_name,
+                "logo_url": logo_url,
                 "category_id": category_id,
                 "category_name": category_name,
-                "confidence": 1.0,
-                "match_method": "global_regex"
+                "confidence": 1.0 if merchant_id else 0.9,
+                "match_method": "regex"
             }
+
+    print(f"DEBUG: No regex rules matched for '{cleaned_memo}'")
     return None
 
 def _match_by_mcc_and_parsing(cleaned_memo: str, mcc_category_map: list, categories: list) -> Optional[Dict[str, Any]]:
@@ -143,7 +163,8 @@ def process_transaction(transaction_data: Dict[str, Any], data_cache: Any) -> Di
     match_result = _match_by_regex_rules(
         cleaned_memo,
         data_cache.global_regex_rules,
-        data_cache.categories
+        data_cache.categories,
+        data_cache.merchants
     )
 
     # 3. Strategy 2: If no regex match, fall back to MCC parsing
@@ -155,8 +176,13 @@ def process_transaction(transaction_data: Dict[str, Any], data_cache: Any) -> Di
         )
 
     # 4. Consolidate the results
+    # Only include fields not already mapped to standard fields
     user_metadata = {k: v for k, v in transaction_data.items() 
-                     if k not in ['date', 'transaction_number', 'description', 'amount']}
+                     if k not in ['date', 'transaction_number', 'description', 'amount', 'balance', 'user_metadata']}
+    
+    # If user_metadata was provided as a nested object, use that instead
+    if 'user_metadata' in transaction_data and isinstance(transaction_data['user_metadata'], dict):
+        user_metadata = transaction_data['user_metadata']
 
     processed_data = {
         "date": transaction_data.get('date'),
@@ -170,6 +196,7 @@ def process_transaction(transaction_data: Dict[str, Any], data_cache: Any) -> Di
         # Matched data from our strategies
         "merchant_id": match_result.get('merchant_id') if match_result else None,
         "merchant_name": match_result.get('merchant_name') if match_result else None,
+        "logo_url": match_result.get('logo_url') if match_result and 'logo_url' in match_result else None,
         "category_id": match_result.get('category_id') if match_result else None,
         "category_name": match_result.get('category_name') if match_result else None,
         "clean_description": (match_result.get('merchant_name') if match_result

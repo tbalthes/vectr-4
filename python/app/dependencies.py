@@ -14,6 +14,6 @@ def get_data_cache():
     Loads tables on first use.
     """
     cache = DataCache()
-    if not cache.global_regex_rules or not cache.mcc_category_map or not cache.categories:
+    if cache.last_refresh is None:
         cache.load_all_tables()
     return cache
