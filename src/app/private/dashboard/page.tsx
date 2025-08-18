@@ -8,8 +8,11 @@ import { IncomeVsSpending } from "@/components/private/dashboard/IncomeVsSpendin
 import PageHeader from "@/components/private/PageHeader";
 import { Plus, Download, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
+  const router = useRouter();
+
   return (
     <div className="flex-1 space-y-6 p-6 animate-fade-in">
       {/* Header */}
@@ -26,9 +29,9 @@ export default function Dashboard() {
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={() => router.push("/private/upload")}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Transaction
+              Add Transactions
             </Button>
           </div>
         }
