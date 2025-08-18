@@ -9,6 +9,10 @@ import PageHeader from "@/components/private/PageHeader";
 import { Plus, Download, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { IncomeSpendingOverTimeChart } from "@/components/private/dashboard/IncomeSpendingOverTime";
+import { transactionData } from "@/data/dashboard-data";
+import { BudgetCompositionChart } from "@/components/private/dashboard/BudgetCompositionChart";
+import { Spending90v90 } from "@/components/private/dashboard/Spending90v90";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -41,9 +45,12 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <IncomeSpendingOverTimeChart transactionData={transactionData} />
         <IncomeVsSpending data={dashboardData.spendingData} />
+        <BudgetCompositionChart />
         <SpendingByCategory categories={dashboardData.categoryData} />
       </div>
+      <Spending90v90 />
 
       <RecentTransactions transactions={dashboardData.recentTransactions} />
     </div>

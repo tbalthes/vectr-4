@@ -40,9 +40,15 @@
   --success: oklch(0.6 0.118 184.704);
   --warning: oklch(0.828 0.189 84.429);
   --info: oklch(0.398 0.07 227.392);
-  --progress: oklch(0.6 0.2 280);
+  --progress: oklch(45.314% 0.31243 264.599);
+  --progress-background: oklch(0.73 0.2 280);
+  --color-spending: oklch(0.646 0.222 41.116); /* matches --chart-1 */
+  --color-income: oklch(0.6 0.118 184.704);   /* matches --chart-2 */
   --progress-background: oklch(0.73 0.2 280);
 }
+
+
+
 
 .dark {
   --background: oklch(0.141 0.005 285.823);
@@ -79,6 +85,8 @@
   --success: oklch(0.696 0.17 162.48);
   --warning: oklch(0.627 0.265 303.9);
   --info: oklch(0.488 0.243 264.376);
-  --progress: oklch(0.5 0.2 280);
-  --progress-background: oklch(0.63 0.2 280);
+  --progress: oklch(45.542% 0.31073 265.674);
+  --progress-background: oklch(69.3% 0.15883 281.849);
+  --color-spending: oklch(0.488 0.243 264.376); /* matches dark --chart-1 */
+  --color-income: oklch(0.696 0.17 162.48);     /* matches dark --chart-2 */
 }
