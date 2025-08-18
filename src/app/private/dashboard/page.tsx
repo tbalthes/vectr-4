@@ -13,6 +13,8 @@ import { IncomeSpendingOverTimeChart } from "@/components/private/dashboard/Inco
 import { transactionData } from "@/data/dashboard-data";
 import { BudgetCompositionChart } from "@/components/private/dashboard/BudgetCompositionChart";
 import { Spending90v90 } from "@/components/private/dashboard/Spending90v90";
+import { NetWorthOverTime } from "@/components/private/dashboard/NetWorthOverTime";
+import { CategorySpending } from "@/components/private/dashboard/CategorySpendingChart";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -44,13 +46,16 @@ export default function Dashboard() {
       <StatCards />
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <IncomeSpendingOverTimeChart transactionData={transactionData} />
-        <IncomeVsSpending data={dashboardData.spendingData} />
-        <BudgetCompositionChart />
-        <SpendingByCategory categories={dashboardData.categoryData} />
+        <Spending90v90 />
       </div>
-      <Spending90v90 />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <BudgetCompositionChart />
+        <NetWorthOverTime />
+        <SpendingByCategory categories={dashboardData.categoryData} />
+        <CategorySpending />
+      </div>
 
       <RecentTransactions transactions={dashboardData.recentTransactions} />
     </div>

@@ -328,7 +328,7 @@ export function Spending90v90() {
             />
             <Bar
               dataKey="value"
-              fill={`var(--color-${activeChart})`}
+              fill="#8b5cf6" // violet-500
               radius={4}
               barSize={32}
             />
