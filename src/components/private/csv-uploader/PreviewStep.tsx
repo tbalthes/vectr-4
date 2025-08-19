@@ -42,6 +42,8 @@ export function PreviewStep({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState(false);
+  const [effectiveUserId] = React.useState<string | null>(user_id || null);
+  const [resolvingUserId, setResolvingUserId] = React.useState(false);
 
   const previewData = data.slice(0, 10);
 
@@ -74,21 +76,32 @@ export function PreviewStep({
     );
 
     try {
-      // Ensure we have a valid user_id; if not provided, attempt to fetch from Supabase client
-      let effectiveUserId = user_id;
-      if (!effectiveUserId) {
+      // Prefer resolved effectiveUserId from component state. As a last resort try fetching.
+      let payloadUserId = effectiveUserId;
+      if (!payloadUserId) {
         try {
+          setResolvingUserId(true);
           const supabase = createClientComponentClient();
           const { data: userData } = await supabase.auth.getUser();
           const fetchedUser = userData?.user;
-          if (fetchedUser?.id) effectiveUserId = fetchedUser.id;
-        } catch (e) {
+          if (fetchedUser?.id) payloadUserId = fetchedUser.id;
+        } catch {
           // ignore and let validation handle it
+        } finally {
+          setResolvingUserId(false);
         }
       }
 
+      // If we still don't have a user id, abort early with a clear client-side error
+      if (!payloadUserId) {
+        console.error("Import aborted: no authenticated user id available");
+        setError("You must be signed in to complete the import.");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
-        user_id: effectiveUserId,
+        user_id: payloadUserId,
         account_id,
         transactions: data.map((row) => {
           const {
@@ -97,8 +110,6 @@ export function PreviewStep({
             date,
             amount,
             balance,
-            formattedAmount,
-            _rowIndex,
             ...rest
           } = row;
 
@@ -434,7 +445,7 @@ export function PreviewStep({
           Back to Mapping
         </Button>
 
-        <div className="flex gap-2">
+    <div className="flex gap-2">
           {onCancel && (
             <Button variant="outline" onClick={onCancel} disabled={loading}>
               Cancel
@@ -442,7 +453,12 @@ export function PreviewStep({
           )}
           <Button
             onClick={handleImport}
-            disabled={data.length === 0 || loading}
+            disabled={
+              data.length === 0 ||
+              loading ||
+              resolvingUserId ||
+              !effectiveUserId
+            }
             className="min-w-[140px] gap-2"
           >
             {loading ? (

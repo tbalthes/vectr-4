@@ -310,24 +310,15 @@ export default function UploadPage() {
 
           {currentStep === 4 && (
             <>
-              {selectedAccountId && userId ? (
+              {selectedAccountId ? (
                 <PreviewStep
                   data={transformDataForPreview(false)}
                   mapping={mapping}
-                  user_id={authUserId || userId || ""}
+          user_id={authUserId || userId || ""}
                   account_id={selectedAccountId}
                   onComplete={handleUploadComplete}
                   onBack={() => setCurrentStep(3)}
                 />
-              ) : selectedAccountId && !userId ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    You are not signed in. Please sign in before completing the import.
-                  </p>
-                  <Button onClick={() => router.push('/login')} variant="outline">
-                    Sign in
-                  </Button>
-                </div>
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">
