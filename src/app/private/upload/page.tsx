@@ -112,9 +112,9 @@ export default function UploadPage() {
     router.push("/private/dashboard");
   };
 
-  const transformDataForPreview = (limitRows: boolean = true): Array<
-    Record<string, string | number | undefined>
-  > => {
+  const transformDataForPreview = (
+    limitRows: boolean = true
+  ): Array<Record<string, string | number | undefined>> => {
     if (!csvData.length || !mapping.description || !mapping.date) return [];
 
     const dataRows = csvData.slice(selectedHeaderRow + 1);
@@ -160,11 +160,11 @@ export default function UploadPage() {
 
       const combinedAmount = combineAmounts(amounts, headers);
       record.amount = combinedAmount;
-      
+
       // Add formatted amount for display
-      record.formattedAmount = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
+      record.formattedAmount = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
       }).format(combinedAmount);
 
       // Add custom fields
@@ -261,78 +261,77 @@ export default function UploadPage() {
       </div>
 
       {/* Upload Content */}
-        <CardContent className="p-6">
-          {currentStep === 0 && (
-            <FileUploadStep onFileUpload={handleFileUploaded} />
-          )}
+      <CardContent className="p-6">
+        {currentStep === 0 && (
+          <FileUploadStep onFileUpload={handleFileUploaded} />
+        )}
 
-          {currentStep === 1 && headerDetection && (
-            <HeaderDetectionStep
-              rows={csvData}
-              headerDetection={headerDetection}
-              selectedHeaderRow={selectedHeaderRow}
-              onHeaderSelect={(headerRowIndex) => {
-                setSelectedHeaderRow(headerRowIndex);
-                // Re-detect column mapping with new headers
-                const headers = csvData[headerRowIndex] || [];
-                const autoMapping = getColumnSuggestions(headers);
-                setMapping({
-                  amountColumns: autoMapping.amountColumns || [],
-                  customFields: {},
-                  ...autoMapping,
-                });
-              }}
-              onContinue={handleHeaderSelected}
-              onBack={() => setCurrentStep(0)}
-            />
-          )}
+        {currentStep === 1 && headerDetection && (
+          <HeaderDetectionStep
+            rows={csvData}
+            headerDetection={headerDetection}
+            selectedHeaderRow={selectedHeaderRow}
+            onHeaderSelect={(headerRowIndex) => {
+              setSelectedHeaderRow(headerRowIndex);
+              // Re-detect column mapping with new headers
+              const headers = csvData[headerRowIndex] || [];
+              const autoMapping = getColumnSuggestions(headers);
+              setMapping({
+                amountColumns: autoMapping.amountColumns || [],
+                customFields: {},
+                ...autoMapping,
+              });
+            }}
+            onContinue={handleHeaderSelected}
+            onBack={() => setCurrentStep(0)}
+          />
+        )}
 
-          {currentStep === 2 && (
-            <ColumnMappingStep
-              headers={headers}
-              mapping={mapping}
-              onMappingChange={setMapping}
-              onComplete={handleMappingComplete}
-              onBack={() => setCurrentStep(1)}
-              rawRows={csvData}
-              selectedHeaderRow={selectedHeaderRow}
-            />
-          )}
+        {currentStep === 2 && (
+          <ColumnMappingStep
+            headers={headers}
+            mapping={mapping}
+            onMappingChange={setMapping}
+            onComplete={handleMappingComplete}
+            onBack={() => setCurrentStep(1)}
+            rawRows={csvData}
+            selectedHeaderRow={selectedHeaderRow}
+          />
+        )}
 
-          {currentStep === 3 && (
-            <DataPreviewStep
-              data={transformDataForPreview()}
-              mapping={mapping}
-              onContinue={handlePreviewComplete}
-              onBack={() => setCurrentStep(2)}
-            />
-          )}
+        {currentStep === 3 && (
+          <DataPreviewStep
+            data={transformDataForPreview()}
+            mapping={mapping}
+            onContinue={handlePreviewComplete}
+            onBack={() => setCurrentStep(2)}
+          />
+        )}
 
-          {currentStep === 4 && (
-            <>
-              {selectedAccountId ? (
-                <PreviewStep
-                  data={transformDataForPreview(false)}
-                  mapping={mapping}
-          user_id={authUserId || userId || ""}
-                  account_id={selectedAccountId}
-                  onComplete={handleUploadComplete}
-                  onBack={() => setCurrentStep(3)}
-                />
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    No account selected. Please go back and select an account.
-                  </p>
-                  <Button onClick={() => setCurrentStep(2)} variant="outline">
-                    Go Back to Column Mapping
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-
+        {currentStep === 4 && (
+          <>
+            {selectedAccountId ? (
+              <PreviewStep
+                data={transformDataForPreview(false)}
+                mapping={mapping}
+                user_id={authUserId || userId || ""}
+                account_id={selectedAccountId}
+                onComplete={handleUploadComplete}
+                onBack={() => setCurrentStep(3)}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  No account selected. Please go back and select an account.
+                </p>
+                <Button onClick={() => setCurrentStep(2)} variant="outline">
+                  Go Back to Column Mapping
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
     </div>
   );
 }

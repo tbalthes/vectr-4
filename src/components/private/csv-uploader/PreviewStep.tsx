@@ -132,7 +132,7 @@ export function PreviewStep({
         }),
       };
 
-  console.log("Sending payload:", payload);
+      console.log("Sending payload:", payload);
 
       const url = "/api/upload-transactions";
       console.log("Making POST request to Next.js API route:", url);
@@ -445,7 +445,7 @@ export function PreviewStep({
           Back to Mapping
         </Button>
 
-    <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           {onCancel && (
             <Button variant="outline" onClick={onCancel} disabled={loading}>
               Cancel
@@ -470,6 +470,15 @@ export function PreviewStep({
               </>
             )}
           </Button>
+          {resolvingUserId && (
+            <span className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 ml-2">
+              <svg className="animate-spin h-4 w-4 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+              Resolving authentication...
+            </span>
+          )}
         </div>
       </div>
       {error && (

@@ -42,8 +42,8 @@ class ProcessedTransaction(Transaction):
 
 
 class ProcessUploadPayload(BaseModel):
-    account_id: str | None = None
-    user_id: str | None = None
+    account_id: str
+    user_id: str
     transactions: List[Transaction] = []
 
 
@@ -74,8 +74,6 @@ def transaction_upload(
             data_cache.refresh()
             break
 
-    # Debug: log incoming IDs to help diagnose invalid UUID/empty input causing DB errors
-    print(f"DEBUG: Incoming payload.user_id={repr(payload.user_id)}, account_id={repr(payload.account_id)}")
 
     # Validate required UUID inputs to avoid passing empty strings to UUID columns
     if not payload.user_id or str(payload.user_id).strip() == "":
