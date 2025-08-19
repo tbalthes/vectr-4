@@ -1,15 +1,21 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField } from "@/components/public/register/FormField";
 import { SocialLoginButtons } from "@/components/public/register/SocialLoginButtons";
+import { supabase } from "@/lib/supabaseClient";
+
+import { AuthError } from "@supabase/supabase-js";
 
 interface SignupFormData {
   fullName: string;
   email: string;
   password: string;
   confirmPassword: string;
+  general?: string;
 }
 
 export function SignupForm({
@@ -25,6 +31,7 @@ export function SignupForm({
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<SignupFormData>>({});
+  const router = useRouter();
 
   const handleInputChange =
     (field: keyof SignupFormData) =>
@@ -82,13 +89,25 @@ export function SignupForm({
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+          },
+        },
+      });
 
-      // Handle successful signup
-      console.log("Account created successfully:", formData);
+      if (error) {
+        throw error;
+      }
+
+      console.log("Signup successful, redirecting to /private/dashboard");
+      router.push("/private/dashboard");
     } catch (error) {
-      console.error("Signup failed:", error);
+      console.error("Signup failed:", (error as AuthError).message);
+      setErrors({ general: (error as AuthError).message });
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +188,12 @@ export function SignupForm({
                     {errors.confirmPassword}
                   </p>
                 )}
+
+                {errors.general && (
+                  <p className="text-destructive font-sans text-xs font-normal text-center">
+                    {errors.general}
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}
@@ -196,7 +221,7 @@ export function SignupForm({
                   Already have an account?{" "}
                 </span>
                 <a
-                  href="#"
+                  href="/public/login"
                   className="text-foreground underline underline-offset-4 hover:text-primary transition-colors duration-200"
                 >
                   Sign in

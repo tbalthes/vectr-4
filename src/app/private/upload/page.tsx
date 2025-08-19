@@ -15,15 +15,16 @@ import {
   getColumnSuggestions,
   parseCSV,
   combineAmounts,
-  formatCurrency,
   type ColumnMapping,
   type HeaderDetectionResult,
 } from "@/components/private/csv-uploader/csv-utils";
-import userProfile from "@/data/user-data";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function UploadPage() {
   const router = useRouter();
+  const { user, userId, loading: authLoading } = useAuth();
+
   const [currentStep, setCurrentStep] = useState(0);
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [selectedHeaderRow, setSelectedHeaderRow] = useState<number>(0);
@@ -33,6 +34,7 @@ export default function UploadPage() {
     amountColumns: [],
     customFields: {},
   });
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
 
   const handleFileUploaded = (file: File, content: string) => {
     // Parse the CSV content
@@ -71,8 +73,13 @@ export default function UploadPage() {
     setCurrentStep(2);
   };
 
-  const handleMappingComplete = (finalMapping: ColumnMapping) => {
+  const handleMappingComplete = (
+    finalMapping: ColumnMapping,
+    accountId: string
+  ) => {
     setMapping(finalMapping);
+    setSelectedAccountId(accountId);
+    console.log("Selected account ID:", accountId);
     setCurrentStep(3);
   };
 
@@ -85,7 +92,7 @@ export default function UploadPage() {
     router.push("/private/dashboard");
   };
 
-  const transformDataForPreview = (): Array<
+  const transformDataForPreview = (limitRows: boolean = true): Array<
     Record<string, string | number | undefined>
   > => {
     if (!csvData.length || !mapping.description || !mapping.date) return [];
@@ -93,7 +100,10 @@ export default function UploadPage() {
     const dataRows = csvData.slice(selectedHeaderRow + 1);
     const headers = csvData[selectedHeaderRow] || [];
 
-    return dataRows.slice(0, 10).map((row, index) => {
+    // Process all rows or limit to 10 for preview
+    const rowsToProcess = limitRows ? dataRows.slice(0, 10) : dataRows;
+
+    return rowsToProcess.map((row, index) => {
       const record: Record<string, string | number | undefined> = {
         _rowIndex: index,
       };
@@ -128,14 +138,21 @@ export default function UploadPage() {
         }
       });
 
-      record.amount = combineAmounts(amounts, headers);
+      const combinedAmount = combineAmounts(amounts, headers);
+      record.amount = combinedAmount;
+      
+      // Add formatted amount for display
+      record.formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      }).format(combinedAmount);
 
       // Add custom fields
       Object.entries(mapping.customFields).forEach(
         ([fieldName, columnName]) => {
           const colIndex = headers.indexOf(columnName);
           if (colIndex >= 0) {
-            record[fieldName] = row[colIndex];
+            record[columnName] = row[colIndex];
           }
         }
       );
@@ -153,6 +170,20 @@ export default function UploadPage() {
     "Preview Data",
     "Complete Import",
   ];
+
+  // Only show loading state if we've been loading for a while
+  if (authLoading && !userId) {
+    return (
+      <div className="flex-1 space-y-6 p-6 animate-fade-in">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 space-y-6 p-6 animate-fade-in">
@@ -176,7 +207,7 @@ export default function UploadPage() {
 
       {/* Progress Steps */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 space-y-4">
           {steps.map((step, index) => (
             <div key={index} className="flex items-center">
               <div
@@ -210,7 +241,6 @@ export default function UploadPage() {
       </div>
 
       {/* Upload Content */}
-      <Card>
         <CardContent className="p-6">
           {currentStep === 0 && (
             <FileUploadStep onFileUpload={handleFileUploaded} />
@@ -259,17 +289,30 @@ export default function UploadPage() {
           )}
 
           {currentStep === 4 && (
-            <PreviewStep
-              data={transformDataForPreview()}
-              mapping={mapping}
-              user_id={userProfile.user_id}
-              account_id={userProfile.account_id}
-              onComplete={handleUploadComplete}
-              onBack={() => setCurrentStep(3)}
-            />
+            <>
+              {selectedAccountId ? (
+                <PreviewStep
+                  data={transformDataForPreview(false)}
+                  mapping={mapping}
+                  user_id={userId || ""}
+                  account_id={selectedAccountId}
+                  onComplete={handleUploadComplete}
+                  onBack={() => setCurrentStep(3)}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    No account selected. Please go back and select an account.
+                  </p>
+                  <Button onClick={() => setCurrentStep(2)} variant="outline">
+                    Go Back to Column Mapping
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
-      </Card>
+
     </div>
   );
 }

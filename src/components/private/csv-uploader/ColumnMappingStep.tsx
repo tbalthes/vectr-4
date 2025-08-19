@@ -1,22 +1,22 @@
 import React, { useState } from "react";
-import { Button } from "../../ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../ui/card";
-import { Alert, AlertDescription } from "../../ui/alert";
-import { Label } from "../../ui/label";
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../ui/select";
-import { Checkbox } from "../../ui/checkbox";
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   ChevronLeft,
   Settings,
@@ -25,12 +25,16 @@ import {
   X,
 } from "lucide-react";
 import { type ColumnMapping, hasBalanceColumn } from "./csv-utils";
+import { useAccounts } from "@/hooks/useAccounts";
+import AccountSelectorDropdown from "@/components/AccountSelectorDropdown";
+import { ColumnMappingAlert } from "./ColumnMappingAlert";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ColumnMappingStepProps {
   headers: string[];
   mapping: ColumnMapping;
   onMappingChange: (mapping: ColumnMapping) => void;
-  onComplete: (mapping: ColumnMapping) => void;
+  onComplete: (mapping: ColumnMapping, selectedAccountId: string) => void;
   onBack: () => void;
   rawRows?: string[][];
   selectedHeaderRow?: number;
@@ -45,10 +49,21 @@ export function ColumnMappingStep({
   rawRows = [],
   selectedHeaderRow = 0,
 }: ColumnMappingStepProps) {
+  // Get current user
+  const { userId } = useAuth();
+  
+  // Fetch user's accounts
+  const {
+    accounts,
+    loading: accountsLoading,
+    error: accountsError,
+  } = useAccounts(userId || "");
+
   // Detect balance column
   const hasBalance = hasBalanceColumn(headers);
 
   // Local state for form values
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [transactionNumber, setTransactionNumber] = useState(
     mapping.transactionNumber || ""
   );
@@ -243,6 +258,7 @@ export function ColumnMappingStep({
   const remainingHeaders = getRemainingHeaders();
   const validAmountColumns = getValidAmountColumns();
   const isFormValid =
+    selectedAccountId &&
     transactionNumber &&
     description &&
     date &&
@@ -256,33 +272,41 @@ export function ColumnMappingStep({
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm">
-        <CardHeader className="p-6">
-          <CardTitle className="flex items-center gap-2 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-            <Settings className="w-5 h-5" />
+      <Card className="p-4">
+        <CardHeader className="p-4">
+          <CardTitle className="flex text-2xl items-center gap-2">
+            <Settings className="w-8 h-8" />
             Column Mapping
           </CardTitle>
-          <CardDescription className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Map your CSV columns to the required transaction fields.
-            {hasBalance &&
-              " We detected a balance column which is required for this import."}
-            {
-              " For Amount, only columns containing &apos;amount&apos;, &apos;credit&apos;, or &apos;debit&apos; with numeric data are allowed."
-            }
+          <CardDescription className="pt-2 font-semibold">
+            <i>Map your CSV columns to the required transaction fields.</i>
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6 pt-0 space-y-6">
+        <h4 className="font-medium px-4">
+          Account
+          <span className="text-red-500"> *</span>
+        </h4>
+        <div className="pt-4 px-4">
+          <AccountSelectorDropdown
+            value={selectedAccountId}
+            onChange={setSelectedAccountId}
+            disabled={accountsLoading}
+            selectTriggerClasses={selectTriggerClasses}
+            destructiveBorderClasses={destructiveBorderClasses}
+          />
+        </div>
+        <CardContent className="p-4 space-y-4">
           <div className="space-y-4">
             <h4 className="font-medium text-zinc-900 dark:text-zinc-50">
               Required Fields
             </h4>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-4">
                 <Label className="flex items-center gap-2 text-sm font-medium">
                   Transaction Number <span className="text-red-500">*</span>
                   {transactionNumber && (
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-3 h-3 text-green-600 " />
                   )}
                 </Label>
                 <Select
@@ -306,11 +330,11 @@ export function ColumnMappingStep({
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <Label className="flex items-center gap-2 text-sm font-medium">
                   Description <span className="text-red-500">*</span>
                   {description && (
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-3 h-3 text-green-600" />
                   )}
                 </Label>
                 <Select
@@ -334,10 +358,10 @@ export function ColumnMappingStep({
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <Label className="flex items-center gap-2 text-sm font-medium">
                   Date <span className="text-red-500">*</span>
-                  {date && <CheckCircle className="w-4 h-4 text-green-600" />}
+                  {date && <CheckCircle className="w-3 h-3 text-green-600" />}
                 </Label>
                 <Select value={date} onValueChange={handleDateChange}>
                   <SelectTrigger
@@ -358,11 +382,11 @@ export function ColumnMappingStep({
               </div>
 
               {hasBalance && (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <Label className="flex items-center gap-2 text-sm font-medium">
                     Balance <span className="text-red-500">*</span>
                     {balance && (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <CheckCircle className="w-3 h-3 text-green-600" />
                     )}
                   </Label>
                   <Select value={balance} onValueChange={handleBalanceChange}>
@@ -389,7 +413,7 @@ export function ColumnMappingStep({
               <Label className="flex items-center gap-2 text-sm font-medium">
                 Amount Columns <span className="text-red-500">*</span>
                 {amountColumns.length > 0 && (
-                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <CheckCircle className="w-3 h-3 text-green-600" />
                 )}
               </Label>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -426,7 +450,7 @@ export function ColumnMappingStep({
                 </div>
               ) : (
                 <Alert className="relative w-full rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
-                  <AlertCircle className="w-4 h-4 absolute left-4 top-3.5" />
+                  <AlertCircle className="w-4 h-4 absolute left-4 top-3.5 !gap-0" />
                   <AlertDescription className="ml-6">
                     <strong>No valid amount columns found.</strong> Please
                     ensure your CSV has columns with &apos;amount&apos;,
@@ -528,43 +552,23 @@ export function ColumnMappingStep({
         </CardContent>
       </Card>
 
-      {!isFormValid && (
-        <Alert className="relative w-full rounded-lg border border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-900/20 dark:text-red-300">
-          <AlertCircle className="w-4 h-4 absolute left-4 top-3.5" />
-          <AlertDescription className="ml-6">
-            <strong>Please complete all required field mappings:</strong>
-            <ul className="list-disc list-inside mt-2">
-              {!transactionNumber && <li>Transaction Number is required</li>}
-              {!description && <li>Description is required</li>}
-              {!date && <li>Date is required</li>}
-              {amountColumns.length === 0 && (
-                <li>At least one Amount column is required</li>
-              )}
-              {hasBalance && !balance && <li>Balance is required</li>}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="flex justify-between">
-        <Button
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-zinc-200 bg-white hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:ring-offset-zinc-950 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 h-10 px-4 py-2"
-          onClick={onBack}
-        >
+      {/* Sticky Navigation */}
+      <div className="sticky bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 pt-4 pb-4 z-20 flex justify-between border-t border-zinc-200 dark:border-zinc-800 mt-8">
+        <Button variant="outline" onClick={onBack}>
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back to Headers
         </Button>
-
-        {/* Only call onComplete on button click, never in render or effect */}
-        <Button
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-zinc-900 text-zinc-50 hover:bg-zinc-900/90 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/90 h-10 px-4 py-2"
-          onClick={() => onComplete(mapping)}
-          disabled={!isFormValid}
-        >
-          Continue to Preview
-          <CheckCircle className="w-4 h-4 ml-2" />
-        </Button>
+        <div className="text-right space-y-2">
+          <Button
+            onClick={() => onComplete(mapping, selectedAccountId)}
+            disabled={!isFormValid}
+          >
+            Continue to Preview
+            <CheckCircle className="w-3 h-3" />
+          </Button>
+        </div>
       </div>
+      <div className="flex justify-between"></div>
     </div>
   );
 }

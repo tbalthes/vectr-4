@@ -52,15 +52,15 @@ export function HeaderDetectionStep({
 
   return (
     <div className="space-y-6 pb-8 mb-8 relative">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
+      <Card className="gap-6 p-4">
+        <CardHeader className="p-4">
+          <CardTitle className="flex text-2xl items-center gap-2">
+            <FileText className="w-8 h-8" />
             Header Detection
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="pt-2 font-semibold"><i>
             We&apos;ve analyzed your CSV file to identify the header row. Please
-            verify or select the correct row that contains your column headers.
+            verify or select the correct row that contains your column headers.</i>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -110,7 +110,7 @@ export function HeaderDetectionStep({
                               {/* Fixed row number header */}
                               <div className="w-8 h-6 flex-shrink-0 bg-gray-200 border-r border-gray-300 flex items-center justify-center text-xs font-medium text-gray-600 sticky left-0 z-30"></div>
                               {/* Column letters */}
-                              {columnLetters.map((letter, index) => (
+                              {columnLetters.map((letter) => (
                                 <div
                                   key={letter}
                                   className="w-20 h-6 flex-shrink-0 bg-gray-100 border-r border-gray-300 flex items-center justify-center text-xs font-medium text-gray-600"
@@ -132,7 +132,7 @@ export function HeaderDetectionStep({
                                 onClick={() => handleRowSelect(rowIndex)}
                               >
                                 {/* Fixed row number with dot indicator */}
-                                <div className="w-8 h-6 flex-shrink-0 bg-gray-100 border-r border-gray-300 flex items-center justify-center text-xs font-medium text-gray-600 relative sticky left-0 z-10">
+                                <div className="w-8 h-6 flex-shrink-0 bg-gray-100 border-r border-gray-300 flex items-center justify-center text-xs font-medium text-gray-600 sticky left-0 z-10">
                                   {rowIndex === selectedHeaderRow && (
                                     <div className="absolute left-0.5 w-1 h-1 bg-blue-600 rounded-full"></div>
                                   )}

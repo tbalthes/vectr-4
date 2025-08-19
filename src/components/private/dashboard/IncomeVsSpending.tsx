@@ -5,8 +5,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../ui/card";
-import { Button } from "../../ui/button";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
 import {
   LineChart,

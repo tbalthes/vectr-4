@@ -1,6 +1,6 @@
 import React from "react";
-import { Card, CardContent } from "../../ui/card";
-import { Progress } from "../../ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp,
   TrendingDown,
@@ -18,24 +18,26 @@ export function StatCards() {
       return {
         bg: "bg-success/10",
         text: "text-success",
-        icon: "text-success"
+        icon: "text-success",
       };
     } else if (value >= 50) {
       return {
         bg: "bg-warning/10",
         text: "text-warning",
-        icon: "text-warning"
+        icon: "text-warning",
       };
     } else {
       return {
         bg: "bg-destructive/10",
         text: "text-destructive",
-        icon: "text-destructive"
+        icon: "text-destructive",
       };
     }
   };
 
-  const savingsGoalColors = getSavingsGoalColorClasses(dashboardData.savingsGoalValue);
+  const savingsGoalColors = getSavingsGoalColorClasses(
+    dashboardData.savingsGoalValue
+  );
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -121,15 +123,15 @@ export function StatCards() {
                 {dashboardData.savingsGoalPercent}
               </p>
             </div>
-            <div className={`h-8 w-8 ${savingsGoalColors.bg} rounded-lg flex items-center justify-center`}>
+            <div
+              className={`h-8 w-8 ${savingsGoalColors.bg} rounded-lg flex items-center justify-center`}
+            >
               <PiggyBank className={`h-4 w-4 ${savingsGoalColors.icon}`} />
             </div>
           </div>
           <div className="mt-4">
             <Progress value={dashboardData.savingsGoalValue} className="h-2" />
-            <p className="text-xs   mt-2">
-              {dashboardData.savingsGoalLabel}
-            </p>
+            <p className="text-xs   mt-2">{dashboardData.savingsGoalLabel}</p>
           </div>
         </CardContent>
       </Card>

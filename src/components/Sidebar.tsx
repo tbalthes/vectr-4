@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,10 +17,14 @@ import {
   Settings,
   HelpCircle,
   User,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
+
   const navItems = [
     {
       id: "dashboard",
@@ -115,6 +121,14 @@ export function Sidebar() {
           <HelpCircle className="mr-2 h-3 w-3" />
           Help
         </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start h-8 px-3 text-xs text-gray-600 hover:text-black hover:bg-slate-50"
+          onClick={signOut}
+        >
+          <LogOut className="mr-2 h-3 w-3" />
+          Sign Out
+        </Button>
       </div>
 
       <Separator />
@@ -126,8 +140,12 @@ export function Sidebar() {
             <User className="h-3 w-3 text-violet-700" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-black truncate">John Doe</p>
-            <p className="text-xs text-gray-600 truncate">john@example.com</p>
+            <p className="text-xs font-medium text-black truncate">
+              {user?.email || "Guest"}
+            </p>
+            <p className="text-xs text-gray-600 truncate">
+              {user?.id || "Not logged in"}
+            </p>
           </div>
         </div>
       </div>

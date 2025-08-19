@@ -1,14 +1,19 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField } from "@/components/public/register/FormField";
 import { SocialLoginButtons } from "@/components/public/register/SocialLoginButtons";
+import { supabase } from "@/lib/supabaseClient";
+
+import { AuthError } from "@supabase/supabase-js";
 
 interface LoginFormData {
   email: string;
   password: string;
+  general?: string;
 }
 
 export function LoginForm({
@@ -22,6 +27,7 @@ export function LoginForm({
 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
+  const router = useRouter();
 
   const handleInputChange =
     (field: keyof LoginFormData) =>
@@ -67,13 +73,20 @@ export function LoginForm({
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-      // Handle successful login
-      console.log("Login successful:", formData);
+      if (error) {
+        throw error;
+      }
+
+      console.log("Login successful, redirecting to /private/dashboard");
+      router.push("/private/dashboard");
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Login failed:", (error as AuthError).message);
+      setErrors({ general: (error as AuthError).message });
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +138,12 @@ export function LoginForm({
                   </p>
                 )}
 
+                {errors.general && (
+                  <p className="text-destructive font-sans text-xs font-normal text-center">
+                    {errors.general}
+                  </p>
+                )}
+
                 {/* Forgot Password Link */}
                 <div className="text-right">
                   <a
@@ -158,10 +177,10 @@ export function LoginForm({
               {/* Sign Up Link */}
               <div className="text-center font-sans text-sm font-normal">
                 <span className="text-muted-foreground">
-                  Don&#39;t have an account?{" "}
+                  Don&apos;t have an account?{" "}
                 </span>
                 <a
-                  href="#"
+                  href="/public/register"
                   className="text-foreground underline underline-offset-4 hover:text-primary transition-colors duration-200"
                 >
                   Sign up

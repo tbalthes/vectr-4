@@ -44,6 +44,9 @@ export function PreviewStep({
 
   const previewData = data.slice(0, 10);
 
+  // Pull ordered custom field column names for display (custom_1, custom_2, ...)
+  const customFieldList: string[] = Object.values(mapping.customFields || {});
+
   const getCustomFieldValue = (
     record: Record<string, string | number | undefined>,
     fieldName: string
@@ -61,6 +64,14 @@ export function PreviewStep({
     setLoading(true);
     setError(null);
     setSuccess(false);
+
+    console.log(
+      "Starting import with user_id:",
+      user_id,
+      "account_id:",
+      account_id
+    );
+
     try {
       const payload = {
         user_id,
@@ -72,33 +83,63 @@ export function PreviewStep({
             date,
             amount,
             balance,
+            formattedAmount,
+            _rowIndex,
             ...rest
           } = row;
-          const user_metadata = { ...rest };
+
+          // Filter out undefined values and format user_metadata
+          const user_metadata: Record<string, string | number> = {};
+          Object.entries(rest).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+              user_metadata[key] = value;
+            }
+          });
+
           return {
-            transaction_number: transactionNumber,
-            description,
-            date,
-            amount,
-            balance,
+            date: date as string,
+            transaction_number: parseFloat(transactionNumber as string) || 0,
+            description: description as string,
+            amount: amount as number,
+            balance: balance ? parseFloat(balance as string) : undefined,
             user_metadata,
           };
         }),
       };
-      const res = await fetch(
-        "http://127.0.0.1:8000/transactions/transaction-upload",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
+
+      console.log("Sending payload:", payload);
+
+      const url = "/api/upload-transactions";
+      console.log("Making POST request to Next.js API route:", url);
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log("Response status:", res.status);
+      console.log(
+        "Response headers:",
+        Object.fromEntries(res.headers.entries())
       );
+
       if (!res.ok) {
         const err = await res.text();
+        console.error("API Error:", err);
         throw new Error(err || `HTTP ${res.status}`);
       }
+
+      const result = await res.json();
+      console.log("API Response:", result);
+
       setSuccess(true);
-      onComplete();
+      setTimeout(() => {
+        onComplete();
+      }, 1000);
     } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message || "Upload failed");
@@ -169,22 +210,42 @@ export function PreviewStep({
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-zinc-800 dark:text-zinc-200">
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-left gap-6 items-center">
                   <span>Transaction Number:</span>
                   <Badge className="border-zinc-200 dark:border-zinc-700">
                     {mapping.transactionNumber}
                   </Badge>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-left gap-6 items-center">
                   <span>Description:</span>
                   <Badge className="border-zinc-200 dark:border-zinc-700">
                     {mapping.description}
                   </Badge>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-left gap-6 items-center">
                   <span>Date:</span>
                   <Badge className="border-zinc-200 dark:border-zinc-700">
                     {mapping.date}
+                  </Badge>
+                </div>
+                <div className="flex justify-left gap-6 items-center">
+                  <span>Amount:</span>
+                  <Badge className="border-zinc-200 dark:border-zinc-700">
+                    {mapping.amountColumns && mapping.amountColumns.length
+                      ? mapping.amountColumns.join(", ")
+                      : "—"}
+                  </Badge>
+                </div>
+                <div className="flex justify-left gap-6 items-center">
+                  <span>Custom 1:</span>
+                  <Badge className="border-zinc-200 dark:border-zinc-700">
+                    {customFieldList[0] ?? "—"}
+                  </Badge>
+                </div>
+                <div className="flex justify-left gap-6 items-center">
+                  <span>Custom 2:</span>
+                  <Badge className="border-zinc-200 dark:border-zinc-700">
+                    {customFieldList[1] ?? "—"}
                   </Badge>
                 </div>
               </div>
@@ -196,7 +257,7 @@ export function PreviewStep({
                     ([fieldName, columnName]) => (
                       <div
                         key={fieldName}
-                        className="flex justify-between items-center"
+                        className="flex justify-left gap-6 items-center"
                       >
                         <span className="text-sm">{fieldName}:</span>
                         <Badge className="border-transparent bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50">
@@ -250,8 +311,8 @@ export function PreviewStep({
                       <div className="w-24 flex-shrink-0 border-r border-zinc-200 dark:border-zinc-800 px-3 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">
                         Amount
                       </div>
-                      {Object.keys(mapping.customFields).map(
-                        (fieldName, index) => (
+                      {Object.entries(mapping.customFields).map(
+                        ([fieldName, columnName], index) => (
                           <div
                             key={fieldName}
                             className={`w-32 flex-shrink-0 px-3 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 ${
@@ -261,7 +322,7 @@ export function PreviewStep({
                                 : ""
                             }`}
                           >
-                            {fieldName}
+                            {columnName}
                           </div>
                         )
                       )}
@@ -293,8 +354,8 @@ export function PreviewStep({
                         >
                           {record.formattedAmount || "$0.00"}
                         </div>
-                        {Object.keys(mapping.customFields).map(
-                          (fieldName, fieldIndex) => (
+                        {Object.entries(mapping.customFields).map(
+                          ([fieldName, columnName], fieldIndex) => (
                             <div
                               key={fieldName}
                               className={`w-32 flex-shrink-0 px-3 py-2 text-left text-sm truncate ${
@@ -304,7 +365,7 @@ export function PreviewStep({
                                   : ""
                               }`}
                             >
-                              {getCustomFieldValue(record, fieldName)}
+                              {getCustomFieldValue(record, columnName)}
                             </div>
                           )
                         )}
@@ -342,29 +403,28 @@ export function PreviewStep({
         </Alert>
       )}
 
-      <div className="flex justify-between">
+      {/* Navigation */}
+      <div className="sticky bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 pt-4 pb-4 z-20 flex justify-between border-t border-zinc-200 dark:border-zinc-800 mt-8">
         <Button
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-zinc-200 bg-white hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:ring-offset-zinc-950 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 h-10 px-4 py-2"
+          variant="outline"
           onClick={onBack}
+          className="gap-2"
           disabled={loading}
         >
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back to Mapping
         </Button>
+
         <div className="flex gap-2">
           {onCancel && (
-            <Button
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-zinc-200 bg-white hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:ring-offset-zinc-950 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 h-10 px-4 py-2"
-              onClick={onCancel}
-              disabled={loading}
-            >
+            <Button variant="outline" onClick={onCancel} disabled={loading}>
               Cancel
             </Button>
           )}
           <Button
             onClick={handleImport}
             disabled={data.length === 0 || loading}
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-green-600 text-white hover:bg-green-700 dark:bg-green-600 dark:text-white dark:hover:bg-green-700 h-10 px-4 py-2"
+            className="min-w-[140px] gap-2"
           >
             {loading ? (
               "Uploading..."

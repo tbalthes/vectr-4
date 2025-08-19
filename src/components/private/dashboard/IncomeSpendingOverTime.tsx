@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import { format, subDays } from "date-fns"
+import * as React from "react";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { format, subDays } from "date-fns";
 
-import { transactionData } from "@/data/dashboard-data"
+import { transactionData } from "@/data/dashboard-data";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
@@ -19,14 +19,14 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 // --- Step 2: Create a data processing function ---
 // This function aggregates the raw transactions into daily income and spending totals,
@@ -44,7 +44,9 @@ const processDataForChart = (data: { date: string; amount: number }[]) => {
     return acc;
   }, {} as Record<string, { date: string; income: number; spending: number }>);
 
-  return Object.values(dailyTotals).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  return Object.values(dailyTotals).sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
 };
 
 // Removed: processedChartData is now computed inside the component using the prop
@@ -56,19 +58,23 @@ const chartConfig = {
     theme: {
       light: "oklch(0.6 0.118 184.704)",
       dark: "oklch(0.696 0.17 162.48)",
-    }
+    },
   },
   spending: {
     label: "Spending",
     theme: {
       light: "oklch(0.646 0.222 41.116)",
       dark: "oklch(0.488 0.243 264.376)",
-    }
+    },
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
-export function IncomeSpendingOverTimeChart({ transactionData }: { transactionData: { date: string; amount: number }[] }) {
-  const [timeRange, setTimeRange] = React.useState("30d")
+export function IncomeSpendingOverTimeChart({
+  transactionData,
+}: {
+  transactionData: { date: string; amount: number }[];
+}) {
+  const [timeRange, setTimeRange] = React.useState("30d");
 
   const processedChartData = React.useMemo(
     () => processDataForChart(transactionData),
@@ -85,7 +91,9 @@ export function IncomeSpendingOverTimeChart({ transactionData }: { transactionDa
     }
     const startDate = subDays(today, daysToSubtract);
 
-    return processedChartData.filter((item) => new Date(item.date) >= startDate);
+    return processedChartData.filter(
+      (item) => new Date(item.date) >= startDate
+    );
   }, [timeRange, processedChartData]);
 
   return (
@@ -164,9 +172,11 @@ export function IncomeSpendingOverTimeChart({ transactionData }: { transactionDa
               cursor={false}
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value) => format(new Date(value), "MMM d, yyyy")}
+                  labelFormatter={(value) =>
+                    format(new Date(value), "MMM d, yyyy")
+                  }
                   indicator="dot"
-                  formatter={(value, name) => 
+                  formatter={(value, name) =>
                     `$${Number(value).toLocaleString()}`
                   }
                 />
@@ -190,5 +200,5 @@ export function IncomeSpendingOverTimeChart({ transactionData }: { transactionDa
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

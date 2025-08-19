@@ -206,19 +206,22 @@ export function combineAmounts(amounts: { [column: string]: string }, headers: s
     const columnLower = columnName.toLowerCase();
     const parsedAmount = parseAmount(value);
     
-    if (parsedAmount === 0) return;
+    if (parsedAmount === 0 && value.trim() === '') return; // Skip empty values
     
     // Determine if this is a credit or debit column
-    if (columnLower.includes('debit') || columnLower.includes('withdrawal') || 
-        columnLower.includes('payment') || columnLower.includes('outgoing')) {
-      // Debit amounts should be negative
-      totalAmount += parsedAmount > 0 ? -parsedAmount : parsedAmount;
-    } else if (columnLower.includes('credit') || columnLower.includes('deposit') || 
-               columnLower.includes('incoming') || columnLower.includes('received')) {
-      // Credit amounts should be positive
+    if (columnLower.includes('debit') || columnLower.includes('withdrawal') ||
+        columnLower.includes('payment') || columnLower.includes('outgoing') ||
+        columnLower.includes('expense') || columnLower.includes('out')) {
+      // Debit amounts should be negative (subtract from balance)
+      totalAmount += parsedAmount > 0 ? -Math.abs(parsedAmount) : parsedAmount;
+    } else if (columnLower.includes('credit') || columnLower.includes('deposit') ||
+               columnLower.includes('incoming') || columnLower.includes('received') ||
+               columnLower.includes('income') || columnLower.includes('in')) {
+      // Credit amounts should be positive (add to balance)
       totalAmount += Math.abs(parsedAmount);
     } else {
       // For general "amount" columns, keep the sign as-is
+      // This handles cases where the CSV already has proper +/- signs
       totalAmount += parsedAmount;
     }
   });

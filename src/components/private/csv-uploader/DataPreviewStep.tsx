@@ -40,7 +40,6 @@ export function DataPreviewStep({
   ) => {
     return record[fieldName] || "";
   };
-
   const hasValidData =
     previewData.length > 0 &&
     previewData.some(
@@ -49,126 +48,153 @@ export function DataPreviewStep({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Eye className="w-5 h-5" />
-            Data Preview
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Preview of your mapped data showing how transactions will be
-            processed
-          </p>
-        </div>
-        <Badge variant="secondary" className="text-sm">
-          Showing {previewData.length} of {totalRows} rows
-        </Badge>
-      </div>
-
-      {!hasValidData && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            No valid transaction data found. Please check your column mapping
-            and ensure your CSV contains transaction data.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {hasValidData && (
-        <Alert>
-          <CheckCircle className="h-4 w-4" />
-          <AlertDescription>
-            Data looks good! {totalRows} transactions ready for import.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Preview Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Transaction Preview</CardTitle>
-          <CardDescription>
-            First {previewData.length} transactions from your CSV file
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium">#</th>
-                  {mapping.transactionNumber && (
-                    <th className="text-left p-3 font-medium">
-                      Transaction Number
-                    </th>
-                  )}
-                  <th className="text-left p-3 font-medium">Description</th>
-                  <th className="text-left p-3 font-medium">Date</th>
-                  <th className="text-right p-3 font-medium">Amount</th>
-                  {mapping.balance && (
-                    <th className="text-right p-3 font-medium">Balance</th>
-                  )}
-                  {Object.keys(mapping.customFields).map((fieldName) => (
-                    <th key={fieldName} className="text-left p-3 font-medium">
-                      {fieldName.replace("custom_", "Custom ")}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {previewData.map((record, index) => (
-                  <tr key={index} className="border-b hover:bg-muted/30">
-                    <td className="p-3 text-sm text-muted-foreground">
-                      {index + 1}
-                    </td>
-                    {mapping.transactionNumber && (
-                      <td className="p-3 text-sm font-mono">
-                        {record.transactionNumber}
-                      </td>
-                    )}
-                    <td className="p-3 text-sm">{record.description}</td>
-                    <td className="p-3 text-sm">{record.date}</td>
-                    <td className="p-3 text-sm text-right font-mono">
-                      <span
-                        className={
-                          typeof record.amount === "number" && record.amount < 0
-                            ? "text-red-600"
-                            : "text-green-600"
-                        }
-                      >
-                        {typeof record.amount === "number"
-                          ? formatCurrency(record.amount)
-                          : record.amount}
-                      </span>
-                    </td>
-                    {mapping.balance && (
-                      <td className="p-3 text-sm text-right font-mono">
-                        {record.balance}
-                      </td>
-                    )}
-                    {Object.keys(mapping.customFields).map((fieldName) => (
-                      <td key={fieldName} className="p-3 text-sm">
-                        {getCustomFieldValue(record, fieldName)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <Card className="space-y-6 p-6">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-3 text-2xl font-bold">
+              <Eye className="h-8 w-8 text-primary" />
+              Data Preview
+            </CardTitle>
+            <CardDescription className="text-base">
+              Preview of your mapped data showing how transactions will be
+              processed
+            </CardDescription>
           </div>
-
-          {totalRows > 10 && (
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              ... and {totalRows - 10} more rows
-            </div>
+          <Badge variant="secondary" className="text-sm py-1 px-3">
+            Showing {previewData.length} of {totalRows} rows
+          </Badge>
+        </CardHeader>
+        <CardContent className="space-y-6 pb-6">
+          {!hasValidData && (
+            <Alert variant="destructive" className="border-destructive/30">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                No valid transaction data found. Please check your column
+                mapping and ensure your CSV contains transaction data.
+              </AlertDescription>
+            </Alert>
           )}
+
+          {hasValidData && (
+            <Alert className="border-green-500/30 bg-green-50/50 dark:bg-green-900/10">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <AlertDescription className="text-green-700 dark:text-green-400">
+                Data looks good! {totalRows} transactions ready for import.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Preview Table */}
+          <Card className="border shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold">
+                Transaction Preview
+              </CardTitle>
+              <CardDescription>
+                First {previewData.length} transactions from your CSV file
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                        #
+                      </th>
+                      {mapping.transactionNumber && (
+                        <th className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                          Transaction Number
+                        </th>
+                      )}
+                      <th className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                        Description
+                      </th>
+                      <th className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                        Date
+                      </th>
+                      <th className="text-right p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                        Amount
+                      </th>
+                      {mapping.balance && (
+                        <th className="text-right p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                          Balance
+                        </th>
+                      )}
+                      {Object.entries(mapping.customFields).map(([fieldName, columnName]) => (
+                        <th
+                          key={fieldName}
+                          className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground"
+                        >
+                          {columnName}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewData.map((record, index) => (
+                      <tr
+                        key={index}
+                        className="border-b hover:bg-muted/30 transition-colors"
+                      >
+                        <td className="p-3 text-sm text-muted-foreground">
+                          {index + 1}
+                        </td>
+                        {mapping.transactionNumber && (
+                          <td className="p-3 text-sm font-mono">
+                            {record.transactionNumber}
+                          </td>
+                        )}
+                        <td className="p-3 text-sm font-medium">
+                          {record.description}
+                        </td>
+                        <td className="p-3 text-sm">{record.date}</td>
+                        <td className="p-3 text-sm text-right font-mono tabular-nums">
+                          <span
+                            className={
+                              typeof record.amount === "number" &&
+                              record.amount < 0
+                                ? "text-red-600 font-medium"
+                                : typeof record.amount === "number" && record.amount > 0
+                                ? "text-green-600 font-medium"
+                                : "text-zinc-500 font-medium"
+                            }
+                          >
+                            {record.formattedAmount ||
+                             (typeof record.amount === "number"
+                               ? formatCurrency(record.amount)
+                               : "$0.00")}
+                          </span>
+                        </td>
+                        {mapping.balance && (
+                          <td className="p-3 text-sm text-right font-mono tabular-nums">
+                            {record.balance}
+                          </td>
+                        )}
+                        {Object.entries(mapping.customFields).map(([fieldName, columnName]) => (
+                          <td key={fieldName} className="p-3 text-sm">
+                            {getCustomFieldValue(record, columnName)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {totalRows > 10 && (
+                <div className="mt-4 text-center text-sm text-muted-foreground py-3 border-t">
+                  ... and {totalRows - 10} more rows
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between pt-4 border-t">
-        <Button variant="outline" onClick={onBack}>
+      <div className="sticky bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 pt-4 pb-4 z-20 flex justify-between border-t border-zinc-200 dark:border-zinc-800 mt-8">
+        <Button variant="outline" onClick={onBack} className="gap-2">
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back to Mapping
         </Button>
@@ -176,10 +202,10 @@ export function DataPreviewStep({
         <Button
           onClick={onContinue}
           disabled={!hasValidData}
-          className="min-w-[120px]"
+          className="min-w-[140px] gap-2"
         >
           Continue to Import
-          <ChevronRight className="w-4 h-4 ml-2" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
     </div>

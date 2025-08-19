@@ -11,28 +11,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   BarChart3,
-  TrendingUp,
   Shield,
   Users,
-  Timer,
-  Globe,
-  BookOpen,
-  Calculator,
   ArrowRight,
-  Eye,
   Check,
   Play,
   Sparkles,
   ChevronDown,
   X,
   Menu,
-  Monitor,
-  Smartphone,
   PiggyBank,
   Brain,
   CreditCard,
   Target,
-  Activity,
   Lock,
   Building,
   Database,
@@ -41,7 +32,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
-export function HomePage() {
+export default function HomePage() {
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pricingPeriod, setPricingPeriod] = useState<"monthly" | "annual">(
@@ -173,7 +164,7 @@ export function HomePage() {
       </a>
 
       {/* Navigation */}
-      <nav className="relative border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
+      <nav className="border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 sm:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
@@ -864,5 +855,3 @@ export function HomePage() {
     </div>
   );
 }
-
-export default HomePage;

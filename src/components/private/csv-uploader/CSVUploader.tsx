@@ -111,8 +111,8 @@ export function PreviewStep({
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm">
+    <div className="space-y-">
+      <Card className="rounded-lg">
         <CardHeader className="p-6">
           <CardTitle className="flex items-center gap-2 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
             <Eye className="w-5 h-5" />
@@ -212,7 +212,7 @@ export function PreviewStep({
         </CardContent>
       </Card>
 
-      <Card className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm">
+      <Card className="rounded-lg">
         <CardHeader className="p-6">
           <CardTitle className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
             Data Preview
@@ -343,28 +343,20 @@ export function PreviewStep({
       )}
 
       <div className="flex justify-between">
-        <Button
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-zinc-200 bg-white hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:ring-offset-zinc-950 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 h-10 px-4 py-2"
-          onClick={onBack}
-          disabled={loading}
-        >
+        <Button className="h-10 px-4" onClick={onBack}>
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back to Mapping
         </Button>
         <div className="flex gap-2">
           {onCancel && (
-            <Button
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-zinc-200 bg-white hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:ring-offset-zinc-950 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 h-10 px-4 py-2"
-              onClick={onCancel}
-              disabled={loading}
-            >
+            <Button className="h-10 px-4" onClick={onCancel} disabled={loading}>
               Cancel
             </Button>
           )}
           <Button
             onClick={handleImport}
             disabled={data.length === 0 || loading}
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-green-600 text-white hover:bg-green-700 dark:bg-green-600 dark:text-white dark:hover:bg-green-700 h-10 px-4 py-2"
+            className="h-10 px-4"
           >
             {loading ? (
               "Uploading..."

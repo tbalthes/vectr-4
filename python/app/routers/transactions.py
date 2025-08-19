@@ -64,9 +64,11 @@ def process_upload_and_return_locally(
     """
     raw_transactions = payload.transactions
 
-    # Check for special refresh trigger
+    # Check for special refresh trigger (accepts either 'description' or 'original_description')
     for tx in raw_transactions:
-        if (getattr(tx, 'original_description', None) or getattr(tx, 'description', None)) == "refresh data tables":
+        desc = getattr(tx, 'description', None)
+        orig_desc = getattr(tx, 'original_description', None)
+        if (desc and desc.strip().lower() == "refresh data tables") or (orig_desc and orig_desc.strip().lower() == "refresh data tables"):
             data_cache.refresh()
             break
 

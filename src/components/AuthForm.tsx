@@ -6,8 +6,8 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { useAuth } from "./AuthContext";
-import { toast } from "sonner@2.0.3";
+import { useAuth } from "@/components/AuthContext";
+import { toast } from "sonner";
 
 export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);

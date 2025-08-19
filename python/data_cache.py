@@ -34,10 +34,15 @@ class DataCache:
     def load_all_tables(self):
         """Fetch all required tables from Supabase and store in memory. Updates last_refresh timestamp."""
         with self._cache_lock:
+            print("[DataCache] Loading all tables from Supabase...")
             self.global_regex_rules = self._fetch_table('global_regex_rules')
+            print(f"[DataCache] Loaded {len(self.global_regex_rules)} global_regex_rules")
             self.mcc_category_map = self._fetch_table('mcc_category_map')
+            print(f"[DataCache] Loaded {len(self.mcc_category_map)} mcc_category_map entries")
             self.categories = self._fetch_table('categories')
+            print(f"[DataCache] Loaded {len(self.categories)} categories")
             self.merchants = self._fetch_table('merchants')
+            print(f"[DataCache] Loaded {len(self.merchants)} merchants")
             self.last_refresh = datetime.datetime.utcnow()
             # Also store local Phoenix time for convenience
             phoenix_tz = pytz.timezone('America/Phoenix')
