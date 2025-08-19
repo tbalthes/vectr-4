@@ -1,4 +1,5 @@
 import React from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -73,8 +74,21 @@ export function PreviewStep({
     );
 
     try {
+      // Ensure we have a valid user_id; if not provided, attempt to fetch from Supabase client
+      let effectiveUserId = user_id;
+      if (!effectiveUserId) {
+        try {
+          const supabase = createClientComponentClient();
+          const { data: userData } = await supabase.auth.getUser();
+          const fetchedUser = userData?.user;
+          if (fetchedUser?.id) effectiveUserId = fetchedUser.id;
+        } catch (e) {
+          // ignore and let validation handle it
+        }
+      }
+
       const payload = {
-        user_id,
+        user_id: effectiveUserId,
         account_id,
         transactions: data.map((row) => {
           const {
@@ -107,7 +121,7 @@ export function PreviewStep({
         }),
       };
 
-      console.log("Sending payload:", payload);
+  console.log("Sending payload:", payload);
 
       const url = "/api/upload-transactions";
       console.log("Making POST request to Next.js API route:", url);
@@ -210,25 +224,28 @@ export function PreviewStep({
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-zinc-800 dark:text-zinc-200">
               <div className="space-y-2">
-                <div className="flex justify-left gap-6 items-center">
+                <div className="flex items-center gap-6">
                   <span>Transaction Number:</span>
                   <Badge className="border-zinc-200 dark:border-zinc-700">
-                    {mapping.transactionNumber}
+                    {mapping.transactionNumber ?? "—"}
                   </Badge>
                 </div>
-                <div className="flex justify-left gap-6 items-center">
+                <div className="flex items-center gap-6">
                   <span>Description:</span>
                   <Badge className="border-zinc-200 dark:border-zinc-700">
-                    {mapping.description}
+                    {mapping.description ?? "—"}
                   </Badge>
                 </div>
-                <div className="flex justify-left gap-6 items-center">
+                <div className="flex items-center gap-6">
                   <span>Date:</span>
                   <Badge className="border-zinc-200 dark:border-zinc-700">
-                    {mapping.date}
+                    {mapping.date ?? "—"}
                   </Badge>
                 </div>
-                <div className="flex justify-left gap-6 items-center">
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-6">
                   <span>Amount:</span>
                   <Badge className="border-zinc-200 dark:border-zinc-700">
                     {mapping.amountColumns && mapping.amountColumns.length
@@ -236,38 +253,40 @@ export function PreviewStep({
                       : "—"}
                   </Badge>
                 </div>
-                <div className="flex justify-left gap-6 items-center">
+                <div className="flex items-center gap-6">
                   <span>Custom 1:</span>
                   <Badge className="border-zinc-200 dark:border-zinc-700">
                     {customFieldList[0] ?? "—"}
                   </Badge>
                 </div>
-                <div className="flex justify-left gap-6 items-center">
+                <div className="flex items-center gap-6">
                   <span>Custom 2:</span>
                   <Badge className="border-zinc-200 dark:border-zinc-700">
                     {customFieldList[1] ?? "—"}
                   </Badge>
                 </div>
-              </div>
 
-              {Object.keys(mapping.customFields).length > 0 && (
-                <div className="space-y-2">
-                  <h5 className="text-sm font-medium">Custom Fields:</h5>
-                  {Object.entries(mapping.customFields).map(
-                    ([fieldName, columnName]) => (
-                      <div
-                        key={fieldName}
-                        className="flex justify-left gap-6 items-center"
-                      >
-                        <span className="text-sm">{fieldName}:</span>
-                        <Badge className="border-transparent bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50">
-                          {columnName}
-                        </Badge>
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
+                {/* Keep dynamic custom fields list below if needed
+                {Object.keys(mapping.customFields).length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <h5 className="text-sm font-medium">Custom Fields:</h5>
+                    {Object.entries(mapping.customFields).map(
+                      ([fieldName, columnName]) => (
+                        <div
+                          key={fieldName}
+                          className="flex items-center gap-6"
+                        >
+                          <span className="text-sm">{fieldName}:</span>
+                          <Badge className="border-transparent bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50">
+                            {columnName}
+                          </Badge>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+                */}
+              </div>
             </div>
           </div>
         </CardContent>

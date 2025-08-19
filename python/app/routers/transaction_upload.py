@@ -1,6 +1,7 @@
 # In python/app/routers/transactions.py
 
 from fastapi import APIRouter, Depends, HTTPException, Body
+import uuid
 from typing import List, Dict, Any
 # Assuming these dependencies provide your Supabase client and authenticated user
 from ..dependencies import get_supabase_client, get_data_cache
@@ -41,9 +42,9 @@ class ProcessedTransaction(Transaction):
 
 
 class ProcessUploadPayload(BaseModel):
-    account_id: str
-    user_id: str
-    transactions: List[Transaction]
+    account_id: str | None = None
+    user_id: str | None = None
+    transactions: List[Transaction] = []
 
 
 @router.post(
@@ -72,6 +73,24 @@ def transaction_upload(
         if (getattr(tx, 'original_description', None) or getattr(tx, 'description', None)) == "refresh data tables":
             data_cache.refresh()
             break
+
+    # Debug: log incoming IDs to help diagnose invalid UUID/empty input causing DB errors
+    print(f"DEBUG: Incoming payload.user_id={repr(payload.user_id)}, account_id={repr(payload.account_id)}")
+
+    # Validate required UUID inputs to avoid passing empty strings to UUID columns
+    if not payload.user_id or str(payload.user_id).strip() == "":
+        raise HTTPException(status_code=400, detail="user_id is required and must be a valid UUID")
+    try:
+        uuid.UUID(str(payload.user_id))
+    except Exception:
+        raise HTTPException(status_code=400, detail="user_id must be a valid UUID")
+
+    if not payload.account_id or str(payload.account_id).strip() == "":
+        raise HTTPException(status_code=400, detail="account_id is required and must be a valid UUID")
+    try:
+        uuid.UUID(str(payload.account_id))
+    except Exception:
+        raise HTTPException(status_code=400, detail="account_id must be a valid UUID")
 
     # Fetch user rules once for this user (sorted by priority)
     user_rules = supabase.table("user_rules").select("*").eq("user_id", payload.user_id).eq("enabled", True).order("priority", desc=True).execute().data or []

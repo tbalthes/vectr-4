@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileUploadStep } from "@/components/private/csv-uploader/FileUploadStep";
@@ -24,6 +25,8 @@ import { useAuth } from "@/hooks/useAuth";
 export default function UploadPage() {
   const router = useRouter();
   const { user, userId, loading: authLoading } = useAuth();
+  const [authUserId, setAuthUserId] = useState<string | null>(userId || null);
+  const supabaseClient = createClientComponentClient();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [csvData, setCsvData] = useState<string[][]>([]);
@@ -82,6 +85,23 @@ export default function UploadPage() {
     console.log("Selected account ID:", accountId);
     setCurrentStep(3);
   };
+
+  // Keep local copy of authenticated user id to avoid transient null during navigation
+  React.useEffect(() => {
+    if (userId) setAuthUserId(userId);
+    // Fallback: if we don't have a userId yet, try fetching directly from Supabase client
+    if (!userId && !authUserId) {
+      (async () => {
+        try {
+          const { data } = await supabaseClient.auth.getUser();
+          const fetchedUser = data?.user;
+          if (fetchedUser?.id) setAuthUserId(fetchedUser.id);
+        } catch (err) {
+          // ignore - user likely not signed in
+        }
+      })();
+    }
+  }, [userId]);
 
   const handlePreviewComplete = () => {
     setCurrentStep(4);
@@ -290,15 +310,24 @@ export default function UploadPage() {
 
           {currentStep === 4 && (
             <>
-              {selectedAccountId ? (
+              {selectedAccountId && userId ? (
                 <PreviewStep
                   data={transformDataForPreview(false)}
                   mapping={mapping}
-                  user_id={userId || ""}
+                  user_id={authUserId || userId || ""}
                   account_id={selectedAccountId}
                   onComplete={handleUploadComplete}
                   onBack={() => setCurrentStep(3)}
                 />
+              ) : selectedAccountId && !userId ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    You are not signed in. Please sign in before completing the import.
+                  </p>
+                  <Button onClick={() => router.push('/login')} variant="outline">
+                    Sign in
+                  </Button>
+                </div>
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">
