@@ -31,11 +31,9 @@ import {
   ChevronsRight,
 } from "lucide-react";
 import { TransactionRow } from "./TransactionRow";
-// Step 1: Import the new, correct type
 import { FormattedTransaction } from "@/types/transactions";
 
-interface TransactionTableProps {
-  // Step 2: Update the props to expect FormattedTransaction[]
+interface AdvancedTransactionTableProps {
   transactions: FormattedTransaction[];
   title?: string;
   className?: string;
@@ -46,33 +44,30 @@ interface TransactionTableProps {
 type SortField = "date" | "amount" | "description" | "categoryName";
 type SortDirection = "asc" | "desc";
 
-export function TransactionTable({
-  // Step 3: Remove the old mock data default. This component should always get its data from the parent page.
+export function AdvancedTransactionTable({
   transactions,
   title = "Transaction History",
   className,
   onEdit,
   onDelete,
-}: TransactionTableProps) {
+}: AdvancedTransactionTableProps) {
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [amountFilter, setAmountFilter] = useState<string>("all");
-
+  
   // Sorting state
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
   // Get unique categories for filter dropdown
   const uniqueCategories = useMemo(() => {
-    const categories = Array.from(
-      new Set(transactions.map((t) => t.categoryName))
-    );
+    const categories = Array.from(new Set(transactions.map(t => t.categoryName)));
     return categories.sort();
   }, [transactions]);
 
@@ -80,34 +75,22 @@ export function TransactionTable({
   const filteredAndSortedTransactions = useMemo(() => {
     const filtered = transactions.filter((transaction) => {
       // Search filter
-      const searchMatch =
-        searchTerm === "" ||
-        transaction.description
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        transaction.originalDescription
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        transaction.merchantName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        transaction.transaction_number
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
+      const searchMatch = searchTerm === "" || 
+        transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.originalDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.merchantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.transaction_number.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Category filter
-      const categoryMatch =
-        categoryFilter === "all" || transaction.categoryName === categoryFilter;
+      const categoryMatch = categoryFilter === "all" || transaction.categoryName === categoryFilter;
 
       // Status filter
-      const statusMatch =
-        statusFilter === "all" ||
+      const statusMatch = statusFilter === "all" || 
         (statusFilter === "needs-review" && transaction.needsReview) ||
         (statusFilter === "verified" && !transaction.needsReview);
 
       // Amount filter
-      const amountMatch =
-        amountFilter === "all" ||
+      const amountMatch = amountFilter === "all" ||
         (amountFilter === "income" && transaction.amount > 0) ||
         (amountFilter === "expense" && transaction.amount < 0);
 
@@ -147,26 +130,13 @@ export function TransactionTable({
     });
 
     return filtered;
-  }, [
-    transactions,
-    searchTerm,
-    categoryFilter,
-    statusFilter,
-    amountFilter,
-    sortField,
-    sortDirection,
-  ]);
+  }, [transactions, searchTerm, categoryFilter, statusFilter, amountFilter, sortField, sortDirection]);
 
   // Pagination
-  const totalPages = Math.ceil(
-    filteredAndSortedTransactions.length / itemsPerPage
-  );
+  const totalPages = Math.ceil(filteredAndSortedTransactions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedTransactions = filteredAndSortedTransactions.slice(
-    startIndex,
-    endIndex
-  );
+  const paginatedTransactions = filteredAndSortedTransactions.slice(startIndex, endIndex);
 
   // Reset to first page when filters change
   const handleFilterChange = () => {
@@ -186,22 +156,18 @@ export function TransactionTable({
     if (sortField !== field) {
       return <ArrowUpDown className="h-3 w-3 text-gray-400" />;
     }
-    return sortDirection === "asc" ? (
-      <ArrowUp className="h-3 w-3 text-blue-600" />
-    ) : (
-      <ArrowDown className="h-3 w-3 text-blue-600" />
-    );
+    return sortDirection === "asc" ? 
+      <ArrowUp className="h-3 w-3 text-blue-600" /> : 
+      <ArrowDown className="h-3 w-3 text-blue-600" />;
   };
 
-  const reviewCount = filteredAndSortedTransactions.filter(
-    (t) => t.needsReview
-  ).length;
+  const reviewCount = filteredAndSortedTransactions.filter((t) => t.needsReview).length;
 
   return (
     <div className={`space-y-6 ${className}`}>
       <Card className="bg-white border border-gray-200 shadow-lg">
-        {/* Enhanced Header with gradient background */}
-        <CardHeader className="pb-3 pt-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        {/* Enhanced Header */}
+        <CardHeader className="pb-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-3xl font-bold text-gray-900 tracking-tight">
@@ -215,21 +181,20 @@ export function TransactionTable({
               {reviewCount > 0 && (
                 <Badge
                   variant="outline"
-                  className="text-xs bg-orange-50 text-orange-700 border-orange-300 font-semibold px-3 py-1 shadow-sm"
+                  className="text-xs bg-orange-50 text-orange-700 border-orange-300 font-semibold px-3 py-1"
                 >
                   {reviewCount} need review
                 </Badge>
               )}
               <div className="text-sm text-blue-700 font-semibold bg-blue-100 px-4 py-2 rounded-lg border border-blue-200 shadow-sm">
-                {filteredAndSortedTransactions.length} of {transactions.length}{" "}
-                transactions
+                {filteredAndSortedTransactions.length} of {transactions.length} transactions
               </div>
             </div>
           </div>
         </CardHeader>
 
         {/* Enhanced Search and Filter Controls */}
-        <div className="p-3 border-b border-gray-200 bg-gray-50">
+        <div className="p-6 border-b border-gray-200 bg-gray-50">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             {/* Search */}
             <div className="lg:col-span-2 relative">
@@ -241,19 +206,16 @@ export function TransactionTable({
                   setSearchTerm(e.target.value);
                   handleFilterChange();
                 }}
-                className="pl-10 bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm"
+                className="pl-10 bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
             {/* Category Filter */}
-            <Select
-              value={categoryFilter}
-              onValueChange={(value) => {
-                setCategoryFilter(value);
-                handleFilterChange();
-              }}
-            >
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 shadow-sm">
+            <Select value={categoryFilter} onValueChange={(value) => {
+              setCategoryFilter(value);
+              handleFilterChange();
+            }}>
+              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -267,14 +229,11 @@ export function TransactionTable({
             </Select>
 
             {/* Status Filter */}
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => {
-                setStatusFilter(value);
-                handleFilterChange();
-              }}
-            >
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 shadow-sm">
+            <Select value={statusFilter} onValueChange={(value) => {
+              setStatusFilter(value);
+              handleFilterChange();
+            }}>
+              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
@@ -285,14 +244,11 @@ export function TransactionTable({
             </Select>
 
             {/* Amount Filter */}
-            <Select
-              value={amountFilter}
-              onValueChange={(value) => {
-                setAmountFilter(value);
-                handleFilterChange();
-              }}
-            >
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 shadow-sm">
+            <Select value={amountFilter} onValueChange={(value) => {
+              setAmountFilter(value);
+              handleFilterChange();
+            }}>
+              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
                 <SelectValue placeholder="All Amounts" />
               </SelectTrigger>
               <SelectContent>
@@ -303,14 +259,11 @@ export function TransactionTable({
             </Select>
 
             {/* Items per page */}
-            <Select
-              value={itemsPerPage.toString()}
-              onValueChange={(value) => {
-                setItemsPerPage(parseInt(value));
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 shadow-sm">
+            <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+              setItemsPerPage(parseInt(value));
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -327,11 +280,11 @@ export function TransactionTable({
           <div className="overflow-x-auto">
             <ScrollArea className="h-[600px]">
               <Table className="min-w-full">
-                {/* Enhanced Sortable Header with improved styling */}
-                <TableHeader className="sticky top-0 z-20 bg-white shadow-sm border-b-2 border-gray-200">
-                  <TableRow className="hover:bg-gray-50 transition-colors">
-                    <TableHead
-                      className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider w-[120px] cursor-pointer hover:bg-blue-50 transition-colors border-r border-gray-100"
+                {/* Enhanced Sortable Header */}
+                <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
+                  <TableRow className="border-b-2 border-gray-200 hover:bg-gray-50">
+                    <TableHead 
+                      className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider w-[120px] cursor-pointer hover:bg-blue-50 transition-colors"
                       onClick={() => handleSort("date")}
                     >
                       <div className="flex items-center gap-2">
@@ -339,8 +292,8 @@ export function TransactionTable({
                         {getSortIcon("date")}
                       </div>
                     </TableHead>
-                    <TableHead
-                      className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider min-w-[250px] cursor-pointer hover:bg-blue-50 transition-colors border-r border-gray-100"
+                    <TableHead 
+                      className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider min-w-[250px] cursor-pointer hover:bg-blue-50 transition-colors"
                       onClick={() => handleSort("description")}
                     >
                       <div className="flex items-center gap-2">
@@ -348,8 +301,8 @@ export function TransactionTable({
                         {getSortIcon("description")}
                       </div>
                     </TableHead>
-                    <TableHead
-                      className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-right w-[140px] cursor-pointer hover:bg-blue-50 transition-colors border-r border-gray-100"
+                    <TableHead 
+                      className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-right w-[140px] cursor-pointer hover:bg-blue-50 transition-colors"
                       onClick={() => handleSort("amount")}
                     >
                       <div className="flex items-center justify-end gap-2">
@@ -357,8 +310,8 @@ export function TransactionTable({
                         {getSortIcon("amount")}
                       </div>
                     </TableHead>
-                    <TableHead
-                      className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[120px] cursor-pointer hover:bg-blue-50 transition-colors border-r border-gray-100"
+                    <TableHead 
+                      className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[120px] cursor-pointer hover:bg-blue-50 transition-colors"
                       onClick={() => handleSort("categoryName")}
                     >
                       <div className="flex items-center justify-center gap-2">
@@ -366,7 +319,7 @@ export function TransactionTable({
                         {getSortIcon("categoryName")}
                       </div>
                     </TableHead>
-                    <TableHead className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[100px] border-r border-gray-100">
+                    <TableHead className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[100px]">
                       STATUS
                     </TableHead>
                     <TableHead className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[80px]">
@@ -375,7 +328,6 @@ export function TransactionTable({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {/* Use paginated transactions instead of all transactions */}
                   {paginatedTransactions.map((transaction, index) => (
                     <TransactionRow
                       key={transaction.id}
@@ -394,9 +346,8 @@ export function TransactionTable({
         {/* Enhanced Pagination */}
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600 font-medium">
-              Showing {startIndex + 1} to{" "}
-              {Math.min(endIndex, filteredAndSortedTransactions.length)} of{" "}
+            <div className="text-sm text-gray-600">
+              Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedTransactions.length)} of{" "}
               {filteredAndSortedTransactions.length} transactions
             </div>
             <div className="flex items-center gap-2">
@@ -405,7 +356,7 @@ export function TransactionTable({
                 size="sm"
                 onClick={() => setCurrentPage(1)}
                 disabled={currentPage === 1}
-                className="border-gray-300 hover:bg-gray-100 shadow-sm"
+                className="border-gray-300 hover:bg-gray-100"
               >
                 <ChevronsLeft className="h-4 w-4" />
               </Button>
@@ -414,11 +365,11 @@ export function TransactionTable({
                 size="sm"
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="border-gray-300 hover:bg-gray-100 shadow-sm"
+                className="border-gray-300 hover:bg-gray-100"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm">
+              <span className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md">
                 {currentPage} of {totalPages}
               </span>
               <Button
@@ -426,7 +377,7 @@ export function TransactionTable({
                 size="sm"
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="border-gray-300 hover:bg-gray-100 shadow-sm"
+                className="border-gray-300 hover:bg-gray-100"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -435,7 +386,7 @@ export function TransactionTable({
                 size="sm"
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={currentPage === totalPages}
-                className="border-gray-300 hover:bg-gray-100 shadow-sm"
+                className="border-gray-300 hover:bg-gray-100"
               >
                 <ChevronsRight className="h-4 w-4" />
               </Button>

@@ -1,65 +1,71 @@
-import { useState, useEffect, useCallback } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { User } from '@supabase/supabase-js';
+"use client";
 
-export function useAuth() {
+import { useState, useEffect } from "react";
+// We still need the correct client hook from the auth helpers
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { User } from "@supabase/supabase-js";
+
+// The return type of our hook for better TypeScript inference
+interface UseAuthReturn {
+  user: User | null;
+  loading: boolean;
+  userId: string | null;
+}
+
+export function useAuth(): UseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
+  // The 'loading' state now represents the initial check for a session.
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   const supabase = createClientComponentClient();
 
-  const getUser = useCallback(async () => {
-    try {
-      // First check if we have a session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        // No session available, user is not authenticated
-        setUser(null);
-        setLoading(false);
-        setInitialized(true);
-        return;
-      }
-
-      // If we have a session, get the user
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Error fetching user:', error);
-        setUser(null);
-      } else {
-        setUser(user);
-      }
-    } catch (error) {
-      console.error('Error in getUser:', error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-      setInitialized(true);
-    }
-  }, [supabase.auth]);
-
   useEffect(() => {
-    if (!initialized) {
-      getUser();
-    }
+    // The onAuthStateChange listener is the single source of truth.
+    // It fires once on load with the initial session, and then for any change.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      // When the listener fires, the initial check is complete.
+      setLoading(false);
+      setUser(session?.user ?? null);
+    });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        if (initialized) {
-          setLoading(false);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth, getUser, initialized]);
+    // The cleanup function for the effect is to unsubscribe from the listener.
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase.auth]); // The effect depends only on the auth client instance.
 
   return {
     user,
     loading,
-    userId: user?.id || null,
+    userId: user?.id ?? null,
   };
 }
+
+// --- HOW TO USE THIS HOOK ---
+/*
+import { useAuth } from '@/hooks/useAuth';
+
+function UserProfileComponent() {
+  const { user, loading, userId } = useAuth();
+
+  if (loading) {
+    // This will show until the initial session check is complete
+    return <div>Loading user information...</div>;
+  }
+
+  if (!user) {
+    // Once loading is false, if there's no user, they are logged out.
+    return <div>Please log in to see your profile.</div>;
+  }
+
+  // If we get here, loading is false and we have a user.
+  return (
+    <div>
+      <h1>Welcome, {user.email}</h1>
+      <p>Your User ID is: {userId}</p>
+    </div>
+  );
+}
+*/

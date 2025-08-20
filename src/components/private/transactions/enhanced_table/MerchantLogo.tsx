@@ -1,42 +1,49 @@
-import { Building2 } from 'lucide-react';
+// This component is mostly correct already, just ensure props are named well.
+import Image from "next/image";
 
 interface MerchantLogoProps {
-  merchant: string;
-  logoUrl?: string;
+  merchantName: string;
+  logoUrl?: string | null; // Can be null
   className?: string;
 }
 
-export function MerchantLogo({ merchant, logoUrl, className = "w-8 h-8" }: MerchantLogoProps) {
+export function MerchantLogo({
+  merchantName,
+  logoUrl,
+  className = "w-8 h-8",
+}: MerchantLogoProps) {
+  // If a logoUrl is provided, try to render it.
   if (logoUrl) {
     return (
-      <img 
-        src={logoUrl} 
-        alt={`${merchant} logo`}
+      <Image
+        src={logoUrl}
+        alt={`${merchantName} logo`}
         className={`${className} rounded-lg object-cover border border-border`}
-        onError={(e) => {
-          e.currentTarget.style.display = 'none';
-          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-        }}
+        width={32}
+        height={32}
+        style={{ objectFit: "cover" }}
+        unoptimized={logoUrl.startsWith("data:")}
       />
     );
   }
 
-  // Generate a color based on merchant name
+  // Fallback to initial if no logoUrl
   const colors = [
-    'bg-chart-1/20 text-chart-1',
-    'bg-chart-2/20 text-chart-2', 
-    'bg-chart-3/20 text-chart-3',
-    'bg-chart-4/20 text-chart-4',
-    'bg-chart-5/20 text-chart-5'
+    "bg-chart-1/20 text-chart-1",
+    "bg-chart-2/20 text-chart-2",
+    "bg-chart-3/20 text-chart-3",
+    "bg-chart-4/20 text-chart-4",
+    "bg-chart-5/20 text-chart-5",
   ];
-  
-  const colorIndex = merchant.length % colors.length;
+  const colorIndex = merchantName.length % colors.length;
   const colorClass = colors[colorIndex];
 
   return (
-    <div className={`${className} ${colorClass} rounded-lg flex items-center justify-center border border-current/20`}>
+    <div
+      className={`${className} ${colorClass} rounded-lg flex items-center justify-center border border-current/20`}
+    >
       <span className="font-semibold text-sm">
-        {merchant.charAt(0).toUpperCase()}
+        {merchantName.charAt(0).toUpperCase()}
       </span>
     </div>
   );

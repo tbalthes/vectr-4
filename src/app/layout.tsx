@@ -1,20 +1,25 @@
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import React from "react";
-import { AuthProvider } from "@/context/AuthContext";
+// Step 4: Import your newly refactored AuthProvider
+import { AuthProvider } from "@/contexts/AuthContext";
 
-export const metadata = {
-  title: "Vectr Financial",
-  description: "Your personal financial command center",
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Vectr-4 Finance",
+  description: "Your financial command center",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
-      <body className="bg-background text-foreground">
+      <body className={inter.className}>
+        {/* Wrap your entire application with the provider */}
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

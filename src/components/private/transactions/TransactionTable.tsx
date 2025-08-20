@@ -28,13 +28,13 @@ export default function TransactionTable({
       return {
         bg: "bg-success/10",
         text: "text-success",
-        icon: "text-success"
+        icon: "text-success",
       };
     } else {
       return {
         bg: "bg-destructive/10",
         text: "text-destructive",
-        icon: "text-destructive"
+        icon: "text-destructive",
       };
     }
   };
@@ -63,11 +63,17 @@ export default function TransactionTable({
                 className="flex items-center justify-between p-4 hover:bg-muted/30 transition-smooth"
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colorClasses.bg} ${colorClasses.text}`}>
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${colorClasses.bg} ${colorClasses.text}`}
+                  >
                     {transaction.type === "income" ? (
-                      <ArrowUpRight className={`h-4 w-4 ${colorClasses.icon}`} />
+                      <ArrowUpRight
+                        className={`h-4 w-4 ${colorClasses.icon}`}
+                      />
                     ) : (
-                      <ArrowDownRight className={`h-4 w-4 ${colorClasses.icon}`} />
+                      <ArrowDownRight
+                        className={`h-4 w-4 ${colorClasses.icon}`}
+                      />
                     )}
                   </div>
                   <div>
@@ -100,7 +106,9 @@ export default function TransactionTable({
                 <div className="flex items-center space-x-3">
                   <span
                     className={`text-sm font-semibold ${
-                      transaction.amount > 0 ? "text-success" : "text-foreground"
+                      transaction.amount > 0
+                        ? "text-success"
+                        : "text-foreground"
                     }`}
                   >
                     {transaction.amount > 0 ? "+" : ""}$

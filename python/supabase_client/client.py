@@ -6,11 +6,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 url = os.environ.get("SUPABASE_URL")
-anon_key = os.environ.get("SUPABASE_KEY")
+service_role_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
 if not url:
     raise EnvironmentError("SUPABASE_URL must be set in the .env file")
-if not anon_key:
-    raise EnvironmentError("SUPABASE_KEY must be set in the .env file")
+if not service_role_key:
+    raise EnvironmentError("SUPABASE_SERVICE_ROLE_KEY must be set in the .env file")
 
-supabase = create_client(url, anon_key)
+supabase = create_client(url, service_role_key)

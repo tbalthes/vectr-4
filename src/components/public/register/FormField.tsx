@@ -1,39 +1,29 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+// The 'ChangeEvent' import has been removed as it is no longer needed.
 
-interface FormFieldProps {
+// This interface accepts all standard input props (like name, type, value, onChange, etc.)
+// in addition to the 'id' and 'label' we need for our custom component.
+interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;
   label: string;
-  type: string;
-  placeholder: string;
-  required?: boolean;
-  value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function FormField({
   id,
   label,
-  type,
-  placeholder,
-  required = false,
-  value,
-  onChange,
+  ...props // Gathers all other passed-in props (name, type, value, onChange, etc.)
 }: FormFieldProps) {
   return (
-    <div className="grid gap-3">
-      <Label htmlFor={id} className="text-label">
+    <div className="grid w-full items-center gap-1.5">
+      <Label htmlFor={id} className="text-sm font-medium text-foreground">
         {label}
       </Label>
       <Input
         id={id}
-        type={type}
-        placeholder={placeholder}
-        className="bg-input border-border text-foreground font-sans"
-        style={{ fontSize: "14px", fontWeight: "var(--font-weight-normal)" }}
-        required={required}
-        value={value}
-        onChange={onChange}
+        className="bg-background border-border focus:ring-primary"
+        // Spreads all the collected props (name, type, value, onChange) onto the Input
+        {...props}
       />
     </div>
   );

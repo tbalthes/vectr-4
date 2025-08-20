@@ -1,5 +1,5 @@
 import React from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,6 +25,7 @@ interface PreviewStepProps {
   mapping: ColumnMapping;
   user_id: string;
   account_id: string;
+  supabase?: SupabaseClient;
   onComplete: () => void;
   onBack: () => void;
   onCancel?: () => void;
@@ -35,6 +36,7 @@ export function PreviewStep({
   mapping,
   user_id,
   account_id,
+  supabase,
   onComplete,
   onBack,
   onCancel,
@@ -78,10 +80,9 @@ export function PreviewStep({
     try {
       // Prefer resolved effectiveUserId from component state. As a last resort try fetching.
       let payloadUserId = effectiveUserId;
-      if (!payloadUserId) {
+      if (!payloadUserId && supabase) {
         try {
           setResolvingUserId(true);
-          const supabase = createClientComponentClient();
           const { data: userData } = await supabase.auth.getUser();
           const fetchedUser = userData?.user;
           if (fetchedUser?.id) payloadUserId = fetchedUser.id;
@@ -116,7 +117,13 @@ export function PreviewStep({
           // Filter out undefined values and format user_metadata
           const user_metadata: Record<string, string | number> = {};
           Object.entries(rest).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
+            // Skip system fields that shouldn't be in user_metadata
+            const isSystemField = key.startsWith('_') ||
+                                 key.toLowerCase().includes('rowindex') ||
+                                 key.toLowerCase().includes('formattedamount') ||
+                                 key.toLowerCase().includes('index');
+                                 
+            if (!isSystemField && value !== undefined && value !== null && value !== "") {
               user_metadata[key] = value;
             }
           });

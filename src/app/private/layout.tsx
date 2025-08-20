@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 
 export default function PrivateLayout({
@@ -30,7 +30,7 @@ export default function PrivateLayout({
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 p-6">{children}</main>
+      <main className="flex-1 p-3">{children}</main>
     </div>
   );
 }

@@ -1,75 +1,159 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import { TransactionTable } from "@/components/private/transactions/enhanced_table/TransactionTable";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TransactionFromApi, FormattedTransaction } from "@/types/transactions";
+import { useAuth } from "@/contexts/AuthContext";
 
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
-import AddTransactionModal from "@/components/private/transactions/AddTransactionModal";
-import SearchBar from "@/components/private/transactions/SearchBar";
-import PageHeader from "@/components/private/PageHeader";
-import TransactionTable from "@/components/private/transactions/TransactionTable";
+// Helper function to format API data for UI
+const formatApiDataForUI = (
+  apiData: TransactionFromApi[]
+): FormattedTransaction[] => {
+  return apiData.map((tx) => {
+    // Parse user_metadata if it's a string (JSONB from Supabase)
+    let parsedUserMetadata = null;
+    if (tx.user_metadata) {
+      try {
+        if (typeof tx.user_metadata === 'string') {
+          parsedUserMetadata = JSON.parse(tx.user_metadata);
+        } else {
+          parsedUserMetadata = tx.user_metadata;
+        }
+        
+        // Debug log to see what we're getting
+        console.log('Parsed user_metadata for transaction:', tx.id, parsedUserMetadata);
+        
+        // Filter out unwanted fields and keep only user-mapped custom fields
+        if (parsedUserMetadata && typeof parsedUserMetadata === 'object') {
+          const filteredMetadata: Record<string, string | number | boolean> = {};
+          Object.entries(parsedUserMetadata).forEach(([key, value]) => {
+            // Skip internal fields like _rowIndex, formattedAmount, and other system fields
+            const isSystemField = key.startsWith('_') ||
+                                 key.toLowerCase().includes('rowindex') ||
+                                 key.toLowerCase().includes('formattedamount') ||
+                                 key.toLowerCase().includes('index');
+            
+            if (!isSystemField &&
+                value !== null &&
+                value !== undefined &&
+                value !== '' &&
+                typeof value !== 'object') {
+              filteredMetadata[key] = value as string | number | boolean;
+            }
+          });
+          parsedUserMetadata = Object.keys(filteredMetadata).length > 0 ? filteredMetadata : null;
+        }
+      } catch (error) {
+        console.warn('Failed to parse user_metadata:', error);
+        parsedUserMetadata = tx.user_metadata;
+      }
+    }
 
-// Swap this import with a Supabase query for production
-import { allTransactions as rawTransactions } from "@/data/transaction-data";
-import type { Transaction } from "@/types/transactions";
+    // Format transaction number to remove decimals and ensure alphanumeric
+    const formattedTransactionNumber = tx.transaction_number
+      ? String(tx.transaction_number).replace(/\.\d+$/, '')
+      : '';
 
-export default function Transactions() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedAccount, setSelectedAccount] = useState("all");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    // Debug log to see what category data we're getting
+    console.log('Transaction category data:', {
+      transactionId: tx.id,
+      merchantName: tx.merchants?.name,
+      categoryName: tx.merchants?.categories?.name,
+      categoryIcon: tx.merchants?.categories?.icon,
+      fullMerchantData: tx.merchants
+    });
 
-  const allTransactions = rawTransactions as Transaction[];
-  const filteredTransactions = allTransactions.filter((transaction) => {
-    const matchesSearch = transaction.description
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" || transaction.category === selectedCategory;
-    const matchesAccount =
-      selectedAccount === "all" || transaction.account === selectedAccount;
-    return matchesSearch && matchesCategory && matchesAccount;
+    return {
+      id: tx.id,
+      transaction_number: formattedTransactionNumber,
+      date: tx.date,
+      amount: tx.amount, // Keep original amount (negative for debits, positive for credits)
+      originalDescription: tx.original_description,
+      balance: tx.balance,
+      userMetadata: parsedUserMetadata,
+      needsReview: tx.needs_review || false,
+      description: tx.merchants?.name || tx.clean_description,
+      merchantName: tx.merchants?.name || "Unknown Merchant",
+      merchantLogoUrl: tx.merchants?.logo_url || null,
+      categoryName: tx.merchants?.categories?.name || "Uncategorized",
+      categoryIcon: tx.merchants?.categories?.icon || "Package",
+    };
   });
+};
 
-  const categories = [...new Set(allTransactions.map((t) => t.category))];
-  const accounts = [...new Set(allTransactions.map((t) => t.account))];
+export default function TransactionsPage() {
+  const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      // Check if user is authenticated
+      if (!user) {
+        console.error("No authenticated user found. Please log in.");
+        setError("You must be logged in to view this page.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Authenticated user found:", user.id);
+
+      try {
+        // Use the API endpoint that bypasses RLS
+        const response = await fetch('/api/transactions');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const rawTransactions: TransactionFromApi[] = await response.json();
+        const formattedTransactions = formatApiDataForUI(rawTransactions);
+        setTransactions(formattedTransactions);
+      } catch (err) {
+        setError("Failed to fetch transactions.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  const handleEditTransaction = (transaction: FormattedTransaction) => {
+    /* ... */
+  };
+  const handleDeleteTransaction = async (transaction: FormattedTransaction) => {
+    /* ... */
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-[700px] w-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="p-6 text-destructive font-semibold">{error}</div>;
+  }
+
+  // Also good practice to handle the case where a user has no transactions
+  if (transactions.length === 0) {
+    return <div className="p-6">No transactions found.</div>;
+  }
 
   return (
-    <div className="flex-1 space-y-6 p-6 animate-fade-in">
-      {/* Header */}
-      <PageHeader
-        title="Transactions"
-        subtitle="Track and manage all your financial transactions"
-        actions={
-          <>
-            <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-            <AddTransactionModal
-              open={isAddDialogOpen}
-              setOpen={setIsAddDialogOpen}
-            />
-          </>
-        }
-      />
-
-      {/* Filters/Search Bar */}
-      <SearchBar
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        selectedAccount={selectedAccount}
-        setSelectedAccount={setSelectedAccount}
-        categories={categories}
-        accounts={accounts}
-      />
-
-      {/* Transactions Table */}
+    <div className="p-6">
       <TransactionTable
-        transactions={filteredTransactions}
-        allCount={allTransactions.length}
+        transactions={transactions}
+        onEdit={handleEditTransaction}
+        onDelete={handleDeleteTransaction}
       />
     </div>
   );

@@ -19,7 +19,7 @@ import {
   User,
   LogOut,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Sidebar() {
   const pathname = usePathname();

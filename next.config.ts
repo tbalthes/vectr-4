@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.bathroomtakeaway.com",
       },
+      {
+        protocol: "https",
+        hostname: "logo.clearbit.com",
+      },
     ],
   },
 };

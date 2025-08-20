@@ -20,13 +20,12 @@ import {
   type HeaderDetectionResult,
 } from "@/components/private/csv-uploader/csv-utils";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function UploadPage() {
   const router = useRouter();
-  const { user, userId, loading: authLoading } = useAuth();
-  const [authUserId, setAuthUserId] = useState<string | null>(userId || null);
-  const supabaseClient = createClientComponentClient();
+  const { user, loading: authLoading, supabase: supabaseClient } = useAuth();
+  const [authUserId, setAuthUserId] = useState<string | null>(user?.id || null);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [csvData, setCsvData] = useState<string[][]>([]);
@@ -88,20 +87,8 @@ export default function UploadPage() {
 
   // Keep local copy of authenticated user id to avoid transient null during navigation
   React.useEffect(() => {
-    if (userId) setAuthUserId(userId);
-    // Fallback: if we don't have a userId yet, try fetching directly from Supabase client
-    if (!userId && !authUserId) {
-      (async () => {
-        try {
-          const { data } = await supabaseClient.auth.getUser();
-          const fetchedUser = data?.user;
-          if (fetchedUser?.id) setAuthUserId(fetchedUser.id);
-        } catch (err) {
-          // ignore - user likely not signed in
-        }
-      })();
-    }
-  }, [userId]);
+    if (user?.id) setAuthUserId(user.id);
+  }, [user?.id]);
 
   const handlePreviewComplete = () => {
     setCurrentStep(4);
@@ -192,7 +179,7 @@ export default function UploadPage() {
   ];
 
   // Only show loading state if we've been loading for a while
-  if (authLoading && !userId) {
+  if (authLoading && !user) {
     return (
       <div className="flex-1 space-y-6 p-6 animate-fade-in">
         <div className="flex items-center justify-center h-64">
@@ -314,8 +301,9 @@ export default function UploadPage() {
               <PreviewStep
                 data={transformDataForPreview(false)}
                 mapping={mapping}
-                user_id={authUserId || userId || ""}
+                user_id={authUserId || user?.id || ""}
                 account_id={selectedAccountId}
+                supabase={supabaseClient}
                 onComplete={handleUploadComplete}
                 onBack={() => setCurrentStep(3)}
               />

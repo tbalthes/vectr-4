@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import {
   Edit3,
@@ -6,25 +8,23 @@ import {
   AlertTriangle,
   ArrowUpRight,
   ArrowDownLeft,
+  Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { CategoryIcon } from "./CategoryIcon";
 import { MerchantLogo } from "./MerchantLogo";
 import { TransactionDetails } from "./TransactionDetails";
-import { Transaction } from "@/data/transaction-table";
+// Step 1: Import the new, flattened transaction type
+import { FormattedTransaction } from "@/types/transactions";
 
 interface TransactionRowProps {
-  transaction: Transaction;
-  onEdit: (transaction: Transaction) => void;
-  onDelete: (transaction: Transaction) => void;
-  isSelected: boolean;
+  transaction: FormattedTransaction;
+  onEdit: (transaction: FormattedTransaction) => void;
+  onDelete: (transaction: FormattedTransaction) => void;
+  // isSelected is now managed by the parent page if needed, but we remove it for simplicity
+  // isSelected: boolean;
   index: number;
 }
 
@@ -32,13 +32,15 @@ export function TransactionRow({
   transaction,
   onEdit,
   onDelete,
-  isSelected,
   index,
 }: TransactionRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Helper function to format the transaction amount and determine its type
   const formatAmount = (amount: number) => {
-    const isIncome = amount > 0;
+    const isCredit = amount > 0; // Positive amounts are credits (income)
+    const isDebit = amount < 0;  // Negative amounts are debits (expenses)
+    
     const formattedAmount = Math.abs(amount).toLocaleString("en-US", {
       style: "currency",
       currency: "USD",
@@ -46,157 +48,188 @@ export function TransactionRow({
 
     return {
       amount: formattedAmount,
-      isIncome,
-      className: isIncome
-        ? "text-chart-2 font-semibold"
-        : "text-foreground font-semibold",
+      isCredit,
+      isDebit,
+      className: isCredit
+        ? "text-chart-2 font-semibold" // Green for credits/income
+        : "text-red-600 font-semibold", // Red for debits/expenses
     };
   };
 
+  // Helper function to format the date into two parts with better styling
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    const today = new Date();
+    const isToday = date.toDateString() === today.toDateString();
+    
     return {
       main: date.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       }),
-      year: date.getFullYear().toString().slice(-2),
+      year: date.getFullYear().toString(),
+      isToday,
+      fullDate: date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      })
     };
   };
 
   const {
     amount,
-    isIncome,
+    isCredit,
+    isDebit,
     className: amountClassName,
   } = formatAmount(transaction.amount);
   const dateFormatted = formatDate(transaction.date);
 
   return (
-    <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+    <>
       <TableRow
-        className={`group hover:bg-accent/30 transition-all duration-200 border-b border-border/50 ${
-          isSelected ? "bg-accent/50" : ""
-        } ${index % 2 === 0 ? "bg-background" : "bg-muted/20"} ${
-          transaction.needs_review ? "border-l-4 border-l-chart-1" : ""
+        className={`group hover:bg-accent/30 transition-colors duration-200 border-b border-border/50 cursor-pointer ${
+          index % 2 === 0 ? "bg-background" : "bg-muted/20"
+        } ${
+          // Step 2: Use the new camelCase prop name
+          transaction.needsReview ? "border-l-4 border-l-chart-1" : ""
         }`}
+        onClick={() => setIsExpanded(!isExpanded)}
       >
-        {/* Date */}
-        <TableCell className="px-6 py-4">
-          <div className="text-center">
-            <div className="text-sm font-medium text-foreground">
-              {dateFormatted.main}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {dateFormatted.year}
-            </div>
-          </div>
-        </TableCell>
-
-        {/* Description */}
-        <TableCell className="px-6 py-4">
-          <div className="flex items-center gap-3">
-            <MerchantLogo
-              merchant={transaction.clean_description}
-              logoUrl={transaction.merchantLogo}
-              className="w-8 h-8 flex-shrink-0"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="font-medium text-foreground truncate">
-                {transaction.clean_description}
+          {/* Date */}
+          <TableCell className="px-3 sm:px-6 py-4">
+            <div className="text-center relative">
+              {transaction.needsReview && (
+                <Flag className="w-3 h-3 text-chart-1 absolute -top-1 -right-1" />
+              )}
+              <div className={`text-sm font-medium ${dateFormatted.isToday ? 'text-chart-2' : 'text-foreground'}`}>
+                {dateFormatted.main}
               </div>
-              <div className="text-xs text-muted-foreground truncate">
-                {transaction.category}
+              <div className="text-xs text-muted-foreground">
+                {dateFormatted.year}
               </div>
-              {transaction.needs_review && (
-                <div className="flex items-center gap-1 mt-1">
-                  <AlertTriangle className="w-3 h-3 text-chart-1" />
-                  <span className="text-xs text-chart-1 font-medium">
-                    Needs Review
-                  </span>
+              {dateFormatted.isToday && (
+                <div className="text-xs text-chart-2 font-medium">
+                  Today
                 </div>
               )}
             </div>
-          </div>
-        </TableCell>
+          </TableCell>
 
-        {/* Amount */}
-        <TableCell className="px-6 py-4 text-right">
-          <div className="flex items-center justify-end gap-2">
-            {isIncome ? (
-              <ArrowUpRight className="w-4 h-4 text-chart-2 flex-shrink-0" />
-            ) : (
-              <ArrowDownLeft className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            )}
-            <span className={`text-lg ${amountClassName}`}>
-              {isIncome ? "+" : ""}
-              {amount}
-            </span>
-          </div>
-        </TableCell>
-
-        {/* Category Icon */}
-        <TableCell className="px-6 py-4">
-          <div className="flex items-center justify-center">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 border border-primary/20">
-              <CategoryIcon
-                category={transaction.mainCategory}
-                className="w-5 h-5 text-primary"
+          {/* Description */}
+          <TableCell className="px-3 sm:px-6 py-4">
+            <div className="flex items-center gap-3">
+              {/* Step 3: Pass data-driven props to MerchantLogo */}
+              <MerchantLogo
+                merchantName={transaction.merchantName}
+                logoUrl={transaction.merchantLogoUrl}
+                className="w-8 h-8 flex-shrink-0"
               />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-foreground truncate">
+                  {transaction.description}
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {transaction.categoryName}
+                </div>
+                {transaction.needsReview && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <AlertTriangle className="w-3 h-3 text-chart-1" />
+                    <span className="text-xs text-chart-1 font-medium">
+                      Needs Review
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </TableCell>
+          </TableCell>
 
-        {/* Status */}
-        <TableCell className="px-6 py-4 text-center">
-          {transaction.needs_review ? (
-            <Badge
-              variant="destructive"
-              className="text-xs bg-chart-1/20 text-chart-1 border-chart-1/30"
-            >
-              Review
-            </Badge>
-          ) : (
-            <Badge
-              variant="secondary"
-              className="text-xs bg-chart-2/20 text-chart-2 border-chart-2/30"
-            >
-              Verified
-            </Badge>
-          )}
-        </TableCell>
+          {/* Amount */}
+          <TableCell className="px-3 sm:px-6 py-4 text-right">
+            <div className="flex items-center justify-end gap-2">
+              {isCredit ? (
+                <ArrowUpRight className="w-4 h-4 text-chart-2 flex-shrink-0" />
+              ) : (
+                <ArrowDownLeft className="w-4 h-4 text-red-600 flex-shrink-0" />
+              )}
+              <span className={`text-lg ${amountClassName}`}>
+                {isCredit ? "+" : "-"}
+                {amount}
+              </span>
+            </div>
+          </TableCell>
 
-        {/* Details Toggle */}
-        <TableCell className="px-6 py-4">
-          <div className="flex items-center justify-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 opacity-60 group-hover:opacity-100 transition-opacity duration-200 hover:bg-primary/10 hover:text-primary"
-              onClick={() => onEdit(transaction)}
-            >
-              <Edit3 className="w-4 h-4" />
-            </Button>
+          {/* Category Icon */}
+          <TableCell className="px-3 sm:px-6 py-4">
+            <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 border border-primary/20">
+                {/* Step 4: Pass the data-driven icon name to CategoryIcon */}
+                <CategoryIcon
+                  iconName={transaction.categoryIcon}
+                  className="w-5 h-5 text-primary"
+                />
+              </div>
+            </div>
+          </TableCell>
 
-            <CollapsibleTrigger asChild>
+          {/* Status */}
+          <TableCell className="px-3 sm:px-6 py-4 text-center">
+            {transaction.needsReview ? (
+              <Badge
+                variant="outline"
+                className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100 cursor-pointer transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // TODO: Add toggle functionality
+                }}
+              >
+                Review
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="text-xs bg-green-50 text-green-700 border-green-300 hover:bg-green-100 cursor-pointer transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // TODO: Add toggle functionality
+                }}
+              >
+                Verified
+              </Badge>
+            )}
+          </TableCell>
+
+          {/* Details Toggle */}
+          <TableCell className="px-3 sm:px-6 py-4">
+            <div className="flex items-center justify-center gap-1">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 opacity-60 group-hover:opacity-100 transition-all duration-200 hover:bg-accent"
+                className="h-8 w-8 p-0 opacity-60 group-hover:opacity-100 transition-opacity duration-200 hover:bg-primary/10 hover:text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(transaction);
+                }}
               >
+                <Edit3 className="w-4 h-4" />
+              </Button>
+
+              <div className="h-8 w-8 p-0 opacity-60 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center">
                 {isExpanded ? (
                   <ChevronDown className="w-4 h-4" />
                 ) : (
                   <ChevronRight className="w-4 h-4" />
                 )}
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-        </TableCell>
-      </TableRow>
+              </div>
+            </div>
+          </TableCell>
+        </TableRow>
 
-      <CollapsibleContent asChild>
-        <TableRow className="border-b-0">
+      {isExpanded && (
+        <TableRow className="border-b-0 bg-muted/20">
           <TableCell colSpan={6} className="p-0">
+            {/* This component will also need to be updated to accept FormattedTransaction */}
             <TransactionDetails
               transaction={transaction}
               onEdit={onEdit}
@@ -204,7 +237,7 @@ export function TransactionRow({
             />
           </TableCell>
         </TableRow>
-      </CollapsibleContent>
-    </Collapsible>
+      )}
+    </>
   );
 }
