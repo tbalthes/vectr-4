@@ -19,7 +19,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {/* Wrap your entire application with the provider */}
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

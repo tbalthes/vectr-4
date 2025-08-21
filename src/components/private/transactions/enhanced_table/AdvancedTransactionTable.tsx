@@ -56,18 +56,20 @@ export function AdvancedTransactionTable({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [amountFilter, setAmountFilter] = useState<string>("all");
-  
+
   // Sorting state
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
   // Get unique categories for filter dropdown
   const uniqueCategories = useMemo(() => {
-    const categories = Array.from(new Set(transactions.map(t => t.categoryName)));
+    const categories = Array.from(
+      new Set(transactions.map((t) => t.categoryName))
+    );
     return categories.sort();
   }, [transactions]);
 
@@ -75,22 +77,34 @@ export function AdvancedTransactionTable({
   const filteredAndSortedTransactions = useMemo(() => {
     const filtered = transactions.filter((transaction) => {
       // Search filter
-      const searchMatch = searchTerm === "" || 
-        transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.originalDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.merchantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.transaction_number.toLowerCase().includes(searchTerm.toLowerCase());
+      const searchMatch =
+        searchTerm === "" ||
+        transaction.description
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        transaction.originalDescription
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        transaction.merchantName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        transaction.transaction_number
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
 
       // Category filter
-      const categoryMatch = categoryFilter === "all" || transaction.categoryName === categoryFilter;
+      const categoryMatch =
+        categoryFilter === "all" || transaction.categoryName === categoryFilter;
 
       // Status filter
-      const statusMatch = statusFilter === "all" || 
+      const statusMatch =
+        statusFilter === "all" ||
         (statusFilter === "needs-review" && transaction.needsReview) ||
         (statusFilter === "verified" && !transaction.needsReview);
 
       // Amount filter
-      const amountMatch = amountFilter === "all" ||
+      const amountMatch =
+        amountFilter === "all" ||
         (amountFilter === "income" && transaction.amount > 0) ||
         (amountFilter === "expense" && transaction.amount < 0);
 
@@ -130,13 +144,26 @@ export function AdvancedTransactionTable({
     });
 
     return filtered;
-  }, [transactions, searchTerm, categoryFilter, statusFilter, amountFilter, sortField, sortDirection]);
+  }, [
+    transactions,
+    searchTerm,
+    categoryFilter,
+    statusFilter,
+    amountFilter,
+    sortField,
+    sortDirection,
+  ]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredAndSortedTransactions.length / itemsPerPage);
+  const totalPages = Math.ceil(
+    filteredAndSortedTransactions.length / itemsPerPage
+  );
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedTransactions = filteredAndSortedTransactions.slice(startIndex, endIndex);
+  const paginatedTransactions = filteredAndSortedTransactions.slice(
+    startIndex,
+    endIndex
+  );
 
   // Reset to first page when filters change
   const handleFilterChange = () => {
@@ -156,12 +183,16 @@ export function AdvancedTransactionTable({
     if (sortField !== field) {
       return <ArrowUpDown className="h-3 w-3 text-gray-400" />;
     }
-    return sortDirection === "asc" ? 
-      <ArrowUp className="h-3 w-3 text-blue-600" /> : 
-      <ArrowDown className="h-3 w-3 text-blue-600" />;
+    return sortDirection === "asc" ? (
+      <ArrowUp className="h-3 w-3 text-blue-600" />
+    ) : (
+      <ArrowDown className="h-3 w-3 text-blue-600" />
+    );
   };
 
-  const reviewCount = filteredAndSortedTransactions.filter((t) => t.needsReview).length;
+  const reviewCount = filteredAndSortedTransactions.filter(
+    (t) => t.needsReview
+  ).length;
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -187,7 +218,8 @@ export function AdvancedTransactionTable({
                 </Badge>
               )}
               <div className="text-sm text-blue-700 font-semibold bg-blue-100 px-4 py-2 rounded-lg border border-blue-200 shadow-sm">
-                {filteredAndSortedTransactions.length} of {transactions.length} transactions
+                {filteredAndSortedTransactions.length} of {transactions.length}{" "}
+                transactions
               </div>
             </div>
           </div>
@@ -211,10 +243,13 @@ export function AdvancedTransactionTable({
             </div>
 
             {/* Category Filter */}
-            <Select value={categoryFilter} onValueChange={(value) => {
-              setCategoryFilter(value);
-              handleFilterChange();
-            }}>
+            <Select
+              value={categoryFilter}
+              onValueChange={(value) => {
+                setCategoryFilter(value);
+                handleFilterChange();
+              }}
+            >
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
@@ -229,10 +264,13 @@ export function AdvancedTransactionTable({
             </Select>
 
             {/* Status Filter */}
-            <Select value={statusFilter} onValueChange={(value) => {
-              setStatusFilter(value);
-              handleFilterChange();
-            }}>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                handleFilterChange();
+              }}
+            >
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
@@ -244,10 +282,13 @@ export function AdvancedTransactionTable({
             </Select>
 
             {/* Amount Filter */}
-            <Select value={amountFilter} onValueChange={(value) => {
-              setAmountFilter(value);
-              handleFilterChange();
-            }}>
+            <Select
+              value={amountFilter}
+              onValueChange={(value) => {
+                setAmountFilter(value);
+                handleFilterChange();
+              }}
+            >
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
                 <SelectValue placeholder="All Amounts" />
               </SelectTrigger>
@@ -259,10 +300,13 @@ export function AdvancedTransactionTable({
             </Select>
 
             {/* Items per page */}
-            <Select value={itemsPerPage.toString()} onValueChange={(value) => {
-              setItemsPerPage(parseInt(value));
-              setCurrentPage(1);
-            }}>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => {
+                setItemsPerPage(parseInt(value));
+                setCurrentPage(1);
+              }}
+            >
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500">
                 <SelectValue />
               </SelectTrigger>
@@ -283,7 +327,7 @@ export function AdvancedTransactionTable({
                 {/* Enhanced Sortable Header */}
                 <TableHeader className="sticky top-0 z-20 bg-white shadow-sm">
                   <TableRow className="border-b-2 border-gray-200 hover:bg-gray-50">
-                    <TableHead 
+                    <TableHead
                       className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider w-[120px] cursor-pointer hover:bg-blue-50 transition-colors"
                       onClick={() => handleSort("date")}
                     >
@@ -292,7 +336,7 @@ export function AdvancedTransactionTable({
                         {getSortIcon("date")}
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider min-w-[250px] cursor-pointer hover:bg-blue-50 transition-colors"
                       onClick={() => handleSort("description")}
                     >
@@ -301,7 +345,7 @@ export function AdvancedTransactionTable({
                         {getSortIcon("description")}
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-right w-[140px] cursor-pointer hover:bg-blue-50 transition-colors"
                       onClick={() => handleSort("amount")}
                     >
@@ -310,7 +354,7 @@ export function AdvancedTransactionTable({
                         {getSortIcon("amount")}
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[120px] cursor-pointer hover:bg-blue-50 transition-colors"
                       onClick={() => handleSort("categoryName")}
                     >
@@ -347,7 +391,8 @@ export function AdvancedTransactionTable({
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedTransactions.length)} of{" "}
+              Showing {startIndex + 1} to{" "}
+              {Math.min(endIndex, filteredAndSortedTransactions.length)} of{" "}
               {filteredAndSortedTransactions.length} transactions
             </div>
             <div className="flex items-center gap-2">

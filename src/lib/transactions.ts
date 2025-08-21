@@ -29,6 +29,7 @@ export async function getTransactionsWithDetails(
       balance,
       user_metadata,
       needs_review,
+      transaction_note,
       user_id,
       merchants (
         name,
@@ -56,4 +57,29 @@ export async function getTransactionsWithDetails(
 
   console.log(`Fetched ${data?.length || 0} transactions for user ${user.id}`);
   return data as unknown as TransactionFromApi[];
+}
+
+export async function updateTransactionNote(
+  supabase: SupabaseClient,
+  transactionId: string,
+  note: string
+): Promise<void> {
+  // First, let's check if we have an authenticated user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user) {
+    console.error("Authentication error:", userError);
+    throw new Error("User not authenticated");
+  }
+
+  const { error } = await supabase
+    .from("transactions")
+    .update({ transaction_note: note })
+    .eq("id", transactionId)
+    .eq("user_id", user.id); // Ensure user can only update their own transactions
+
+  if (error) {
+    console.error("Error updating transaction note:", error);
+    throw new Error("Failed to update transaction note");
+  }
 }

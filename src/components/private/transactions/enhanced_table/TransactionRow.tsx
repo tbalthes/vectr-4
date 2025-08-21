@@ -9,11 +9,12 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Flag,
+  StickyNote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CategoryIcon } from "./CategoryIcon";
+import CategoryIcon from "./CategoryIcon";
 import { MerchantLogo } from "./MerchantLogo";
 import { TransactionDetails } from "./TransactionDetails";
 // Step 1: Import the new, flattened transaction type
@@ -23,6 +24,7 @@ interface TransactionRowProps {
   transaction: FormattedTransaction;
   onEdit: (transaction: FormattedTransaction) => void;
   onDelete: (transaction: FormattedTransaction) => void;
+  onUpdateNote?: (transactionId: string, note: string) => Promise<void>;
   // isSelected is now managed by the parent page if needed, but we remove it for simplicity
   // isSelected: boolean;
   index: number;
@@ -32,6 +34,7 @@ export function TransactionRow({
   transaction,
   onEdit,
   onDelete,
+  onUpdateNote,
   index,
 }: TransactionRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -98,7 +101,7 @@ export function TransactionRow({
         onClick={() => setIsExpanded(!isExpanded)}
       >
           {/* Date */}
-          <TableCell className="px-3 sm:px-6 py-4">
+          <TableCell className="p-2">
             <div className="text-center relative">
               {transaction.needsReview && (
                 <Flag className="w-3 h-3 text-chart-1 absolute -top-1 -right-1" />
@@ -118,7 +121,7 @@ export function TransactionRow({
           </TableCell>
 
           {/* Description */}
-          <TableCell className="px-3 sm:px-6 py-4">
+          <TableCell className="p-2">
             <div className="flex items-center gap-3">
               {/* Step 3: Pass data-driven props to MerchantLogo */}
               <MerchantLogo
@@ -127,8 +130,11 @@ export function TransactionRow({
                 className="w-8 h-8 flex-shrink-0"
               />
               <div className="min-w-0 flex-1">
-                <div className="font-medium text-foreground truncate">
+                <div className="font-medium text-foreground truncate flex items-center gap-2">
                   {transaction.description}
+                  {transaction.note && (
+                    <StickyNote className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                  )}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">
                   {transaction.categoryName}
@@ -137,7 +143,7 @@ export function TransactionRow({
                   <div className="flex items-center gap-1 mt-1">
                     <AlertTriangle className="w-3 h-3 text-chart-1" />
                     <span className="text-xs text-chart-1 font-medium">
-                      Needs Review
+                      Review
                     </span>
                   </div>
                 )}
@@ -146,7 +152,7 @@ export function TransactionRow({
           </TableCell>
 
           {/* Amount */}
-          <TableCell className="px-3 sm:px-6 py-4 text-right">
+          <TableCell className="p-2 text-right">
             <div className="flex items-center justify-end gap-2">
               {isCredit ? (
                 <ArrowUpRight className="w-4 h-4 text-chart-2 flex-shrink-0" />
@@ -161,7 +167,7 @@ export function TransactionRow({
           </TableCell>
 
           {/* Category Icon */}
-          <TableCell className="px-3 sm:px-6 py-4">
+          <TableCell className="p-2">
             <div className="flex items-center justify-center">
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 border border-primary/20">
                 {/* Step 4: Pass the data-driven icon name to CategoryIcon */}
@@ -174,7 +180,7 @@ export function TransactionRow({
           </TableCell>
 
           {/* Status */}
-          <TableCell className="px-3 sm:px-6 py-4 text-center">
+          <TableCell className="p-2 text-center">
             {transaction.needsReview ? (
               <Badge
                 variant="outline"
@@ -201,7 +207,7 @@ export function TransactionRow({
           </TableCell>
 
           {/* Details Toggle */}
-          <TableCell className="px-3 sm:px-6 py-4">
+          <TableCell className="p-2">
             <div className="flex items-center justify-center gap-1">
               <Button
                 variant="ghost"
@@ -227,13 +233,11 @@ export function TransactionRow({
         </TableRow>
 
       {isExpanded && (
-        <TableRow className="border-b-0 bg-muted/20">
-          <TableCell colSpan={6} className="p-0">
-            {/* This component will also need to be updated to accept FormattedTransaction */}
+        <TableRow className="border-b-0 bg-muted/5">
+          <TableCell colSpan={6} className="p-0 !bg-background !border-t-0">
             <TransactionDetails
               transaction={transaction}
-              onEdit={onEdit}
-              onDelete={onDelete}
+              onUpdateNote={onUpdateNote}
             />
           </TableCell>
         </TableRow>

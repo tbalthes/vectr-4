@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
+// ...existing code...
 
 export default function PrivateLayout({
   children,
@@ -12,6 +13,26 @@ export default function PrivateLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  // Sidebar is open by default on desktop, closed on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(
+    typeof window !== "undefined" && window.innerWidth >= 768
+  );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Listen for window resize to update sidebar open state
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    // Set initial state
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -29,8 +50,46 @@ export default function PrivateLayout({
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-3">{children}</main>
+      {/* Sidebar: overlays on mobile, fixed on desktop */}
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsible={true}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+      {/* Hamburger button for mobile */}
+      {!sidebarOpen && (
+        <button
+          className="md:hidden fixed top-4 left-4 z-40 bg-white rounded-full shadow p-2 border border-slate-200"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open sidebar"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+      )}
+      {/* Main content: margin-left on desktop if sidebar open, none on mobile */}
+      <main
+        className={`flex-1 p-3 transition-all duration-200 ${
+          sidebarOpen && !sidebarCollapsed
+            ? "md:ml-[var(--sidebar-width)]"
+            : "md:ml-[var(--sidebar-collapsed-width)]"
+        }`}
+      >
+        {children}
+      </main>
     </div>
   );
 }

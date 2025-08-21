@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { TransactionTable } from "@/components/private/transactions/enhanced_table/TransactionTable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionFromApi, FormattedTransaction } from "@/types/transactions";
 import { useAuth } from "@/contexts/AuthContext";
+import { updateTransactionNote } from "@/lib/transactions";
+import PageHeader from "@/components/private/PageHeader";
 
 // Helper function to format API data for UI
 const formatApiDataForUI = (
@@ -15,53 +18,62 @@ const formatApiDataForUI = (
     let parsedUserMetadata = null;
     if (tx.user_metadata) {
       try {
-        if (typeof tx.user_metadata === 'string') {
+        if (typeof tx.user_metadata === "string") {
           parsedUserMetadata = JSON.parse(tx.user_metadata);
         } else {
           parsedUserMetadata = tx.user_metadata;
         }
-        
+
         // Debug log to see what we're getting
-        console.log('Parsed user_metadata for transaction:', tx.id, parsedUserMetadata);
-        
+        console.log(
+          "Parsed user_metadata for transaction:",
+          tx.id,
+          parsedUserMetadata
+        );
+
         // Filter out unwanted fields and keep only user-mapped custom fields
-        if (parsedUserMetadata && typeof parsedUserMetadata === 'object') {
-          const filteredMetadata: Record<string, string | number | boolean> = {};
+        if (parsedUserMetadata && typeof parsedUserMetadata === "object") {
+          const filteredMetadata: Record<string, string | number | boolean> =
+            {};
           Object.entries(parsedUserMetadata).forEach(([key, value]) => {
             // Skip internal fields like _rowIndex, formattedAmount, and other system fields
-            const isSystemField = key.startsWith('_') ||
-                                 key.toLowerCase().includes('rowindex') ||
-                                 key.toLowerCase().includes('formattedamount') ||
-                                 key.toLowerCase().includes('index');
-            
-            if (!isSystemField &&
-                value !== null &&
-                value !== undefined &&
-                value !== '' &&
-                typeof value !== 'object') {
+            const isSystemField =
+              key.startsWith("_") ||
+              key.toLowerCase().includes("rowindex") ||
+              key.toLowerCase().includes("formattedamount") ||
+              key.toLowerCase().includes("index");
+
+            if (
+              !isSystemField &&
+              value !== null &&
+              value !== undefined &&
+              value !== "" &&
+              typeof value !== "object"
+            ) {
               filteredMetadata[key] = value as string | number | boolean;
             }
           });
-          parsedUserMetadata = Object.keys(filteredMetadata).length > 0 ? filteredMetadata : null;
+          parsedUserMetadata =
+            Object.keys(filteredMetadata).length > 0 ? filteredMetadata : null;
         }
       } catch (error) {
-        console.warn('Failed to parse user_metadata:', error);
+        console.warn("Failed to parse user_metadata:", error);
         parsedUserMetadata = tx.user_metadata;
       }
     }
 
     // Format transaction number to remove decimals and ensure alphanumeric
     const formattedTransactionNumber = tx.transaction_number
-      ? String(tx.transaction_number).replace(/\.\d+$/, '')
-      : '';
+      ? String(tx.transaction_number).replace(/\.\d+$/, "")
+      : "";
 
     // Debug log to see what category data we're getting
-    console.log('Transaction category data:', {
+    console.log("Transaction category data:", {
       transactionId: tx.id,
       merchantName: tx.merchants?.name,
       categoryName: tx.merchants?.categories?.name,
       categoryIcon: tx.merchants?.categories?.icon,
-      fullMerchantData: tx.merchants
+      fullMerchantData: tx.merchants,
     });
 
     return {
@@ -78,6 +90,7 @@ const formatApiDataForUI = (
       merchantLogoUrl: tx.merchants?.logo_url || null,
       categoryName: tx.merchants?.categories?.name || "Uncategorized",
       categoryIcon: tx.merchants?.categories?.icon || "Package",
+      note: tx.transaction_note || undefined,
     };
   });
 };
@@ -88,6 +101,7 @@ export default function TransactionsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { user } = useAuth();
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,12 +117,12 @@ export default function TransactionsPage() {
 
       try {
         // Use the API endpoint that bypasses RLS
-        const response = await fetch('/api/transactions');
-        
+        const response = await fetch("/api/transactions");
+
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        
+
         const rawTransactions: TransactionFromApi[] = await response.json();
         const formattedTransactions = formatApiDataForUI(rawTransactions);
         setTransactions(formattedTransactions);
@@ -128,6 +142,29 @@ export default function TransactionsPage() {
   };
   const handleDeleteTransaction = async (transaction: FormattedTransaction) => {
     /* ... */
+  };
+
+  const handleUpdateNote = async (transactionId: string, note: string) => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    // Optimistic update: update UI first, persist to Supabase, revert on failure
+    const previousTransactions = transactions;
+
+    // Apply optimistic change
+    setTransactions((prev) =>
+      prev.map((tx) => (tx.id === transactionId ? { ...tx, note: note || undefined } : tx))
+    );
+
+    try {
+      await updateTransactionNote(supabase, transactionId, note);
+    } catch (error) {
+      console.error("Failed to update transaction note:", error);
+      // Revert local state to previous value
+      setTransactions(previousTransactions);
+      throw error;
+    }
   };
 
   if (loading) {
@@ -150,10 +187,16 @@ export default function TransactionsPage() {
 
   return (
     <div className="p-6">
+      <PageHeader
+        title="Transactions"
+        subtitle="View and manage your transactions"
+      />
       <TransactionTable
         transactions={transactions}
         onEdit={handleEditTransaction}
         onDelete={handleDeleteTransaction}
+        onUpdateNote={handleUpdateNote}
+        className="pt-6"
       />
     </div>
   );

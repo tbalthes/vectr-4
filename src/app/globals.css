@@ -45,6 +45,8 @@
   --color-spending: oklch(0.646 0.222 41.116); /* matches --chart-1 */
   --color-income: oklch(0.6 0.118 184.704);   /* matches --chart-2 */
   --progress-background: oklch(0.73 0.2 280);
+  --sidebar-width: 16rem;
+  --sidebar-collapsed-width: 4rem;
 }
 
 

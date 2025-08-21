@@ -12,7 +12,7 @@ import TransactionTable from "@/components/private/transactions/TransactionTable
 // Swap this import with a Supabase query for production
 import { allTransactions as rawTransactions } from "@/data/transaction-data";
 // Update the import to match the actual exported type from "@/types/transactions"
-import type { TransactionType } from "@/types/transactions";
+import type { Transaction } from "@/types/transactions";
 
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState("");

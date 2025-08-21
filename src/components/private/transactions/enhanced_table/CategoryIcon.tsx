@@ -1,98 +1,48 @@
+import React from "react";
 import * as Icons from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import CustomIcons from "@/components/icons/CustomIcons";
 
 interface CategoryIconProps {
-  iconName: string; // e.g., "Utensils", "Car", "ShoppingBag"
+  iconName?: string;
   className?: string;
 }
 
-// A type guard to ensure the iconName is a valid key in lucide-react and is a component
-const isLucideIcon = (icon: unknown): icon is LucideIcon =>
-  typeof icon === "function" && !!(icon as { render?: unknown }).render;
-
-const isIconName = (name: string): name is keyof typeof Icons => {
-  return (name in Icons) && isLucideIcon(Icons[name as keyof typeof Icons]);
+// Small alias map for legacy or DB values that don't match lucide exports
+const ALIASES: Record<string, string> = {
+  CarAlt: "Car",
+  House: "Home",
+  Rabbit: "Package",
+  Recycle: "RefreshCw",
+  Burger: "Utensils",
+  Plane: "Plane",
+  Wrench: "Wrench",
+  Utensils: "Utensils",
 };
 
-// Normalize icon names to match Lucide icon names
-const normalizeIconName = (name: string): string => {
+function normalizeIconName(name?: string) {
   if (!name) return "Package";
-  
-  // Handle kebab-case to PascalCase conversion
-  const pascalCaseName = name
-    .replace(/[^a-zA-Z0-9]/g, ' ')
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.substr(1).toLowerCase())
-    .join('');
-    
-  // Map database icon names to Lucide icon names
-  const nameMap: Record<string, string> = {
-    // Existing mappings
-    "Food": "Utensils",
-    "Dining": "Utensils",
-    "Restaurant": "Utensils",
-    "Shopping": "ShoppingCart",
-    "Retail": "ShoppingCart",
-    "Transport": "Car",
-    "Travel": "Plane",
-    "Entertainment": "Gamepad",
-    "Utilities": "Zap",
-    "Health": "Heart",
-    "Medical": "Heart",
-    "Salary": "DollarSign",
-    "Income": "DollarSign",
-    "Gift": "Gift",
-    "Education": "Book",
-    "Home": "Home",
-    "Housing": "Home",
-    "Groceries": "ShoppingCart",
-    "Gas": "Fuel",
-    "Fuel": "Fuel",
-    "Bank": "Banknote",
-    "Finance": "Banknote",
-    "Investment": "TrendingUp",
-    "Transfer": "Send",
-    "Withdrawal": "Download",
-    "Deposit": "Upload",
-    "ATM": "CreditCard",
-    "Online": "Globe",
-    "Subscription": "RefreshCw",
-    "Other": "Package",
-    "Miscellaneous": "Package",
-    "Uncategorized": "Package",
-    
-    // Database kebab-case mappings to Lucide icons
-    "CarAlt": "Car",
-    "Store": "Store",
-    "HandSparkles": "Sparkles",
-    "Burger": "Utensils",
-    "Plane": "Plane",
-    "CreditCard": "CreditCard",
-    "FileInvoiceDollar": "FileText",
-    "Utensils": "Utensils",
-    "DollarSign": "DollarSign",
-    "FileInvoice": "FileText",
-    "Receipt": "FileText",
-    "BanknoteArrowUp": "Banknote",
-    "Eye": "Eye"
-  };
-  
-  return nameMap[pascalCaseName] || nameMap[name] || pascalCaseName || "Package";
-};
+  const cleaned = name.trim();
+  if (ALIASES[cleaned]) return ALIASES[cleaned];
+  // Convert kebab/snake/caseless names to PascalCase (best-effort)
+  const pascal = cleaned
+    .replace(/[_-]+/g, " ")
+    .split(" ")
+    .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : ""))
+    .join("");
+  return pascal || "Package";
+}
 
-export function CategoryIcon({
-  iconName,
-  className = "w-5 h-5",
-}: CategoryIconProps) {
-  // Normalize the icon name to match Lucide icons
-  const normalizedName = normalizeIconName(iconName);
-  
-  // Use the icon name directly from Supabase categories table
-  let IconComponent: LucideIcon = Icons.Package;
-  
-  if (isIconName(normalizedName)) {
-    IconComponent = Icons[normalizedName] as LucideIcon;
+export default function CategoryIcon({ iconName, className = "w-5 h-5" }: CategoryIconProps) {
+  const name = normalizeIconName(iconName);
+  // Prefer project-local overrides (so DB values like 'Rabbit' can map directly)
+  const Local = (CustomIcons as Record<string, unknown>)[name];
+  if (Local) return React.createElement(Local as unknown as IconConstructor, { className });
+
+  const Candidate = (Icons as unknown as Record<string, unknown>)[name];
+  const Icon = (Candidate as unknown) ?? (Icons as unknown as Record<string, unknown>).Package;
+  if (!Candidate) {
+    console.debug("CategoryIcon: falling back to Package for:", name);
   }
-
-  return <IconComponent className={className} />;
+  type IconConstructor = (props: Record<string, unknown>) => React.ReactElement | null;
+  return Icon ? React.createElement(Icon as unknown as IconConstructor, { className }) : null;
 }

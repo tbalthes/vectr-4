@@ -72,9 +72,37 @@ export function PreviewStep({
             date,
             amount,
             balance,
+            formattedAmount, // Exclude system fields
             ...rest
           } = row;
-          const user_metadata = { ...rest };
+
+          // Build user_metadata from custom fields mapping
+          const user_metadata: Record<string, string | number | boolean> = {};
+
+          // Add custom fields from mapping configuration
+          Object.entries(mapping.customFields).forEach(([fieldKey, columnName]) => {
+            const value = row[columnName];
+            if (value !== null && value !== undefined && value !== "") {
+              user_metadata[fieldKey] = value;
+            }
+          });
+
+          // Add any additional fields that aren't system fields
+          Object.entries(rest).forEach(([key, value]) => {
+            // Skip system fields that shouldn't be in custom fields
+            const isSystemField =
+              key.startsWith("_") ||
+              key.toLowerCase().includes("rowindex") ||
+              key.toLowerCase().includes("formattedamount") ||
+              key.toLowerCase().includes("index") ||
+              key.toLowerCase().includes("system") ||
+              Object.keys(mapping.customFields).includes(key);
+
+            if (!isSystemField && value !== null && value !== undefined && value !== "") {
+              user_metadata[key] = value;
+            }
+          });
+
           return {
             transaction_number: transactionNumber,
             description,

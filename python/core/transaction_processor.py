@@ -261,12 +261,33 @@ def process_transaction(transaction_data: Dict[str, Any], data_cache: Any, user_
 
     # 4. Consolidate the results
     # Only include fields not already mapped to standard fields
-    user_metadata = {k: v for k, v in transaction_data.items() 
+    user_metadata = {k: v for k, v in transaction_data.items()
                      if k not in ['date', 'transaction_number', 'description', 'amount', 'balance', 'user_metadata']}
-    
+
     # If user_metadata was provided as a nested object, use that instead
     if 'user_metadata' in transaction_data and isinstance(transaction_data['user_metadata'], dict):
         user_metadata = transaction_data['user_metadata']
+
+    # Filter out system fields from user_metadata to only keep actual custom fields
+    if user_metadata:
+        filtered_metadata = {}
+        for key, value in user_metadata.items():
+            # Skip system fields that shouldn't be custom fields
+            is_system_field = (
+                key.startswith("_") or
+                key.lower().startswith("system") or
+                key.lower() in ["formattedamount", "formatted_amount"] or
+                key.lower().endswith("index") or
+                key.lower().endswith("rowindex") or
+                value is None or
+                value == "" or
+                (isinstance(value, str) and len(value.strip()) == 0)
+            )
+
+            if not is_system_field:
+                filtered_metadata[key] = value
+
+        user_metadata = filtered_metadata if filtered_metadata else None
 
     processed_data = {
         "date": transaction_data.get('date'),

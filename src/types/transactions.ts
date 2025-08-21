@@ -21,6 +21,7 @@ export interface TransactionFromApi {
   balance: number | null;
   user_metadata: Record<string, string | number | boolean> | null;
   needs_review: boolean;
+  transaction_note: string | null;
   merchants: {
     name: string;
     logo_url: string | null;
@@ -47,6 +48,6 @@ export interface FormattedTransaction {
   categoryName: string;
   categoryIcon: string;
   // This will be used by the TransactionDetails component
-  allCategories?: string[]; 
-  note?: string; 
+  allCategories?: string[];
+  note?: string;
 }

@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
         balance,
         user_metadata,
         needs_review,
+        transaction_note,
         merchants (
           name,
           logo_url,
