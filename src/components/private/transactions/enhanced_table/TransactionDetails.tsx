@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Hash, StickyNote, Tag } from "lucide-react";
+import { Landmark, StickyNote, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 // Step 1: Import the new, flattened transaction type
@@ -60,7 +60,7 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
         {/* Left Column - Transaction Details */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Hash className="w-4 h-4 text-muted-foreground" />
+            <Landmark className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">
               Transaction Details
             </span>

@@ -86,7 +86,7 @@ export function DataPreviewStep({
 
           {/* Preview Table */}
           <Card className="border shadow-sm">
-            <CardHeader className="pb-3">
+            <CardHeader className="pl-5 pt-5 pb-3">
               <CardTitle className="text-lg font-semibold">
                 Transaction Preview
               </CardTitle>
@@ -99,36 +99,38 @@ export function DataPreviewStep({
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                      <th className="text-left pl-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
                         #
                       </th>
                       {mapping.transactionNumber && (
-                        <th className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
-                          Transaction Number
+                        <th className="text-left p-2 font-medium text-sm/3 uppercase tracking-wider text-muted-foreground">
+                          Trans. Number
                         </th>
                       )}
-                      <th className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                      <th className="text-left p-2 font-medium text-sm uppercase tracking-wider text-muted-foreground">
                         Description
                       </th>
-                      <th className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                      <th className="text-left p-2 font-medium text-sm uppercase tracking-wider text-muted-foreground">
                         Date
                       </th>
-                      <th className="text-right p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                      <th className="text-right p-2 font-medium text-sm uppercase tracking-wider text-muted-foreground">
                         Amount
                       </th>
                       {mapping.balance && (
-                        <th className="text-right p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground">
+                        <th className="text-right p-2 font-medium text-sm uppercase tracking-wider text-muted-foreground">
                           Balance
                         </th>
                       )}
-                      {Object.entries(mapping.customFields).map(([fieldName, columnName]) => (
-                        <th
-                          key={fieldName}
-                          className="text-left p-3 font-medium text-sm uppercase tracking-wider text-muted-foreground"
-                        >
-                          {columnName}
-                        </th>
-                      ))}
+                      {Object.entries(mapping.customFields).map(
+                        ([fieldName, columnName]) => (
+                          <th
+                            key={fieldName}
+                            className="text-left p-2 font-medium text-sm uppercase tracking-wider text-muted-foreground"
+                          >
+                            {columnName}
+                          </th>
+                        )
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -155,15 +157,16 @@ export function DataPreviewStep({
                               typeof record.amount === "number" &&
                               record.amount < 0
                                 ? "text-red-600 font-medium"
-                                : typeof record.amount === "number" && record.amount > 0
+                                : typeof record.amount === "number" &&
+                                  record.amount > 0
                                 ? "text-green-600 font-medium"
                                 : "text-zinc-500 font-medium"
                             }
                           >
                             {record.formattedAmount ||
-                             (typeof record.amount === "number"
-                               ? formatCurrency(record.amount)
-                               : "$0.00")}
+                              (typeof record.amount === "number"
+                                ? formatCurrency(record.amount)
+                                : "$0.00")}
                           </span>
                         </td>
                         {mapping.balance && (
@@ -171,11 +174,13 @@ export function DataPreviewStep({
                             {record.balance}
                           </td>
                         )}
-                        {Object.entries(mapping.customFields).map(([fieldName, columnName]) => (
-                          <td key={fieldName} className="p-3 text-sm">
-                            {getCustomFieldValue(record, columnName)}
-                          </td>
-                        ))}
+                        {Object.entries(mapping.customFields).map(
+                          ([fieldName, columnName]) => (
+                            <td key={fieldName} className="p-3 text-sm">
+                              {getCustomFieldValue(record, columnName)}
+                            </td>
+                          )
+                        )}
                       </tr>
                     ))}
                   </tbody>
