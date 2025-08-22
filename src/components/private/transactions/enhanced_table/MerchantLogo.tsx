@@ -13,7 +13,12 @@ export function MerchantLogo({
   className = "w-8 h-8",
 }: MerchantLogoProps) {
   // If a logoUrl is provided, try to render it.
-  if (logoUrl) {
+  // Only render Image if logoUrl is a non-empty string and looks like a valid URL
+  if (
+    typeof logoUrl === "string" &&
+    logoUrl.trim() !== "" &&
+    (/^(https?:\/\/|\/|data:)/.test(logoUrl.trim()))
+  ) {
     return (
       <Image
         src={logoUrl}

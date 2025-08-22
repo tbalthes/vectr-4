@@ -121,16 +121,16 @@ export function DataPreviewStep({
                           Balance
                         </th>
                       )}
-                      {Object.entries(mapping.customFields).map(
-                        ([fieldName, columnName]) => (
+                      {Object.entries(mapping.customFields)
+                        .filter(([, columnName]) => columnName && columnName.trim() !== "")
+                        .map(([fieldName, columnName]) => (
                           <th
                             key={fieldName}
                             className="text-left p-2 font-medium text-sm uppercase tracking-wider text-muted-foreground"
                           >
                             {columnName}
                           </th>
-                        )
-                      )}
+                        ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -174,13 +174,13 @@ export function DataPreviewStep({
                             {record.balance}
                           </td>
                         )}
-                        {Object.entries(mapping.customFields).map(
-                          ([fieldName, columnName]) => (
+                        {Object.entries(mapping.customFields)
+                          .filter(([, columnName]) => columnName && columnName.trim() !== "")
+                          .map(([fieldName, columnName]) => (
                             <td key={fieldName} className="p-3 text-sm">
                               {getCustomFieldValue(record, columnName)}
                             </td>
-                          )
-                        )}
+                          ))}
                       </tr>
                     ))}
                   </tbody>
