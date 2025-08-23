@@ -27,7 +27,8 @@ export function MerchantLogo({
         width={32}
         height={32}
         style={{ objectFit: "cover" }}
-        unoptimized={logoUrl.startsWith("data:")}
+  // `unoptimized` must be a boolean; only set true for data URIs.
+  unoptimized={typeof logoUrl === "string" && logoUrl.startsWith("data:")}
       />
     );
   }
@@ -53,3 +54,6 @@ export function MerchantLogo({
     </div>
   );
 }
+
+// Provide a default export for consumers that import the component as default
+export default MerchantLogo;

@@ -31,7 +31,7 @@ type SearchFilterControlsProps = {
 export default function SearchFilterControls({
   transactions = [],
   uniqueCategories = [],
-  className = "",
+  className = "shadow-sm",
   onChange,
 }: SearchFilterControlsProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -220,23 +220,23 @@ export default function SearchFilterControls({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      <div className="p-3 border-b border-gray-200 bg-gray-50">
+      <div className="p-2 border-b border-border bg-muted/50 shadow-inner">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
           {/* Left: Filters/Search */}
           <div className="flex flex-wrap gap-2 items-center">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search transactions..."
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10 bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm min-w-[180px]"
+                className="pl-10 bg-background border-border focus:border-ring focus:ring-ring/50 shadow-sm min-w-[180px]"
               />
             </div>
             {/* Category Filter */}
             <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 shadow-sm min-w-[140px]">
+              <SelectTrigger className="bg-background border-border focus:border-ring shadow-sm min-w-[140px]">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -250,7 +250,7 @@ export default function SearchFilterControls({
             </Select>
             {/* Status Filter */}
             <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 shadow-sm min-w-[120px]">
+              <SelectTrigger className="bg-background border-border focus:border-ring shadow-sm min-w-[120px]">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
@@ -261,7 +261,7 @@ export default function SearchFilterControls({
             </Select>
             {/* Amount Filter */}
             <Select value={amountFilter} onValueChange={handleAmountChange}>
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 shadow-sm min-w-[120px]">
+              <SelectTrigger className="bg-background border-border focus:border-ring shadow-sm min-w-[120px]">
                 <SelectValue placeholder="All Amounts" />
               </SelectTrigger>
               <SelectContent>
@@ -277,7 +277,7 @@ export default function SearchFilterControls({
                 handleItemsPerPageChange(parseInt(value))
               }
             >
-              <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 shadow-sm min-w-[110px]">
+              <SelectTrigger className="bg-background border-border focus:border-ring shadow-sm min-w-[110px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -292,7 +292,7 @@ export default function SearchFilterControls({
           <div className="flex items-center gap-1 ml-auto">
             <button
               type="button"
-              className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
+              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs hover:bg-muted hover:shadow-md shadow-black/10 dark:shadow-white/10 transition-all disabled:opacity-50"
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
               aria-label="First page"
@@ -301,20 +301,20 @@ export default function SearchFilterControls({
             </button>
             <button
               type="button"
-              className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
+              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs hover:bg-muted hover:shadow-md shadow-black/10 dark:shadow-white/10 transition-all disabled:opacity-50"
               onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               aria-label="Previous page"
             >
               &#8249;
             </button>
-            <span className="px-2 text-xs text-gray-700">
+            <span className="px-2 text-xs text-foreground flex items-center">
               {currentPage} /{" "}
               {Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage))}
             </span>
             <button
               type="button"
-              className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
+              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs hover:bg-muted hover:shadow-md shadow-black/10 dark:shadow-white/10 transition-all disabled:opacity-50"
               onClick={() =>
                 handlePageChange(
                   Math.min(
@@ -336,7 +336,7 @@ export default function SearchFilterControls({
             </button>
             <button
               type="button"
-              className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
+              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs hover:bg-muted hover:shadow-md shadow-black/10 dark:shadow-white/10 transition-all disabled:opacity-50"
               onClick={() =>
                 handlePageChange(
                   Math.max(

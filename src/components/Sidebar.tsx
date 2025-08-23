@@ -242,10 +242,10 @@ export function Sidebar({
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-foreground truncate">
-                {user?.email || "Guest"}
+                {user?.username || "Guest"}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                {user?.id || "Not logged in"}
+                {user ? "Signed in" : "Not logged in"}
               </p>
             </div>
           )}

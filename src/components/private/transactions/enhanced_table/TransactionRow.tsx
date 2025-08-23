@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import {
   Edit3,
   ChevronDown,
@@ -30,13 +30,13 @@ interface TransactionRowProps {
   index: number;
 }
 
-export function TransactionRow({
+export const TransactionRow = forwardRef<HTMLTableRowElement, TransactionRowProps>(({
   transaction,
   onEdit,
   onDelete,
   onUpdateNote,
   index,
-}: TransactionRowProps) {
+}, ref) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Helper function to format the transaction amount and determine its type
@@ -92,6 +92,7 @@ export function TransactionRow({
   return (
     <>
       <TableRow
+        ref={ref}
         className={`group hover:bg-accent/30 transition-colors duration-200 border-b border-border/50 cursor-pointer ${
           index % 2 === 0 ? "bg-background" : "bg-muted/20"
         } ${
@@ -246,4 +247,6 @@ export function TransactionRow({
       )}
     </>
   );
-}
+});
+
+TransactionRow.displayName = "TransactionRow";

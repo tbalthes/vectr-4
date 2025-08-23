@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { TransactionTable } from "@/components/private/transactions/enhanced_table/TransactionTable";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Search, Calendar, Filter, Plus } from "lucide-react";
 import { TransactionFromApi, FormattedTransaction } from "@/types/transactions";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateTransactionNote } from "@/lib/transactions";
-import PageHeader from "@/components/private/PageHeader";
 
 // Helper function to format API data for UI
 const formatApiDataForUI = (
@@ -101,6 +103,7 @@ export default function TransactionsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { user } = useAuth();
+  const router = useRouter();
   const supabase = createClientComponentClient();
 
   useEffect(() => {
@@ -188,18 +191,45 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="p-6">
-      <PageHeader
-        title="Transactions"
-        subtitle="View and manage your transactions"
-      />
-      <TransactionTable
-        transactions={transactions}
-        onEdit={handleEditTransaction}
-        onDelete={handleDeleteTransaction}
-        onUpdateNote={handleUpdateNote}
-        className="pt-6"
-      />
-    </div>
+    <>
+      {/* Custom header similar to dashboard but not the same component */}
+      <div className="h-16 sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm shadow-black/10 dark:shadow-white/10 flex items-center justify-between px-6 py-4 w-full">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Transactions</h1>
+          <p className="text-sm text-muted-foreground">View and manage your transactions</p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Button variant="outline" size="sm">
+            <Search className="mr-2 h-4 w-4" />
+            Search
+          </Button>
+          <Button variant="outline" size="sm">
+            <Calendar className="mr-2 h-4 w-4" />
+            Date
+          </Button>
+          <Button variant="outline" size="sm">
+            <Filter className="mr-2 h-4 w-4" />
+            Filters
+          </Button>
+          <Button variant="outline" size="sm">
+            Edit rules
+          </Button>
+          <Button size="sm" onClick={() => router.push("/private/upload")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add transaction
+          </Button>
+        </div>
+      </div>
+      
+      <div className="p-3 space-y-6">
+        <TransactionTable
+          transactions={transactions}
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
+          onUpdateNote={handleUpdateNote}
+          className=""
+        />
+      </div>
+    </>
   );
 }

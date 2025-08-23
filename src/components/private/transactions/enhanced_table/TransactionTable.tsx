@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -8,17 +8,8 @@ import {
   TableRow,
   TableHead,
 } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import {
-  ChevronsLeft,
-  ChevronsRight,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { CardNp, CardNpContent } from "@/components/ui/card-zero-pad";
 import { TransactionRow } from "./TransactionRow";
-// Step 1: Import the new, correct type
 import { FormattedTransaction } from "@/types/transactions";
 import SearchFilterControls from "./SearchFilterControls";
 
@@ -35,29 +26,29 @@ interface TransactionTableProps {
 // sorting is handled inside the SearchFilterControls now
 
 export function TransactionTable({
-  // Step 3: Remove the old mock data default. This component should always get its data from the parent page.
   transactions,
   className,
   onEdit,
   onDelete,
   onUpdateNote,
 }: TransactionTableProps) {
-  // Local state to receive filtered & paginated results from SearchFilterControls
-  const [paginatedTransactions, setPaginatedTransactions] = useState<
+  // Infinite scroll state - optimized for better UX matching the screenshot
+  const [displayedTransactions, setDisplayedTransactions] = useState<
     FormattedTransaction[]
-  >(transactions.slice(0, Math.min(25, transactions.length)));
+  >([]);
   const [filteredAndSortedTransactions, setFilteredAndSortedTransactions] =
     useState<FormattedTransaction[]>(transactions);
   const [total, setTotal] = useState<number>(transactions.length);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPageState, setItemsPerPageState] = useState<number>(25);
-  const [startIndex, setStartIndex] = useState<number>(0);
-  const [endIndex, setEndIndex] = useState<number>(
-    Math.min(itemsPerPageState, transactions.length)
-  );
-  const [totalPages, setTotalPages] = useState<number>(
-    Math.max(1, Math.ceil(transactions.length / itemsPerPageState))
-  );
+  const [loadedCount, setLoadedCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Infinite scroll settings - adjusted to match screenshot visibility
+  const INITIAL_LOAD = 20; // Show 20 transactions initially (matches screenshot)
+  const LOAD_MORE_COUNT = 15; // Load 15 more when scrolling for smooth experience
+  
+  // Refs for intersection observer
+  const lastTransactionElementRef = useRef<HTMLTableRowElement>(null);
+  const observer = useRef<IntersectionObserver | null>(null);
 
   const uniqueCategories = useMemo(() => {
     return Array.from(new Set(transactions.map((t) => t.categoryName)))
@@ -65,20 +56,69 @@ export function TransactionTable({
       .sort();
   }, [transactions]);
 
-  // If the parent `transactions` prop changes (for example after an optimistic update),
-  // merge those updates into our local filtered/paginated arrays so UI stays in sync.
+  // Intersection Observer callback for infinite scroll
+  const lastTransactionRef = useCallback(
+    (node: HTMLTableRowElement | null) => {
+      if (isLoading) return;
+      if (observer.current) observer.current.disconnect();
+      
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && loadedCount < filteredAndSortedTransactions.length) {
+            // Load more transactions when last row is visible
+            const newCount = Math.min(
+              loadedCount + LOAD_MORE_COUNT,
+              filteredAndSortedTransactions.length
+            );
+            setDisplayedTransactions(filteredAndSortedTransactions.slice(0, newCount));
+            setLoadedCount(newCount);
+          }
+        },
+        {
+          threshold: 0.1,
+          rootMargin: '50px',
+        }
+      );
+      
+      if (node) observer.current.observe(node);
+    },
+    [isLoading, loadedCount, filteredAndSortedTransactions, LOAD_MORE_COUNT]
+  );
+
+  // Load more transactions for infinite scroll
+  const loadMoreTransactions = useCallback(() => {
+    if (isLoading || loadedCount >= filteredAndSortedTransactions.length) return;
+    
+    setIsLoading(true);
+    setTimeout(() => {
+      const newCount = Math.min(
+        loadedCount + LOAD_MORE_COUNT,
+        filteredAndSortedTransactions.length
+      );
+      setDisplayedTransactions(filteredAndSortedTransactions.slice(0, newCount));
+      setLoadedCount(newCount);
+      setIsLoading(false);
+    }, 300); // Slightly longer delay for smoother UX
+  }, [isLoading, loadedCount, filteredAndSortedTransactions, LOAD_MORE_COUNT]);
+
+  // Initialize displayed transactions when filtered data changes
+  useEffect(() => {
+    const initialCount = Math.min(INITIAL_LOAD, filteredAndSortedTransactions.length);
+    setDisplayedTransactions(filteredAndSortedTransactions.slice(0, initialCount));
+    setLoadedCount(initialCount);
+    setTotal(filteredAndSortedTransactions.length);
+  }, [filteredAndSortedTransactions, INITIAL_LOAD]);
+
+  // If the parent `transactions` prop changes, update our local state
   useEffect(() => {
     setFilteredAndSortedTransactions((prev) =>
       prev.map((tx) => transactions.find((t) => t.id === tx.id) || tx)
     );
-    setPaginatedTransactions((prev) =>
+    setDisplayedTransactions((prev) =>
       prev.map((tx) => transactions.find((t) => t.id === tx.id) || tx)
     );
     setTotal(transactions.length);
-    setTotalPages(
-      Math.max(1, Math.ceil(transactions.length / itemsPerPageState))
-    );
-  }, [transactions, itemsPerPageState]);
+  }, [transactions]);
 
   // Debug: log distinct categoryIcon values returned from the backend so we can
   // verify the frontend receives icon names that match lucide-react exports.
@@ -117,20 +157,17 @@ export function TransactionTable({
     itemsPerPage: number;
   }) => {
     setFilteredAndSortedTransactions(payload.filtered);
-    setPaginatedTransactions(payload.paginated);
     setTotal(payload.total);
-    setCurrentPage(payload.currentPage);
-    setItemsPerPageState(payload.itemsPerPage);
-    const s = (payload.currentPage - 1) * payload.itemsPerPage;
-    setStartIndex(s);
-    setEndIndex(Math.min(payload.total, s + payload.itemsPerPage));
-    setTotalPages(Math.max(1, Math.ceil(payload.total / payload.itemsPerPage)));
+    // Reset infinite scroll when filters change
+    const initialCount = Math.min(INITIAL_LOAD, payload.filtered.length);
+    setDisplayedTransactions(payload.filtered.slice(0, initialCount));
+    setLoadedCount(initialCount);
   };
 
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Controls card: Search / Filters / Pagination size */}
-      <Card className="bg-background border border-border drop-shadow-md">
+      <CardNp className="bg-background/95 backdrop-blur-sm border border-border shadow-sm shadow-black/10 dark:shadow-white/10 rounded-lg overflow-hidden">
         <div className="p-0">
           <SearchFilterControls
             transactions={transactions}
@@ -138,22 +175,24 @@ export function TransactionTable({
             onChange={handleControlsChange}
           />
         </div>
-      </Card>
+      </CardNp>
 
-      {/* Header area (separate from the table card) */}
+      {/* Header area (separate from the table card)
       <div className="px-2">
         <div className="text-sm text-muted-foreground font-medium">
-          Showing {total === 0 ? 0 : startIndex + 1} to{" "}
-          {Math.min(endIndex, total)} of {total} transactions
+          Showing {displayedTransactions.length} of {total} transactions
+          {loadedCount < total && " (scroll for more)"}
         </div>
-      </div>
+      </div> */}
 
       {/* Table card (table only) */}
-      <Card className="bg-background border border-border drop-shadow-sm h-full flex flex-col">
-        <CardContent className="-px-6 flex-1 flex flex-col">
+      <CardNp className="pt-1 bg-background/95 backdrop-blur-sm border border-border shadow-md shadow-black/10 dark:shadow-white/10 h-full flex flex-col rounded-lg overflow-hidden max-h-[calc(100vh-140px)] min-h-[calc(100vh-140px)]">
+        <CardNpContent
+          className="flex-1 flex flex-col overflow-auto"
+        >
           <Table className="min-w-full flex-1">
-            <TableHeader className="sticky top-0 z-20 bg-background shadow-sm border-b-2 border-border">
-              <TableRow className="hover:bg-muted/50 transition-colors">
+            <TableHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm shadow-md shadow-black/10 dark:shadow-white/10 border-b-2 border-border">
+              <TableRow className="hover:bg-muted/30 transition-colors">
                 <TableHead className="h-10 px-4 sm:px-6 text-xs text-center font-bold text-foreground uppercase tracking-wider w-[120px]">
                   DATE
                 </TableHead>
@@ -175,20 +214,38 @@ export function TransactionTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedTransactions.map((transaction, index) => (
-                <TransactionRow
-                  key={transaction.id}
-                  transaction={transaction}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onUpdateNote={onUpdateNote}
-                  index={startIndex + index}
-                />
-              ))}
+              {displayedTransactions.map((transaction, index) => {
+                const isLast = index === displayedTransactions.length - 1;
+                return (
+                  <TransactionRow
+                    key={transaction.id}
+                    transaction={transaction}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onUpdateNote={onUpdateNote}
+                    index={index}
+                    ref={isLast ? lastTransactionRef : undefined}
+                  />
+                );
+              })}
+              {isLoading && (
+                <TableRow>
+                  <td colSpan={6} className="text-center py-4 text-muted-foreground">
+                    Loading more transactions...
+                  </td>
+                </TableRow>
+              )}
+              {!isLoading && loadedCount >= total && total > 0 && (
+                <TableRow>
+                  <td colSpan={6} className="text-center py-4 text-muted-foreground">
+                    All transactions loaded ({total} total)
+                  </td>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </CardNpContent>
+      </CardNp>
     </div>
   );
 }
