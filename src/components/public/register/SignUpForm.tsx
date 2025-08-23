@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField } from "@/components/public/register/FormField";
 import { SocialLoginButtons } from "@/components/public/register/SocialLoginButtons";
-import { supabase } from "@/lib/supabaseClient";
+// import { supabase } from lib supabaseClient
 
 import { AuthError } from "@supabase/supabase-js";
 
@@ -115,13 +115,13 @@ export function SignupForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="overflow-hidden p-0 bg-white border-border max-w-2xl mx-auto rounded-xl shadow-[0_8px_40px_0_rgba(0,0,0,0.28)]">
+      <Card className="overflow-hidden p-0 bg-card border border-border max-w-2xl mx-auto rounded-xl shadow-lg shadow-black/10 dark:shadow-white/10">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form onSubmit={handleSubmit} className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               {/* Header */}
               <div className="flex flex-col items-center text-center">
-                <h1 className="text-page-title mb-2">Create your account</h1>
+                <h1 className="text-page-title mb-2 text-foreground">Create your account</h1>
                 <p className="text-muted-foreground text-balance font-sans text-sm font-normal">
                   Join Vectr Financial and start managing your money smarter
                 </p>

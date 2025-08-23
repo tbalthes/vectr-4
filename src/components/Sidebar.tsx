@@ -158,7 +158,7 @@ export function Sidebar({
           )
         )}
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1 bg-background">
+  <nav className="flex-1 px-3 py-4 space-y-1 bg-background">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -167,8 +167,8 @@ export function Sidebar({
               href={item.href}
               className={`flex items-center px-3 py-2 rounded-md transition-colors font-medium text-sm ${
                 isActive
-                  ? "bg-muted text-foreground border border-border"
-                  : "text-foreground hover:bg-muted hover:text-foreground border border-transparent"
+                  ? "bg-accent text-foreground border border-border"
+                  : "text-foreground hover:bg-accent hover:text-foreground border border-transparent"
               } ${collapsed ? "justify-center" : ""}`}
             >
               <item.icon className="h-4 w-4" />
@@ -226,11 +226,7 @@ export function Sidebar({
       <Separator />
 
       {/* User Profile */}
-      <div
-        className={`p-3 bg-background ${
-          collapsed ? "flex justify-center" : ""
-        }`}
-      >
+  <div className={`p-3 bg-background ${collapsed ? "flex justify-center" : ""}`}>
         <div
           className={`flex items-center p-2 rounded-md hover:bg-muted transition-colors cursor-pointer ${
             collapsed ? "justify-center" : "space-x-2"
@@ -242,10 +238,10 @@ export function Sidebar({
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-foreground truncate">
-                {user?.username || "Guest"}
+                {user?.email || "Guest"}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                {user ? "Signed in" : "Not logged in"}
+                {user?.id || "Not logged in"}
               </p>
             </div>
           )}

@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import PublicPageHeader from "@/components/public/PublicPageHeader";
 import {
   Card,
   CardContent,
@@ -32,12 +31,14 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 
-function HomePage() {
+export default function HomePage() {
+  const [featuresOpen, setFeaturesOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pricingPeriod, setPricingPeriod] = useState<"monthly" | "annual">(
     "monthly"
   );
+
   const features = [
     {
       title: "AI-Powered Budgeting",
@@ -70,33 +71,91 @@ function HomePage() {
       icon: Target,
     },
   ];
-  type Testimonial = {
-    name: string;
-    role: string;
-    company: string;
-    rating: number;
-    content: string;
-  };
 
-  const testimonials: Testimonial[] = [
-    // ...existing code...
+  const testimonials = [
+    {
+      name: "Sarah Chen",
+      role: "Marketing Director",
+      company: "TechCorp",
+      content:
+        "Vectr has completely transformed how I manage my finances. The AI insights helped me save $5,000 in just 3 months!",
+      avatar: "/avatars/sarah.jpg",
+      rating: 5,
+    },
+    {
+      name: "Marcus Johnson",
+      role: "Small Business Owner",
+      company: "Local Coffee Shop",
+      content:
+        "As a business owner, keeping track of both personal and business finances was overwhelming. Vectr makes it seamless.",
+      avatar: "/avatars/marcus.jpg",
+      rating: 5,
+    },
+    {
+      name: "Emily Rodriguez",
+      role: "Software Engineer",
+      company: "StartupXYZ",
+      content:
+        "The AI-powered budgeting is incredible. It is like having a financial advisor in my pocket 24/7.",
+      avatar: "/avatars/emily.jpg",
+      rating: 5,
+    },
   ];
-  type PricingTier = {
-    name: string;
-    description: string;
-    price: { monthly: number; annual: number };
-    features: string[];
-    popular?: boolean;
-  };
 
-  const pricingTiers: PricingTier[] = [
-    // ...existing code...
+  const pricingTiers = [
+    {
+      name: "Starter",
+      price: { monthly: 0, annual: 0 },
+      description: "Perfect for getting started",
+      features: [
+        "Basic budgeting",
+        "Expense tracking",
+        "Goal setting",
+        "Mobile app access",
+        "Email support",
+      ],
+      popular: false,
+    },
+    {
+      name: "Pro",
+      price: { monthly: 9.99, annual: 99.99 },
+      description: "For serious budgeters",
+      features: [
+        "Everything in Starter",
+        "AI-powered insights",
+        "Investment tracking",
+        "Advanced analytics",
+        "Priority support",
+        "Unlimited goals",
+      ],
+      popular: true,
+    },
+    {
+      name: "Business",
+      price: { monthly: 19.99, annual: 199.99 },
+      description: "For teams and businesses",
+      features: [
+        "Everything in Pro",
+        "Team collaboration",
+        "Business analytics",
+        "Custom integrations",
+        "Dedicated support",
+        "Advanced security",
+      ],
+      popular: false,
+    },
   ];
-  const securityFeatures: { name: string; icon: React.ElementType }[] = [
-    // ...existing code...
+
+  const securityFeatures = [
+    { name: "SOC 2 Type II", icon: Shield },
+    { name: "256-bit Encryption", icon: Lock },
+    { name: "FDIC Insured", icon: Building },
+    { name: "PCI DSS", icon: Database },
   ];
+
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded-md z-50"
@@ -104,7 +163,158 @@ function HomePage() {
         Skip to main content
       </a>
 
-      <PublicPageHeader features={features} />
+      {/* Navigation */}
+      <nav className="border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center space-x-2"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-foreground rounded-lg flex items-center justify-center">
+                  <BarChart3 className="w-4 h-4 text-primary-foreground" />
+                </div>
+                <span className="text-xl font-bold">Vectr</span>
+              </motion.div>
+            </div>
+
+            <div className="hidden md:flex items-center space-x-8">
+              <div className="relative">
+                <button
+                  onClick={() => setFeaturesOpen(!featuresOpen)}
+                  className="text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-1"
+                  aria-expanded={featuresOpen}
+                  aria-controls="features-dropdown"
+                >
+                  <span>Features</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${
+                      featuresOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {featuresOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full left-0 mt-2 w-48 bg-background border border-border rounded-lg shadow-lg"
+                    >
+                      <div className="p-2">
+                        {features.map((feature) => (
+                          <a
+                            key={feature.title}
+                            href="#"
+                            className="flex items-center space-x-2 p-2 hover:bg-muted rounded-md transition-colors"
+                          >
+                            <feature.icon className="w-4 h-4" />
+                            <span className="text-sm">{feature.title}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <a
+                href="#pricing"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Pricing
+              </a>
+              <a
+                href="#security"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Security
+              </a>
+              <a
+                href="#testimonials"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Testimonials
+              </a>
+            </div>
+
+            <div className="hidden md:flex items-center space-x-4">
+              <Button variant="ghost" asChild>
+                <a href="/public/login">Sign In</a>
+              </Button>
+              <Button asChild>
+                <a href="/public/register" className="group">
+                  Get Started Free
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </a>
+              </Button>
+            </div>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2"
+              aria-label="Toggle mobile menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Nav */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden border-t border-border"
+            >
+              <div className="px-6 py-4 space-y-4">
+                <a
+                  href="#features"
+                  className="block text-muted-foreground hover:text-foreground"
+                >
+                  Features
+                </a>
+                <a
+                  href="#pricing"
+                  className="block text-muted-foreground hover:text-foreground"
+                >
+                  Pricing
+                </a>
+                <a
+                  href="#security"
+                  className="block text-muted-foreground hover:text-foreground"
+                >
+                  Security
+                </a>
+                <a
+                  href="#testimonials"
+                  className="block text-muted-foreground hover:text-foreground"
+                >
+                  Testimonials
+                </a>
+                <div className="space-y-2 pt-4 border-t border-border">
+                  <Button variant="ghost" className="w-full" asChild>
+                    <a href="/public/login">Sign In</a>
+                  </Button>
+                  <Button className="w-full" asChild>
+                    <a href="/public/register">Get Started Free</a>
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
 
       {/* Hero Section */}
       <main id="main-content">
@@ -398,7 +608,7 @@ function HomePage() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {tier.features.map((feature: string) => (
+                      {tier.features.map((feature) => (
                         <li key={feature} className="flex items-center">
                           <Check className="w-4 h-4 text-primary mr-2" />
                           <span className="text-sm">{feature}</span>
@@ -410,7 +620,7 @@ function HomePage() {
                       variant={tier.popular ? "default" : "outline"}
                       asChild
                     >
-                      <a href="/public/register">Sign Up</a>
+                      <a href="/public/register">Get Started</a>
                     </Button>
                   </CardContent>
                 </Card>
@@ -645,5 +855,3 @@ function HomePage() {
     </div>
   );
 }
-
-export default HomePage;

@@ -20,16 +20,14 @@ interface SpendingByCategoryProps {
 
 export function SpendingByCategory({ categories }: SpendingByCategoryProps) {
   return (
-    <Card className="bg-background text-foreground p-4 md:p-6">
-      <CardHeader className="pb-2">
+    <Card className="card-clean">
+      <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold">
           Spending by Category
         </CardTitle>
-        <CardDescription className="text-muted-foreground">
-          This month&apos;s expenses breakdown
-        </CardDescription>
+        <CardDescription>This month&apos;s expenses breakdown</CardDescription>
       </CardHeader>
-      <CardContent className="pt-0 pb-2">
+      <CardContent>
         <ResponsiveContainer width="100%" height={200}>
           <PieChart>
             <Pie
@@ -48,11 +46,10 @@ export function SpendingByCategory({ categories }: SpendingByCategoryProps) {
             <Tooltip
               formatter={(value) => [`$${value}`, "Amount"]}
               contentStyle={{
-                backgroundColor: "#fff",
-                border: "1px solid var(--border)",
+                backgroundColor: "#ffffff",
+                border: "1px solid #e5e7eb",
                 borderRadius: "8px",
                 boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                color: "var(--foreground)",
               }}
             />
           </PieChart>
@@ -68,7 +65,7 @@ export function SpendingByCategory({ categories }: SpendingByCategoryProps) {
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: category.color }}
                 />
-                <span className="text-muted-foreground">{category.name}</span>
+                <span className="text-foreground-muted">{category.name}</span>
               </div>
               <span className="font-medium text-foreground">
                 ${category.value}

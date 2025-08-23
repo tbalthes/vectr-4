@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo, useState, useCallback } from "react";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
 import { FormattedTransaction } from "@/types/transactions";
 
 // Replace corrupted file: implement a self-contained SearchFilterControls component that
@@ -31,15 +29,15 @@ type SearchFilterControlsProps = {
 export default function SearchFilterControls({
   transactions = [],
   uniqueCategories = [],
-  className = "shadow-sm",
+  className = "",
   onChange,
 }: SearchFilterControlsProps) {
-  const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [amountFilter, setAmountFilter] = useState<string>("all");
   const [itemsPerPage, setItemsPerPage] = useState<number>(25);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  
   // keep as state in case we later expose setters; disable unused-vars lint for setters
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [sortField, setSortField] = useState<
@@ -61,7 +59,6 @@ export default function SearchFilterControls({
   const filterAndSort = useCallback(
     (
       overrides?: Partial<{
-        searchTerm: string;
         categoryFilter: string;
         statusFilter: string;
         amountFilter: string;
@@ -69,7 +66,6 @@ export default function SearchFilterControls({
         sortDirection: "asc" | "desc";
       }>
     ) => {
-      const s = (overrides?.searchTerm ?? searchTerm).trim().toLowerCase();
       const cat = overrides?.categoryFilter ?? categoryFilter;
       const status = overrides?.statusFilter ?? statusFilter;
       const amount = overrides?.amountFilter ?? amountFilter;
@@ -77,13 +73,6 @@ export default function SearchFilterControls({
       const sDir = overrides?.sortDirection ?? sortDirection;
 
       const filtered = (transactions || []).filter((transaction) => {
-        const searchMatch =
-          s === "" ||
-          (transaction.description || "").toLowerCase().includes(s) ||
-          (transaction.originalDescription || "").toLowerCase().includes(s) ||
-          (transaction.merchantName || "").toLowerCase().includes(s) ||
-          (transaction.transaction_number || "").toLowerCase().includes(s);
-
         const categoryMatch = cat === "all" || transaction.categoryName === cat;
 
         const statusMatch =
@@ -96,7 +85,7 @@ export default function SearchFilterControls({
           (amount === "income" && transaction.amount > 0) ||
           (amount === "expense" && transaction.amount < 0);
 
-        return searchMatch && categoryMatch && statusMatch && amountMatch;
+        return categoryMatch && statusMatch && amountMatch;
       });
 
       filtered.sort((a, b) => {
@@ -129,7 +118,6 @@ export default function SearchFilterControls({
     },
     [
       transactions,
-      searchTerm,
       categoryFilter,
       statusFilter,
       amountFilter,
@@ -144,7 +132,7 @@ export default function SearchFilterControls({
   // paginated list is produced and emitted on user interactions; keep slice available to handlers
 
   // Emit only on user interactions to avoid an update loop with the parent
-  const emitChange = (
+  const emitChange = useCallback((
     filtered: FormattedTransaction[],
     paginatedList: FormattedTransaction[],
     curPage: number,
@@ -157,18 +145,9 @@ export default function SearchFilterControls({
       currentPage: curPage,
       itemsPerPage: ipp,
     });
-  };
+  }, [onChange]);
 
   // Handlers that compute results synchronously and emit to parent
-  const handleSearchChange = (value: string) => {
-    const newPage = 1;
-    const filtered = filterAndSort({ searchTerm: value });
-    const pag = filtered.slice(0, itemsPerPage);
-    setSearchTerm(value);
-    setCurrentPage(newPage);
-    emitChange(filtered, pag, newPage, itemsPerPage);
-  };
-
   const handleCategoryChange = (value: string) => {
     const newPage = 1;
     const filtered = filterAndSort({ categoryFilter: value });
@@ -220,23 +199,13 @@ export default function SearchFilterControls({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      <div className="p-2 border-b border-border bg-muted/50 shadow-inner">
+      <div className="p-[6px] border-b border-border bg-muted/30">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
           {/* Left: Filters/Search */}
           <div className="flex flex-wrap gap-2 items-center">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search transactions..."
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10 bg-background border-border focus:border-ring focus:ring-ring/50 shadow-sm min-w-[180px]"
-              />
-            </div>
             {/* Category Filter */}
             <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="bg-background border-border focus:border-ring shadow-sm min-w-[140px]">
+              <SelectTrigger className="bg-input border-input text-muted-foreground focus-visible:ring-ring shadow-sm min-w-[140px]">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -250,7 +219,7 @@ export default function SearchFilterControls({
             </Select>
             {/* Status Filter */}
             <Select value={statusFilter} onValueChange={handleStatusChange}>
-              <SelectTrigger className="bg-background border-border focus:border-ring shadow-sm min-w-[120px]">
+              <SelectTrigger className="bg-input border-input text-muted-foreground focus-visible:ring-ring shadow-sm min-w-[120px]">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
@@ -261,7 +230,7 @@ export default function SearchFilterControls({
             </Select>
             {/* Amount Filter */}
             <Select value={amountFilter} onValueChange={handleAmountChange}>
-              <SelectTrigger className="bg-background border-border focus:border-ring shadow-sm min-w-[120px]">
+              <SelectTrigger className="bg-input border-input text-muted-foreground focus-visible:ring-ring shadow-sm min-w-[120px]">
                 <SelectValue placeholder="All Amounts" />
               </SelectTrigger>
               <SelectContent>
@@ -277,7 +246,7 @@ export default function SearchFilterControls({
                 handleItemsPerPageChange(parseInt(value))
               }
             >
-              <SelectTrigger className="bg-background border-border focus:border-ring shadow-sm min-w-[110px]">
+              <SelectTrigger className="bg-input border-input text-muted-foreground focus-visible:ring-ring shadow-sm min-w-[110px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -288,11 +257,12 @@ export default function SearchFilterControls({
               </SelectContent>
             </Select>
           </div>
-          {/* Right: Pagination */}
+          
+          {/* Right: Pagination
           <div className="flex items-center gap-1 ml-auto">
             <button
               type="button"
-              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs hover:bg-muted hover:shadow-md shadow-black/10 dark:shadow-white/10 transition-all disabled:opacity-50"
+              className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
               aria-label="First page"
@@ -301,20 +271,20 @@ export default function SearchFilterControls({
             </button>
             <button
               type="button"
-              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs hover:bg-muted hover:shadow-md shadow-black/10 dark:shadow-white/10 transition-all disabled:opacity-50"
+              className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
               onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               aria-label="Previous page"
             >
               &#8249;
             </button>
-            <span className="px-2 text-xs text-foreground flex items-center">
+            <span className="px-2 text-xs text-gray-700">
               {currentPage} /{" "}
               {Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage))}
             </span>
             <button
               type="button"
-              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs hover:bg-muted hover:shadow-md shadow-black/10 dark:shadow-white/10 transition-all disabled:opacity-50"
+              className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
               onClick={() =>
                 handlePageChange(
                   Math.min(
@@ -336,7 +306,7 @@ export default function SearchFilterControls({
             </button>
             <button
               type="button"
-              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs hover:bg-muted hover:shadow-md shadow-black/10 dark:shadow-white/10 transition-all disabled:opacity-50"
+              className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
               onClick={() =>
                 handlePageChange(
                   Math.max(
@@ -353,7 +323,7 @@ export default function SearchFilterControls({
             >
               &#187;
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

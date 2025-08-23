@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { TransactionTable } from "@/components/private/transactions/enhanced_table/TransactionTable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Search, Calendar, Filter, Plus } from "lucide-react";
+import { Calendar, Filter, Plus } from "lucide-react";
 import { TransactionFromApi, FormattedTransaction } from "@/types/transactions";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateTransactionNote } from "@/lib/transactions";
-
+import PageHeader from "@/components/private/PageHeader";
+import { TransactionSearch } from "@/components/private/transactions/transaction-search";
+import { Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover";
 // Helper function to format API data for UI
 const formatApiDataForUI = (
   apiData: TransactionFromApi[]
@@ -101,10 +103,26 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filteredTransactions, setFilteredTransactions] = useState<FormattedTransaction[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { user } = useAuth();
   const router = useRouter();
   const supabase = createClientComponentClient();
+
+  // Handle search filtering from TransactionSearch component
+  const handleFilteredChange = useCallback((filtered: FormattedTransaction[]) => {
+    console.log("handleFilteredChange called with:", filtered.length, "transactions");
+    setFilteredTransactions(filtered);
+  }, []);
+
+  // Monitor when transactions state actually updates
+  useEffect(() => {
+    console.log("transactions state changed to:", transactions.length, "transactions");
+  }, [transactions]);
+
+  // Debug logging
+  console.log("Render - transactions:", transactions.length, "filtered:", filteredTransactions.length);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -140,10 +158,12 @@ export default function TransactionsPage() {
     fetchData();
   }, [user]);
 
-  const handleEditTransaction = (transaction: FormattedTransaction) => {
+  const handleEditTransaction = (_transaction: FormattedTransaction) => {
+    void _transaction;
     /* ... */
   };
-  const handleDeleteTransaction = async (transaction: FormattedTransaction) => {
+  const handleDeleteTransaction = async (_transaction: FormattedTransaction) => {
+    void _transaction;
     /* ... */
   };
 
@@ -192,38 +212,73 @@ export default function TransactionsPage() {
 
   return (
     <>
-      {/* Custom header similar to dashboard but not the same component */}
-      <div className="h-16 sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm shadow-black/10 dark:shadow-white/10 flex items-center justify-between px-6 py-4 w-full">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground">Transactions</h1>
-          <p className="text-sm text-muted-foreground">View and manage your transactions</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" size="sm">
-            <Search className="mr-2 h-4 w-4" />
-            Search
-          </Button>
-          <Button variant="outline" size="sm">
-            <Calendar className="mr-2 h-4 w-4" />
-            Date
-          </Button>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filters
-          </Button>
-          <Button variant="outline" size="sm">
-            Edit rules
-          </Button>
-          <Button size="sm" onClick={() => router.push("/private/upload")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add transaction
-          </Button>
-        </div>
-      </div>
-      
+      <PageHeader
+        title="Transactions"
+        subtitle="View and manage your transactions"
+        actions={
+          <div className="flex items-center space-x-3">
+            <TransactionSearch
+              transactions={transactions}
+              onFilteredChange={handleFilteredChange}
+              placeholder="Search transactions..."
+              size="sm"
+            />
+            <Button variant="outline" size="sm">
+              <Calendar className="mr-2 h-4 w-4" />
+              Date
+            </Button>
+            <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium leading-none">Filters</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Apply filters to narrow down your transactions.
+                    </p>
+                  </div>
+                  <div className="grid gap-2">
+                    <div className="grid grid-cols-3 items-center gap-4">
+                      <label htmlFor="category">Category</label>
+                      <select id="category" className="col-span-2 h-8">
+                        <option>All Categories</option>
+                        <option>Food</option>
+                        <option>Transport</option>
+                        <option>Shopping</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-3 items-center gap-4">
+                      <label htmlFor="amount">Amount</label>
+                      <select id="amount" className="col-span-2 h-8">
+                        <option>All Amounts</option>
+                        <option>Income</option>
+                        <option>Expenses</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <Button variant="outline" size="sm">
+              Edit rules
+            </Button>
+            
+            <Button size="sm" onClick={() => router.push("/private/upload")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add transaction
+            </Button>
+          </div>
+        }
+      />
+
       <div className="p-3 space-y-6">
         <TransactionTable
-          transactions={transactions}
+          transactions={filteredTransactions}
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
           onUpdateNote={handleUpdateNote}

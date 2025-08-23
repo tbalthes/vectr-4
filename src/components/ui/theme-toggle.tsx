@@ -15,9 +15,7 @@ export function ThemeToggle({
     <button
       type="button"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className={`relative w-8 h-8 flex items-center justify-center ${
-        className || ""
-      }`}
+      className={`relative w-8 h-8 flex items-center justify-center ${className || ""}`}
       {...props}
     >
       <Sun className="w-[18px] h-[18px] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

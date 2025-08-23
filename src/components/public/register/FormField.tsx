@@ -21,7 +21,7 @@ export function FormField({
       </Label>
       <Input
         id={id}
-        className="bg-background border-border focus:ring-primary"
+        className="bg-background text-foreground border-border focus-visible:ring-primary"
         // Spreads all the collected props (name, type, value, onChange) onto the Input
         {...props}
       />

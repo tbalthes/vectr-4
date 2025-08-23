@@ -1,1 +1,23 @@
-{}
+
+{
+  "files.watcherExclude": [
+	"node_modules",
+	".next",
+	".turbo",
+	".venv",
+	"python",
+	"dist",
+	"coverage",
+	"*.csv"
+  ],
+  "search.exclude": [
+	"node_modules",
+	".next",
+	".turbo",
+	".venv",
+	"python",
+	"dist",
+	"coverage",
+	"*.csv"
+  ]
+}

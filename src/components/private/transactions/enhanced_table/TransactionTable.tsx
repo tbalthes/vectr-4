@@ -111,12 +111,8 @@ export function TransactionTable({
 
   // If the parent `transactions` prop changes, update our local state
   useEffect(() => {
-    setFilteredAndSortedTransactions((prev) =>
-      prev.map((tx) => transactions.find((t) => t.id === tx.id) || tx)
-    );
-    setDisplayedTransactions((prev) =>
-      prev.map((tx) => transactions.find((t) => t.id === tx.id) || tx)
-    );
+    console.log("TransactionTable: Received", transactions.length, "transactions");
+    setFilteredAndSortedTransactions(transactions);
     setTotal(transactions.length);
   }, [transactions]);
 

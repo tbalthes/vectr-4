@@ -38,16 +38,12 @@ const chartConfig = {
 
 export function CategorySpending() {
   return (
-    <Card className="bg-background text-foreground p-4 md:p-6">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">
-          Monthly Spending - Single Category
-        </CardTitle>
-        <CardDescription className="text-muted-foreground">
-          January - June 2025
-        </CardDescription>
+    <Card>
+      <CardHeader>
+        <CardTitle>Monthly Spending - Single Category</CardTitle>
+        <CardDescription>January - June 2025</CardDescription>
       </CardHeader>
-      <CardContent className="pt-0 pb-2">
+      <CardContent>
         <ChartContainer config={chartConfig}>
           <LineChart
             accessibilityLayer
@@ -79,7 +75,7 @@ export function CategorySpending() {
           </LineChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="pt-0 flex-col items-start gap-2 text-sm">
+      <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 leading-none font-medium">
           Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
         </div>

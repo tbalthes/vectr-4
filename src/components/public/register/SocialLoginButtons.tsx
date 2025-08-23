@@ -33,12 +33,12 @@ export function SocialLoginButtons() {
   };
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-3 gap-3 sm:gap-4">
       {/* Google Login Button */}
       <Button
         variant="outline"
         type="button"
-        className="w-full border-border hover:bg-accent transition-colors duration-200"
+        className="w-full border-border text-foreground hover:bg-accent/10 bg-card"
         onClick={() => handleOAuthSignIn("google")}
         aria-label="Sign up with Google"
       >
@@ -59,9 +59,9 @@ export function SocialLoginButtons() {
 
       {/* GitHub Login Button */}
       <Button
-        variant="outline"
+  variant="outline"
         type="button"
-        className="w-full border-border hover:bg-accent transition-colors duration-200"
+  className="w-full border-border text-foreground hover:bg-accent/10 bg-card"
         onClick={() => handleOAuthSignIn("github")}
         aria-label="Sign up with GitHub"
       >
@@ -84,7 +84,7 @@ export function SocialLoginButtons() {
         <Button
           variant="outline"
           type="button"
-          className="w-full border-border hover:bg-accent transition-colors duration-200"
+          className="w-full border-border text-foreground hover:bg-accent/10 bg-card"
           aria-label="Sign up with Meta"
           disabled // Disabled as it's not part of the handleOAuthSignIn function yet
         >
