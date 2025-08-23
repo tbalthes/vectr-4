@@ -154,7 +154,9 @@ export default function TransactionsPage() {
 
     // Apply optimistic change
     setTransactions((prev) =>
-      prev.map((tx) => (tx.id === transactionId ? { ...tx, note: note || undefined } : tx))
+      prev.map((tx) =>
+        tx.id === transactionId ? { ...tx, note: note || undefined } : tx
+      )
     );
 
     try {

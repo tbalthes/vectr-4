@@ -32,17 +32,29 @@ function normalizeIconName(name?: string) {
   return pascal || "Package";
 }
 
-export default function CategoryIcon({ iconName, className = "w-5 h-5" }: CategoryIconProps) {
+export default function CategoryIcon({
+  iconName,
+  className = "w-5 h-5",
+}: CategoryIconProps) {
   const name = normalizeIconName(iconName);
   // Prefer project-local overrides (so DB values like 'Rabbit' can map directly)
   const Local = (CustomIcons as Record<string, unknown>)[name];
-  if (Local) return React.createElement(Local as unknown as IconConstructor, { className });
+  if (Local)
+    return React.createElement(Local as unknown as IconConstructor, {
+      className,
+    });
 
   const Candidate = (Icons as unknown as Record<string, unknown>)[name];
-  const Icon = (Candidate as unknown) ?? (Icons as unknown as Record<string, unknown>).Package;
+  const Icon =
+    (Candidate as unknown) ??
+    (Icons as unknown as Record<string, unknown>).Package;
   if (!Candidate) {
     console.debug("CategoryIcon: falling back to Package for:", name);
   }
-  type IconConstructor = (props: Record<string, unknown>) => React.ReactElement | null;
-  return Icon ? React.createElement(Icon as unknown as IconConstructor, { className }) : null;
+  type IconConstructor = (
+    props: Record<string, unknown>
+  ) => React.ReactElement | null;
+  return Icon
+    ? React.createElement(Icon as unknown as IconConstructor, { className })
+    : null;
 }

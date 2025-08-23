@@ -272,7 +272,7 @@ export function Spending90v90() {
             <button
               key={key}
               data-active={activeChart === key}
-              className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-l sm:border-t-0"
+              className="data-[active=true]:bg-muted/50 relative flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-l sm:border-t-0"
               onClick={() => setActiveChart(key)}
             >
               <span className="text-xs text-muted-foreground">

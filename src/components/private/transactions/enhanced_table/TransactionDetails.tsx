@@ -12,7 +12,10 @@ interface TransactionDetailsProps {
   onUpdateNote?: (transactionId: string, note: string) => Promise<void>;
 }
 
-export function TransactionDetails({ transaction, onUpdateNote }: TransactionDetailsProps) {
+export function TransactionDetails({
+  transaction,
+  onUpdateNote,
+}: TransactionDetailsProps) {
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [noteValue, setNoteValue] = useState(transaction.note || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -106,13 +109,17 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
                 </div>
               ) : (
                 <div
-                  className={`text-sm text-foreground bg-background border border-border rounded-lg p-2 cursor-pointer hover:bg-muted/20 transition-colors min-h-[40px] flex items-center ${isSaving ? 'opacity-60 pointer-events-none' : ''}`}
+                  className={`text-sm text-foreground bg-background border border-border rounded-lg p-2 cursor-pointer hover:bg-muted/20 transition-colors min-h-[40px] flex items-center ${
+                    isSaving ? "opacity-60 pointer-events-none" : ""
+                  }`}
                   onClick={() => setIsEditingNote(true)}
                 >
                   {noteValue ? (
                     <span className="text-chart-3 italic">{noteValue}</span>
                   ) : (
-                    <span className="text-muted-foreground italic">Click to add a note...</span>
+                    <span className="text-muted-foreground italic">
+                      Click to add a note...
+                    </span>
                   )}
                 </div>
               )}
@@ -139,7 +146,7 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
                   <Badge
                     key={index}
                     variant="outline"
-                    className="text-xs bg-primary/5 text-primary border-primary/20"
+                    className="text-xs bg-muted text-muted-foreground border-border"
                   >
                     {category}
                   </Badge>
@@ -149,13 +156,13 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
 
             {/* Dynamically render User Metadata / Custom Fields */}
             {transaction.userMetadata &&
-              typeof transaction.userMetadata === 'object' &&
+              typeof transaction.userMetadata === "object" &&
               transaction.userMetadata !== null &&
               Object.keys(transaction.userMetadata).length > 0 && (
                 <div>
                   <div className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
                     <span>Custom Fields</span>
-                    <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                    <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
                       {Object.keys(transaction.userMetadata).length}
                     </span>
                   </div>
@@ -163,21 +170,28 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
                     {Object.entries(transaction.userMetadata).map(
                       ([key, value]) => {
                         // Skip internal fields like _rowIndex, formattedAmount, and other system fields
-                        const isSystemField = key.startsWith('_') ||
-                          key.toLowerCase().includes('rowindex') ||
-                          key.toLowerCase().includes('formattedamount') ||
-                          key.toLowerCase().includes('index');
-                        if (isSystemField ||
+                        const isSystemField =
+                          key.startsWith("_") ||
+                          key.toLowerCase().includes("rowindex") ||
+                          key.toLowerCase().includes("formattedamount") ||
+                          key.toLowerCase().includes("index");
+                        if (
+                          isSystemField ||
                           value === null ||
                           value === undefined ||
-                          value === '' ||
-                          typeof value === 'object') {
+                          value === "" ||
+                          typeof value === "object"
+                        ) {
                           return null;
                         }
                         return (
                           <div key={key} className="mb-1">
                             <div className="text-xs font-medium text-muted-foreground mb-1">
-                              {key.replace(/_/g, " ").replace(/([A-Z])/g, ' $1').trim()}:
+                              {key
+                                .replace(/_/g, " ")
+                                .replace(/([A-Z])/g, " $1")
+                                .trim()}
+                              :
                             </div>
                             <div className="text-sm text-foreground bg-background border border-border rounded-lg p-2 font-mono break-all max-w-full overflow-x-auto whitespace-nowrap">
                               {String(value)}
@@ -193,7 +207,7 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
         </div>
       </div>
 
-  {/* Actions and Transaction Date removed for cleaner details row */}
+      {/* Actions and Transaction Date removed for cleaner details row */}
     </div>
   );
 }

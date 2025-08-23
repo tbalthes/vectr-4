@@ -11,14 +11,20 @@ export async function GET(request: NextRequest) {
     const requestCookies = await cookies();
     const supabase = createRouteHandlerClient({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cookies: () => requestCookies as any
+      cookies: () => requestCookies as any,
     });
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
     if (userError || !user) {
       console.error("Authentication error:", userError);
-      return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
+      return NextResponse.json(
+        { error: "User not authenticated" },
+        { status: 401 }
+      );
     }
 
     console.log("API: Authenticated user ID:", user.id);
@@ -54,7 +60,7 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .eq("user_id", user.id)  // Filter by authenticated user's ID
+      .eq("user_id", user.id) // Filter by authenticated user's ID
       .order("date", { ascending: false });
 
     if (error) {
@@ -65,15 +71,22 @@ export async function GET(request: NextRequest) {
         code: error.code,
         status: status,
       });
-      return NextResponse.json({ error: "Could not fetch transaction data" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Could not fetch transaction data" },
+        { status: 500 }
+      );
     }
 
-    console.log(`API: Fetched ${data?.length || 0} transactions for user ${user.id}`);
-    
-    return NextResponse.json(data);
+    console.log(
+      `API: Fetched ${data?.length || 0} transactions for user ${user.id}`
+    );
 
+    return NextResponse.json(data);
   } catch (err) {
     console.error("API route unexpected error:", err);
-    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Unexpected server error" },
+      { status: 500 }
+    );
   }
 }

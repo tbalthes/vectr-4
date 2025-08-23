@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-// ...existing code...
+import PageHeader from "@/components/private/PageHeader";
 
 export default function PrivateLayout({
   children,
@@ -61,7 +61,7 @@ export default function PrivateLayout({
       {/* Hamburger button for mobile */}
       {!sidebarOpen && (
         <button
-          className="md:hidden fixed top-4 left-4 z-40 bg-white rounded-full shadow p-2 border border-slate-200"
+          className="md:hidden fixed top-4 left-4 z-40 bg-background rounded-full shadow p-2 border border-border"
           onClick={() => setSidebarOpen(true)}
           aria-label="Open sidebar"
         >
@@ -82,7 +82,7 @@ export default function PrivateLayout({
       )}
       {/* Main content: margin-left on desktop if sidebar open, none on mobile */}
       <main
-        className={`flex-1 p-3 transition-all duration-200 ${
+        className={`flex-1 transition-all duration-200 ${
           sidebarOpen && !sidebarCollapsed
             ? "md:ml-[var(--sidebar-width)]"
             : "md:ml-[var(--sidebar-collapsed-width)]"

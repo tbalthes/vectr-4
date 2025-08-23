@@ -17,7 +17,7 @@ export function MerchantLogo({
   if (
     typeof logoUrl === "string" &&
     logoUrl.trim() !== "" &&
-    (/^(https?:\/\/|\/|data:)/.test(logoUrl.trim()))
+    /^(https?:\/\/|\/|data:)/.test(logoUrl.trim())
   ) {
     return (
       <Image

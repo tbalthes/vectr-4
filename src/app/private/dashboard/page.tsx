@@ -20,8 +20,7 @@ export default function Dashboard() {
   const router = useRouter();
 
   return (
-    <div className="flex-1 space-y-6 p-6 animate-fade-in">
-      {/* Header */}
+    <>
       <PageHeader
         title="Dashboard"
         subtitle="Welcome back, John. Here's what's happening with your money."
@@ -42,22 +41,24 @@ export default function Dashboard() {
           </div>
         }
       />
-      {/* Stats Cards */}
-      <StatCards />
+      <div className="flex-1 space-y-6 p-6 animate-fade-in">
+        {/* Stats Cards */}
+        <StatCards />
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <IncomeSpendingOverTimeChart transactionData={transactionData} />
-        <Spending90v90 />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <BudgetCompositionChart />
-        <NetWorthOverTime />
-        <SpendingByCategory categories={dashboardData.categoryData} />
-        <CategorySpending />
-      </div>
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <IncomeSpendingOverTimeChart transactionData={transactionData} />
+          <Spending90v90 />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <BudgetCompositionChart />
+          <NetWorthOverTime />
+          <SpendingByCategory categories={dashboardData.categoryData} />
+          <CategorySpending />
+        </div>
 
-      <RecentTransactions transactions={dashboardData.recentTransactions} />
-    </div>
+        <RecentTransactions transactions={dashboardData.recentTransactions} />
+      </div>
+    </>
   );
 }

@@ -1,0 +1,503 @@
+@ ROOT
+├── public
+│   ├── dashboard_preview.png
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── python
+│   ├── __pycache__
+│   │   └── data_cache.cpython-313.pyc
+│   ├── app
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   ├── dependencies.cpython-313.pyc
+│   │   │   └── main.cpython-313.pyc
+│   │   ├── routers
+│   │   │   ├── __pycache__
+│   │   │   │   ├── categorize.cpython-313.pyc
+│   │   │   │   ├── data_status.cpython-313.pyc
+│   │   │   │   ├── transaction_upload.cpython-313.pyc
+│   │   │   │   └── transactions.cpython-313.pyc
+│   │   │   ├── categorize.py
+│   │   │   ├── data_status.py
+│   │   │   ├── transaction_upload.py
+│   │   │   └── transactions.py
+│   │   ├── __init__.py
+│   │   ├── dependencies.py
+│   │   └── main.py
+│   ├── core
+│   │   ├── __pycache__
+│   │   │   ├── matching.cpython-313.pyc
+│   │   │   └── transaction_processor.cpython-313.pyc
+│   │   ├── matching.py
+│   │   ├── parser.py
+│   │   └── transaction_processor.py
+│   ├── data
+│   │   └── bank_transactions - Export (3) (1).csv
+│   ├── docs
+│   │   ├── ADD_BALANCE_TRANS_PROCESSOR.md
+│   │   ├── API_ENDPOINTS.md
+│   │   ├── DATA_CACHE.md
+│   │   ├── openapi.json
+│   │   └── TRANSACTION_PROCESSING_API.md
+│   ├── how_to
+│   │   └── TRANSACTION_PROCESSING_API.md
+│   ├── supabase_client
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-313.pyc
+│   │   │   └── client.cpython-313.pyc
+│   │   ├── __init__.py
+│   │   └── client.py
+│   ├── __init__.py
+│   ├── data_cache.py
+│   ├── requirements.txt
+│   └── test.json
+├── src
+│   ├── app
+│   │   ├── _components
+│   │   │   └── HomePage.tsx
+│   │   ├── api
+│   │   │   ├── transactions
+│   │   │   │   └── route.ts
+│   │   │   └── upload-transactions
+│   │   │       └── route.ts
+│   │   ├── auth
+│   │   │   ├── callback
+│   │   │   │   └── route.ts
+│   │   │   └── login
+│   │   │       └── route.ts
+│   │   ├── private
+│   │   │   ├── accounts
+│   │   │   │   └── page.tsx
+│   │   │   ├── budgets
+│   │   │   │   └── page.tsx
+│   │   │   ├── dashboard
+│   │   │   │   └── page.tsx
+│   │   │   ├── test
+│   │   │   │   └── page.tsx
+│   │   │   ├── transactions
+│   │   │   │   └── page.tsx
+│   │   │   ├── upload
+│   │   │   │   └── page.tsx
+│   │   │   ├── vectr-ai
+│   │   │   │   └── page.tsx
+│   │   │   └── layout.tsx
+│   │   ├── public
+│   │   │   ├── about
+│   │   │   │   └── page.tsx
+│   │   │   ├── landing
+│   │   │   │   └── page.tsx
+│   │   │   ├── login
+│   │   │   │   └── page.tsx
+│   │   │   ├── pricing
+│   │   │   │   └── page.tsx
+│   │   │   └── register
+│   │   │       └── page.tsx
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── figma
+│   │   │   └── ImageWithFallback.tsx
+│   │   ├── icons
+│   │   │   └── CustomIcons.tsx
+│   │   ├── private
+│   │   │   ├── budgets
+│   │   │   │   ├── AddBudgetModal.tsx
+│   │   │   │   ├── budget-utils.ts
+│   │   │   │   ├── BudgetCard.tsx
+│   │   │   │   ├── BudgetCardList.tsx
+│   │   │   │   ├── BudgetInsights.tsx
+│   │   │   │   ├── BudgetOverview.tsx
+│   │   │   │   ├── BudgetStatusIcon.tsx
+│   │   │   │   └── CreateBudgetModal.tsx
+│   │   │   ├── csv-uploader
+│   │   │   │   ├── ColumnMappingAlert.tsx
+│   │   │   │   ├── ColumnMappingStep.tsx
+│   │   │   │   ├── csv-utils.ts
+│   │   │   │   ├── CSVUploader.tsx
+│   │   │   │   ├── DataPreviewStep.tsx
+│   │   │   │   ├── FileUploadStep.tsx
+│   │   │   │   ├── HeaderDetectionStep.tsx
+│   │   │   │   └── PreviewStep.tsx
+│   │   │   ├── dashboard
+│   │   │   │   ├── BudgetCompositionChart.tsx
+│   │   │   │   ├── CategorySpendingChart.tsx
+│   │   │   │   ├── IncomeSpendingOverTime.tsx
+│   │   │   │   ├── IncomeVsSpending.tsx
+│   │   │   │   ├── NetWorthOverTime.tsx
+│   │   │   │   ├── PageHeader.tsx
+│   │   │   │   ├── RecentTransactions.tsx
+│   │   │   │   ├── Spending90v90.tsx
+│   │   │   │   ├── SpendingByCategory.tsx
+│   │   │   │   └── StatCards.tsx
+│   │   │   ├── transactions
+│   │   │   │   ├── enhanced_table
+│   │   │   │   │   ├── AdvancedTransactionTable.tsx
+│   │   │   │   │   ├── CategoryIcon.tsx
+│   │   │   │   │   ├── MerchantLogo.tsx
+│   │   │   │   │   ├── SearchFilterControls.tsx
+│   │   │   │   │   ├── TransactionDetails.tsx
+│   │   │   │   │   ├── TransactionRow.tsx
+│   │   │   │   │   └── TransactionTable.tsx
+│   │   │   │   ├── AddTransactionModal.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── PageHeader.tsx
+│   │   │   │   ├── SearchBar.tsx
+│   │   │   │   └── TransactionTable.tsx
+│   │   │   ├── vectr-ai
+│   │   │   │   ├── ChatInterface.tsx
+│   │   │   │   ├── GoalTrackingCard.tsx
+│   │   │   │   ├── InsightsCard.tsx
+│   │   │   │   ├── PredictionsCard.tsx
+│   │   │   │   └── TabSelector.tsx
+│   │   │   └── PageHeader.tsx
+│   │   ├── public
+│   │   │   ├── login
+│   │   │   │   └── LoginForm.tsx
+│   │   │   └── register
+│   │   │       ├── FormField.tsx
+│   │   │       ├── index.ts
+│   │   │       ├── SignUpForm.tsx
+│   │   │       └── SocialLoginButtons.tsx
+│   │   ├── ui
+│   │   │   ├── accordion.tsx
+│   │   │   ├── alert-dialog.tsx
+│   │   │   ├── alert.tsx
+│   │   │   ├── aspect-ratio.tsx
+│   │   │   ├── avatar.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── breadcrumb.tsx
+│   │   │   ├── button.tsx
+│   │   │   ├── calendar.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── carousel.tsx
+│   │   │   ├── chart.tsx
+│   │   │   ├── checkbox.tsx
+│   │   │   ├── collapsible.tsx
+│   │   │   ├── command.tsx
+│   │   │   ├── context-menu.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── drawer.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   ├── form.tsx
+│   │   │   ├── hover-card.tsx
+│   │   │   ├── input-otp.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── label.tsx
+│   │   │   ├── menubar.tsx
+│   │   │   ├── navigation-menu.tsx
+│   │   │   ├── pagination.tsx
+│   │   │   ├── popover.tsx
+│   │   │   ├── progress.tsx
+│   │   │   ├── radio-group.tsx
+│   │   │   ├── resizable.tsx
+│   │   │   ├── scroll-area.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── separator.tsx
+│   │   │   ├── sheet.tsx
+│   │   │   ├── sidebar.tsx
+│   │   │   ├── skeleton.tsx
+│   │   │   ├── slider.tsx
+│   │   │   ├── sonner.tsx
+│   │   │   ├── switch.tsx
+│   │   │   ├── table.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── textarea.tsx
+│   │   │   ├── toggle-group.tsx
+│   │   │   ├── toggle.tsx
+│   │   │   ├── tooltip.tsx
+│   │   │   └── utils.ts
+│   │   ├── AccountSelectorDropdown.tsx
+│   │   ├── AuthForm.tsx
+│   │   ├── Sidebar.tsx
+│   │   ├── TestIcon.tsx
+│   │   └── transactions.ts
+│   ├── contexts
+│   │   └── AuthContext.tsx
+│   ├── data
+│   │   ├── budget-data.ts
+│   │   ├── dashboard-data.ts
+│   │   ├── transaction-data.ts
+│   │   ├── transaction-table.ts
+│   │   ├── user-data.ts
+│   │   └── vectrai-data.ts
+│   ├── docs
+│   │   └── authentication.md
+│   ├── hooks
+│   │   ├── useAccounts.ts
+│   │   └── useAuth.ts
+│   ├── lib
+│   │   ├── bank_transactions.csv
+│   │   ├── supabase.ts
+│   │   ├── supabaseClient.ts
+│   │   ├── transactions.ts
+│   │   └── utils.ts
+│   ├── types
+│   │   ├── budgets.ts
+│   │   ├── dashboard.ts
+│   │   ├── transactions.ts
+│   │   └── vectrai.ts
+│   ├── middleware.ts
+│   └── requirements.txt
+├── components.json
+├── eslint.config.mjs
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── postcss.config.mjs
+├── print_project_tree.js
+├── project_tree.txt
+├── README.md
+├── requirements.txt
+├── tailwind.config.js
+└── tsconfig.json
+@ PUBLIC
+├── dashboard_preview.png
+├── file.svg
+├── globe.svg
+├── next.svg
+├── vercel.svg
+└── window.svg
+@ PYTHON
+├── __pycache__
+│   └── data_cache.cpython-313.pyc
+├── app
+│   ├── __pycache__
+│   │   ├── __init__.cpython-313.pyc
+│   │   ├── dependencies.cpython-313.pyc
+│   │   └── main.cpython-313.pyc
+│   ├── routers
+│   │   ├── __pycache__
+│   │   │   ├── categorize.cpython-313.pyc
+│   │   │   ├── data_status.cpython-313.pyc
+│   │   │   ├── transaction_upload.cpython-313.pyc
+│   │   │   └── transactions.cpython-313.pyc
+│   │   ├── categorize.py
+│   │   ├── data_status.py
+│   │   ├── transaction_upload.py
+│   │   └── transactions.py
+│   ├── __init__.py
+│   ├── dependencies.py
+│   └── main.py
+├── core
+│   ├── __pycache__
+│   │   ├── matching.cpython-313.pyc
+│   │   └── transaction_processor.cpython-313.pyc
+│   ├── matching.py
+│   ├── parser.py
+│   └── transaction_processor.py
+├── data
+│   └── bank_transactions - Export (3) (1).csv
+├── docs
+│   ├── ADD_BALANCE_TRANS_PROCESSOR.md
+│   ├── API_ENDPOINTS.md
+│   ├── DATA_CACHE.md
+│   ├── openapi.json
+│   └── TRANSACTION_PROCESSING_API.md
+├── how_to
+│   └── TRANSACTION_PROCESSING_API.md
+├── supabase_client
+│   ├── __pycache__
+│   │   ├── __init__.cpython-313.pyc
+│   │   └── client.cpython-313.pyc
+│   ├── __init__.py
+│   └── client.py
+├── __init__.py
+├── data_cache.py
+├── requirements.txt
+└── test.json
+@ SRC
+├── app
+│   ├── _components
+│   │   └── HomePage.tsx
+│   ├── api
+│   │   ├── transactions
+│   │   │   └── route.ts
+│   │   └── upload-transactions
+│   │       └── route.ts
+│   ├── auth
+│   │   ├── callback
+│   │   │   └── route.ts
+│   │   └── login
+│   │       └── route.ts
+│   ├── private
+│   │   ├── accounts
+│   │   │   └── page.tsx
+│   │   ├── budgets
+│   │   │   └── page.tsx
+│   │   ├── dashboard
+│   │   │   └── page.tsx
+│   │   ├── test
+│   │   │   └── page.tsx
+│   │   ├── transactions
+│   │   │   └── page.tsx
+│   │   ├── upload
+│   │   │   └── page.tsx
+│   │   ├── vectr-ai
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── public
+│   │   ├── about
+│   │   │   └── page.tsx
+│   │   ├── landing
+│   │   │   └── page.tsx
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── pricing
+│   │   │   └── page.tsx
+│   │   └── register
+│   │       └── page.tsx
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components
+│   ├── figma
+│   │   └── ImageWithFallback.tsx
+│   ├── icons
+│   │   └── CustomIcons.tsx
+│   ├── private
+│   │   ├── budgets
+│   │   │   ├── AddBudgetModal.tsx
+│   │   │   ├── budget-utils.ts
+│   │   │   ├── BudgetCard.tsx
+│   │   │   ├── BudgetCardList.tsx
+│   │   │   ├── BudgetInsights.tsx
+│   │   │   ├── BudgetOverview.tsx
+│   │   │   ├── BudgetStatusIcon.tsx
+│   │   │   └── CreateBudgetModal.tsx
+│   │   ├── csv-uploader
+│   │   │   ├── ColumnMappingAlert.tsx
+│   │   │   ├── ColumnMappingStep.tsx
+│   │   │   ├── csv-utils.ts
+│   │   │   ├── CSVUploader.tsx
+│   │   │   ├── DataPreviewStep.tsx
+│   │   │   ├── FileUploadStep.tsx
+│   │   │   ├── HeaderDetectionStep.tsx
+│   │   │   └── PreviewStep.tsx
+│   │   ├── dashboard
+│   │   │   ├── BudgetCompositionChart.tsx
+│   │   │   ├── CategorySpendingChart.tsx
+│   │   │   ├── IncomeSpendingOverTime.tsx
+│   │   │   ├── IncomeVsSpending.tsx
+│   │   │   ├── NetWorthOverTime.tsx
+│   │   │   ├── PageHeader.tsx
+│   │   │   ├── RecentTransactions.tsx
+│   │   │   ├── Spending90v90.tsx
+│   │   │   ├── SpendingByCategory.tsx
+│   │   │   └── StatCards.tsx
+│   │   ├── transactions
+│   │   │   ├── enhanced_table
+│   │   │   │   ├── AdvancedTransactionTable.tsx
+│   │   │   │   ├── CategoryIcon.tsx
+│   │   │   │   ├── MerchantLogo.tsx
+│   │   │   │   ├── SearchFilterControls.tsx
+│   │   │   │   ├── TransactionDetails.tsx
+│   │   │   │   ├── TransactionRow.tsx
+│   │   │   │   └── TransactionTable.tsx
+│   │   │   ├── AddTransactionModal.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── PageHeader.tsx
+│   │   │   ├── SearchBar.tsx
+│   │   │   └── TransactionTable.tsx
+│   │   ├── vectr-ai
+│   │   │   ├── ChatInterface.tsx
+│   │   │   ├── GoalTrackingCard.tsx
+│   │   │   ├── InsightsCard.tsx
+│   │   │   ├── PredictionsCard.tsx
+│   │   │   └── TabSelector.tsx
+│   │   └── PageHeader.tsx
+│   ├── public
+│   │   ├── login
+│   │   │   └── LoginForm.tsx
+│   │   └── register
+│   │       ├── FormField.tsx
+│   │       ├── index.ts
+│   │       ├── SignUpForm.tsx
+│   │       └── SocialLoginButtons.tsx
+│   ├── ui
+│   │   ├── accordion.tsx
+│   │   ├── alert-dialog.tsx
+│   │   ├── alert.tsx
+│   │   ├── aspect-ratio.tsx
+│   │   ├── avatar.tsx
+│   │   ├── badge.tsx
+│   │   ├── breadcrumb.tsx
+│   │   ├── button.tsx
+│   │   ├── calendar.tsx
+│   │   ├── card.tsx
+│   │   ├── carousel.tsx
+│   │   ├── chart.tsx
+│   │   ├── checkbox.tsx
+│   │   ├── collapsible.tsx
+│   │   ├── command.tsx
+│   │   ├── context-menu.tsx
+│   │   ├── dialog.tsx
+│   │   ├── drawer.tsx
+│   │   ├── dropdown-menu.tsx
+│   │   ├── form.tsx
+│   │   ├── hover-card.tsx
+│   │   ├── input-otp.tsx
+│   │   ├── input.tsx
+│   │   ├── label.tsx
+│   │   ├── menubar.tsx
+│   │   ├── navigation-menu.tsx
+│   │   ├── pagination.tsx
+│   │   ├── popover.tsx
+│   │   ├── progress.tsx
+│   │   ├── radio-group.tsx
+│   │   ├── resizable.tsx
+│   │   ├── scroll-area.tsx
+│   │   ├── select.tsx
+│   │   ├── separator.tsx
+│   │   ├── sheet.tsx
+│   │   ├── sidebar.tsx
+│   │   ├── skeleton.tsx
+│   │   ├── slider.tsx
+│   │   ├── sonner.tsx
+│   │   ├── switch.tsx
+│   │   ├── table.tsx
+│   │   ├── tabs.tsx
+│   │   ├── textarea.tsx
+│   │   ├── toggle-group.tsx
+│   │   ├── toggle.tsx
+│   │   ├── tooltip.tsx
+│   │   └── utils.ts
+│   ├── AccountSelectorDropdown.tsx
+│   ├── AuthForm.tsx
+│   ├── Sidebar.tsx
+│   ├── TestIcon.tsx
+│   └── transactions.ts
+├── contexts
+│   └── AuthContext.tsx
+├── data
+│   ├── budget-data.ts
+│   ├── dashboard-data.ts
+│   ├── transaction-data.ts
+│   ├── transaction-table.ts
+│   ├── user-data.ts
+│   └── vectrai-data.ts
+├── docs
+│   └── authentication.md
+├── hooks
+│   ├── useAccounts.ts
+│   └── useAuth.ts
+├── lib
+│   ├── bank_transactions.csv
+│   ├── supabase.ts
+│   ├── supabaseClient.ts
+│   ├── transactions.ts
+│   └── utils.ts
+├── types
+│   ├── budgets.ts
+│   ├── dashboard.ts
+│   ├── transactions.ts
+│   └── vectrai.ts
+├── middleware.ts
+└── requirements.txt

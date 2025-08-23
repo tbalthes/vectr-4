@@ -46,14 +46,16 @@ const chartConfig = {
 
 export function BudgetCompositionChart() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Budget Composition - Breakdown</CardTitle>
-        <CardDescription>
+    <Card className="bg-background text-foreground p-4 md:p-6">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold">
+          Budget Composition - Breakdown
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
           Showing total budget composition changes over the last 6 months
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0 pb-2">
         <ChartContainer config={chartConfig}>
           <AreaChart
             accessibilityLayer
@@ -104,15 +106,13 @@ export function BudgetCompositionChart() {
           </AreaChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter>
-        <div className="flex w-full items-start gap-2 text-sm">
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2 leading-none font-medium">
-              Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-            </div>
-            <div className="text-muted-foreground flex items-center gap-2 leading-none">
-              January - June 2025
-            </div>
+      <CardFooter className="pt-0 flex w-full items-start gap-2 text-sm">
+        <div className="grid gap-2">
+          <div className="flex items-center gap-2 leading-none font-medium">
+            Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+          </div>
+          <div className="text-muted-foreground flex items-center gap-2 leading-none">
+            January - June 2025
           </div>
         </div>
       </CardFooter>

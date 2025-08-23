@@ -7,13 +7,16 @@ export async function getTransactionsWithDetails(
   supabase: SupabaseClient
 ): Promise<TransactionFromApi[]> {
   // First, let's check if we have an authenticated user
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
   if (userError || !user) {
     console.error("Authentication error:", userError);
     throw new Error("User not authenticated");
   }
-  
+
   console.log("Authenticated user ID:", user.id);
 
   const { data, error, status } = await supabase
@@ -41,7 +44,7 @@ export async function getTransactionsWithDetails(
       )
     `
     )
-    .eq("user_id", user.id)  // Explicitly filter by user_id
+    .eq("user_id", user.id) // Explicitly filter by user_id
     .order("date", { ascending: false });
 
   if (error) {
@@ -65,8 +68,11 @@ export async function updateTransactionNote(
   note: string
 ): Promise<void> {
   // First, let's check if we have an authenticated user
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
   if (userError || !user) {
     console.error("Authentication error:", userError);
     throw new Error("User not authenticated");

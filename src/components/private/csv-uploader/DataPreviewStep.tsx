@@ -76,9 +76,9 @@ export function DataPreviewStep({
           )}
 
           {hasValidData && (
-            <Alert className="border-green-500/30 bg-green-50/50 dark:bg-green-900/10">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <AlertDescription className="text-green-700 dark:text-green-400">
+            <Alert className="border-success/30 bg-success/10">
+              <CheckCircle className="h-4 w-4 text-success" />
+              <AlertDescription className="text-success">
                 Data looks good! {totalRows} transactions ready for import.
               </AlertDescription>
             </Alert>
@@ -122,7 +122,10 @@ export function DataPreviewStep({
                         </th>
                       )}
                       {Object.entries(mapping.customFields)
-                        .filter(([, columnName]) => columnName && columnName.trim() !== "")
+                        .filter(
+                          ([, columnName]) =>
+                            columnName && columnName.trim() !== ""
+                        )
                         .map(([fieldName, columnName]) => (
                           <th
                             key={fieldName}
@@ -156,11 +159,11 @@ export function DataPreviewStep({
                             className={
                               typeof record.amount === "number" &&
                               record.amount < 0
-                                ? "text-red-600 font-medium"
+                                ? "text-destructive font-medium"
                                 : typeof record.amount === "number" &&
                                   record.amount > 0
-                                ? "text-green-600 font-medium"
-                                : "text-zinc-500 font-medium"
+                                ? "text-success font-medium"
+                                : "text-muted-foreground font-medium"
                             }
                           >
                             {record.formattedAmount ||
@@ -175,7 +178,10 @@ export function DataPreviewStep({
                           </td>
                         )}
                         {Object.entries(mapping.customFields)
-                          .filter(([, columnName]) => columnName && columnName.trim() !== "")
+                          .filter(
+                            ([, columnName]) =>
+                              columnName && columnName.trim() !== ""
+                          )
                           .map(([fieldName, columnName]) => (
                             <td key={fieldName} className="p-3 text-sm">
                               {getCustomFieldValue(record, columnName)}
@@ -198,7 +204,7 @@ export function DataPreviewStep({
       </Card>
 
       {/* Navigation */}
-      <div className="sticky bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 pt-4 pb-4 z-20 flex justify-between border-t border-zinc-200 dark:border-zinc-800 mt-8">
+      <div className="sticky bottom-0 left-0 right-0 bg-background pt-4 pb-4 z-20 flex justify-between border-t border-border mt-8">
         <Button variant="outline" onClick={onBack} className="gap-2">
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back to Mapping

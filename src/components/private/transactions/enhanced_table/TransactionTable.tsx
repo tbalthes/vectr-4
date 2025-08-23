@@ -1,11 +1,22 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Table, TableBody, TableHeader, TableRow, TableHead } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableHeader,
+  TableRow,
+  TableHead,
+} from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronsLeft,
+  ChevronsRight,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { TransactionRow } from "./TransactionRow";
 // Step 1: Import the new, correct type
 import { FormattedTransaction } from "@/types/transactions";
@@ -32,19 +43,26 @@ export function TransactionTable({
   onUpdateNote,
 }: TransactionTableProps) {
   // Local state to receive filtered & paginated results from SearchFilterControls
-  const [paginatedTransactions, setPaginatedTransactions] = useState<FormattedTransaction[]>(
-    transactions.slice(0, Math.min(25, transactions.length))
-  );
-  const [filteredAndSortedTransactions, setFilteredAndSortedTransactions] = useState<FormattedTransaction[]>(transactions);
+  const [paginatedTransactions, setPaginatedTransactions] = useState<
+    FormattedTransaction[]
+  >(transactions.slice(0, Math.min(25, transactions.length)));
+  const [filteredAndSortedTransactions, setFilteredAndSortedTransactions] =
+    useState<FormattedTransaction[]>(transactions);
   const [total, setTotal] = useState<number>(transactions.length);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPageState, setItemsPerPageState] = useState<number>(25);
   const [startIndex, setStartIndex] = useState<number>(0);
-  const [endIndex, setEndIndex] = useState<number>(Math.min(itemsPerPageState, transactions.length));
-  const [totalPages, setTotalPages] = useState<number>(Math.max(1, Math.ceil(transactions.length / itemsPerPageState)));
+  const [endIndex, setEndIndex] = useState<number>(
+    Math.min(itemsPerPageState, transactions.length)
+  );
+  const [totalPages, setTotalPages] = useState<number>(
+    Math.max(1, Math.ceil(transactions.length / itemsPerPageState))
+  );
 
   const uniqueCategories = useMemo(() => {
-    return Array.from(new Set(transactions.map((t) => t.categoryName))).filter(Boolean).sort();
+    return Array.from(new Set(transactions.map((t) => t.categoryName)))
+      .filter(Boolean)
+      .sort();
   }, [transactions]);
 
   // If the parent `transactions` prop changes (for example after an optimistic update),
@@ -57,7 +75,9 @@ export function TransactionTable({
       prev.map((tx) => transactions.find((t) => t.id === tx.id) || tx)
     );
     setTotal(transactions.length);
-    setTotalPages(Math.max(1, Math.ceil(transactions.length / itemsPerPageState)));
+    setTotalPages(
+      Math.max(1, Math.ceil(transactions.length / itemsPerPageState))
+    );
   }, [transactions, itemsPerPageState]);
 
   // Debug: log distinct categoryIcon values returned from the backend so we can
@@ -69,9 +89,12 @@ export function TransactionTable({
           transactions.map((t) => {
             const tx = t as unknown as Record<string, unknown>;
             return (
-              (typeof tx["categoryIcon"] === "string" && (tx["categoryIcon"] as string)) ||
-              (typeof tx["category_name"] === "string" && (tx["category_name"] as string)) ||
-              (typeof tx["categoryName"] === "string" && (tx["categoryName"] as string)) ||
+              (typeof tx["categoryIcon"] === "string" &&
+                (tx["categoryIcon"] as string)) ||
+              (typeof tx["category_name"] === "string" &&
+                (tx["category_name"] as string)) ||
+              (typeof tx["categoryName"] === "string" &&
+                (tx["categoryName"] as string)) ||
               null
             );
           })
@@ -79,7 +102,10 @@ export function TransactionTable({
       );
       console.debug("TransactionTable: distinct categoryIcon values:", icons);
     } catch (e) {
-      console.debug("TransactionTable: error enumerating categoryIcon values", e);
+      console.debug(
+        "TransactionTable: error enumerating categoryIcon values",
+        e
+      );
     }
   }, [transactions]);
 
@@ -104,7 +130,7 @@ export function TransactionTable({
   return (
     <div className={`space-y-3 ${className}`}>
       {/* Controls card: Search / Filters / Pagination size */}
-      <Card className="bg-white border border-gray-200 drop-shadow-md">
+      <Card className="bg-background border border-border drop-shadow-md">
         <div className="p-0">
           <SearchFilterControls
             transactions={transactions}
@@ -116,33 +142,34 @@ export function TransactionTable({
 
       {/* Header area (separate from the table card) */}
       <div className="px-2">
-        <div className="text-sm text-gray-600 font-medium">
-          Showing {total === 0 ? 0 : startIndex + 1} to {Math.min(endIndex, total)} of {total} transactions
+        <div className="text-sm text-muted-foreground font-medium">
+          Showing {total === 0 ? 0 : startIndex + 1} to{" "}
+          {Math.min(endIndex, total)} of {total} transactions
         </div>
       </div>
 
       {/* Table card (table only) */}
-      <Card className="bg-white border border-gray-200 drop-shadow-sm h-full flex flex-col">
+      <Card className="bg-background border border-border drop-shadow-sm h-full flex flex-col">
         <CardContent className="-px-6 flex-1 flex flex-col">
           <Table className="min-w-full flex-1">
-            <TableHeader className="sticky top-0 z-20 bg-white shadow-sm border-b-2 border-gray-200">
-              <TableRow className="hover:bg-gray-50 transition-colors">
-                <TableHead className="h-10 px-4 sm:px-6 text-xs text-center font-bold text-gray-700 uppercase tracking-wider w-[120px]">
+            <TableHeader className="sticky top-0 z-20 bg-background shadow-sm border-b-2 border-border">
+              <TableRow className="hover:bg-muted/50 transition-colors">
+                <TableHead className="h-10 px-4 sm:px-6 text-xs text-center font-bold text-foreground uppercase tracking-wider w-[120px]">
                   DATE
                 </TableHead>
-                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider min-w-[250px]">
+                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-foreground uppercase tracking-wider min-w-[250px]">
                   DESCRIPTION
                 </TableHead>
-                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-right w-[140px]">
+                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-foreground uppercase tracking-wider text-right w-[140px]">
                   AMOUNT
                 </TableHead>
-                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[120px]">
+                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-foreground uppercase tracking-wider text-center w-[120px]">
                   CATEGORY
                 </TableHead>
-                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[100px]">
+                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-foreground uppercase tracking-wider text-center w-[100px]">
                   STATUS
                 </TableHead>
-                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[80px]">
+                <TableHead className="h-10 px-4 sm:px-6 text-xs font-bold text-foreground uppercase tracking-wider text-center w-[80px]">
                   ACTIONS
                 </TableHead>
               </TableRow>

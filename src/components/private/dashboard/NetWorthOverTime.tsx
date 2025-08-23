@@ -37,12 +37,16 @@ const chartConfig = {
 
 export function NetWorthOverTime() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Net Worth - Over Time</CardTitle>
-        <CardDescription>January - Present</CardDescription>
+    <Card className="bg-background text-foreground p-4 md:p-6">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold">
+          Net Worth - Over Time
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
+          January - Present
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0 pb-2">
         <ChartContainer config={chartConfig}>
           <BarChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} />
@@ -62,7 +66,7 @@ export function NetWorthOverTime() {
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
+      <CardFooter className="pt-0 flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 leading-none font-medium">
           Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
         </div>

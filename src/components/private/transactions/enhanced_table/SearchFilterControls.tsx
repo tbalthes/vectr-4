@@ -42,83 +42,101 @@ export default function SearchFilterControls({
   const [currentPage, setCurrentPage] = useState<number>(1);
   // keep as state in case we later expose setters; disable unused-vars lint for setters
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [sortField, setSortField] = useState<"date" | "amount" | "description" | "categoryName">("date");
+  const [sortField, setSortField] = useState<
+    "date" | "amount" | "description" | "categoryName"
+  >("date");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const categories = useMemo(() => {
-    if (uniqueCategories && uniqueCategories.length > 0) return uniqueCategories;
-    const cats = Array.from(new Set((transactions || []).map((t) => t.categoryName || ""))).filter(Boolean);
+    if (uniqueCategories && uniqueCategories.length > 0)
+      return uniqueCategories;
+    const cats = Array.from(
+      new Set((transactions || []).map((t) => t.categoryName || ""))
+    ).filter(Boolean);
     return cats.sort();
   }, [uniqueCategories, transactions]);
 
   // Helper: filter & sort (used by memo and by handlers so we can compute results synchronously)
-  const filterAndSort = useCallback((overrides?: Partial<{
-    searchTerm: string;
-    categoryFilter: string;
-    statusFilter: string;
-    amountFilter: string;
-    sortField: "date" | "amount" | "description" | "categoryName";
-    sortDirection: "asc" | "desc";
-  }>) => {
-    const s = (overrides?.searchTerm ?? searchTerm).trim().toLowerCase();
-    const cat = overrides?.categoryFilter ?? categoryFilter;
-    const status = overrides?.statusFilter ?? statusFilter;
-    const amount = overrides?.amountFilter ?? amountFilter;
-    const sField = overrides?.sortField ?? sortField;
-    const sDir = overrides?.sortDirection ?? sortDirection;
+  const filterAndSort = useCallback(
+    (
+      overrides?: Partial<{
+        searchTerm: string;
+        categoryFilter: string;
+        statusFilter: string;
+        amountFilter: string;
+        sortField: "date" | "amount" | "description" | "categoryName";
+        sortDirection: "asc" | "desc";
+      }>
+    ) => {
+      const s = (overrides?.searchTerm ?? searchTerm).trim().toLowerCase();
+      const cat = overrides?.categoryFilter ?? categoryFilter;
+      const status = overrides?.statusFilter ?? statusFilter;
+      const amount = overrides?.amountFilter ?? amountFilter;
+      const sField = overrides?.sortField ?? sortField;
+      const sDir = overrides?.sortDirection ?? sortDirection;
 
-    const filtered = (transactions || []).filter((transaction) => {
-      const searchMatch =
-        s === "" ||
-        ((transaction.description || "").toLowerCase().includes(s)) ||
-        ((transaction.originalDescription || "").toLowerCase().includes(s)) ||
-        ((transaction.merchantName || "").toLowerCase().includes(s)) ||
-        ((transaction.transaction_number || "").toLowerCase().includes(s));
+      const filtered = (transactions || []).filter((transaction) => {
+        const searchMatch =
+          s === "" ||
+          (transaction.description || "").toLowerCase().includes(s) ||
+          (transaction.originalDescription || "").toLowerCase().includes(s) ||
+          (transaction.merchantName || "").toLowerCase().includes(s) ||
+          (transaction.transaction_number || "").toLowerCase().includes(s);
 
-      const categoryMatch = cat === "all" || transaction.categoryName === cat;
+        const categoryMatch = cat === "all" || transaction.categoryName === cat;
 
-      const statusMatch =
-        status === "all" ||
-        (status === "needs-review" && transaction.needsReview) ||
-        (status === "verified" && !transaction.needsReview);
+        const statusMatch =
+          status === "all" ||
+          (status === "needs-review" && transaction.needsReview) ||
+          (status === "verified" && !transaction.needsReview);
 
-      const amountMatch =
-        amount === "all" ||
-        (amount === "income" && transaction.amount > 0) ||
-        (amount === "expense" && transaction.amount < 0);
+        const amountMatch =
+          amount === "all" ||
+          (amount === "income" && transaction.amount > 0) ||
+          (amount === "expense" && transaction.amount < 0);
 
-      return searchMatch && categoryMatch && statusMatch && amountMatch;
-    });
+        return searchMatch && categoryMatch && statusMatch && amountMatch;
+      });
 
-    filtered.sort((a, b) => {
-      let aValue: Date | number | string = a.date as unknown as string;
-      let bValue: Date | number | string = b.date as unknown as string;
-      switch (sField) {
-        case "date":
-          aValue = new Date(a.date);
-          bValue = new Date(b.date);
-          break;
-        case "amount":
-          aValue = Math.abs(a.amount);
-          bValue = Math.abs(b.amount);
-          break;
-        case "description":
-          aValue = (a.description || "").toLowerCase();
-          bValue = (b.description || "").toLowerCase();
-          break;
-        case "categoryName":
-          aValue = (a.categoryName || "").toLowerCase();
-          bValue = (b.categoryName || "").toLowerCase();
-          break;
-      }
-      if (aValue < bValue) return sDir === "asc" ? -1 : 1;
-      if (aValue > bValue) return sDir === "asc" ? 1 : -1;
-      return 0;
-    });
+      filtered.sort((a, b) => {
+        let aValue: Date | number | string = a.date as unknown as string;
+        let bValue: Date | number | string = b.date as unknown as string;
+        switch (sField) {
+          case "date":
+            aValue = new Date(a.date);
+            bValue = new Date(b.date);
+            break;
+          case "amount":
+            aValue = Math.abs(a.amount);
+            bValue = Math.abs(b.amount);
+            break;
+          case "description":
+            aValue = (a.description || "").toLowerCase();
+            bValue = (b.description || "").toLowerCase();
+            break;
+          case "categoryName":
+            aValue = (a.categoryName || "").toLowerCase();
+            bValue = (b.categoryName || "").toLowerCase();
+            break;
+        }
+        if (aValue < bValue) return sDir === "asc" ? -1 : 1;
+        if (aValue > bValue) return sDir === "asc" ? 1 : -1;
+        return 0;
+      });
 
-    return filtered;
-  }, [transactions, searchTerm, categoryFilter, statusFilter, amountFilter, sortField, sortDirection]);
+      return filtered;
+    },
+    [
+      transactions,
+      searchTerm,
+      categoryFilter,
+      statusFilter,
+      amountFilter,
+      sortField,
+      sortDirection,
+    ]
+  );
 
   const filteredAndSorted = useMemo(() => filterAndSort(), [filterAndSort]);
   // Removed: const totalPages (no longer needed after pagination controls removal)
@@ -126,8 +144,19 @@ export default function SearchFilterControls({
   // paginated list is produced and emitted on user interactions; keep slice available to handlers
 
   // Emit only on user interactions to avoid an update loop with the parent
-  const emitChange = (filtered: FormattedTransaction[], paginatedList: FormattedTransaction[], curPage: number, ipp: number) => {
-    onChange?.({ filtered, paginated: paginatedList, total: filtered.length, currentPage: curPage, itemsPerPage: ipp });
+  const emitChange = (
+    filtered: FormattedTransaction[],
+    paginatedList: FormattedTransaction[],
+    curPage: number,
+    ipp: number
+  ) => {
+    onChange?.({
+      filtered,
+      paginated: paginatedList,
+      total: filtered.length,
+      currentPage: curPage,
+      itemsPerPage: ipp,
+    });
   };
 
   // Handlers that compute results synchronously and emit to parent
@@ -179,7 +208,10 @@ export default function SearchFilterControls({
   // Pagination handlers
   const handlePageChange = (newPage: number) => {
     const filtered = filteredAndSorted;
-    const pag = filtered.slice((newPage - 1) * itemsPerPage, newPage * itemsPerPage);
+    const pag = filtered.slice(
+      (newPage - 1) * itemsPerPage,
+      newPage * itemsPerPage
+    );
     setCurrentPage(newPage);
     emitChange(filtered, pag, newPage, itemsPerPage);
   };
@@ -241,7 +273,9 @@ export default function SearchFilterControls({
             {/* Items per page */}
             <Select
               value={itemsPerPage.toString()}
-              onValueChange={(value) => handleItemsPerPageChange(parseInt(value))}
+              onValueChange={(value) =>
+                handleItemsPerPageChange(parseInt(value))
+              }
             >
               <SelectTrigger className="bg-white border-gray-300 focus:border-blue-500 shadow-sm min-w-[110px]">
                 <SelectValue />
@@ -275,13 +309,27 @@ export default function SearchFilterControls({
               &#8249;
             </button>
             <span className="px-2 text-xs text-gray-700">
-              {currentPage} / {Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage))}
+              {currentPage} /{" "}
+              {Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage))}
             </span>
             <button
               type="button"
               className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
-              onClick={() => handlePageChange(Math.min(Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage)), currentPage + 1))}
-              disabled={currentPage === Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage))}
+              onClick={() =>
+                handlePageChange(
+                  Math.min(
+                    Math.max(
+                      1,
+                      Math.ceil(filteredAndSorted.length / itemsPerPage)
+                    ),
+                    currentPage + 1
+                  )
+                )
+              }
+              disabled={
+                currentPage ===
+                Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage))
+              }
               aria-label="Next page"
             >
               &#8250;
@@ -289,8 +337,18 @@ export default function SearchFilterControls({
             <button
               type="button"
               className="px-2 py-1 rounded border border-gray-300 bg-white text-gray-700 text-xs hover:bg-gray-100 disabled:opacity-50"
-              onClick={() => handlePageChange(Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage)))}
-              disabled={currentPage === Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage))}
+              onClick={() =>
+                handlePageChange(
+                  Math.max(
+                    1,
+                    Math.ceil(filteredAndSorted.length / itemsPerPage)
+                  )
+                )
+              }
+              disabled={
+                currentPage ===
+                Math.max(1, Math.ceil(filteredAndSorted.length / itemsPerPage))
+              }
               aria-label="Last page"
             >
               &#187;
@@ -298,7 +356,6 @@ export default function SearchFilterControls({
           </div>
         </div>
       </div>
-
     </div>
   );
 }
