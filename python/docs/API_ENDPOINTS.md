@@ -9,16 +9,17 @@ Process a batch of bank transactions, enrich them with merchant/category data, a
 `POST http://127.0.0.1:8000/transactions/process-upload-local`
 
 **Request Body:**
+
 ```json
 {
-  "account_id": "string",           // Required. The account identifier for these transactions.
+  "account_id": "string", // Required. The account identifier for these transactions.
   "transactions": [
     {
-      "date": "YYYY-MM-DD",         // Required. Transaction date.
-      "transaction_number": "str",  // Required. Unique transaction number.
-      "description": "string",      // Required. Transaction description.
-      "amount": 123.45,             // Required. Transaction amount.
-      "balance": 1000.00,           // Optional. Account balance after this transaction (pass-through).
+      "date": "YYYY-MM-DD", // Required. Transaction date.
+      "transaction_number": "str", // Required. Unique transaction number.
+      "description": "string", // Required. Transaction description.
+      "amount": 123.45, // Required. Transaction amount.
+      "balance": 1000.0 // Optional. Account balance after this transaction (pass-through).
       // ...any other custom fields (allowed and preserved)
     }
     // ...more transactions
@@ -27,6 +28,7 @@ Process a batch of bank transactions, enrich them with merchant/category data, a
 ```
 
 **Behavior:**
+
 - Each transaction is cleaned and normalized.
 - The description is matched against in-memory regex rules for merchant/category enrichment.
 - Fallback logic uses MCC and parsing if no regex match.
@@ -36,10 +38,12 @@ Process a batch of bank transactions, enrich them with merchant/category data, a
 
 **Response:**
 Returns a list of processed transactions, each including:
+
 - All original fields (including `balance` if present)
 - Enriched fields: `merchant_id`, `merchant_name`, `category_id`, `category_name`, `confidence`, `match_method`, etc.
 
 **Example Response:**
+
 ```json
 [
   {
@@ -51,18 +55,9 @@ Returns a list of processed transactions, each including:
     "merchant_id": "...",
     "merchant_name": "...",
     "category_id": "...",
-    "category_name": "...",
-    "confidence": 1.0,
-    "match_method": "global_regex"
-    // ...any custom fields
-  }
-]
 ```
 
-**Special Feature:**  
-If any transaction in the batch has `"original_description": "refresh data tables"` (or similar trigger), the in-memory cache of lookup tables will be refreshed from Supabase before processing.
-
----
+## **Special Feature:**
 
 ## 2. `/data-table-status/` (GET)
 
@@ -73,6 +68,7 @@ Report the status of the in-memory data tables used for transaction processing, 
 `GET http://127.0.0.1:8000/data-table-status/`
 
 **Response:**
+
 ```json
 {
   "last_refresh": "2024-08-16T18:00:00.000000",
@@ -83,23 +79,22 @@ Report the status of the in-memory data tables used for transaction processing, 
 ```
 
 **Fields:**
+
 - `last_refresh`: UTC timestamp of the last time the lookup tables were loaded/refreshed from Supabase.
 - `global_regex_rules_count`: Number of regex rules currently cached.
 - `mcc_category_map_count`: Number of MCC-category mappings cached.
-- `categories_count`: Number of categories cached.
 
-**Usage:**  
+**Usage:**
+
 - Use this endpoint to monitor the health and freshness of your in-memory lookup tables.
 - Useful for debugging, development, and ensuring that recent changes in Supabase are reflected in your API.
 
 ---
 
-**See also:**  
+**See also:**
+
 - [TRANSACTION_PROCESSING_API.md](./TRANSACTION_PROCESSING_API.md) for more details on transaction enrichment logic.
 - [data_cache.py](./data_cache.py) for
-  more information about the in-memory lookup/cache implementation.
-
----
 
 ## End-to-end transaction processing (upload → table)
 
@@ -120,35 +115,24 @@ High-level flow:
 - What happens:
   - User clicks “+ Add transaction” which opens the CSV uploader UI.
   - The file is read (client-side) and parsed into rows (CSV parsing utilities in `csv-utils.ts`).
-  - The UI presents a column-mapping step so the user can tell the app which CSV column maps to `date`, `transaction_number`, `description`, `amount`, etc.
-  - The uploader constructs a JSON payload with the mapped fields and any extra columns preserved.
 
 Example payload shape sent by the frontend (same shape expected by the processing endpoint):
-
-```json
 {
-  "account_id": "string",
-  "transactions": [
-    {
-      "date": "YYYY-MM-DD",
-      "transaction_number": "TXN-001",
-      "description": "Some merchant text",
-      "amount": -12.34,
-      "balance": 1000.00,
-      "original_description": "raw csv description",
-      "custom_column": "kept"
-    }
-  ]
+"date": "YYYY-MM-DD",
+"transaction_number": "TXN-001",
+"description": "Some merchant text",
+"amount": -12.34,
+"balance": 1000.00,
+"original_description": "raw csv description",
+"custom_column": "kept"
 }
+]
+}
+
 ```
 
-Notes:
-- The frontend preserves any extra columns and sends them through so backend processing doesn't drop fields.
-- Column mapping is optional for developer testing; automatic column heuristics are often used for common provider CSVs.
 
 ### 2) Processing (backend)
-
-- Endpoint(s):
   - Development-only/process endpoint: `POST http://127.0.0.1:8000/transactions/process-upload-local` (documented above). This processes batches and returns enriched results without writing to the DB.
   - Production/ingest endpoints may exist under `python/app/` (check `main.py` and routers). Frontend also uses a Next.js API proxy at `/api/transactions` to fetch stored transactions.
 
@@ -163,7 +147,6 @@ Notes:
   3. If a special trigger is present (for example, a transaction with `original_description` == "refresh data tables"), refresh the in-memory cache from Supabase before processing the batch.
   4. Attempt merchant/category enrichment in order of preference:
      - Global regex rules (highest confidence, exact pattern matches)
-     - MCC -> category mapping (fallback for ATM/merchant-less rows)
      - Fuzzy string heuristics / parsed merchant name
   5. Attach metadata to the returned transaction: `merchant_id`, `merchant_name`, `category_id`, `category_name`, `confidence`, `match_method`, `full_merchant_data` (optional), and preserve any custom fields.
 
@@ -248,3 +231,4 @@ Key UI files: `SearchFilterControls.tsx`, `transaction-search.tsx`, `enhanced_ta
 ---
 
 
+```
