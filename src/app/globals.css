@@ -4,6 +4,23 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .text-2xs {
+    font-size: 0.625rem; /* 10px */
+    line-height: 0.75rem; /* 12px */
+  }
+  
+  .text-3xs {
+    font-size: 0.5rem; /* 8px */
+    line-height: 0.625rem; /* 10px */
+  }
+  
+  .text-micro {
+    font-size: 0.4375rem; /* 7px */
+    line-height: 0.5rem; /* 8px */
+  }
+}
+
 :root {
   --radius: 0.65rem;
   --background: oklch(1 0 0);
@@ -97,4 +114,4 @@
   --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
   --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-} 
+}

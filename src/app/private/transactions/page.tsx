@@ -1,228 +1,194 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { TransactionTable } from "@/components/private/transactions/enhanced_table/TransactionTable";
-import { Skeleton } from "@/components/ui/skeleton";
+import TransactionTableVirtuoso from "@/components/private/transactions/enhanced_table/TransactionTableVirtuoso";
+import { TransactionDetailsDrawer } from "@/components/private/transactions/enhanced_table/TransactionDetailsDrawer";
 import { Button } from "@/components/ui/button";
-import { Calendar, Filter, Plus } from "lucide-react";
-import { TransactionFromApi, FormattedTransaction } from "@/types/transactions";
-import { useAuth } from "@/contexts/AuthContext";
-import { updateTransactionNote } from "@/lib/transactions";
+import { Plus, Calendar, Filter } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { FormattedTransaction } from "@/types/transactions";
+import { useInfiniteTransactions } from '@/hooks/useInfiniteTransactions';
 import PageHeader from "@/components/private/PageHeader";
-import { TransactionSearch } from "@/components/private/transactions/transaction-search";
-import { Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover";
-// Helper function to format API data for UI
-const formatApiDataForUI = (
-  apiData: TransactionFromApi[]
-): FormattedTransaction[] => {
-  return apiData.map((tx) => {
-    // Parse user_metadata if it's a string (JSONB from Supabase)
-    let parsedUserMetadata = null;
-    if (tx.user_metadata) {
-      try {
-        if (typeof tx.user_metadata === "string") {
-          parsedUserMetadata = JSON.parse(tx.user_metadata);
-        } else {
-          parsedUserMetadata = tx.user_metadata;
-        }
-
-        // Debug log to see what we're getting
-        console.log(
-          "Parsed user_metadata for transaction:",
-          tx.id,
-          parsedUserMetadata
-        );
-
-        // Filter out unwanted fields and keep only user-mapped custom fields
-        if (parsedUserMetadata && typeof parsedUserMetadata === "object") {
-          const filteredMetadata: Record<string, string | number | boolean> =
-            {};
-          Object.entries(parsedUserMetadata).forEach(([key, value]) => {
-            // Skip internal fields like _rowIndex, formattedAmount, and other system fields
-            const isSystemField =
-              key.startsWith("_") ||
-              key.toLowerCase().includes("rowindex") ||
-              key.toLowerCase().includes("formattedamount") ||
-              key.toLowerCase().includes("index");
-
-            if (
-              !isSystemField &&
-              value !== null &&
-              value !== undefined &&
-              value !== "" &&
-              typeof value !== "object"
-            ) {
-              filteredMetadata[key] = value as string | number | boolean;
-            }
-          });
-          parsedUserMetadata =
-            Object.keys(filteredMetadata).length > 0 ? filteredMetadata : null;
-        }
-      } catch (error) {
-        console.warn("Failed to parse user_metadata:", error);
-        parsedUserMetadata = tx.user_metadata;
-      }
-    }
-
-    // Format transaction number to remove decimals and ensure alphanumeric
-    const formattedTransactionNumber = tx.transaction_number
-      ? String(tx.transaction_number).replace(/\.\d+$/, "")
-      : "";
-
-    // Debug log to see what category data we're getting
-    console.log("Transaction category data:", {
-      transactionId: tx.id,
-      merchantName: tx.merchants?.name,
-      categoryName: tx.merchants?.categories?.name,
-      categoryIcon: tx.merchants?.categories?.icon,
-      fullMerchantData: tx.merchants,
-    });
-
-    return {
-      id: tx.id,
-      transaction_number: formattedTransactionNumber,
-      date: tx.date,
-      amount: tx.amount, // Keep original amount (negative for debits, positive for credits)
-      originalDescription: tx.original_description,
-      balance: tx.balance,
-      userMetadata: parsedUserMetadata,
-      needsReview: tx.needs_review || false,
-      description: tx.merchants?.name || tx.clean_description,
-      merchantName: tx.merchants?.name || "Unknown Merchant",
-      merchantLogoUrl: tx.merchants?.logo_url || null,
-      categoryName: tx.merchants?.categories?.name || "Uncategorized",
-      categoryIcon: tx.merchants?.categories?.icon || "Package",
-      note: tx.transaction_note || undefined,
-    };
-  });
-};
+// The page now uses server-side formatted transactions via the API and the
+// `useInfiniteTransactions` hook. Client-side formatting utilities were removed
+// to avoid duplicating logic. If needed, reintroduce a small formatter that
+// maps API fields to `FormattedTransaction`.
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filteredTransactions, setFilteredTransactions] = useState<FormattedTransaction[]>([]);
+  // TODO: Integrate useInfiniteTransactions and new data flow (WBS 3.1)
+  // Placeholder for future filter panel (WBS 5.1)
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<'date' | 'amount' | 'transaction_number'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const router = useRouter();
+
+  // Drawer state
+  const [drawerTransactionId, setDrawerTransactionId] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const { user } = useAuth();
-  const router = useRouter();
-  const supabase = createClientComponentClient();
-
-  // Handle search filtering from TransactionSearch component
-  const handleFilteredChange = useCallback((filtered: FormattedTransaction[]) => {
-    console.log("handleFilteredChange called with:", filtered.length, "transactions");
-    setFilteredTransactions(filtered);
-  }, []);
-
-  // Monitor when transactions state actually updates
+  // Debounced search state
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
-    console.log("transactions state changed to:", transactions.length, "transactions");
-  }, [transactions]);
+    const handler = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(handler);
+  }, [search]);
 
-  // Debug logging
-  console.log("Render - transactions:", transactions.length, "filtered:", filteredTransactions.length);
+  // Infinite loading hook
+  const {
+    transactions,
+    isLoadingMore,
+    isReachingEnd,
+    loadMore,
+    error,
+  } = useInfiniteTransactions({
+    q: debouncedSearch,
+    sortBy,
+    sortOrder,
+    pageSize: 50,
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // Check if user is authenticated
-      if (!user) {
-        console.error("No authenticated user found. Please log in.");
-        setError("You must be logged in to view this page.");
-        setLoading(false);
-        return;
-      }
+  console.log("TransactionsPage render:", {
+    transactionsCount: transactions.length,
+    isLoadingMore,
+    isReachingEnd,
+    error,
+    firstTransaction: transactions[0],
+    hasLoadMore: !!loadMore
+  });
 
-      console.log("Authenticated user found:", user.id);
-
-      try {
-        // Use the API endpoint that bypasses RLS
-        const response = await fetch("/api/transactions");
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const rawTransactions: TransactionFromApi[] = await response.json();
-        const formattedTransactions = formatApiDataForUI(rawTransactions);
-        setTransactions(formattedTransactions);
-      } catch (err) {
-        setError("Failed to fetch transactions.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user]);
 
   const handleEditTransaction = (_transaction: FormattedTransaction) => {
     void _transaction;
-    /* ... */
   };
   const handleDeleteTransaction = async (_transaction: FormattedTransaction) => {
     void _transaction;
-    /* ... */
   };
 
-  const handleUpdateNote = async (transactionId: string, note: string) => {
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    // Optimistic update: update UI first, persist to Supabase, revert on failure
-    const previousTransactions = transactions;
-
-    // Apply optimistic change
-    setTransactions((prev) =>
-      prev.map((tx) =>
-        tx.id === transactionId ? { ...tx, note: note || undefined } : tx
-      )
-    );
-
+  // Drawer edit handler
+  const handleDrawerEdit = async (transaction: {
+    id: string;
+    transaction_number: string;
+    date: string;
+    clean_description: string;
+    original_description: string;
+    amount: number;
+    balance: number | null;
+    transaction_note: string | null;
+    needs_review: boolean;
+  }) => {
     try {
-      await updateTransactionNote(supabase, transactionId, note);
+      const response = await fetch(`/api/transactions/${transaction.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(transaction),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update transaction: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Transaction updated successfully:', result);
+      
+      // Optionally refresh the transactions list or update optimistically
+      // For now, we'll just log success
     } catch (error) {
-      console.error("Failed to update transaction note:", error);
-      // Revert local state to previous value
-      setTransactions(previousTransactions);
-      throw error;
+      console.error('Error updating transaction:', error);
+      // TODO: Show error toast/notification
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-6 space-y-4">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-[700px] w-full" />
-      </div>
-    );
-  }
+  // Drawer delete handler
+  const handleDrawerDelete = async (transactionId: string) => {
+    try {
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        method: 'DELETE',
+      });
 
-  if (error) {
-    return <div className="p-6 text-destructive font-semibold">{error}</div>;
-  }
+      if (!response.ok) {
+        throw new Error(`Failed to delete transaction: ${response.statusText}`);
+      }
 
-  // Also good practice to handle the case where a user has no transactions
-  if (transactions.length === 0) {
-    return <div className="p-6">No transactions found.</div>;
-  }
+      console.log('Transaction deleted successfully');
+      
+      // Close the drawer and optionally refresh the list
+      handleCloseDrawer();
+      // TODO: Remove from local state or refresh transactions
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      // TODO: Show error toast/notification
+    }
+  };
 
+  const handleUpdateNote = async (_transactionId: string, _note: string) => {
+    // Use params to avoid TS unused variable errors and reserve for WBS 6 optimistic updates.
+    void _transactionId;
+    void _note;
+    // Note: optimistic updates/mutations will be integrated in WBS 6.
+    return Promise.resolve();
+  };
+
+  // Drawer handlers
+  const handleOpenDetails = (transactionId: string) => {
+    setDrawerTransactionId(transactionId);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setDrawerTransactionId(null);
+  };
+
+  // TODO: Render loading, error, and empty states using new hook (WBS 3.1)
   return (
     <>
+      <style jsx global>{`
+        /* Hide browser scrollbars */
+        html, body {
+          overflow: hidden;
+        }
+
+        /* Ensure the page content can scroll */
+        #__next {
+          height: 100vh;
+          overflow: hidden;
+        }
+      `}</style>
       <PageHeader
         title="Transactions"
-        subtitle="View and manage your transactions"
+        subtitle=""
         actions={
           <div className="flex items-center space-x-3">
-            <TransactionSearch
-              transactions={transactions}
-              onFilteredChange={handleFilteredChange}
+            <input
+              type="text"
+              className="border rounded px-2 py-1 text-sm"
               placeholder="Search transactions..."
-              size="sm"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ minWidth: 200 }}
             />
+            <select
+              value={sortBy}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value as 'date' | 'amount' | 'transaction_number')}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value="date">Date</option>
+              <option value="amount">Amount</option>
+              <option value="transaction_number">Transaction #</option>
+            </select>
+            <select
+              value={sortOrder}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortOrder(e.target.value as 'asc' | 'desc')}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value="desc">Desc</option>
+              <option value="asc">Asc</option>
+            </select>
             <Button variant="outline" size="sm">
               <Calendar className="mr-2 h-4 w-4" />
               Date
@@ -267,7 +233,6 @@ export default function TransactionsPage() {
             <Button variant="outline" size="sm">
               Edit rules
             </Button>
-            
             <Button size="sm" onClick={() => router.push("/private/upload")}>
               <Plus className="mr-2 h-4 w-4" />
               Add transaction
@@ -276,15 +241,34 @@ export default function TransactionsPage() {
         }
       />
 
-      <div className="p-3 space-y-6">
-        <TransactionTable
-          transactions={filteredTransactions}
+      <div className="h-full overflow-hidden bg-background dark:bg-background">
+        {error ? <div className="text-destructive dark:text-destructive font-semibold p-3">Failed to load transactions.</div> : null}
+        {!error && transactions.length === 0 && !isLoadingMore && (
+          <div className="flex justify-center items-center h-full text-muted-foreground dark:text-muted-foreground">
+            No transactions found.
+          </div>
+        )}
+
+        <TransactionTableVirtuoso
+          transactions={transactions}
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
           onUpdateNote={handleUpdateNote}
-          className=""
+          onOpenDetails={handleOpenDetails}
+          loadMore={loadMore}
+          isReachingEnd={isReachingEnd}
+          isLoadingMore={isLoadingMore}
         />
       </div>
+
+      {/* Transaction Details Drawer */}
+      <TransactionDetailsDrawer
+        transactionId={drawerTransactionId}
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        onEdit={handleDrawerEdit}
+        onDelete={handleDrawerDelete}
+      />
     </>
   );
 }

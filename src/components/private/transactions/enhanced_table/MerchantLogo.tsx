@@ -12,6 +12,9 @@ export function MerchantLogo({
   logoUrl,
   className = "w-8 h-8",
 }: MerchantLogoProps) {
+  // Guard merchantName
+  const name = merchantName || "";
+
   // If a logoUrl is provided, try to render it.
   // Only render Image if logoUrl is a non-empty string and looks like a valid URL
   if (
@@ -33,7 +36,7 @@ export function MerchantLogo({
     );
   }
 
-  // Fallback to initial if no logoUrl
+  // Fallback to initial if no logoUrl - use theme colors
   const colors = [
     "bg-chart-1/20 text-chart-1",
     "bg-chart-2/20 text-chart-2",
@@ -41,15 +44,15 @@ export function MerchantLogo({
     "bg-chart-4/20 text-chart-4",
     "bg-chart-5/20 text-chart-5",
   ];
-  const colorIndex = merchantName.length % colors.length;
+  const colorIndex = name.length % colors.length;
   const colorClass = colors[colorIndex];
 
   return (
     <div
-      className={`${className} ${colorClass} rounded-lg flex items-center justify-center border border-current/20`}
+      className={`${className} ${colorClass} rounded-full flex items-center justify-center border border-current/20`}
     >
       <span className="font-semibold text-sm">
-        {merchantName.charAt(0).toUpperCase()}
+        {name.charAt(0).toUpperCase()}
       </span>
     </div>
   );

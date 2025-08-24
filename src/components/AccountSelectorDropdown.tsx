@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/select";
 // UI icon import unused here
 import { useAccounts } from "@/hooks/useAccounts";
-import userProfile from "@/data/user-data";
 
 interface Props {
   value: string;
@@ -31,7 +30,7 @@ export default function AccountSelectorDropdown({
     accounts,
     loading: accountsLoading,
     error: accountsError,
-  } = useAccounts(userProfile.user_id);
+  } = useAccounts();
 
   return (
     <div className="space-y-2">

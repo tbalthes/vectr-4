@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
     const email = String(formData.get("email"));
     const password = String(formData.get("password"));
 
-    // Prepare a redirect response early so we can attach cookies to it.
-    const redirectUrl = new URL("/private/dashboard", request.url);
-    const response = NextResponse.redirect(redirectUrl);
+  // Prepare a JSON response so the client fetch receives a predictable
+  // JSON body while we still attach cookies to the same response.
+  const response = NextResponse.json({ success: true });
 
     // Resolve request-scoped cookies (some runtimes return a Promise, others return directly)
     const requestCookies = await cookies();
@@ -76,9 +76,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Return the response we attached cookie writes to (redirect). Cookies set by
-    // the Supabase client are now present on `response` and will be sent to the browser.
-    return response;
+    // Return the JSON response we attached cookie writes to. Also include
+    // the session and user information so the browser-side Supabase client
+    // can update its local session cache immediately.
+    // Note: cookies written to `response` will still be sent to the browser.
+    return NextResponse.json(
+      { success: true, session: data?.session ?? null, user: data?.user ?? null },
+      { status: 200 }
+    );
   } catch (err) {
     console.error("Auth route unexpected error:", err);
     return NextResponse.json(

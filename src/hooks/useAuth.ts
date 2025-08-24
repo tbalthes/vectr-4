@@ -10,6 +10,8 @@ interface UseAuthReturn {
   user: User | null;
   loading: boolean;
   userId: string | null;
+  signIn: (email: string, password: string) => Promise<{ error: unknown }>;
+  signUp: (email: string, password: string, name?: string) => Promise<{ error: unknown }>;
 }
 
 export function useAuth(): UseAuthReturn {
@@ -20,26 +22,62 @@ export function useAuth(): UseAuthReturn {
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    // The onAuthStateChange listener is the single source of truth.
-    // It fires once on load with the initial session, and then for any change.
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      // When the listener fires, the initial check is complete.
-      setLoading(false);
+    let mounted = true;
+
+    // Fetch the initial session once (ensures we have the current user immediately)
+    (async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+        if (error) {
+          console.error("useAuth: getSession error", error);
+        }
+        setUser(session?.user ?? null);
+        setLoading(false);
+      } catch (err) {
+        console.error("useAuth: getSession unexpected error", err);
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    // Subscribe to auth state changes to keep user state in sync
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Update user when auth state changes (login/logout)
       setUser(session?.user ?? null);
     });
 
-    // The cleanup function for the effect is to unsubscribe from the listener.
     return () => {
-      subscription.unsubscribe();
+      mounted = false;
+      data?.subscription.unsubscribe();
     };
-  }, [supabase.auth]); // The effect depends only on the auth client instance.
+  }, [supabase]); // depend on supabase client instance
 
   return {
     user,
     loading,
     userId: user?.id ?? null,
+    signIn: async (email: string, password: string) => {
+      // sign in with password
+      const res = await supabase.auth.signInWithPassword({ email, password });
+      if (res.error) return { error: res.error };
+      // update local user state immediately when possible
+      if (res.data?.user) setUser(res.data.user);
+      return { error: null };
+    },
+    signUp: async (email: string, password: string, name?: string) => {
+      const res = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: name } },
+      });
+      if (res.error) return { error: res.error };
+      if (res.data?.user) setUser(res.data.user);
+      return { error: null };
+    },
   };
 }
 

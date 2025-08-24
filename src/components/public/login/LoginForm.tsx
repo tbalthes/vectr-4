@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
   const router = useRouter();
+  const supabase = createClientComponentClient();
 
   const handleInputChange =
     (field: keyof LoginFormData) =>
@@ -84,15 +86,27 @@ export function LoginForm({
         body: formDataPayload,
       });
 
-      if (!response.ok) {
-        const { error } = await response.json();
-        throw new Error(error || "Login failed. Please try again.");
+      const json = await response.json();
+
+      if (!response.ok || json?.error) {
+        throw new Error(json?.error || "Login failed. Please try again.");
       }
 
-      console.log("Login successful, redirecting to /private/dashboard");
+      // If the server returned a session object, update the client Supabase session
+      // so the client-side auth SDK and hooks (useAuth) reflect the new session
+      // immediately. Cookies will still be set by the server response.
+      if (json?.session) {
+        try {
+          await supabase.auth.setSession(json.session);
+        } catch (err) {
+          // Non-fatal: still proceed to refresh and navigate; server cookies are authoritative.
+          console.warn("Failed to set client session from server response", err);
+        }
+      }
 
-      // Crucial step: Refresh the router to reload server components and
-      // allow the new session cookie to be picked up by middleware.
+      console.log("Login successful, refreshing and redirecting to /private/dashboard");
+
+      // Refresh server components to pick up the new session cookie, then navigate.
       router.refresh();
       router.push("/private/dashboard");
     } catch (error: unknown) {

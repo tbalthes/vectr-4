@@ -57,7 +57,7 @@ export function ColumnMappingStep({
     accounts,
     loading: accountsLoading,
     error: accountsError,
-  } = useAccounts(userId || "");
+  } = useAccounts();
 
   // Detect balance column
   const hasBalance = hasBalanceColumn(headers);

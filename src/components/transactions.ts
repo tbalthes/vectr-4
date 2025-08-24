@@ -41,6 +41,7 @@ export async function getTransactionsWithDetails(): Promise<
     throw new Error("Could not fetch transaction data.");
   }
 
-  // The 'data' is already typed by Supabase, but we cast it for our app's benefit
-  return data as TransactionFromApi[];
+  // The 'data' is typed by Supabase; convert to unknown first and then to our type.
+  const asUnknown = data as unknown;
+  return asUnknown as TransactionFromApi[];
 }

@@ -1,15 +1,15 @@
-// // src/types/transactions.ts
+// src/types/transactions.ts
 
-// export interface Transaction {
-//   id: number;
-//   description: string;
-//   amount: number;
-//   category: string;
-//   date: string;
-//   account: string;
-//   type: "income" | "expense";
-//   status: "completed" | "pending";
-// }
+export interface Transaction {
+  id: number;
+  description: string;
+  amount: number;
+  category: string;
+  date: string;
+  account: string;
+  type: "income" | "expense";
+  status: "completed" | "pending";
+}
 // This type matches the nested structure returned by our Supabase query
 export interface TransactionFromApi {
   id: string;
@@ -47,6 +47,11 @@ export interface FormattedTransaction {
   merchantLogoUrl: string | null;
   categoryName: string;
   categoryIcon: string;
+  // Additional properties for TransactionTable compatibility
+  type: "income" | "expense";
+  category: string;
+  account: string;
+  status: "completed" | "pending";
   // This will be used by the TransactionDetails component
   allCategories?: string[];
   note?: string;

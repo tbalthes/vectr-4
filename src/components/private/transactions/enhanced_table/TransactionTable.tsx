@@ -98,7 +98,7 @@ export function TransactionTable({
       setDisplayedTransactions(filteredAndSortedTransactions.slice(0, newCount));
       setLoadedCount(newCount);
       setIsLoading(false);
-    }, 300); // Slightly longer delay for smoother UX
+    }, 400); // 400ms delay for consistent UX
   }, [isLoading, loadedCount, filteredAndSortedTransactions, LOAD_MORE_COUNT]);
 
   // Initialize displayed transactions when filtered data changes
@@ -213,15 +213,18 @@ export function TransactionTable({
               {displayedTransactions.map((transaction, index) => {
                 const isLast = index === displayedTransactions.length - 1;
                 return (
-                  <TransactionRow
+                  <TableRow
                     key={transaction.id}
-                    transaction={transaction}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onUpdateNote={onUpdateNote}
-                    index={index}
                     ref={isLast ? lastTransactionRef : undefined}
-                  />
+                  >
+                    <TransactionRow
+                      transaction={transaction}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onUpdateNote={onUpdateNote}
+                      index={index}
+                    />
+                  </TableRow>
                 );
               })}
               {isLoading && (

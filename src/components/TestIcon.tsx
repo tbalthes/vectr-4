@@ -1,4 +1,4 @@
-import { CategoryIcon } from "./private/transactions/enhanced_table/CategoryIcon";
+import CategoryIcon from "./private/transactions/enhanced_table/CategoryIcon";
 
 export function TestIcon() {
   const testIconNames = [

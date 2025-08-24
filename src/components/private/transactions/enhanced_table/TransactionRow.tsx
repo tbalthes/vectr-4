@@ -1,22 +1,11 @@
 "use client";
 
-import { useState, forwardRef } from "react";
-import {
-  Edit3,
-  ChevronDown,
-  ChevronRight,
-  AlertTriangle,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Flag,
-  StickyNote,
-} from "lucide-react";
+import React from "react";
+import { ChevronRight, Flag, StickyNote } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import CategoryIcon from "./CategoryIcon";
-import { MerchantLogo } from "./MerchantLogo";
-import { TransactionDetails } from "./TransactionDetails";
+import MerchantLogo from "./MerchantLogo";
 // Step 1: Import the new, flattened transaction type
 import { FormattedTransaction } from "@/types/transactions";
 
@@ -28,19 +17,25 @@ interface TransactionRowProps {
   // isSelected is now managed by the parent page if needed, but we remove it for simplicity
   // isSelected: boolean;
   index: number;
+  onOpenDetails?: (transactionId: string) => void;
 }
 
-export const TransactionRow = forwardRef<HTMLTableRowElement, TransactionRowProps>(({
+export function TransactionRow({
   transaction,
-  onEdit,
-  onDelete,
-  onUpdateNote,
-  index,
-}, ref) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // onEdit,
+  // onDelete, // Temporarily unused
+  // onUpdateNote, // Temporarily unused
+  // index, // Temporarily unused
+  onOpenDetails,
+}: TransactionRowProps) {
 
   // Helper function to format the transaction amount and determine its type
-  const formatAmount = (amount: number) => {
+  const formatAmount = (amount: number): {
+    amount: string;
+    isCredit: boolean;
+    isDebit: boolean;
+    className: string;
+  } => {
     const isCredit = amount > 0; // Positive amounts are credits (income)
     const isDebit = amount < 0; // Negative amounts are debits (expenses)
 
@@ -54,8 +49,8 @@ export const TransactionRow = forwardRef<HTMLTableRowElement, TransactionRowProp
       isCredit,
       isDebit,
       className: isCredit
-        ? "text-chart-2 font-semibold" // Green for credits/income
-        : "text-red-600 font-semibold", // Red for debits/expenses
+        ? "text-chart-2 dark:text-chart-2 font-semibold" // Green for credits/income in both themes
+        : "text-foreground dark:text-foreground font-semibold", // Default text for debits/expenses
     };
   };
 
@@ -84,169 +79,98 @@ export const TransactionRow = forwardRef<HTMLTableRowElement, TransactionRowProp
   const {
     amount,
     isCredit,
-    isDebit,
     className: amountClassName,
   } = formatAmount(transaction.amount);
-  const dateFormatted = formatDate(transaction.date);
+  // dateFormatted reserved for future use
+  void formatDate(transaction.date);
+
+  const handleOpenDetails = () => {
+    if (onOpenDetails) {
+      onOpenDetails(transaction.id);
+    }
+  };
 
   return (
     <>
-      <TableRow
-        ref={ref}
-        className={`group hover:bg-accent/30 transition-colors duration-200 border-b border-border/50 cursor-pointer ${
-          index % 2 === 0 ? "bg-background" : "bg-muted/20"
-        } ${
-          // Step 2: Use the new camelCase prop name
-          transaction.needsReview ? "border-l-4 border-l-chart-1" : ""
-        }`}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {/* Date */}
-        <TableCell className="p-2">
-          <div className="text-center relative">
-            {transaction.needsReview && (
-              <Flag className="w-3 h-3 text-chart-1 absolute -top-1 -right-1" />
-            )}
-            <div
-              className={`text-sm font-medium ${
-                dateFormatted.isToday ? "text-chart-2" : "text-foreground"
-              }`}
-            >
-              {dateFormatted.main}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {dateFormatted.year}
-            </div>
-            {dateFormatted.isToday && (
-              <div className="text-xs text-chart-2 font-medium">Today</div>
-            )}
-          </div>
-        </TableCell>
+      {/* Merchant Logo */}
+      <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+        <div className="flex items-center justify-center">
+          <MerchantLogo
+            merchantName={transaction.merchantName}
+            logoUrl={transaction.merchantLogoUrl}
+            className="w-7 h-7 flex-shrink-0"
+          />
+        </div>
+      </td>
 
-        {/* Description */}
-        <TableCell className="p-2">
-          <div className="flex items-center gap-3">
-            {/* Step 3: Pass data-driven props to MerchantLogo */}
-            <MerchantLogo
-              merchantName={transaction.merchantName}
-              logoUrl={transaction.merchantLogoUrl}
-              className="w-8 h-8 flex-shrink-0"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="font-medium text-foreground truncate flex items-center gap-2">
-                {transaction.description}
-                {transaction.note && (
-                  <StickyNote className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                )}
-              </div>
-              <div className="text-xs text-muted-foreground truncate">
-                {transaction.categoryName}
-              </div>
-              {transaction.needsReview && (
-                <div className="flex items-center gap-1 mt-1">
-                  <AlertTriangle className="w-3 h-3 text-chart-1" />
-                  <span className="text-xs text-chart-1 font-medium">
-                    Review
+      {/* Description */}
+      <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+        <div className="flex flex-col">
+          <div className="font-medium text-foreground dark:text-foreground truncate flex items-center gap-2 text-xs">
+            {transaction.description}
+            {transaction.note && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center ml-1" tabIndex={0}>
+                    <StickyNote className="w-4 h-4 text-foreground dark:text-foreground flex-shrink-0" />
                   </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </TableCell>
-
-        {/* Amount */}
-        <TableCell className="p-2 text-right">
-          <div className="flex items-center justify-end gap-2">
-            {isCredit ? (
-              <ArrowUpRight className="w-4 h-4 text-chart-2 flex-shrink-0" />
-            ) : (
-              <ArrowDownLeft className="w-4 h-4 text-red-600 flex-shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs break-words">
+                  {transaction.note}
+                </TooltipContent>
+              </Tooltip>
             )}
-            <span className={`text-lg ${amountClassName}`}>
-              {isCredit ? "+" : "-"}
-              {amount}
-            </span>
           </div>
-        </TableCell>
-
-        {/* Category Icon */}
-        <TableCell className="p-2">
-          <div className="flex items-center justify-center">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 border border-primary/20">
-              {/* Step 4: Pass the data-driven icon name to CategoryIcon */}
-              <CategoryIcon
-                iconName={transaction.categoryIcon}
-                className="w-5 h-5 text-primary"
-              />
-            </div>
+          <div className="text-2xs text-muted-foreground dark:text-muted-foreground truncate mt-0.5">
+            {transaction.categoryName}
           </div>
-        </TableCell>
+        </div>
+      </td>
 
-        {/* Status */}
-        <TableCell className="p-2 text-center">
-          {transaction.needsReview ? (
-            <Badge
-              variant="outline"
-              className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100 cursor-pointer transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                // TODO: Add toggle functionality
-              }}
-            >
-              Review
-            </Badge>
-          ) : (
-            <Badge
-              variant="outline"
-              className="text-xs bg-green-50 text-green-700 border-green-300 hover:bg-green-100 cursor-pointer transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                // TODO: Add toggle functionality
-              }}
-            >
-              Verified
-            </Badge>
+      {/* Category */}
+      <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+        <div className="flex items-center justify-center">
+          <CategoryIcon
+            iconName={transaction.categoryIcon}
+            className="w-5 h-5 text-primary dark:text-primary"
+          />
+        </div>
+      </td>
+
+      {/* Account */}
+      <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full bg-muted dark:bg-muted flex items-center justify-center">
+            <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground dark:bg-muted-foreground"></div>
+          </div>
+          <span className="text-xs text-foreground dark:text-foreground truncate">
+            My Money (...2733)
+          </span>
+        </div>
+      </td>
+
+      {/* Amount */}
+      <td className="px-3 py-2 text-right bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+        <div className="flex items-center justify-end gap-3">
+          {(!transaction.categoryName || transaction.categoryName === 'Uncategorized' || transaction.categoryName === '') && (
+            <Flag className="w-4 h-4 text-yellow-500 dark:text-yellow-400 flex-shrink-0" />
           )}
-        </TableCell>
-
-        {/* Details Toggle */}
-        <TableCell className="p-2">
-          <div className="flex items-center justify-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 opacity-60 group-hover:opacity-100 transition-opacity duration-200 hover:bg-primary/10 hover:text-primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(transaction);
-              }}
-            >
-              <Edit3 className="w-4 h-4" />
-            </Button>
-
-            <div className="h-8 w-8 p-0 opacity-60 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center">
-              {isExpanded ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </div>
-          </div>
-        </TableCell>
-      </TableRow>
-
-      {isExpanded && (
-        <TableRow className="border-b-0 bg-muted/5">
-          <TableCell colSpan={6} className="p-0 !bg-background !border-t-0">
-            <TransactionDetails
-              transaction={transaction}
-              onUpdateNote={onUpdateNote}
-            />
-          </TableCell>
-        </TableRow>
-      )}
+          <span className={`text-sm font-medium ${amountClassName} dark:text-chart-2`}>
+            {isCredit ? "+" : ""}
+            {amount}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 hover:bg-muted"
+            onClick={handleOpenDetails}
+          >
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-muted-foreground" />
+          </Button>
+        </div>
+      </td>
     </>
   );
-});
+}
 
-TransactionRow.displayName = "TransactionRow";
+export default TransactionRow;

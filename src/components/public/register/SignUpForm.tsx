@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField } from "@/components/public/register/FormField";
 import { SocialLoginButtons } from "@/components/public/register/SocialLoginButtons";
-// import { supabase } from lib supabaseClient
+import { supabase } from "@/lib/supabase";
 
 import { AuthError } from "@supabase/supabase-js";
 

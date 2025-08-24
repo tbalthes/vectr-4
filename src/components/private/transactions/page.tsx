@@ -12,7 +12,43 @@ import TransactionTable from "@/components/private/transactions/TransactionTable
 // Swap this import with a Supabase query for production
 import { allTransactions as rawTransactions } from "@/data/transaction-data";
 // Update the import to match the actual exported type from "@/types/transactions"
-import type { Transaction } from "@/types/transactions";
+import type { FormattedTransaction } from "@/types/transactions";
+
+// Define the raw transaction type from mock data
+interface RawTransaction {
+  id: number;
+  description: string;
+  amount: number;
+  category: string;
+  date: string;
+  account: string;
+  type: string;
+  status: string;
+}
+
+// Converter function from Transaction to FormattedTransaction for mock data
+function convertToFormattedTransaction(transaction: RawTransaction): FormattedTransaction {
+  return {
+    id: transaction.id.toString(),
+    transaction_number: `TXN-${transaction.id}`,
+    date: transaction.date,
+    description: transaction.description,
+    amount: transaction.amount,
+    originalDescription: transaction.description,
+    balance: null,
+    userMetadata: null,
+    needsReview: false,
+    merchantName: transaction.description,
+    merchantLogoUrl: null,
+    categoryName: transaction.category,
+    categoryIcon: "Utensils", // Default icon
+    type: transaction.type as "income" | "expense",
+    category: transaction.category,
+    account: transaction.account,
+    status: transaction.status as "completed" | "pending",
+    note: undefined,
+  };
+}
 
 export default function Transactions() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,7 +56,7 @@ export default function Transactions() {
   const [selectedAccount, setSelectedAccount] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const allTransactions = rawTransactions as Transaction[];
+  const allTransactions = rawTransactions.map(convertToFormattedTransaction);
   const filteredTransactions = allTransactions.filter((transaction) => {
     const matchesSearch = transaction.description
       .toLowerCase()

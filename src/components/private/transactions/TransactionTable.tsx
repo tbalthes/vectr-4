@@ -10,13 +10,31 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import type { Transaction } from "@/types/transactions";
+import { Edit, Trash2, ArrowUpRight, ArrowDownRight, StickyNote } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import type { FormattedTransaction } from "@/types/transactions";
 
 interface TransactionTableProps {
-  transactions: Transaction[];
+  transactions: FormattedTransaction[];
   allCount: number;
 }
+
+// Helper that checks multiple possible note fields safely
+const hasTransactionNote = (t: FormattedTransaction) => {
+  if (t.note) return true;
+  const u = t as unknown as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(u, "transaction_note") && typeof u["transaction_note"] === "string") return true;
+  if (Object.prototype.hasOwnProperty.call(u, "transactionNote") && typeof u["transactionNote"] === "string") return true;
+  return false;
+};
+
+const getTransactionNote = (t: FormattedTransaction): string | undefined => {
+  if (typeof t.note === 'string' && t.note.length > 0) return t.note;
+  const u = t as unknown as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(u, "transaction_note") && typeof u["transaction_note"] === "string") return u["transaction_note"] as string;
+  if (Object.prototype.hasOwnProperty.call(u, "transactionNote") && typeof u["transactionNote"] === "string") return u["transactionNote"] as string;
+  return undefined;
+};
 
 export default function TransactionTable({
   transactions,
@@ -77,8 +95,20 @@ export default function TransactionTable({
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-foreground">
                       {transaction.description}
+                      {hasTransactionNote(transaction) && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex items-center ml-2" tabIndex={0}>
+                              <StickyNote className="w-4 h-4 text-muted-foreground inline-block" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs break-words">
+                            {getTransactionNote(transaction)}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </p>
                     <div className="flex items-center space-x-3 mt-1">
                       <Badge variant="secondary" className="text-xs">
