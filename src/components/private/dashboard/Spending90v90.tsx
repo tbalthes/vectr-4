@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-import { subDays, subMonths, format, startOfMonth, endOfMonth } from "date-fns";
+import { subDays, format } from "date-fns";
 
 import {
   Card,
@@ -14,11 +14,10 @@ import {
 import {
   ChartConfig,
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 // --- Step 1: Use the realistic transaction data ---
 const transactionData = [
@@ -226,27 +225,83 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function Spending90v90() {
-  const [data] = React.useState(() =>
-    calculateDailySpendingComparison(transactionData)
+  // compute the date ranges (90-day windows) and format for API
+  const today = new Date();
+  const startDateCurrent = subDays(today, 89);
+  const endDateCurrent = today;
+  const startDatePrevious = subDays(today, 179);
+  const endDatePrevious = subDays(today, 90);
+  const fmt = (d: Date) => format(d, "yyyy-MM-dd");
+
+  // Use the shared useAnalytics hook with explicit start/end (aggregator will return zero-filled buckets)
+  const { data: rpcCurrent } = useAnalytics("90d", fmt(startDateCurrent), fmt(endDateCurrent));
+  const { data: rpcPrevious } = useAnalytics(
+    "90d",
+    fmt(startDatePrevious),
+    fmt(endDatePrevious)
   );
+
+  // fallback to local calculation if RPC not available
+  const fallback = React.useMemo(
+    () => calculateDailySpendingComparison(transactionData),
+    []
+  );
+
+  if (process.env.NODE_ENV === "development") {
+  console.debug("[Spending90v90] rpcCurrent preview", rpcCurrent?.slice?.(0, 10));
+  console.debug("[Spending90v90] rpcPrevious preview", rpcPrevious?.slice?.(0, 10));
+  }
+
+  // build chart arrays (API returns spending as numbers per day)
+  const currentChartData =
+    rpcCurrent && rpcCurrent.length
+      ? rpcCurrent.map((r) => ({
+          date: r.bucket,
+          value: Number(r.spending ?? 0),
+        }))
+      : fallback.currentChartData;
+
+  const previousChartData =
+    rpcPrevious && rpcPrevious.length
+      ? rpcPrevious.map((r) => ({
+          date: r.bucket,
+          value: Number(r.spending ?? 0),
+        }))
+      : fallback.previousChartData;
+
   const [activeChart, setActiveChart] = React.useState<"current" | "previous">(
     "current"
   );
 
   const total = {
-    current: data.totalCurrent,
-    previous: data.totalPrevious,
+    current:
+      rpcCurrent && rpcCurrent.length
+        ? rpcCurrent.reduce((s, r) => s + Number(r.spending ?? 0), 0)
+        : fallback.totalCurrent,
+    previous:
+      rpcPrevious && rpcPrevious.length
+        ? rpcPrevious.reduce((s, r) => s + Number(r.spending ?? 0), 0)
+        : fallback.totalPrevious,
   };
+
+  if (process.env.NODE_ENV === "development") {
+    console.debug("[Spending90v90] totals", { current: total.current, previous: total.previous });
+  }
 
   // Pick the correct chart data and x-axis range for the selected period
   const chartData =
-    activeChart === "current" ? data.currentChartData : data.previousChartData;
+    activeChart === "current" ? currentChartData : previousChartData;
+  // loading/error states are available from the hook if needed; omitted here to keep UI simple
 
   // For legend: show the 3 months covered by the selected period
-  const firstDate = chartData[0]?.date ? new Date(chartData[0].date) : null;
-  const lastDate = chartData[chartData.length - 1]?.date
-    ? new Date(chartData[chartData.length - 1].date)
-    : null;
+  const parseLocal = (d: string | undefined | null) => {
+    if (!d) return null;
+    const s = String(d);
+    return new Date(s.includes("T") ? s : s + "T00:00:00");
+  };
+
+  const firstDate = parseLocal(chartData[0]?.date ?? null);
+  const lastDate = parseLocal(chartData[chartData.length - 1]?.date ?? null);
   const legendLabel =
     firstDate && lastDate
       ? `${firstDate.toLocaleDateString("en-US", {
@@ -294,7 +349,21 @@ export function Spending90v90() {
           config={chartConfig}
           className="aspect-auto h-[250px] w-full"
         >
-          <BarChart accessibilityLayer data={chartData}>
+          <BarChart
+            accessibilityLayer
+            data={chartData}
+            onMouseMove={(state: unknown) => {
+              if (process.env.NODE_ENV === "development") {
+                if (typeof state === "object" && state !== null && "activePayload" in state) {
+                  const s = state as Record<string, unknown>;
+                  const payload = s["activePayload"] as unknown[] | undefined;
+                  if (payload && payload.length) {
+                    console.debug("[Spending90v90] onMouseMove activePayload", payload);
+                  }
+                }
+              }
+            }}
+          >
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -303,7 +372,9 @@ export function Spending90v90() {
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value);
+                // Parse bucket (YYYY-MM-DD) as local date to avoid UTC shift
+                const str = String(value ?? "");
+                const date = new Date(str.includes("T") ? str : str + "T00:00:00");
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -317,7 +388,10 @@ export function Spending90v90() {
                   indicator="dot"
                   formatter={(value) => `$${Number(value).toLocaleString()}`}
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                    // Ensure ISO bucket strings (YYYY-MM-DD) are treated as local dates
+                    const str = String(value ?? "");
+                    const date = new Date(str.includes("T") ? str : str + "T00:00:00");
+                    return date.toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",

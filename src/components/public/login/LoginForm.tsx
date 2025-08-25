@@ -100,11 +100,16 @@ export function LoginForm({
           await supabase.auth.setSession(json.session);
         } catch (err) {
           // Non-fatal: still proceed to refresh and navigate; server cookies are authoritative.
-          console.warn("Failed to set client session from server response", err);
+          console.warn(
+            "Failed to set client session from server response",
+            err
+          );
         }
       }
 
-      console.log("Login successful, refreshing and redirecting to /private/dashboard");
+      console.log(
+        "Login successful, refreshing and redirecting to /private/dashboard"
+      );
 
       // Refresh server components to pick up the new session cookie, then navigate.
       router.refresh();

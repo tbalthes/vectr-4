@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { format, subDays } from "date-fns";
 
-import { transactionData } from "@/data/dashboard-data";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import {
   Card,
   CardContent,
@@ -28,28 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// --- Step 2: Create a data processing function ---
-// This function aggregates the raw transactions into daily income and spending totals,
-// which is the format the chart component needs.
-const processDataForChart = (data: { date: string; amount: number }[]) => {
-  const dailyTotals = data.reduce((acc, { date, amount }) => {
-    if (!acc[date]) {
-      acc[date] = { date, income: 0, spending: 0 };
-    }
-    if (amount > 0) {
-      acc[date].income += amount;
-    } else {
-      acc[date].spending += Math.abs(amount);
-    }
-    return acc;
-  }, {} as Record<string, { date: string; income: number; spending: number }>);
-
-  return Object.values(dailyTotals).sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-};
-
-// Removed: processedChartData is now computed inside the component using the prop
+// The chart consumes aggregated series returned by the analytics API.
 
 // --- Step 3: Update Chart Configuration for Income & Spending ---
 const chartConfig = {
@@ -69,32 +49,40 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function IncomeSpendingOverTimeChart({
-  transactionData,
-}: {
-  transactionData: { date: string; amount: number }[];
-}) {
-  const [timeRange, setTimeRange] = React.useState("30d");
+export default function IncomeSpendingOverTime() {
+  const [range, setRange] = useState<"7d" | "30d" | "90d">("30d");
+  const { data } = useAnalytics(range);
 
-  const processedChartData = React.useMemo(
-    () => processDataForChart(transactionData),
-    [transactionData]
+  const chartDataMemo = React.useMemo(
+    () =>
+      (data ?? []).map((r) => ({
+        date: r.bucket,
+        income: r.income,
+        spending: r.spending,
+      })),
+    [data]
   );
+
+  if (process.env.NODE_ENV === "development") {
+    console.debug("[IncomeSpendingOverTime] chartDataMemo preview", chartDataMemo.slice?.(0, 20));
+  }
 
   const filteredData = React.useMemo(() => {
     const today = new Date();
     let daysToSubtract = 90;
-    if (timeRange === "30d") {
+    if (range === "30d") {
       daysToSubtract = 30;
-    } else if (timeRange === "7d") {
+    } else if (range === "7d") {
       daysToSubtract = 7;
     }
     const startDate = subDays(today, daysToSubtract);
 
-    return processedChartData.filter(
-      (item) => new Date(item.date) >= startDate
-    );
-  }, [timeRange, processedChartData]);
+    return chartDataMemo.filter((item) => {
+      const d = String(item.date ?? "");
+      const date = new Date(d.includes("T") ? d : d + "T00:00:00");
+      return date >= startDate;
+    });
+  }, [range, chartDataMemo]);
 
   return (
     <Card>
@@ -105,7 +93,7 @@ export function IncomeSpendingOverTimeChart({
             Showing total income and spending over time
           </CardDescription>
         </div>
-        <Select value={timeRange} onValueChange={setTimeRange}>
+        <Select value={range} onValueChange={(v) => setRange(v as "7d" | "30d" | "90d")}>
           <SelectTrigger
             className="w-[160px] rounded-lg sm:ml-auto"
             aria-label="Select a value"
@@ -166,19 +154,21 @@ export function IncomeSpendingOverTimeChart({
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
-              tickFormatter={(value) => format(new Date(value), "MMM d")}
+              tickFormatter={(value) => {
+                const str = String(value ?? "");
+                const date = new Date(str.includes("T") ? str : str + "T00:00:00");
+                return format(date, "MMM d");
+              }}
             />
             <ChartTooltip
               cursor={false}
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) =>
-                    format(new Date(value), "MMM d, yyyy")
+                    format(new Date(String(value ?? "").includes("T") ? String(value) : String(value) + "T00:00:00"), "MMM d, yyyy")
                   }
                   indicator="dot"
-                  formatter={(value, name) =>
-                    `$${Number(value).toLocaleString()}`
-                  }
+                  formatter={(value) => `$${Number(value).toLocaleString()}`}
                 />
               }
             />

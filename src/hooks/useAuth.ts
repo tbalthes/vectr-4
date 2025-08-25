@@ -11,7 +11,11 @@ interface UseAuthReturn {
   loading: boolean;
   userId: string | null;
   signIn: (email: string, password: string) => Promise<{ error: unknown }>;
-  signUp: (email: string, password: string, name?: string) => Promise<{ error: unknown }>;
+  signUp: (
+    email: string,
+    password: string,
+    name?: string
+  ) => Promise<{ error: unknown }>;
 }
 
 export function useAuth(): UseAuthReturn {

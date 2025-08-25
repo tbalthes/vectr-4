@@ -18,22 +18,30 @@ interface RawSupabaseTransaction {
   user_metadata: Record<string, string | number | boolean> | null;
   needs_review: boolean;
   transaction_note: string | null;
-  merchants: {
-    name: string;
-    logo_url: string | null;
-    categories: {
-      name: string;
-      icon: string;
-    }[];
-  }[] | null;
+  merchants:
+    | {
+        name: string;
+        logo_url: string | null;
+        categories: {
+          name: string;
+          icon: string;
+        }[];
+      }[]
+    | null;
 }
 
 // Transform raw Supabase data to FormattedTransaction
-function transformToFormattedTransaction(raw: RawSupabaseTransaction): FormattedTransaction {
+function transformToFormattedTransaction(
+  raw: RawSupabaseTransaction
+): FormattedTransaction {
   // Handle the fact that merchants is an array from Supabase join
-  const merchant = Array.isArray(raw.merchants) ? raw.merchants[0] : raw.merchants;
-  const category = Array.isArray(merchant?.categories) ? merchant?.categories[0] : merchant?.categories;
-  
+  const merchant = Array.isArray(raw.merchants)
+    ? raw.merchants[0]
+    : raw.merchants;
+  const category = Array.isArray(merchant?.categories)
+    ? merchant?.categories[0]
+    : merchant?.categories;
+
   return {
     id: raw.id,
     transaction_number: raw.transaction_number,
@@ -87,20 +95,23 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-
     // --- Pagination, Filtering, Sorting (WBS 1.1, 1.2) ---
     const url = new URL(request.url);
     const pageParam = Number(url.searchParams.get("page") || "1");
     const limitParam = Number(url.searchParams.get("limit") || "25");
     const q = url.searchParams.get("q")?.trim() || "";
     const sortBy = url.searchParams.get("sortBy") || "date";
-    const sortOrder = (url.searchParams.get("sortOrder") || "desc").toLowerCase() === "asc" ? "asc" : "desc";
+    const sortOrder =
+      (url.searchParams.get("sortOrder") || "desc").toLowerCase() === "asc"
+        ? "asc"
+        : "desc";
 
     const allowedSortFields = ["date", "amount", "transaction_number"];
     const sortField = allowedSortFields.includes(sortBy) ? sortBy : "date";
 
     const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
-    const pageSize = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : 25;
+    const pageSize =
+      Number.isFinite(limitParam) && limitParam > 0 ? limitParam : 25;
 
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
@@ -111,7 +122,9 @@ export async function GET(request: NextRequest) {
       .select("id", { count: "exact", head: false })
       .eq("user_id", user.id);
     if (q) {
-      countQuery = countQuery.or(`clean_description.ilike.%${q}%,original_description.ilike.%${q}%`);
+      countQuery = countQuery.or(
+        `clean_description.ilike.%${q}%,original_description.ilike.%${q}%`
+      );
     }
     const { count: totalItems, error: countError } = await countQuery;
 
@@ -142,7 +155,9 @@ export async function GET(request: NextRequest) {
       )
       .eq("user_id", user.id);
     if (q) {
-      query = query.or(`clean_description.ilike.%${q}%,original_description.ilike.%${q}%`);
+      query = query.or(
+        `clean_description.ilike.%${q}%,original_description.ilike.%${q}%`
+      );
     }
     query = query.order(sortField, { ascending: sortOrder === "asc" });
     query = query.range(from, to);
@@ -170,7 +185,9 @@ export async function GET(request: NextRequest) {
     };
 
     console.log(
-      `API: Fetched ${data?.length || 0} transactions for user ${user.id} (page ${page}, pageSize ${pageSize}, totalItems ${meta.totalItems})`
+      `API: Fetched ${data?.length || 0} transactions for user ${
+        user.id
+      } (page ${page}, pageSize ${pageSize}, totalItems ${meta.totalItems})`
     );
 
     // Transform the raw Supabase data to FormattedTransaction format

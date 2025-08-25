@@ -1,17 +1,17 @@
-import useSWRInfinite from 'swr/infinite';
-import qs from 'query-string';
-import { useCallback } from 'react';
-import { FormattedTransaction } from '@/types/transactions';
+import useSWRInfinite from "swr/infinite";
+import qs from "query-string";
+import { useCallback } from "react";
+import { FormattedTransaction } from "@/types/transactions";
 
 export interface InfiniteTransactionsFilters {
   q?: string;
-  sortBy?: 'date' | 'amount' | 'transaction_number';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "date" | "amount" | "transaction_number";
+  sortOrder?: "asc" | "desc";
   pageSize?: number;
 }
 
 export type DateHeader = {
-  type: 'date-header';
+  type: "date-header";
   date: string;
   displayDate: string;
   id: string; // Required for virtuoso key
@@ -46,14 +46,17 @@ type ApiResponse = {
   };
 };
 
-const fetcher = (url: string): Promise<ApiResponse> => fetch(url).then(res => res.json());
+const fetcher = (url: string): Promise<ApiResponse> =>
+  fetch(url).then((res) => res.json());
 
 /**
  * useInfiniteTransactions - Infinite loading hook for paginated transaction API.
  * @param filters - Filtering and sorting options
  * @returns InfiniteTransactionsResult
  */
-export function useInfiniteTransactions(filters: InfiniteTransactionsFilters = {}): InfiniteTransactionsResult {
+export function useInfiniteTransactions(
+  filters: InfiniteTransactionsFilters = {}
+): InfiniteTransactionsResult {
   const pageSize = filters.pageSize || 25;
 
   const getKey = (pageIndex: number, previousPageData?: ApiResponse) => {
@@ -66,20 +69,20 @@ export function useInfiniteTransactions(filters: InfiniteTransactionsFilters = {
     return `/api/transactions?${qs.stringify(params)}`;
   };
 
-  const {
-    data,
-    error,
-    size,
-    setSize,
-    isValidating,
-  } = useSWRInfinite(getKey, fetcher, {
-    revalidateFirstPage: false,
-  });
+  const { data, error, size, setSize, isValidating } = useSWRInfinite(
+    getKey,
+    fetcher,
+    {
+      revalidateFirstPage: false,
+    }
+  );
 
   // Flatten all loaded pages and remove duplicates by transaction ID
   const flatTransactions: FormattedTransaction[] = Array.from(
     new Map(
-      data?.flatMap((page) => page?.data || []).map(transaction => [transaction.id, transaction]) || []
+      data
+        ?.flatMap((page) => page?.data || [])
+        .map((transaction) => [transaction.id, transaction]) || []
     ).values()
   );
 
@@ -95,7 +98,7 @@ export function useInfiniteTransactions(filters: InfiniteTransactionsFilters = {
 
   // Create a flat array with date headers and transactions
   const transactions: TransactionItem[] = [];
-  
+
   Object.entries(groupedTransactions)
     .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime()) // Sort dates descending
     .forEach(([dateString, dateTransactions]) => {
@@ -103,36 +106,39 @@ export function useInfiniteTransactions(filters: InfiniteTransactionsFilters = {
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-      
+
       let displayDate: string;
       if (date.toDateString() === today.toDateString()) {
-        displayDate = 'Today';
+        displayDate = "Today";
       } else if (date.toDateString() === yesterday.toDateString()) {
-        displayDate = 'Yesterday';
+        displayDate = "Yesterday";
       } else {
-        displayDate = date.toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+        displayDate = date.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         });
       }
-      
+
       // Calculate daily total
-      const dailyTotal = dateTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-      
+      const dailyTotal = dateTransactions.reduce(
+        (sum, transaction) => sum + transaction.amount,
+        0
+      );
+
       // Add date header
       transactions.push({
-        type: 'date-header',
+        type: "date-header",
         date: dateString,
         displayDate,
         id: `date-header-${dateString}`,
-        dailyTotal
+        dailyTotal,
       });
-      
+
       // Add transactions for this date (sorted by time, newest first)
-      const sortedTransactions = dateTransactions.sort((a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
+      const sortedTransactions = dateTransactions.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       );
       transactions.push(...sortedTransactions);
     });
@@ -141,17 +147,22 @@ export function useInfiniteTransactions(filters: InfiniteTransactionsFilters = {
   const isReachingEnd = meta ? !meta.hasNextPage : false;
 
   const loadMore = useCallback(() => {
-    console.log('useInfiniteTransactions loadMore called:', {
+    console.log("useInfiniteTransactions loadMore called:", {
       isReachingEnd,
       currentSize: size,
       hasMeta: !!meta,
-      meta: meta
+      meta: meta,
     });
     if (!isReachingEnd) {
-      console.log('useInfiniteTransactions: Increasing size from', size, 'to', size + 1);
+      console.log(
+        "useInfiniteTransactions: Increasing size from",
+        size,
+        "to",
+        size + 1
+      );
       setSize(size + 1);
     } else {
-      console.log('useInfiniteTransactions: Not loading more - reached end');
+      console.log("useInfiniteTransactions: Not loading more - reached end");
     }
   }, [isReachingEnd, setSize, size, meta]);
 

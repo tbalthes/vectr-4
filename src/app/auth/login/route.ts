@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
     const email = String(formData.get("email"));
     const password = String(formData.get("password"));
 
-  // Prepare a JSON response so the client fetch receives a predictable
-  // JSON body while we still attach cookies to the same response.
-  const response = NextResponse.json({ success: true });
+    // Prepare a JSON response so the client fetch receives a predictable
+    // JSON body while we still attach cookies to the same response.
+    const response = NextResponse.json({ success: true });
 
     // Resolve request-scoped cookies (some runtimes return a Promise, others return directly)
     const requestCookies = await cookies();
@@ -81,7 +81,11 @@ export async function POST(request: NextRequest) {
     // can update its local session cache immediately.
     // Note: cookies written to `response` will still be sent to the browser.
     return NextResponse.json(
-      { success: true, session: data?.session ?? null, user: data?.user ?? null },
+      {
+        success: true,
+        session: data?.session ?? null,
+        user: data?.user ?? null,
+      },
       { status: 200 }
     );
   } catch (err) {

@@ -51,7 +51,7 @@ export function ColumnMappingStep({
 }: ColumnMappingStepProps) {
   // Get current user
   const { userId } = useAuth();
-  
+
   // Fetch user's accounts
   const {
     accounts,

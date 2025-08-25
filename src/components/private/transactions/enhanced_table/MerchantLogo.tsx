@@ -30,8 +30,8 @@ export function MerchantLogo({
         width={32}
         height={32}
         style={{ objectFit: "cover" }}
-  // `unoptimized` must be a boolean; only set true for data URIs.
-  unoptimized={typeof logoUrl === "string" && logoUrl.startsWith("data:")}
+        // `unoptimized` must be a boolean; only set true for data URIs.
+        unoptimized={typeof logoUrl === "string" && logoUrl.startsWith("data:")}
       />
     );
   }

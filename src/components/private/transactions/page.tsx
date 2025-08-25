@@ -27,7 +27,9 @@ interface RawTransaction {
 }
 
 // Converter function from Transaction to FormattedTransaction for mock data
-function convertToFormattedTransaction(transaction: RawTransaction): FormattedTransaction {
+function convertToFormattedTransaction(
+  transaction: RawTransaction
+): FormattedTransaction {
   return {
     id: transaction.id.toString(),
     transaction_number: `TXN-${transaction.id}`,

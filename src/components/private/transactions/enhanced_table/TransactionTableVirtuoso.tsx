@@ -35,12 +35,15 @@ const DateHeaderRow = ({ dateHeader }: { dateHeader: DateHeader }) => {
 
   return (
     <>
-      <td colSpan={5} className="px-3 py-2 bg-background dark:bg-background border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+      <td
+        colSpan={5}
+        className="px-4 py-2 bg-accent dark:bg-muted border-b border-gray-200 dark:border-gray-600 sticky top-0 z-10"
+      >
+        <div className="h-[7px] flex items-center justify-between">
+          <div className="text-xs font-medium text-muted-foreground dark:text-muted-foreground">
             {dateHeader.displayDate}
           </div>
-          <div className="text-sm font-medium text-foreground dark:text-foreground">
+          <div className="text-xs font-medium text-foreground dark:text-foreground">
             {formatAmount(dateHeader.dailyTotal)}
           </div>
         </div>

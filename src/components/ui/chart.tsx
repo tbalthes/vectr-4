@@ -168,6 +168,12 @@ function ChartTooltipContent({
     return null
   }
 
+  if (process.env.NODE_ENV === "development") {
+    // Log tooltip payload for debugging hovered values
+    // This helps confirm whether the value shown in the tooltip is coming from the RPC or from local processing
+    console.debug("[ChartTooltipContent] payload", payload)
+  }
+
   const nestLabel = payload.length === 1 && indicator !== "dot"
 
   return (

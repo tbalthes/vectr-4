@@ -121,7 +121,9 @@ export function SignupForm({
             <div className="flex flex-col gap-6">
               {/* Header */}
               <div className="flex flex-col items-center text-center">
-                <h1 className="text-page-title mb-2 text-foreground">Create your account</h1>
+                <h1 className="text-page-title mb-2 text-foreground">
+                  Create your account
+                </h1>
                 <p className="text-muted-foreground text-balance font-sans text-sm font-normal">
                   Join Vectr Financial and start managing your money smarter
                 </p>

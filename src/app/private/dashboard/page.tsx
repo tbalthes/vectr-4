@@ -9,7 +9,7 @@ import PageHeader from "@/components/private/PageHeader";
 import { Plus, Download, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { IncomeSpendingOverTimeChart } from "@/components/private/dashboard/IncomeSpendingOverTime";
+import IncomeSpendingOverTimeChart from "@/components/private/dashboard/IncomeSpendingOverTime";
 import { transactionData } from "@/data/dashboard-data";
 import { BudgetCompositionChart } from "@/components/private/dashboard/BudgetCompositionChart";
 import { Spending90v90 } from "@/components/private/dashboard/Spending90v90";
@@ -25,7 +25,7 @@ export default function Dashboard() {
         title="Dashboard"
         subtitle="Welcome back, John. Here's what's happening with your money."
         actions={
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 ">
             <Button variant="outline" size="sm">
               <Calendar className="mr-2 h-4 w-4" />
               Last 30 days
@@ -34,7 +34,7 @@ export default function Dashboard() {
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <Button size="sm" onClick={() => router.push("/private/upload")}>
+            <Button size="sm" className="text-white" onClick={() => router.push("/private/upload")}>
               <Plus className="mr-2 h-4 w-4" />
               Add Transactions
             </Button>
@@ -47,7 +47,7 @@ export default function Dashboard() {
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <IncomeSpendingOverTimeChart transactionData={transactionData} />
+          <IncomeSpendingOverTimeChart />
           <Spending90v90 />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

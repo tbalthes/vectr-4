@@ -4,7 +4,14 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -24,7 +31,10 @@ export default function AuthForm() {
     const { error } = await signIn(email, password);
 
     if (error) {
-  toast.error("Failed to sign in: " + ((error as unknown as { message?: string })?.message ?? String(error)));
+      toast.error(
+        "Failed to sign in: " +
+          ((error as unknown as { message?: string })?.message ?? String(error))
+      );
     } else {
       toast.success("Welcome back!");
     }
@@ -44,7 +54,10 @@ export default function AuthForm() {
     const { error } = await signUp(email, password, name);
 
     if (error) {
-  toast.error("Failed to sign up: " + ((error as unknown as { message?: string })?.message ?? String(error)));
+      toast.error(
+        "Failed to sign up: " +
+          ((error as unknown as { message?: string })?.message ?? String(error))
+      );
     } else {
       toast.success("Account created successfully!");
     }
@@ -60,9 +73,7 @@ export default function AuthForm() {
             <span className="text-primary-foreground font-bold text-xl">V</span>
           </div>
           <CardTitle className="text-2xl">Welcome to vectr</CardTitle>
-          <CardDescription>
-            Your personal finance companion
-          </CardDescription>
+          <CardDescription>Your personal finance companion</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -70,7 +81,7 @@ export default function AuthForm() {
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
@@ -97,7 +108,7 @@ export default function AuthForm() {
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">

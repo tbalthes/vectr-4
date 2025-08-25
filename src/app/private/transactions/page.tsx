@@ -6,9 +6,13 @@ import TransactionTableVirtuoso from "@/components/private/transactions/enhanced
 import { TransactionDetailsDrawer } from "@/components/private/transactions/enhanced_table/TransactionDetailsDrawer";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar, Filter } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { FormattedTransaction } from "@/types/transactions";
-import { useInfiniteTransactions } from '@/hooks/useInfiniteTransactions';
+import { useInfiniteTransactions } from "@/hooks/useInfiniteTransactions";
 import PageHeader from "@/components/private/PageHeader";
 // The page now uses server-side formatted transactions via the API and the
 // `useInfiniteTransactions` hook. Client-side formatting utilities were removed
@@ -19,12 +23,16 @@ export default function TransactionsPage() {
   // TODO: Integrate useInfiniteTransactions and new data flow (WBS 3.1)
   // Placeholder for future filter panel (WBS 5.1)
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<'date' | 'amount' | 'transaction_number'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<
+    "date" | "amount" | "transaction_number"
+  >("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const router = useRouter();
 
   // Drawer state
-  const [drawerTransactionId, setDrawerTransactionId] = useState<string | null>(null);
+  const [drawerTransactionId, setDrawerTransactionId] = useState<string | null>(
+    null
+  );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -37,18 +45,13 @@ export default function TransactionsPage() {
   }, [search]);
 
   // Infinite loading hook
-  const {
-    transactions,
-    isLoadingMore,
-    isReachingEnd,
-    loadMore,
-    error,
-  } = useInfiniteTransactions({
-    q: debouncedSearch,
-    sortBy,
-    sortOrder,
-    pageSize: 50,
-  });
+  const { transactions, isLoadingMore, isReachingEnd, loadMore, error } =
+    useInfiniteTransactions({
+      q: debouncedSearch,
+      sortBy,
+      sortOrder,
+      pageSize: 50,
+    });
 
   console.log("TransactionsPage render:", {
     transactionsCount: transactions.length,
@@ -56,14 +59,15 @@ export default function TransactionsPage() {
     isReachingEnd,
     error,
     firstTransaction: transactions[0],
-    hasLoadMore: !!loadMore
+    hasLoadMore: !!loadMore,
   });
-
 
   const handleEditTransaction = (_transaction: FormattedTransaction) => {
     void _transaction;
   };
-  const handleDeleteTransaction = async (_transaction: FormattedTransaction) => {
+  const handleDeleteTransaction = async (
+    _transaction: FormattedTransaction
+  ) => {
     void _transaction;
   };
 
@@ -81,9 +85,9 @@ export default function TransactionsPage() {
   }) => {
     try {
       const response = await fetch(`/api/transactions/${transaction.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(transaction),
       });
@@ -93,12 +97,12 @@ export default function TransactionsPage() {
       }
 
       const result = await response.json();
-      console.log('Transaction updated successfully:', result);
-      
+      console.log("Transaction updated successfully:", result);
+
       // Optionally refresh the transactions list or update optimistically
       // For now, we'll just log success
     } catch (error) {
-      console.error('Error updating transaction:', error);
+      console.error("Error updating transaction:", error);
       // TODO: Show error toast/notification
     }
   };
@@ -107,20 +111,20 @@ export default function TransactionsPage() {
   const handleDrawerDelete = async (transactionId: string) => {
     try {
       const response = await fetch(`/api/transactions/${transactionId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
         throw new Error(`Failed to delete transaction: ${response.statusText}`);
       }
 
-      console.log('Transaction deleted successfully');
-      
+      console.log("Transaction deleted successfully");
+
       // Close the drawer and optionally refresh the list
       handleCloseDrawer();
       // TODO: Remove from local state or refresh transactions
     } catch (error) {
-      console.error('Error deleting transaction:', error);
+      console.error("Error deleting transaction:", error);
       // TODO: Show error toast/notification
     }
   };
@@ -149,7 +153,8 @@ export default function TransactionsPage() {
     <>
       <style jsx global>{`
         /* Hide browser scrollbars */
-        html, body {
+        html,
+        body {
           overflow: hidden;
         }
 
@@ -169,12 +174,16 @@ export default function TransactionsPage() {
               className="border rounded px-2 py-1 text-sm"
               placeholder="Search transactions..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               style={{ minWidth: 200 }}
             />
             <select
               value={sortBy}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value as 'date' | 'amount' | 'transaction_number')}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setSortBy(
+                  e.target.value as "date" | "amount" | "transaction_number"
+                )
+              }
               className="border rounded px-2 py-1 text-sm"
             >
               <option value="date">Date</option>
@@ -183,7 +192,9 @@ export default function TransactionsPage() {
             </select>
             <select
               value={sortOrder}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortOrder(e.target.value as 'asc' | 'desc')}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setSortOrder(e.target.value as "asc" | "desc")
+              }
               className="border rounded px-2 py-1 text-sm"
             >
               <option value="desc">Desc</option>
@@ -242,7 +253,11 @@ export default function TransactionsPage() {
       />
 
       <div className="h-full overflow-hidden bg-background dark:bg-background">
-        {error ? <div className="text-destructive dark:text-destructive font-semibold p-3">Failed to load transactions.</div> : null}
+        {error ? (
+          <div className="text-destructive dark:text-destructive font-semibold p-3">
+            Failed to load transactions.
+          </div>
+        ) : null}
         {!error && transactions.length === 0 && !isLoadingMore && (
           <div className="flex justify-center items-center h-full text-muted-foreground dark:text-muted-foreground">
             No transactions found.

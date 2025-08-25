@@ -2,7 +2,11 @@
 
 import React from "react";
 import { ChevronRight, Flag, StickyNote } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import CategoryIcon from "./CategoryIcon";
 import MerchantLogo from "./MerchantLogo";
@@ -28,9 +32,10 @@ export function TransactionRow({
   // index, // Temporarily unused
   onOpenDetails,
 }: TransactionRowProps) {
-
   // Helper function to format the transaction amount and determine its type
-  const formatAmount = (amount: number): {
+  const formatAmount = (
+    amount: number
+  ): {
     amount: string;
     isCredit: boolean;
     isDebit: boolean;
@@ -152,10 +157,14 @@ export function TransactionRow({
       {/* Amount */}
       <td className="px-3 py-2 text-right bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
         <div className="flex items-center justify-end gap-3">
-          {(!transaction.categoryName || transaction.categoryName === 'Uncategorized' || transaction.categoryName === '') && (
+          {(!transaction.categoryName ||
+            transaction.categoryName === "Uncategorized" ||
+            transaction.categoryName === "") && (
             <Flag className="w-4 h-4 text-yellow-500 dark:text-yellow-400 flex-shrink-0" />
           )}
-          <span className={`text-sm font-medium ${amountClassName} dark:text-chart-2`}>
+          <span
+            className={`text-sm font-medium ${amountClassName} dark:text-chart-2`}
+          >
             {isCredit ? "+" : ""}
             {amount}
           </span>
