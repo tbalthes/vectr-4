@@ -44,6 +44,20 @@ interface AnalyticsResponse {
   };
 }
 
+// Alternative response when view=categories
+interface CategoryRow {
+  category: string;
+  subcategory?: string | null;
+  merchant?: string | null;
+  amount: number;
+}
+interface CategoriesResponseMeta {
+  startDate: string;
+  endDate: string;
+  total: number;
+  requestId: string;
+}
+
 interface ErrorResponse {
   error: string;
   message: string;
@@ -67,8 +81,11 @@ export async function GET(request: NextRequest) {
   try {
     // Initialize Supabase client with request-scoped authentication
     // Resolve the cookie store and give Supabase a synchronous getter so its internals can call cookies().get(...)
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const requestCookies = await cookies();
+    const supabase = createRouteHandlerClient({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      cookies: () => requestCookies as any,
+    });
 
     // Verify authentication
     const {
@@ -94,11 +111,13 @@ export async function GET(request: NextRequest) {
     const range = searchParams.get("range") || "30d";
     const start = searchParams.get("start");
     const end = searchParams.get("end");
-    const granularityOverride = searchParams.get("granularity") as
+  const granularityOverride = searchParams.get("granularity") as
       | "day"
       | "week"
       | "month"
       | null;
+  const view = (searchParams.get("view") || "time-series").toLowerCase();
+  const namesOnly = searchParams.get("namesOnly") === "true";
 
     // Validate parameters
     try {
@@ -123,6 +142,119 @@ export async function GET(request: NextRequest) {
     // Calculate date range
     type RangeKey = "7d" | "30d" | "90d" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "all";
     const dateRange = calculateDateRange(range as RangeKey, start, end);
+
+    // If categories view requested, run a different aggregation path and return early
+    if (view === "categories") {
+      // Special mode: return unique category names for this user (no date filtering)
+      if (namesOnly) {
+        const { data, error } = await supabase
+          .from("transactions")
+          .select(
+            `
+            merchants (
+              categories ( name )
+            )
+          `
+          )
+          .eq("user_id", session.user.id)
+          .not("merchants.categories.name", "is", null);
+
+        if (error) {
+          console.error("[analytics aggregator categories namesOnly] Supabase error:", error.message);
+          return NextResponse.json(
+            { error: "Database Error", message: "Failed to fetch categories", code: "DB_ERROR" },
+            { status: 500, headers: { ...CACHE_HEADERS, "X-Request-ID": requestId } }
+          );
+        }
+
+        const categoryNames = new Set<string>();
+        type TxRowNames = {
+          merchants: { categories?: { name?: string | null } | { name?: string | null }[] } | null;
+        };
+        for (const t of (data as TxRowNames[]) || []) {
+          if (t?.merchants?.categories) {
+            const cats = Array.isArray(t.merchants.categories)
+              ? t.merchants.categories
+              : [t.merchants.categories];
+            for (const c of cats) {
+              if (c?.name) categoryNames.add(c.name);
+            }
+          }
+        }
+
+        return NextResponse.json(
+          {
+            data: Array.from(categoryNames).sort(),
+            metadata: {
+              total: categoryNames.size,
+              requestId,
+            },
+          },
+          {
+            headers: { ...CACHE_HEADERS, "X-Request-ID": requestId, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Initialize Supabase client above; reuse here
+      const { data, error } = await supabase
+        .from("transactions")
+        .select(
+          `
+          date,
+          amount,
+          merchants (
+            name,
+            categories ( name )
+          )
+        `
+        )
+        .eq("user_id", session.user.id)
+        .gte("date", dateRange.startDate.toISOString())
+        .lte("date", dateRange.endDate.toISOString());
+
+      if (error) {
+        console.error("[analytics categories] Supabase error:", error.message);
+        return NextResponse.json(
+          { error: "Database Error", message: "Failed to fetch transactions", code: "DB_ERROR" },
+          { status: 500, headers: { ...CACHE_HEADERS, "X-Request-ID": requestId } }
+        );
+      }
+
+      type TxRow = {
+        amount: number | null;
+        merchants: { name?: string | null; categories?: { name?: string | null } | { name?: string | null }[] } | null;
+      };
+      const rows: CategoryRow[] = [];
+      for (const t of (data as TxRow[]) || []) {
+        const amt = Number(t?.amount ?? 0);
+        const spend = amt < 0 ? -amt : 0;
+        if (spend <= 0) continue;
+        const merchant = t?.merchants?.name || null;
+        const category = Array.isArray(t?.merchants?.categories)
+          ? (t.merchants!.categories as { name?: string | null }[])[0]?.name || "Uncategorized"
+          : (t?.merchants?.categories as { name?: string | null } | undefined)?.name || "Uncategorized";
+        rows.push({ category, subcategory: null, merchant, amount: spend });
+      }
+
+      const total = rows.reduce((s, r) => s + r.amount, 0);
+      const response = {
+        data: rows,
+        metadata: {
+          startDate: dateRange.startDate.toISOString().split("T")[0],
+          endDate: dateRange.endDate.toISOString().split("T")[0],
+          total,
+          requestId,
+        } as CategoriesResponseMeta,
+      };
+      return NextResponse.json(response, {
+        headers: {
+          ...CACHE_HEADERS,
+          "X-Request-ID": requestId,
+          "Content-Type": "application/json",
+        },
+      });
+    }
 
     // Apply granularity override if provided
     const finalGranularity =
@@ -199,7 +331,7 @@ export async function GET(request: NextRequest) {
     const totalRecords = data.reduce((sum, row) => sum + row.tx_count, 0);
     const emptyBuckets = data.filter((row) => row.tx_count === 0).length;
 
-    const response: AnalyticsResponse = {
+  const response: AnalyticsResponse = {
       data,
       metadata: {
         startDate: dateRange.startDate.toISOString().split("T")[0],

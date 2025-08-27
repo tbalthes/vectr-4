@@ -100,11 +100,14 @@ export async function GET(request: NextRequest) {
     const pageParam = Number(url.searchParams.get("page") || "1");
     const limitParam = Number(url.searchParams.get("limit") || "25");
     const q = url.searchParams.get("q")?.trim() || "";
-    const sortBy = url.searchParams.get("sortBy") || "date";
+  const sortBy = url.searchParams.get("sortBy") || "date";
     const sortOrder =
       (url.searchParams.get("sortOrder") || "desc").toLowerCase() === "asc"
         ? "asc"
         : "desc";
+  const categoryFilter = url.searchParams.get("category") || "";
+  const minAmount = url.searchParams.get("minAmount");
+  const maxAmount = url.searchParams.get("maxAmount");
 
     const allowedSortFields = ["date", "amount", "transaction_number"];
     const sortField = allowedSortFields.includes(sortBy) ? sortBy : "date";
@@ -125,6 +128,15 @@ export async function GET(request: NextRequest) {
       countQuery = countQuery.or(
         `clean_description.ilike.%${q}%,original_description.ilike.%${q}%`
       );
+    }
+    if (categoryFilter) {
+      countQuery = countQuery.ilike("merchants.categories.name", `%${categoryFilter}%`);
+    }
+    if (minAmount) {
+      countQuery = countQuery.gte("amount", Number(minAmount));
+    }
+    if (maxAmount) {
+      countQuery = countQuery.lte("amount", Number(maxAmount));
     }
     const { count: totalItems, error: countError } = await countQuery;
 
@@ -158,6 +170,15 @@ export async function GET(request: NextRequest) {
       query = query.or(
         `clean_description.ilike.%${q}%,original_description.ilike.%${q}%`
       );
+    }
+    if (categoryFilter) {
+      query = query.ilike("merchants.categories.name", `%${categoryFilter}%`);
+    }
+    if (minAmount) {
+      query = query.gte("amount", Number(minAmount));
+    }
+    if (maxAmount) {
+      query = query.lte("amount", Number(maxAmount));
     }
     query = query.order(sortField, { ascending: sortOrder === "asc" });
     query = query.range(from, to);

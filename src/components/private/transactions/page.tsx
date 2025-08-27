@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
@@ -13,6 +13,42 @@ import TransactionTable from "@/components/private/transactions/TransactionTable
 import { allTransactions as rawTransactions } from "@/data/transaction-data";
 // Update the import to match the actual exported type from "@/types/transactions"
 import type { FormattedTransaction } from "@/types/transactions";
+
+// Hook to fetch all available categories
+function useAllCategories() {
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch("/api/analytics/aggregator?view=categories&namesOnly=true", {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch categories: ${response.status}`);
+        }
+        const data = await response.json();
+        setCategories(data.data || []);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch categories");
+        // Fallback to extracting from mock data
+        const fallbackCategories = [...new Set(rawTransactions.map((t) => t.category))];
+        setCategories(fallbackCategories);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  return { categories, loading, error };
+}
 
 // Define the raw transaction type from mock data
 interface RawTransaction {
@@ -58,6 +94,9 @@ export default function Transactions() {
   const [selectedAccount, setSelectedAccount] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
+  // Fetch all available categories from API
+  const { categories: allCategories } = useAllCategories();
+
   const allTransactions = rawTransactions.map(convertToFormattedTransaction);
   const filteredTransactions = allTransactions.filter((transaction) => {
     const matchesSearch = transaction.description
@@ -70,7 +109,10 @@ export default function Transactions() {
     return matchesSearch && matchesCategory && matchesAccount;
   });
 
-  const categories = [...new Set(allTransactions.map((t) => t.category))];
+  // Use fetched categories, fallback to mock data categories if API fails
+  const categories = allCategories.length > 0
+    ? allCategories
+    : [...new Set(allTransactions.map((t) => t.category))];
   const accounts = [...new Set(allTransactions.map((t) => t.account))];
 
   return (

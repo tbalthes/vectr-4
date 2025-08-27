@@ -1,10 +1,31 @@
 import { useEffect, useState, useCallback } from "react";
 
-export type RangeKey = "7d" | "30d" | "90d" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "all";
-export interface AggregateRow { bucket: string; income: number; spending: number; tx_count: number; }
-export interface AnalyticsResponse { data: AggregateRow[]; metadata: Record<string, unknown>; }
+export type RangeKey =
+  | "7d"
+  | "30d"
+  | "90d"
+  | "1M"
+  | "3M"
+  | "6M"
+  | "YTD"
+  | "1Y"
+  | "all";
+export interface AggregateRow {
+  bucket: string;
+  income: number;
+  spending: number;
+  tx_count: number;
+}
+export interface AnalyticsResponse {
+  data: AggregateRow[];
+  metadata: Record<string, unknown>;
+}
 
-export function useAnalytics(range: RangeKey = "30d", start?: string, end?: string) {
+export function useAnalytics(
+  range: RangeKey = "30d",
+  start?: string,
+  end?: string
+) {
   const [data, setData] = useState<AggregateRow[] | null>(null);
   const [meta, setMeta] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,7 +47,12 @@ export function useAnalytics(range: RangeKey = "30d", start?: string, end?: stri
       setMeta(body.metadata);
       if (process.env.NODE_ENV === "development") {
         // shallow preview to avoid huge logs
-        console.debug("[useAnalytics] fetched", { range, start, end, preview: body.data.slice(0, 20) });
+        console.debug("[useAnalytics] fetched", {
+          range,
+          start,
+          end,
+          preview: body.data.slice(0, 20),
+        });
       }
     } catch (err) {
       if (err instanceof Error) {

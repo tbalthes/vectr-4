@@ -12,22 +12,63 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { FormattedTransaction } from "@/types/transactions";
-import { useInfiniteTransactions } from "@/hooks/useInfiniteTransactions";
+import { useInfiniteTransactions, type TransactionItem } from "@/hooks/useInfiniteTransactions";
 import PageHeader from "@/components/private/PageHeader";
-// The page now uses server-side formatted transactions via the API and the
-// `useInfiniteTransactions` hook. Client-side formatting utilities were removed
-// to avoid duplicating logic. If needed, reintroduce a small formatter that
-// maps API fields to `FormattedTransaction`.
+
+// Hook to fetch all available categories
+function useAllCategories() {
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch("/api/analytics/aggregator?view=categories&namesOnly=true", {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch categories: ${response.status}`);
+        }
+        const data = await response.json();
+        setCategories(data.data || []);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch categories");
+        // Fallback to some default categories
+        setCategories(["Food", "Transport", "Shopping", "Entertainment", "Bills"]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  return { categories, loading, error };
+}
 
 export default function TransactionsPage() {
   // TODO: Integrate useInfiniteTransactions and new data flow (WBS 3.1)
   // Placeholder for future filter panel (WBS 5.1)
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedAmount, setSelectedAmount] = useState("all");
   const [sortBy, setSortBy] = useState<
     "date" | "amount" | "transaction_number"
   >("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const router = useRouter();
+
+  // Fetch all available categories
+  const { categories: allCategories } = useAllCategories();
+
+  // Add "Uncategorized" to the categories list if it's not already there
+  const categoriesWithUncategorized = allCategories.includes("Uncategorized")
+    ? allCategories
+    : [...allCategories, "Uncategorized"];
 
   // Drawer state
   const [drawerTransactionId, setDrawerTransactionId] = useState<string | null>(
@@ -44,8 +85,8 @@ export default function TransactionsPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Infinite loading hook
-  const { transactions, isLoadingMore, isReachingEnd, loadMore, error } =
+  // Infinite loading hook - only use search for now since API doesn't support category filtering
+  const { transactions: allTransactions, isLoadingMore, isReachingEnd, loadMore, error } =
     useInfiniteTransactions({
       q: debouncedSearch,
       sortBy,
@@ -53,13 +94,105 @@ export default function TransactionsPage() {
       pageSize: 50,
     });
 
+  // Client-side filtering based on selected filters
+  const filteredTransactions = allTransactions.filter((transaction) => {
+    // Skip date headers for filtering
+    if ('type' in transaction && transaction.type === 'date-header') {
+      return true; // Always include date headers initially, we'll rebuild them
+    }
+
+    const tx = transaction as FormattedTransaction;
+
+    // Category filter
+    if (selectedCategory !== "all") {
+      if (selectedCategory === "Uncategorized") {
+        // Show transactions with no category or "Uncategorized"
+        if (tx.categoryName && tx.categoryName !== "Uncategorized") {
+          return false;
+        }
+      } else if (tx.categoryName !== selectedCategory) {
+        return false;
+      }
+    }
+
+    // Amount filter
+    if (selectedAmount === "income" && tx.amount <= 0) {
+      return false;
+    }
+    if (selectedAmount === "expense" && tx.amount >= 0) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Rebuild the transaction list with proper date headers
+  const rebuildWithDateHeaders = (transactions: TransactionItem[]) => {
+    const result: TransactionItem[] = [];
+    let currentDate = '';
+
+    for (const transaction of transactions) {
+      if ('type' in transaction && transaction.type === 'date-header') {
+        continue; // Skip old date headers
+      }
+
+      const tx = transaction as FormattedTransaction;
+      const transactionDate = new Date(tx.date).toDateString();
+
+      if (transactionDate !== currentDate) {
+        currentDate = transactionDate;
+        const date = new Date(transactionDate);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        let displayDate: string;
+        if (date.toDateString() === today.toDateString()) {
+          displayDate = "Today";
+        } else if (date.toDateString() === yesterday.toDateString()) {
+          displayDate = "Yesterday";
+        } else {
+          displayDate = date.toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+        }
+
+        // Calculate daily total for this date
+        const dailyTotal = transactions
+          .filter(t => !('type' in t) || t.type !== 'date-header')
+          .filter(t => new Date((t as FormattedTransaction).date).toDateString() === transactionDate)
+          .reduce((sum, t) => sum + (t as FormattedTransaction).amount, 0);
+
+        result.push({
+          type: "date-header",
+          date: transactionDate,
+          displayDate,
+          id: `date-header-${transactionDate}`,
+          dailyTotal,
+        });
+      }
+
+      result.push(tx);
+    }
+
+    return result;
+  };
+
+  const finalTransactions = rebuildWithDateHeaders(filteredTransactions);
+
   console.log("TransactionsPage render:", {
-    transactionsCount: transactions.length,
+    transactionsCount: finalTransactions.length,
+    allTransactionsCount: allTransactions.length,
     isLoadingMore,
     isReachingEnd,
     error,
-    firstTransaction: transactions[0],
+    firstTransaction: finalTransactions[0],
     hasLoadMore: !!loadMore,
+    selectedCategory,
+    selectedAmount,
   });
 
   const handleEditTransaction = (_transaction: FormattedTransaction) => {
@@ -222,19 +355,31 @@ export default function TransactionsPage() {
                   <div className="grid gap-2">
                     <div className="grid grid-cols-3 items-center gap-4">
                       <label htmlFor="category">Category</label>
-                      <select id="category" className="col-span-2 h-8">
-                        <option>All Categories</option>
-                        <option>Food</option>
-                        <option>Transport</option>
-                        <option>Shopping</option>
+                      <select
+                        id="category"
+                        className="col-span-2 h-8"
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                      >
+                        <option value="all">All Categories</option>
+                        {categoriesWithUncategorized.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-4">
                       <label htmlFor="amount">Amount</label>
-                      <select id="amount" className="col-span-2 h-8">
-                        <option>All Amounts</option>
-                        <option>Income</option>
-                        <option>Expenses</option>
+                      <select
+                        id="amount"
+                        className="col-span-2 h-8"
+                        value={selectedAmount}
+                        onChange={(e) => setSelectedAmount(e.target.value)}
+                      >
+                        <option value="all">All Amounts</option>
+                        <option value="income">Income Only</option>
+                        <option value="expense">Expenses Only</option>
                       </select>
                     </div>
                   </div>
@@ -258,14 +403,14 @@ export default function TransactionsPage() {
             Failed to load transactions.
           </div>
         ) : null}
-        {!error && transactions.length === 0 && !isLoadingMore && (
+        {!error && finalTransactions.length === 0 && !isLoadingMore && (
           <div className="flex justify-center items-center h-full text-muted-foreground dark:text-muted-foreground">
             No transactions found.
           </div>
         )}
 
         <TransactionTableVirtuoso
-          transactions={transactions}
+          transactions={finalTransactions}
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
           onUpdateNote={handleUpdateNote}

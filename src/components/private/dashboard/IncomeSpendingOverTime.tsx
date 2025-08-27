@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import { useState } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-import { format, subDays } from "date-fns";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { format, subDays, subMonths, subYears, startOfYear } from "date-fns";
 
-import { useAnalytics } from "@/hooks/useAnalytics";
+import { useAnalytics, type RangeKey } from "@/hooks/useAnalytics";
 import {
   Card,
   CardContent,
@@ -50,8 +50,15 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function IncomeSpendingOverTime() {
-  const [range, setRange] = useState<"7d" | "30d" | "90d">("30d");
+  const [range, setRange] = useState<RangeKey>("30d");
   const { data } = useAnalytics(range);
+  // active series state: control which series are shown
+  const [activeSeries, setActiveSeries] = React.useState<
+    Record<string, boolean>
+  >({
+    income: true,
+    spending: true,
+  });
 
   const chartDataMemo = React.useMemo(
     () =>
@@ -64,18 +71,68 @@ export default function IncomeSpendingOverTime() {
   );
 
   if (process.env.NODE_ENV === "development") {
-    console.debug("[IncomeSpendingOverTime] chartDataMemo preview", chartDataMemo.slice?.(0, 20));
+    console.debug(
+      "[IncomeSpendingOverTime] chartDataMemo preview",
+      chartDataMemo.slice?.(0, 20)
+    );
   }
 
   const filteredData = React.useMemo(() => {
     const today = new Date();
-    let daysToSubtract = 90;
-    if (range === "30d") {
-      daysToSubtract = 30;
-    } else if (range === "7d") {
-      daysToSubtract = 7;
+
+    // If range is 'all', try to find the earliest non-empty bucket and start there
+    if (range === "all") {
+      const firstNonZero = chartDataMemo.find(
+        (r) => (Number(r.income) || Number(r.spending)) !== 0
+      );
+      if (firstNonZero) {
+        const d = String(firstNonZero.date ?? "");
+        const start = new Date(d.includes("T") ? d : d + "T00:00:00");
+        return chartDataMemo.filter((item) => {
+          const itmDate = new Date(
+            String(item.date ?? "").includes("T")
+              ? String(item.date)
+              : String(item.date) + "T00:00:00"
+          );
+          return itmDate >= start;
+        });
+      }
+
+      // if no non-zero buckets exist, fall back to returning everything
+      return chartDataMemo;
     }
-    const startDate = subDays(today, daysToSubtract);
+
+    let startDate: Date;
+
+    switch (range) {
+      case "7d":
+        startDate = subDays(today, 7);
+        break;
+      case "30d":
+        startDate = subDays(today, 30);
+        break;
+      case "90d":
+        startDate = subDays(today, 90);
+        break;
+      case "1M":
+        startDate = subMonths(today, 1);
+        break;
+      case "3M":
+        startDate = subMonths(today, 3);
+        break;
+      case "6M":
+        startDate = subMonths(today, 6);
+        break;
+      case "YTD":
+        startDate = startOfYear(today);
+        break;
+      case "1Y":
+        startDate = subYears(today, 1);
+        break;
+      default:
+        // fallback to 90 days
+        startDate = subDays(today, 90);
+    }
 
     return chartDataMemo.filter((item) => {
       const d = String(item.date ?? "");
@@ -83,6 +140,51 @@ export default function IncomeSpendingOverTime() {
       return date >= startDate;
     });
   }, [range, chartDataMemo]);
+
+  // compute visible domain for Y axis based on active series
+  const yDomain = React.useMemo(() => {
+    const keys = Object.keys(activeSeries).filter((k) => activeSeries[k]);
+    if (!keys.length) return [0, 1];
+
+    let min = Infinity;
+    let max = -Infinity;
+
+    for (const row of filteredData) {
+      for (const k of keys) {
+        const v = Number((row as Record<string, unknown>)[k] ?? 0);
+        if (Number.isFinite(v)) {
+          if (v < min) min = v;
+          if (v > max) max = v;
+        }
+      }
+    }
+
+    if (min === Infinity || max === -Infinity) return [0, 1];
+
+    // add small padding
+    const padding = Math.max((max - min) * 0.08, 1);
+    return [Math.floor(min - padding), Math.ceil(max + padding)];
+  }, [filteredData, activeSeries]);
+
+  const handleToggleSeries = (key: string) => {
+    setActiveSeries((s) => ({ ...s, [key]: !s[key] }));
+  };
+
+  // create modified data so hidden series animate to zero instead of unmounting
+  const animatedData = React.useMemo(() => {
+    return filteredData.map((r) => ({
+      ...r,
+      spending: activeSeries.spending ? r.spending : 0,
+      income: activeSeries.income ? r.income : 0,
+    }));
+  }, [filteredData, activeSeries]);
+
+  function formatYAxisTick(value: number) {
+    const abs = Math.abs(value);
+    if (abs >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (abs >= 1000) return `$${(value / 1000).toFixed(1)}k`;
+    return `$${value.toLocaleString()}`;
+  }
 
   return (
     <Card>
@@ -93,7 +195,7 @@ export default function IncomeSpendingOverTime() {
             Showing total income and spending over time
           </CardDescription>
         </div>
-        <Select value={range} onValueChange={(v) => setRange(v as "7d" | "30d" | "90d")}>
+        <Select value={range} onValueChange={(v) => setRange(v as RangeKey)}>
           <SelectTrigger
             className="w-[160px] rounded-lg sm:ml-auto"
             aria-label="Select a value"
@@ -101,24 +203,36 @@ export default function IncomeSpendingOverTime() {
             <SelectValue placeholder="Select time range" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
-            <SelectItem value="90d" className="rounded-lg">
-              Last 90 days
+            <SelectItem value="7d" className="rounded-lg">
+              1 week
             </SelectItem>
             <SelectItem value="30d" className="rounded-lg">
-              Last 30 days
+              1 month
             </SelectItem>
-            <SelectItem value="7d" className="rounded-lg">
-              Last 7 days
+            <SelectItem value="90d" className="rounded-lg">
+              3 months
+            </SelectItem>
+            <SelectItem value="6M" className="rounded-lg">
+              6 months
+            </SelectItem>
+            <SelectItem value="YTD" className="rounded-lg">
+              Year to date
+            </SelectItem>
+            <SelectItem value="1Y" className="rounded-lg">
+              1 year
+            </SelectItem>
+            <SelectItem value="all" className="rounded-lg">
+              All time
             </SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-5">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
+          className="aspect-auto  h-[300px] w-full pt-7"
         >
-          <AreaChart data={filteredData}>
+          <AreaChart data={animatedData}>
             <defs>
               {/* Gradient for the Spending area */}
               <linearGradient id="fillSpending" x1="0" y1="0" x2="0" y2="1">
@@ -156,16 +270,33 @@ export default function IncomeSpendingOverTime() {
               minTickGap={32}
               tickFormatter={(value) => {
                 const str = String(value ?? "");
-                const date = new Date(str.includes("T") ? str : str + "T00:00:00");
+                const date = new Date(
+                  str.includes("T") ? str : str + "T00:00:00"
+                );
                 return format(date, "MMM d");
               }}
+            />
+            {/* dynamic domain scales to visible series */}
+            <YAxis
+              domain={yDomain}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#6b7280", fontSize: 12 }}
+              tickFormatter={formatYAxisTick}
             />
             <ChartTooltip
               cursor={false}
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) =>
-                    format(new Date(String(value ?? "").includes("T") ? String(value) : String(value) + "T00:00:00"), "MMM d, yyyy")
+                    format(
+                      new Date(
+                        String(value ?? "").includes("T")
+                          ? String(value)
+                          : String(value) + "T00:00:00"
+                      ),
+                      "MMM d, yyyy"
+                    )
                   }
                   indicator="dot"
                   formatter={(value) => `$${Number(value).toLocaleString()}`}
@@ -178,14 +309,45 @@ export default function IncomeSpendingOverTime() {
               type="natural"
               fill="url(#fillSpending)"
               stroke="var(--color-spending)"
+              isAnimationActive={true}
+              animationDuration={420}
+              animationEasing="ease"
+              strokeOpacity={activeSeries.spending ? 1 : 0}
+              fillOpacity={activeSeries.spending ? 1 : 0}
             />
             <Area
               dataKey="income"
               type="natural"
               fill="url(#fillIncome)"
               stroke="var(--color-income)"
+              isAnimationActive={true}
+              animationDuration={420}
+              animationEasing="ease"
+              strokeOpacity={activeSeries.income ? 1 : 0}
+              fillOpacity={activeSeries.income ? 1 : 0}
             />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartLegend
+              payload={[
+                {
+                  dataKey: "spending",
+                  value: "spending",
+                  color: "var(--color-spending)",
+                },
+                {
+                  dataKey: "income",
+                  value: "income",
+                  color: "var(--color-income)",
+                },
+              ]}
+              content={(props) => (
+                <ChartLegendContent
+                  payload={props?.payload}
+                  verticalAlign={props?.verticalAlign}
+                  onLegendToggle={handleToggleSeries}
+                  activeKeys={activeSeries}
+                />
+              )}
+            />
           </AreaChart>
         </ChartContainer>
       </CardContent>

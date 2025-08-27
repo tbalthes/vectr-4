@@ -234,7 +234,11 @@ export function Spending90v90() {
   const fmt = (d: Date) => format(d, "yyyy-MM-dd");
 
   // Use the shared useAnalytics hook with explicit start/end (aggregator will return zero-filled buckets)
-  const { data: rpcCurrent } = useAnalytics("90d", fmt(startDateCurrent), fmt(endDateCurrent));
+  const { data: rpcCurrent } = useAnalytics(
+    "90d",
+    fmt(startDateCurrent),
+    fmt(endDateCurrent)
+  );
   const { data: rpcPrevious } = useAnalytics(
     "90d",
     fmt(startDatePrevious),
@@ -248,8 +252,14 @@ export function Spending90v90() {
   );
 
   if (process.env.NODE_ENV === "development") {
-  console.debug("[Spending90v90] rpcCurrent preview", rpcCurrent?.slice?.(0, 10));
-  console.debug("[Spending90v90] rpcPrevious preview", rpcPrevious?.slice?.(0, 10));
+    console.debug(
+      "[Spending90v90] rpcCurrent preview",
+      rpcCurrent?.slice?.(0, 10)
+    );
+    console.debug(
+      "[Spending90v90] rpcPrevious preview",
+      rpcPrevious?.slice?.(0, 10)
+    );
   }
 
   // build chart arrays (API returns spending as numbers per day)
@@ -285,7 +295,10 @@ export function Spending90v90() {
   };
 
   if (process.env.NODE_ENV === "development") {
-    console.debug("[Spending90v90] totals", { current: total.current, previous: total.previous });
+    console.debug("[Spending90v90] totals", {
+      current: total.current,
+      previous: total.previous,
+    });
   }
 
   // Pick the correct chart data and x-axis range for the selected period
@@ -354,11 +367,18 @@ export function Spending90v90() {
             data={chartData}
             onMouseMove={(state: unknown) => {
               if (process.env.NODE_ENV === "development") {
-                if (typeof state === "object" && state !== null && "activePayload" in state) {
+                if (
+                  typeof state === "object" &&
+                  state !== null &&
+                  "activePayload" in state
+                ) {
                   const s = state as Record<string, unknown>;
                   const payload = s["activePayload"] as unknown[] | undefined;
                   if (payload && payload.length) {
-                    console.debug("[Spending90v90] onMouseMove activePayload", payload);
+                    console.debug(
+                      "[Spending90v90] onMouseMove activePayload",
+                      payload
+                    );
                   }
                 }
               }
@@ -374,7 +394,9 @@ export function Spending90v90() {
               tickFormatter={(value) => {
                 // Parse bucket (YYYY-MM-DD) as local date to avoid UTC shift
                 const str = String(value ?? "");
-                const date = new Date(str.includes("T") ? str : str + "T00:00:00");
+                const date = new Date(
+                  str.includes("T") ? str : str + "T00:00:00"
+                );
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -390,7 +412,9 @@ export function Spending90v90() {
                   labelFormatter={(value) => {
                     // Ensure ISO bucket strings (YYYY-MM-DD) are treated as local dates
                     const str = String(value ?? "");
-                    const date = new Date(str.includes("T") ? str : str + "T00:00:00");
+                    const date = new Date(
+                      str.includes("T") ? str : str + "T00:00:00"
+                    );
                     return date.toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",

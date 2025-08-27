@@ -52,6 +52,8 @@
     "csv-stringify": "^6.6.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.1",
+    "echarts": "^5.6.0",
+    "echarts-for-react": "^3.0.2",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.12",
     "fuse.js": "^7.1.0",
@@ -93,7 +95,8 @@
   },
   "overrides": {
     "lucide-react": {
-      "react": "^19"
+      "react": "^19",
+      "lodash": "^4.17.21"
     }
   }
 }
