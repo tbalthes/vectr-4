@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const typography = require("@tailwindcss/typography");
+
 module.exports = {
   darkMode: ["class"],
   content: [
@@ -87,11 +89,11 @@ module.exports = {
         "fade-in": "fade-in 0.5s ease-out",
       },
       fontSize: {
-        '2xs': ['0.625rem', '0.75rem'],   // 10px, 12px line-height
-        '3xs': ['0.5rem', '0.625rem'],    // 8px, 10px line-height
-        'micro': ['0.4375rem', '0.5rem'], // 7px, 8px line-height
-      }
+        "2xs": ["0.625rem", "0.75rem"], // 10px, 12px line-height
+        "3xs": ["0.5rem", "0.625rem"], // 8px, 10px line-height
+        micro: ["0.4375rem", "0.5rem"], // 7px, 8px line-height
+      },
     },
   },
-  plugins: [],
+  plugins: [typography],
 };

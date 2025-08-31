@@ -26,7 +26,7 @@ function useAllCategories() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch("/api/analytics/aggregator?view=categories&namesOnly=true", {
+        const response = await fetch("/api/analytics/categories?namesOnly=true", {
           credentials: "include",
         });
         if (!response.ok) {

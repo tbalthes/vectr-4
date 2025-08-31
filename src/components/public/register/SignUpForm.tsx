@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField } from "@/components/public/register/FormField";
 import { SocialLoginButtons } from "@/components/public/register/SocialLoginButtons";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/supabase";
 
 import { AuthError } from "@supabase/supabase-js";
 

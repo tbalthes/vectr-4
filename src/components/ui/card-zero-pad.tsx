@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 function CardNp({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -38,7 +38,10 @@ function CardNpTitle({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function CardNpDescription({ className, ...props }: React.ComponentProps<"div">) {
+function CardNpDescription({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-np-description"

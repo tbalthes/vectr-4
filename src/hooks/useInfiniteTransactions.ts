@@ -8,9 +8,6 @@ export interface InfiniteTransactionsFilters {
   sortBy?: "date" | "amount" | "transaction_number";
   sortOrder?: "asc" | "desc";
   pageSize?: number;
-  category?: string; // server-side category filter
-  minAmount?: number; // server-side min amount
-  maxAmount?: number; // server-side max amount
 }
 
 export type DateHeader = {

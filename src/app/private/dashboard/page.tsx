@@ -14,7 +14,6 @@ import { Spending90v90 } from "@/components/private/dashboard/Spending90v90";
 import { NetWorthOverTime } from "@/components/private/dashboard/NetWorthOverTime";
 import { CategorySpending } from "@/components/private/dashboard/CategorySpendingChart";
 import SpendingHeatmap from "@/components/private/dashboard/SpendingHeatmap";
-import CategorySunburstCard from "@/components/private/dashboard/CategorySunburstCard";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -60,7 +59,6 @@ export default function Dashboard() {
           <NetWorthOverTime />
           <SpendingByCategory categories={dashboardData.categoryData} />
           <CategorySpending />
-          <CategorySunburstCard />
         </div>
 
         <RecentTransactions transactions={dashboardData.recentTransactions} />

@@ -1,143 +1,437 @@
-"use client";
-import React, { useMemo } from "react";
-import ReactECharts from "echarts-for-react";
 import * as echarts from "echarts";
-import type { SunburstSeriesOption } from "echarts/charts";
 
-export type SunburstNode = {
-  name: string;
-  value?: number;
-  children?: SunburstNode[];
-  itemStyle?: {
-    color?: string;
-    borderColor?: string;
-    borderWidth?: number;
-  };
+var chartDom = document.getElementById("main");
+var myChart = echarts.init(chartDom);
+var option;
+
+const colors = ["#FFAE57", "#FF7853", "#EA5151", "#CC3F57", "#9A2555"];
+const bgColor = "#2E2733";
+const itemStyle = {
+  star5: {
+    color: colors[0],
+  },
+  star4: {
+    color: colors[1],
+  },
+  star3: {
+    color: colors[2],
+  },
+  star2: {
+    color: colors[3],
+  },
 };
-
-export interface CategorySunburstProps {
-  data: SunburstNode[];
-  height?: number;
-}
-
-// Convert a CSS color (including oklch) to a hex string via computed styles
-function cssColorToHex(input: string, fallback = "#6E56CF"): string {
-  if (!input) return fallback;
-  const el = typeof window !== "undefined" ? document.createElement("div") : null;
-  if (!el) return fallback;
-  el.style.color = input;
-  document.body.appendChild(el);
-  const rgb = getComputedStyle(el).color; // e.g., rgb(110, 86, 207)
-  document.body.removeChild(el);
-  const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-  if (!m) return fallback;
-  const r = Number(m[1]);
-  const g = Number(m[2]);
-  const b = Number(m[3]);
-  const toHex = (n: number) => n.toString(16).padStart(2, "0");
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
-}
-
-export default function CategorySunburst({ data, height = 400 }: CategorySunburstProps) {
-  const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
-  const brandHex = useMemo(
-    () => cssColorToHex(getComputedStyle(document.documentElement).getPropertyValue("--ring") || "#6E56CF"),
-    []
-  );
-  const border = isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)";
-
-  const option = useMemo(() => {
-    const total = (nodes: SunburstNode[]): number =>
-      nodes.reduce((sum, n) => sum + (n.value || 0) + (n.children ? total(n.children) : 0), 0);
-    const grandTotal = total(data);
-
-    return {
-      backgroundColor: "transparent",
-      tooltip: {
-        trigger: "item",
-        formatter: (params: { name?: string; value?: number }) => {
-          const name = params?.name || "";
-          const value = Number(params?.value || 0);
-          const pct = grandTotal > 0 ? ((value / grandTotal) * 100).toFixed(1) : "0.0";
-          const fmt = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
-          return `<div style="padding:4px 6px">${name}<br/><b>${fmt.format(value)}</b> • ${pct}%</div>`;
-        },
+const data = [
+  {
+    name: "虚构",
+    itemStyle: {
+      color: colors[1],
+    },
+    children: [
+      {
+        name: "小说",
+        children: [
+          {
+            name: "5☆",
+            children: [
+              {
+                name: "疼",
+              },
+              {
+                name: "慈悲",
+              },
+              {
+                name: "楼下的房客",
+              },
+            ],
+          },
+          {
+            name: "4☆",
+            children: [
+              {
+                name: "虚无的十字架",
+              },
+              {
+                name: "无声告白",
+              },
+              {
+                name: "童年的终结",
+              },
+            ],
+          },
+          {
+            name: "3☆",
+            children: [
+              {
+                name: "疯癫老人日记",
+              },
+            ],
+          },
+        ],
       },
-      series: [
+      {
+        name: "其他",
+        children: [
+          {
+            name: "5☆",
+            children: [
+              {
+                name: "纳博科夫短篇小说全集",
+              },
+            ],
+          },
+          {
+            name: "4☆",
+            children: [
+              {
+                name: "安魂曲",
+              },
+              {
+                name: "人生拼图版",
+              },
+            ],
+          },
+          {
+            name: "3☆",
+            children: [
+              {
+                name: "比起爱你，我更需要你",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: "非虚构",
+    itemStyle: {
+      color: colors[2],
+    },
+    children: [
+      {
+        name: "设计",
+        children: [
+          {
+            name: "5☆",
+            children: [
+              {
+                name: "无界面交互",
+              },
+            ],
+          },
+          {
+            name: "4☆",
+            children: [
+              {
+                name: "数字绘图的光照与渲染技术",
+              },
+              {
+                name: "日本建筑解剖书",
+              },
+            ],
+          },
+          {
+            name: "3☆",
+            children: [
+              {
+                name: "奇幻世界艺术\n&RPG地图绘制讲座",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "社科",
+        children: [
+          {
+            name: "5☆",
+            children: [
+              {
+                name: "痛点",
+              },
+            ],
+          },
+          {
+            name: "4☆",
+            children: [
+              {
+                name: "卓有成效的管理者",
+              },
+              {
+                name: "进化",
+              },
+              {
+                name: "后物欲时代的来临",
+              },
+            ],
+          },
+          {
+            name: "3☆",
+            children: [
+              {
+                name: "疯癫与文明",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "心理",
+        children: [
+          {
+            name: "5☆",
+            children: [
+              {
+                name: "我们时代的神经症人格",
+              },
+            ],
+          },
+          {
+            name: "4☆",
+            children: [
+              {
+                name: "皮格马利翁效应",
+              },
+              {
+                name: "受伤的人",
+              },
+            ],
+          },
+          {
+            name: "3☆",
+          },
+          {
+            name: "2☆",
+            children: [
+              {
+                name: "迷恋",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "居家",
+        children: [
+          {
+            name: "4☆",
+            children: [
+              {
+                name: "把房子住成家",
+              },
+              {
+                name: "只过必要生活",
+              },
+              {
+                name: "北欧简约风格",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "绘本",
+        children: [
+          {
+            name: "5☆",
+            children: [
+              {
+                name: "设计诗",
+              },
+            ],
+          },
+          {
+            name: "4☆",
+            children: [
+              {
+                name: "假如生活糊弄了你",
+              },
+              {
+                name: "博物学家的神秘动物图鉴",
+              },
+            ],
+          },
+          {
+            name: "3☆",
+            children: [
+              {
+                name: "方向",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "哲学",
+        children: [
+          {
+            name: "4☆",
+            children: [
+              {
+                name: "人生的智慧",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "技术",
+        children: [
+          {
+            name: "5☆",
+            children: [
+              {
+                name: "代码整洁之道",
+              },
+            ],
+          },
+          {
+            name: "4☆",
+            children: [
+              {
+                name: "Three.js 开发指南",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+for (let j = 0; j < data.length; ++j) {
+  let level1 = data[j].children;
+  for (let i = 0; i < level1.length; ++i) {
+    let block = level1[i].children;
+    let bookScore = [];
+    let bookScoreId;
+    for (let star = 0; star < block.length; ++star) {
+      let style = (function (name) {
+        switch (name) {
+          case "5☆":
+            bookScoreId = 0;
+            return itemStyle.star5;
+          case "4☆":
+            bookScoreId = 1;
+            return itemStyle.star4;
+          case "3☆":
+            bookScoreId = 2;
+            return itemStyle.star3;
+          case "2☆":
+            bookScoreId = 3;
+            return itemStyle.star2;
+        }
+      })(block[star].name);
+      block[star].label = {
+        color: style.color,
+        downplay: {
+          opacity: 0.5,
+        },
+      };
+      if (block[star].children) {
+        style = {
+          opacity: 1,
+          color: style.color,
+        };
+        block[star].children.forEach(function (book) {
+          book.value = 1;
+          book.itemStyle = style;
+          book.label = {
+            color: style.color,
+          };
+          let value = 1;
+          if (bookScoreId === 0 || bookScoreId === 3) {
+            value = 5;
+          }
+          if (bookScore[bookScoreId]) {
+            bookScore[bookScoreId].value += value;
+          } else {
+            bookScore[bookScoreId] = {
+              color: colors[bookScoreId],
+              value: value,
+            };
+          }
+        });
+      }
+    }
+    level1[i].itemStyle = {
+      color: data[j].itemStyle.color,
+    };
+  }
+}
+option = {
+  backgroundColor: bgColor,
+  color: colors,
+  series: [
+    {
+      type: "sunburst",
+      center: ["50%", "48%"],
+      data: data,
+      sort: function (a, b) {
+        if (a.depth === 1) {
+          return b.getValue() - a.getValue();
+        } else {
+          return a.dataIndex - b.dataIndex;
+        }
+      },
+      label: {
+        rotate: "radial",
+        color: bgColor,
+      },
+      itemStyle: {
+        borderColor: bgColor,
+        borderWidth: 2,
+      },
+      levels: [
+        {},
         {
-          type: "sunburst",
-          data,
-          nodeClick: "rootToNode",
-          sort: (
-            a: { depth: number; getValue: () => number; dataIndex: number },
-            b: { depth: number; getValue: () => number; dataIndex: number }
-          ) => (a.depth === 1 ? b.getValue() - a.getValue() : a.dataIndex - b.dataIndex),
+          r0: 0,
+          r: 40,
           label: {
-            color: isDark ? "#E5E7EB" : "#111827",
-            rotate: "radial",
-            overflow: "truncate",
-            fontSize: 12,
-            formatter: (p: unknown) => {
-              const params = p as { name?: string; depth?: number; treePathInfo?: unknown[] };
-              const name = params?.name ?? "";
-              const depth = Array.isArray(params?.treePathInfo)
-                ? (params.treePathInfo as unknown[]).length - 1
-                : (params.depth ?? 0);
-              // Show labels for all depths since we only have categories now
-              return String(name);
-            },
+            rotate: 0,
           },
-          labelLayout: () => ({ hideOverlap: true, moveOverlap: "shiftX" }),
-          minAngle: 2, // avoid extremely thin slices
+        },
+        {
+          r0: 40,
+          r: 105,
+        },
+        {
+          r0: 115,
+          r: 140,
           itemStyle: {
-            borderColor: border,
-            borderWidth: 1,
+            shadowBlur: 2,
+            shadowColor: colors[2],
+            color: "transparent",
           },
-          levels: [
-            {},
-            // Depth 1: Categories - larger radius for better visibility
-            {
-              r0: 0,
-              r: 120,
-              label: {
-                rotate: "tangential",
-                fontSize: 13,
-                color: isDark ? "#E5E7EB" : "#111827"
-              },
-              itemStyle: {
-                borderColor: border,
-                borderWidth: 2
-              },
+          label: {
+            rotate: "tangential",
+            fontSize: 10,
+            color: colors[0],
+          },
+        },
+        {
+          r0: 140,
+          r: 145,
+          itemStyle: {
+            shadowBlur: 80,
+            shadowColor: colors[0],
+          },
+          label: {
+            position: "outside",
+            textShadowBlur: 5,
+            textShadowColor: "#333",
+          },
+          downplay: {
+            label: {
+              opacity: 0.5,
             },
-          ] as SunburstSeriesOption["levels"],
-          // Enhanced color palette similar to ECharts examples
-          color: [
-            brandHex,
-            "#22C55E",
-            "#F59E0B",
-            "#EF4444",
-            "#06B6D4",
-            "#8B5CF6",
-            "#10B981",
-            "#F97316",
-            "#EC4899",
-            "#84CC16",
-            "#6366F1",
-            "#14B8A6"
-          ],
-          emphasis: {
-            focus: "ancestor",
-            itemStyle: {
-              borderWidth: 3,
-              borderColor: isDark ? "#FFFFFF" : "#000000"
-            }
           },
         },
       ],
-    } as echarts.EChartsOption;
-  }, [data, isDark, brandHex, border]);
+    },
+  ],
+};
 
-  return (
+option && myChart.setOption(option);
     <div className="w-full flex items-center justify-center" style={{ height }}>
       <ReactECharts
         echarts={echarts}

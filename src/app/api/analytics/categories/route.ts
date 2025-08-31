@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
         {
           data: Array.from(categoryNames).sort(),
           metadata: {
-            total: categoryNames.size,
+            count: categoryNames.size,
             requestId,
           },
         },

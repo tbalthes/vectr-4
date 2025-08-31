@@ -46,7 +46,7 @@ export function calculateDateRange(
   const utcNow = new Date(now.getTime() + now.getTimezoneOffset() * 60000); // Convert to UTC
 
   let startDate: Date;
-    const endDate = new Date(utcNow);
+  const endDate = new Date(utcNow);
   endDate.setHours(23, 59, 59, 999); // End of day
 
   switch (range) {
