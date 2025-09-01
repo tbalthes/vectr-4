@@ -28,6 +28,14 @@ interface RawSupabaseTransaction {
         }[];
       }[]
     | null;
+  transaction_categories:
+    | {
+        categories: {
+          name: string;
+          icon: string;
+        };
+      }[]
+    | null;
 }
 
 // Transform raw Supabase data to FormattedTransaction
@@ -38,9 +46,18 @@ function transformToFormattedTransaction(
   const merchant = Array.isArray(raw.merchants)
     ? raw.merchants[0]
     : raw.merchants;
-  const category = Array.isArray(merchant?.categories)
+  const merchantCategory = Array.isArray(merchant?.categories)
     ? merchant?.categories[0]
     : merchant?.categories;
+
+  // Check for user category override first
+  const userCategoryData = Array.isArray(raw.transaction_categories)
+    ? raw.transaction_categories[0]
+    : raw.transaction_categories;
+  const userCategory = userCategoryData?.categories;
+
+  // Prioritize user category over merchant category
+  const category = userCategory || merchantCategory;
 
   return {
     id: raw.id,
@@ -352,6 +369,12 @@ export async function GET(request: NextRequest) {
               name,
               icon
             )
+          ),
+          transaction_categories!fk_tc_transaction (
+            categories!fk_tc_category (
+              name,
+              icon
+            )
           )
         `;
       } else if (needsCategoryInnerJoin) {
@@ -374,6 +397,12 @@ export async function GET(request: NextRequest) {
               name,
               icon
             )
+          ),
+          transaction_categories!fk_tc_transaction (
+            categories!fk_tc_category (
+              name,
+              icon
+            )
           )
         `;
       } else if (needsMerchantInnerJoin) {
@@ -393,6 +422,12 @@ export async function GET(request: NextRequest) {
             name,
             logo_url,
             categories (
+              name,
+              icon
+            )
+          ),
+          transaction_categories!fk_tc_transaction (
+            categories!fk_tc_category (
               name,
               icon
             )
@@ -424,6 +459,12 @@ export async function GET(request: NextRequest) {
             name,
             logo_url,
             categories (
+              name,
+              icon
+            )
+          ),
+          transaction_categories!fk_tc_transaction (
+            categories!fk_tc_category (
               name,
               icon
             )
