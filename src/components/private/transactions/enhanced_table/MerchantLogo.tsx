@@ -22,9 +22,14 @@ export function MerchantLogo({
     logoUrl.trim() !== "" &&
     /^(https?:\/\/|\/|data:)/.test(logoUrl.trim())
   ) {
+    // Convert HTTP to HTTPS for Clearbit and other image services
+    const secureUrl = logoUrl.startsWith("http:")
+      ? logoUrl.replace("http:", "https:")
+      : logoUrl;
+
     return (
       <Image
-        src={logoUrl}
+        src={secureUrl}
         alt={`${merchantName} logo`}
         className={`${className} rounded-lg object-cover border border-border`}
         width={32}
@@ -32,6 +37,14 @@ export function MerchantLogo({
         style={{ objectFit: "cover" }}
         // `unoptimized` must be a boolean; only set true for data URIs.
         unoptimized={typeof logoUrl === "string" && logoUrl.startsWith("data:")}
+        onError={() => {
+          console.log(
+            "MerchantLogo load error:",
+            logoUrl,
+            "-> converted to:",
+            secureUrl
+          );
+        }}
       />
     );
   }

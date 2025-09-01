@@ -106,6 +106,40 @@ export async function GET(request: NextRequest) {
         ? "asc"
         : "desc";
 
+    // New filter parameters
+    const dateFrom = url.searchParams.get("dateFrom");
+    const dateTo = url.searchParams.get("dateTo");
+    const category = url.searchParams.get("category");
+    const merchants = url.searchParams.get("merchants");
+    const amountMin = url.searchParams.get("amountMin");
+    const amountMax = url.searchParams.get("amountMax");
+    const amountType = url.searchParams.get("amountType"); // "income" | "expense"
+    const needsReview = url.searchParams.get("needsReview");
+
+    // Debug logging
+    console.log("🔍 API Filter Debug:", {
+      category,
+      merchants,
+      amountType,
+      amountMin,
+      amountMax,
+      dateFrom,
+      dateTo,
+    });
+
+    // Debug logging
+    console.log("API received filter parameters:", {
+      dateFrom,
+      dateTo,
+      category,
+      merchants,
+      amountType,
+      amountMin,
+      amountMax,
+      needsReview,
+      q,
+    });
+
     const allowedSortFields = ["date", "amount", "transaction_number"];
     const sortField = allowedSortFields.includes(sortBy) ? sortBy : "date";
 
@@ -116,52 +150,311 @@ export async function GET(request: NextRequest) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    // --- Count query for pagination metadata ---
-    let countQuery = serviceSupabase
-      .from("transactions")
-      .select("id", { count: "exact", head: false })
-      .eq("user_id", user.id);
-    if (q) {
-      countQuery = countQuery.or(
-        `clean_description.ilike.%${q}%,original_description.ilike.%${q}%`
+    // Helper function to apply filters to a query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const applyFilters = (query: any) => {
+      // Text search
+      if (q) {
+        query = query.or(
+          `clean_description.ilike.%${q}%,original_description.ilike.%${q}%`
+        );
+      }
+
+      // Date range filters
+      if (dateFrom) {
+        query = query.gte("date", dateFrom);
+      }
+      if (dateTo) {
+        query = query.lte("date", dateTo);
+      }
+
+      // Amount filters - simplified approach
+      if (amountType === "income") {
+        query = query.gt("amount", 0);
+      } else if (amountType === "expense") {
+        query = query.lt("amount", 0);
+      }
+
+      // Skip database-level amount range filtering since we'll do post-processing
+      // This avoids complex OR queries that can cause parsing errors
+
+      // Status filters
+      if (needsReview === "true") {
+        query = query.eq("needs_review", true);
+      } else if (needsReview === "false") {
+        query = query.eq("needs_review", false);
+      }
+
+      return query;
+    };
+
+    // For category filtering with direct join approach
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const applyCategoryFilter = (query: any, useInnerJoin: boolean = false) => {
+      if (!category || category === "all") {
+        return query;
+      }
+
+      console.log(
+        "🔍 Applying category filter for:",
+        category,
+        useInnerJoin ? "(inner join)" : "(regular join)"
       );
+
+      // Handle comma-separated categories for multiple selection
+      const categoryList = category
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean);
+      const hasUncategorized = categoryList.includes("Uncategorized");
+      const namedCategories = categoryList.filter((c) => c !== "Uncategorized");
+
+      if (hasUncategorized && namedCategories.length > 0) {
+        // Mixed case will be handled by separate queries - don't apply filter here
+        // We'll handle this in the main query logic
+        return query;
+      } else if (hasUncategorized) {
+        // Only uncategorized
+        return query.is("merchant_id", null);
+      } else if (namedCategories.length > 0) {
+        // Only named categories - use direct join
+        if (namedCategories.length === 1) {
+          return query.eq("merchants.categories.name", namedCategories[0]);
+        } else {
+          return query.in("merchants.categories.name", namedCategories);
+        }
+      }
+
+      return query;
+    };
+
+    // For merchant filtering, we need a special approach since it involves joined data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const applyMerchantFilter = (query: any, useInnerJoin: boolean = false) => {
+      if (!merchants || !merchants.trim()) {
+        return query;
+      }
+
+      console.log(
+        "🏪 Applying merchant filter for:",
+        merchants,
+        useInnerJoin ? "(inner join)" : "(regular join)"
+      );
+
+      const merchantList = merchants
+        .split(",")
+        .map((m) => m.trim())
+        .filter(Boolean);
+      if (merchantList.length === 0) {
+        return query;
+      }
+
+      // For merchant filtering, always use the filtering logic
+      // The inner join structure should be handled in the main query building
+      if (merchantList.length === 1) {
+        return query.eq("merchants.name", merchantList[0]);
+      } else {
+        return query.in("merchants.name", merchantList);
+      }
+    };
+
+    // --- Count query for pagination metadata ---
+    let countQuery;
+
+    // Determine if we need inner joins for count query
+    const needsCategoryInnerJoin =
+      category && category !== "all" && !category.includes("Uncategorized");
+    const needsMerchantInnerJoin = merchants && merchants.trim();
+
+    if (needsCategoryInnerJoin || needsMerchantInnerJoin) {
+      // Need inner joins for proper filtering
+      let selectClause = "id";
+
+      if (needsCategoryInnerJoin && needsMerchantInnerJoin) {
+        // Both category and merchant filtering
+        selectClause = `
+          id,
+          merchants!inner (
+            name,
+            categories!inner (
+              name
+            )
+          )
+        `;
+      } else if (needsCategoryInnerJoin) {
+        // Only category filtering with inner join
+        selectClause = `
+          id,
+          merchants!inner (
+            categories!inner (
+              name
+            )
+          )
+        `;
+      } else if (needsMerchantInnerJoin) {
+        // Only merchant filtering with inner join
+        selectClause = `
+          id,
+          merchants!inner (
+            name
+          )
+        `;
+      }
+
+      countQuery = serviceSupabase
+        .from("transactions")
+        .select(selectClause, { count: "exact", head: false })
+        .eq("user_id", user.id);
+    } else if (category && category !== "all") {
+      // Category filtering but with uncategorized (use regular structure)
+      countQuery = serviceSupabase
+        .from("transactions")
+        .select("id", { count: "exact", head: false })
+        .eq("user_id", user.id);
+    } else {
+      // No special filtering - use regular structure
+      countQuery = serviceSupabase
+        .from("transactions")
+        .select("id", { count: "exact", head: false })
+        .eq("user_id", user.id);
     }
+
+    countQuery = applyFilters(countQuery);
+    countQuery = applyCategoryFilter(countQuery, true);
+    countQuery = applyMerchantFilter(countQuery);
     const { count: totalItems, error: countError } = await countQuery;
 
     // --- Main data query ---
-    let query = serviceSupabase
-      .from("transactions")
-      .select(
-        `
-        id,
-        transaction_number,
-        date,
-        clean_description,
-        amount,
-        original_description,
-        balance,
-        user_metadata,
-        needs_review,
-        transaction_note,
-        merchants (
-          name,
-          logo_url,
-          categories (
+    let query;
+
+    // Use the filtering requirements already determined above
+    if (needsCategoryInnerJoin || needsMerchantInnerJoin) {
+      // Need inner joins for proper filtering
+      let selectClause;
+
+      if (needsCategoryInnerJoin && needsMerchantInnerJoin) {
+        // Both category and merchant filtering - use inner joins for both
+        selectClause = `
+          id,
+          transaction_number,
+          date,
+          clean_description,
+          amount,
+          original_description,
+          balance,
+          user_metadata,
+          needs_review,
+          transaction_note,
+          merchants!inner (
             name,
-            icon
+            logo_url,
+            categories!inner (
+              name,
+              icon
+            )
           )
+        `;
+      } else if (needsCategoryInnerJoin) {
+        // Only category filtering with inner join (no merchant filter)
+        selectClause = `
+          id,
+          transaction_number,
+          date,
+          clean_description,
+          amount,
+          original_description,
+          balance,
+          user_metadata,
+          needs_review,
+          transaction_note,
+          merchants!inner (
+            name,
+            logo_url,
+            categories!inner (
+              name,
+              icon
+            )
+          )
+        `;
+      } else if (needsMerchantInnerJoin) {
+        // Only merchant filtering with inner join (no category filter)
+        selectClause = `
+          id,
+          transaction_number,
+          date,
+          clean_description,
+          amount,
+          original_description,
+          balance,
+          user_metadata,
+          needs_review,
+          transaction_note,
+          merchants!inner (
+            name,
+            logo_url,
+            categories (
+              name,
+              icon
+            )
+          )
+        `;
+      }
+
+      query = serviceSupabase
+        .from("transactions")
+        .select(selectClause)
+        .eq("user_id", user.id);
+    } else {
+      // Use regular joins (for uncategorized filtering or no special filtering)
+      query = serviceSupabase
+        .from("transactions")
+        .select(
+          `
+          id,
+          transaction_number,
+          date,
+          clean_description,
+          amount,
+          original_description,
+          balance,
+          user_metadata,
+          needs_review,
+          transaction_note,
+          merchants (
+            name,
+            logo_url,
+            categories (
+              name,
+              icon
+            )
+          )
+        `
         )
-      `
-      )
-      .eq("user_id", user.id);
-    if (q) {
-      query = query.or(
-        `clean_description.ilike.%${q}%,original_description.ilike.%${q}%`
-      );
+        .eq("user_id", user.id);
     }
+
+    query = applyFilters(query);
+    query = applyCategoryFilter(query);
+    query = applyMerchantFilter(query);
     query = query.order(sortField, { ascending: sortOrder === "asc" });
     query = query.range(from, to);
     const { data, error, status } = await query;
+
+    // Debug logging for filtered data
+    if ((category && category !== "all") || (merchants && merchants.trim())) {
+      console.log("🔍 Filtered Data Sample:", {
+        category: category || "none",
+        merchants: merchants || "none",
+        totalFound: data?.length,
+        firstTransaction: data?.[0]
+          ? {
+              id: data[0].id,
+              description: data[0].clean_description,
+              merchants: data[0].merchants,
+            }
+          : null,
+      });
+    }
 
     if (error || countError) {
       console.error("Supabase Error:", {
@@ -191,7 +484,41 @@ export async function GET(request: NextRequest) {
     );
 
     // Transform the raw Supabase data to FormattedTransaction format
-    const formattedData = data?.map(transformToFormattedTransaction) || [];
+    let formattedData = data?.map(transformToFormattedTransaction) || [];
+
+    // Post-process amount filtering for absolute values
+    // This handles the case where users want to filter by amount range regardless of sign
+    if (
+      (amountMin !== null && amountMin !== undefined) ||
+      (amountMax !== null && amountMax !== undefined)
+    ) {
+      const minAmount = amountMin ? parseFloat(amountMin) : undefined;
+      const maxAmount = amountMax ? parseFloat(amountMax) : undefined;
+
+      formattedData = formattedData.filter(
+        (transaction: FormattedTransaction) => {
+          const absAmount = Math.abs(transaction.amount);
+
+          // Check minimum amount (absolute value)
+          if (minAmount !== undefined && absAmount < minAmount) {
+            return false;
+          }
+
+          // Check maximum amount (absolute value)
+          if (maxAmount !== undefined && absAmount > maxAmount) {
+            return false;
+          }
+
+          return true;
+        }
+      );
+
+      console.log(
+        `💰 Amount filtering: ${data?.length || 0} -> ${
+          formattedData.length
+        } transactions (range: $${minAmount || "0"}-$${maxAmount || "∞"})`
+      );
+    }
 
     return NextResponse.json({ data: formattedData, meta });
   } catch (err) {

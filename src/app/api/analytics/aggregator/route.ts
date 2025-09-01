@@ -66,18 +66,25 @@ export async function GET(request: NextRequest) {
 
   try {
     // Initialize Supabase client with request-scoped authentication
-    // Resolve the cookie store and give Supabase a synchronous getter so its internals can call cookies().get(...)
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    // Pass the `cookies` function directly so the helper can resolve cookies correctly.
+    const supabase = createRouteHandlerClient({ cookies });
 
     // Dev-only: log whether any auth headers or cookies appear to be present (no secret values printed)
     try {
-      const cookieHeader = request.headers.get('cookie') || '';
+      const cookieHeader = request.headers.get("cookie") || "";
       const hasCookie = cookieHeader.length > 0;
-      const authHeader = request.headers.get('authorization') || request.headers.get('x-supabase-access-token') || '';
+      const authHeader =
+        request.headers.get("authorization") ||
+        request.headers.get("x-supabase-access-token") ||
+        "";
       const hasAuthHeader = authHeader.length > 0;
-      if (process.env.NODE_ENV !== 'production') {
-        console.info('[analytics] dev-auth-presence hasCookie=', hasCookie, 'hasAuthHeader=', hasAuthHeader);
+      if (process.env.NODE_ENV !== "production") {
+        console.info(
+          "[analytics] dev-auth-presence hasCookie=",
+          hasCookie,
+          "hasAuthHeader=",
+          hasAuthHeader
+        );
       }
     } catch {
       // ignore
@@ -134,7 +141,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate date range
-    type RangeKey = "7d" | "30d" | "90d" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "all";
+    type RangeKey =
+      | "7d"
+      | "30d"
+      | "90d"
+      | "1M"
+      | "3M"
+      | "6M"
+      | "YTD"
+      | "1Y"
+      | "all";
     const dateRange = calculateDateRange(range as RangeKey, start, end);
 
     // Apply granularity override if provided
@@ -200,13 +216,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform RPC response to API contract format
-    const data: AggregateRow[] = rpcData.map((row: Record<string, unknown>) => ({
-      // RPC may return 'bucket' or 'bucket_date' depending on SQL — handle both
-      bucket: String(row.bucket ?? row.bucket_date ?? row.bucket_day ?? ""),
-      income: Number(row.income ?? row.income_amount ?? 0),
-      spending: Number(row.spending ?? row.spending_amount ?? 0),
-      tx_count: Number(row.tx_count ?? row.count ?? 0),
-    }));
+    const data: AggregateRow[] = rpcData.map(
+      (row: Record<string, unknown>) => ({
+        // RPC may return 'bucket' or 'bucket_date' depending on SQL — handle both
+        bucket: String(row.bucket ?? row.bucket_date ?? row.bucket_day ?? ""),
+        income: Number(row.income ?? row.income_amount ?? 0),
+        spending: Number(row.spending ?? row.spending_amount ?? 0),
+        tx_count: Number(row.tx_count ?? row.count ?? 0),
+      })
+    );
 
     // Calculate metadata
     const totalRecords = data.reduce((sum, row) => sum + row.tx_count, 0);

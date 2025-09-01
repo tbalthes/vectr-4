@@ -5,70 +5,61 @@ import { useRouter } from "next/navigation";
 import TransactionTableVirtuoso from "@/components/private/transactions/enhanced_table/TransactionTableVirtuoso";
 import { TransactionDetailsDrawer } from "@/components/private/transactions/enhanced_table/TransactionDetailsDrawer";
 import { Button } from "@/components/ui/button";
-import { Plus, Calendar, Filter } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Plus, Filter } from "lucide-react";
 import { FormattedTransaction } from "@/types/transactions";
-import { useInfiniteTransactions, type TransactionItem } from "@/hooks/useInfiniteTransactions";
+import {
+  DateRangePicker,
+  DateRange,
+} from "@/components/private/transactions/filters/DateRangePicker";
+import {
+  AdvancedFilterPanel,
+  AdvancedFilterState,
+} from "@/components/private/transactions/filters/AdvancedFilterPanel";
+import {
+  useInfiniteTransactions,
+  type TransactionItem,
+} from "@/hooks/useInfiniteTransactions";
 import PageHeader from "@/components/private/PageHeader";
-
-// Hook to fetch all available categories
-function useAllCategories() {
-  const [categories, setCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch("/api/analytics/categories?namesOnly=true", {
-          credentials: "include",
-        });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch categories: ${response.status}`);
-        }
-        const data = await response.json();
-        setCategories(data.data || []);
-      } catch (err) {
-        console.error("Error fetching categories:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch categories");
-        // Fallback to some default categories
-        setCategories(["Food", "Transport", "Shopping", "Entertainment", "Bills"]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  return { categories, loading, error };
-}
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default function TransactionsPage() {
   // TODO: Integrate useInfiniteTransactions and new data flow (WBS 3.1)
   // Placeholder for future filter panel (WBS 5.1)
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedAmount, setSelectedAmount] = useState("all");
+  const [selectedCategory] = useState("all");
+  const [selectedAmount] = useState("all");
+  const [dateRange, setDateRange] = useState<DateRange>({});
   const [sortBy, setSortBy] = useState<
     "date" | "amount" | "transaction_number"
   >("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const router = useRouter();
 
-  // Fetch all available categories
-  const { categories: allCategories } = useAllCategories();
-
-  // Add "Uncategorized" to the categories list if it's not already there
-  const categoriesWithUncategorized = allCategories.includes("Uncategorized")
-    ? allCategories
-    : [...allCategories, "Uncategorized"];
+  // Advanced filter state
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterState>({
+    selectedCategories: [],
+    selectedMerchants: [],
+    selectedAccounts: [],
+    selectedTags: [],
+    selectedGoals: [],
+    amountType: "all",
+    amountMin: undefined,
+    amountMax: undefined,
+    dateRange: {},
+    otherFilters: {
+      needsReview: false,
+      hasAttachments: false,
+      isRecurring: false,
+      hasNotes: false,
+    },
+  });
 
   // Drawer state
   const [drawerTransactionId, setDrawerTransactionId] = useState<string | null>(
@@ -85,54 +76,81 @@ export default function TransactionsPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Infinite loading hook - only use search for now since API doesn't support category filtering
-  const { transactions: allTransactions, isLoadingMore, isReachingEnd, loadMore, error } =
-    useInfiniteTransactions({
-      q: debouncedSearch,
-      sortBy,
-      sortOrder,
-      pageSize: 50,
-    });
+  // Convert filter state to API parameters
+  const apiFilters = {
+    q: debouncedSearch,
+    sortBy,
+    sortOrder,
+    pageSize: 50,
+    // Use advanced filters if they have values, otherwise fall back to simple filters
+    // Date range filters
+    ...(advancedFilters.dateRange.from && {
+      dateFrom: advancedFilters.dateRange.from.toISOString(),
+    }),
+    ...(advancedFilters.dateRange.to && {
+      dateTo: advancedFilters.dateRange.to.toISOString(),
+    }),
+    // Fallback to simple date range if advanced not set
+    ...(!advancedFilters.dateRange.from &&
+      !advancedFilters.dateRange.to &&
+      dateRange.from && { dateFrom: dateRange.from.toISOString() }),
+    ...(!advancedFilters.dateRange.from &&
+      !advancedFilters.dateRange.to &&
+      dateRange.to && { dateTo: dateRange.to.toISOString() }),
 
-  // Client-side filtering based on selected filters
-  const filteredTransactions = allTransactions.filter((transaction) => {
-    // Skip date headers for filtering
-    if ('type' in transaction && transaction.type === 'date-header') {
-      return true; // Always include date headers initially, we'll rebuild them
-    }
+    // Category filter - use advanced filters if set, otherwise simple
+    ...(advancedFilters.selectedCategories.length > 0 && {
+      category: advancedFilters.selectedCategories.join(","),
+    }),
+    ...(!advancedFilters.selectedCategories.length &&
+      selectedCategory !== "all" && { category: selectedCategory }),
 
-    const tx = transaction as FormattedTransaction;
+    // Amount filter - use advanced filters if set, otherwise simple
+    ...(advancedFilters.amountType !== "all" && {
+      amountType: advancedFilters.amountType,
+    }),
+    ...(!advancedFilters.amountType ||
+      (advancedFilters.amountType === "all" &&
+        selectedAmount !== "all" && {
+          amountType: selectedAmount as "income" | "expense",
+        })),
 
-    // Category filter
-    if (selectedCategory !== "all") {
-      if (selectedCategory === "Uncategorized") {
-        // Show transactions with no category or "Uncategorized"
-        if (tx.categoryName && tx.categoryName !== "Uncategorized") {
-          return false;
-        }
-      } else if (tx.categoryName !== selectedCategory) {
-        return false;
-      }
-    }
+    // Amount range
+    ...(advancedFilters.amountMin !== undefined && {
+      amountMin: advancedFilters.amountMin,
+    }),
+    ...(advancedFilters.amountMax !== undefined && {
+      amountMax: advancedFilters.amountMax,
+    }),
 
-    // Amount filter
-    if (selectedAmount === "income" && tx.amount <= 0) {
-      return false;
-    }
-    if (selectedAmount === "expense" && tx.amount >= 0) {
-      return false;
-    }
+    // Other advanced filters
+    ...(advancedFilters.selectedMerchants.length > 0 && {
+      merchants: advancedFilters.selectedMerchants.join(","),
+    }),
+    ...(advancedFilters.otherFilters.needsReview && { needsReview: true }),
+  };
 
-    return true;
-  });
+  // Infinite loading hook with server-side filtering
+  const {
+    transactions: allTransactions,
+    isLoadingMore,
+    isReachingEnd,
+    loadMore,
+    error,
+    updateTransactionOptimistic,
+    revalidate,
+  } = useInfiniteTransactions(apiFilters);
+
+  // Use server-filtered transactions directly
+  const filteredTransactions = allTransactions;
 
   // Rebuild the transaction list with proper date headers
   const rebuildWithDateHeaders = (transactions: TransactionItem[]) => {
     const result: TransactionItem[] = [];
-    let currentDate = '';
+    let currentDate = "";
 
     for (const transaction of transactions) {
-      if ('type' in transaction && transaction.type === 'date-header') {
+      if ("type" in transaction && transaction.type === "date-header") {
         continue; // Skip old date headers
       }
 
@@ -162,8 +180,12 @@ export default function TransactionsPage() {
 
         // Calculate daily total for this date
         const dailyTotal = transactions
-          .filter(t => !('type' in t) || t.type !== 'date-header')
-          .filter(t => new Date((t as FormattedTransaction).date).toDateString() === transactionDate)
+          .filter((t) => !("type" in t) || t.type !== "date-header")
+          .filter(
+            (t) =>
+              new Date((t as FormattedTransaction).date).toDateString() ===
+              transactionDate
+          )
           .reduce((sum, t) => sum + (t as FormattedTransaction).amount, 0);
 
         result.push({
@@ -205,23 +227,42 @@ export default function TransactionsPage() {
   };
 
   // Drawer edit handler
-  const handleDrawerEdit = async (transaction: {
-    id: string;
-    transaction_number: string;
-    date: string;
-    clean_description: string;
-    original_description: string;
-    amount: number;
-    balance: number | null;
-    transaction_note: string | null;
-    needs_review: boolean;
-  }) => {
+  // Accept the full edited transaction object from the drawer (including
+  // merchant_name, category_name, and optional *_id fields) so those fields
+  // are included when we call the API. Use a loose type to avoid strict
+  // coupling with the drawer's DetailedTransaction type.
+  const handleDrawerEdit = async (
+    transaction: Record<string, unknown> & {
+      id: string;
+      __explicit_save?: boolean;
+    }
+  ) => {
+    // Optimistic update: apply locally first, but don't close the drawer until
+    // the server confirms success. On failure, rollback via revalidation.
+    let didOptimisticallyUpdate = false;
     try {
+      // Ignore accidental/on-the-fly edits from the drawer; only proceed when
+      // the drawer sends an explicit save flag.
+      if (!transaction.__explicit_save) {
+        console.log(
+          "handleDrawerEdit: ignoring non-explicit edit",
+          transaction.id
+        );
+        return;
+      }
+
+      if (updateTransactionOptimistic) {
+        updateTransactionOptimistic(transaction as Record<string, unknown>);
+        didOptimisticallyUpdate = true;
+      }
+
+      // Persist to server
       const response = await fetch(`/api/transactions/${transaction.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(transaction),
       });
 
@@ -232,33 +273,50 @@ export default function TransactionsPage() {
       const result = await response.json();
       console.log("Transaction updated successfully:", result);
 
-      // Optionally refresh the transactions list or update optimistically
-      // For now, we'll just log success
-    } catch (error) {
-      console.error("Error updating transaction:", error);
-      // TODO: Show error toast/notification
+      // Revalidate from server for final truth
+      if (revalidate) await revalidate();
+
+      // Close the drawer only after a successful save
+      handleCloseDrawer();
+    } catch (err) {
+      console.error("Error updating transaction:", err);
+      // Rollback by revalidating from server if we applied an optimistic update
+      try {
+        if (didOptimisticallyUpdate && revalidate) await revalidate();
+      } catch (reErr) {
+        console.error("Error revalidating after failed update:", reErr);
+      }
+      // Keep the drawer open so the user can retry or correct the data
+      // TODO: show error notification to user (toast)
     }
   };
 
-  // Drawer delete handler
+  // Drawer delete handler (called from TransactionDetailsDrawer)
   const handleDrawerDelete = async (transactionId: string) => {
     try {
       const response = await fetch(`/api/transactions/${transactionId}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) {
         throw new Error(`Failed to delete transaction: ${response.statusText}`);
       }
 
-      console.log("Transaction deleted successfully");
+      // Revalidate the transactions cache
+      if (revalidate) await revalidate();
 
-      // Close the drawer and optionally refresh the list
+      // Close the drawer if still open
       handleCloseDrawer();
-      // TODO: Remove from local state or refresh transactions
-    } catch (error) {
-      console.error("Error deleting transaction:", error);
-      // TODO: Show error toast/notification
+    } catch (err) {
+      console.error("Error deleting transaction:", err);
+      // Attempt to revalidate to ensure UI reflects server
+      try {
+        if (revalidate) await revalidate();
+      } catch (reErr) {
+        console.error("Error revalidating after failed delete:", reErr);
+      }
+      // TODO: surface error to user via toast/notification
     }
   };
 
@@ -333,60 +391,63 @@ export default function TransactionsPage() {
               <option value="desc">Desc</option>
               <option value="asc">Asc</option>
             </select>
-            <Button variant="outline" size="sm">
-              <Calendar className="mr-2 h-4 w-4" />
-              Date
-            </Button>
-            <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <PopoverTrigger asChild>
+            <DateRangePicker
+              value={dateRange}
+              onChange={setDateRange}
+              placeholder="Select date range..."
+            />
+
+            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <SheetTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Filter className="mr-2 h-4 w-4" />
                   Filters
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium leading-none">Filters</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Apply filters to narrow down your transactions.
-                    </p>
-                  </div>
-                  <div className="grid gap-2">
-                    <div className="grid grid-cols-3 items-center gap-4">
-                      <label htmlFor="category">Category</label>
-                      <select
-                        id="category"
-                        className="col-span-2 h-8"
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                      >
-                        <option value="all">All Categories</option>
-                        {categoriesWithUncategorized.map((category) => (
-                          <option key={category} value={category}>
-                            {category}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-3 items-center gap-4">
-                      <label htmlFor="amount">Amount</label>
-                      <select
-                        id="amount"
-                        className="col-span-2 h-8"
-                        value={selectedAmount}
-                        onChange={(e) => setSelectedAmount(e.target.value)}
-                      >
-                        <option value="all">All Amounts</option>
-                        <option value="income">Income Only</option>
-                        <option value="expense">Expenses Only</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Button variant="outline" size="sm">
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+                <SheetHeader>
+                  <SheetTitle>Advanced Filters</SheetTitle>
+                  <SheetDescription>
+                    Apply advanced filters to refine your transaction search
+                  </SheetDescription>
+                </SheetHeader>
+
+                <AdvancedFilterPanel
+                  isOpen={filtersOpen}
+                  onClose={() => setFiltersOpen(false)}
+                  filters={advancedFilters}
+                  onFiltersChange={setAdvancedFilters}
+                  onApply={() => {
+                    // Filters are automatically applied via the apiFilters effect
+                    setFiltersOpen(false);
+                  }}
+                  onClear={() => {
+                    setAdvancedFilters({
+                      selectedCategories: [],
+                      selectedMerchants: [],
+                      selectedAccounts: [],
+                      selectedTags: [],
+                      selectedGoals: [],
+                      amountType: "all",
+                      amountMin: undefined,
+                      amountMax: undefined,
+                      dateRange: {},
+                      otherFilters: {
+                        needsReview: false,
+                        hasAttachments: false,
+                        isRecurring: false,
+                        hasNotes: false,
+                      },
+                    });
+                  }}
+                />
+              </SheetContent>
+            </Sheet>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/private/rules/enhanced")}
+            >
               Edit rules
             </Button>
             <Button size="sm" onClick={() => router.push("/private/upload")}>

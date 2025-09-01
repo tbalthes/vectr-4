@@ -7,7 +7,7 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-    
+
     // First, try to create the tables
     const createSessionsQuery = `
       CREATE TABLE IF NOT EXISTS chat_sessions (
@@ -34,27 +34,31 @@ export async function GET() {
     `;
 
     // Use raw SQL execution
-    const { data: sessionsResult, error: sessionsError } = await supabase
-      .rpc('exec_sql', { query: createSessionsQuery });
-    
-    const { data: messagesResult, error: messagesError } = await supabase
-      .rpc('exec_sql', { query: createMessagesQuery });
+    const { data: sessionsResult, error: sessionsError } = await supabase.rpc(
+      "exec_sql",
+      { query: createSessionsQuery }
+    );
+
+    const { data: messagesResult, error: messagesError } = await supabase.rpc(
+      "exec_sql",
+      { query: createMessagesQuery }
+    );
 
     // Test if we can query the tables
     const { data: sessions, error: sessionQueryError } = await supabase
-      .from('chat_sessions')
-      .select('*')
+      .from("chat_sessions")
+      .select("*")
       .limit(1);
 
     const { data: messages, error: messageQueryError } = await supabase
-      .from('chat_messages')
-      .select('*')
+      .from("chat_messages")
+      .select("*")
       .limit(1);
 
     return NextResponse.json({
       tablesCreated: {
         sessions: !sessionsError,
-        messages: !messagesError
+        messages: !messagesError,
       },
       sessionsError: sessionsError?.message,
       messagesError: messagesError?.message,
@@ -62,17 +66,19 @@ export async function GET() {
         sessionsWork: !sessionQueryError,
         messagesWork: !messageQueryError,
         sessionQueryError: sessionQueryError?.message,
-        messageQueryError: messageQueryError?.message
+        messageQueryError: messageQueryError?.message,
       },
       sessionsResult,
-      messagesResult
+      messagesResult,
     });
-
   } catch (error) {
     console.error("Migration error:", error);
-    return NextResponse.json({ 
-      error: "Migration failed",
-      details: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Migration failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }

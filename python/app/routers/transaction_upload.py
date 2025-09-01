@@ -90,8 +90,8 @@ def transaction_upload(
     except Exception:
         raise HTTPException(status_code=400, detail="account_id must be a valid UUID")
 
-    # Fetch user rules once for this user (sorted by priority)
-    user_rules = supabase.table("user_rules").select("*").eq("user_id", payload.user_id).eq("enabled", True).order("priority", desc=True).execute().data or []
+    # Fetch user rules once for this user (sorted by priority - lower number = higher precedence)
+    user_rules = supabase.table("user_rules").select("*").eq("user_id", payload.user_id).eq("enabled", True).order("priority", desc=False).execute().data or []
     print(f"DEBUG: Fetched {len(user_rules)} user rules for user {payload.user_id}")
     for rule in user_rules:
         print(f"DEBUG: Rule - {rule.get('match_field')}={rule.get('match_value')} -> category {rule.get('category_id')}")
@@ -104,6 +104,53 @@ def transaction_upload(
         processed_tx = process_transaction(tx_dict, data_cache, user_rules)
         processed_tx['account_id'] = payload.account_id
         processed_tx['user_id'] = payload.user_id
+        # Normalize transaction_number: ensure numeric (float) or None
+        tx_num = processed_tx.get("transaction_number")
+        if tx_num is None:
+            tx_num_cast = None
+        else:
+            try:
+                tx_num_cast = float(tx_num)
+            except Exception:
+                # if not castable, set to None so DB upsert will fail-fast or treat as unmatched
+                tx_num_cast = None
+
+        # Normalize needs_review: accept boolean, string values, or infer from confidence/merchant match
+        def parse_bool_like(v):
+            if v is None:
+                return None
+            if isinstance(v, bool):
+                return v
+            s = str(v).strip().lower()
+            if s in ("true", "t", "1", "yes", "y"):
+                return True
+            if s in ("false", "f", "0", "no", "n"):
+                return False
+            return None
+
+        needs_review_val = parse_bool_like(processed_tx.get("needs_review"))
+
+        # If processor returned a confidence score, flag needs_review when confidence < 1
+        conf = processed_tx.get("confidence")
+        try:
+            conf_val = float(conf) if conf is not None else None
+        except Exception:
+            conf_val = None
+
+        # If merchant not matched, mark needs_review
+        merchant_id = processed_tx.get("merchant_id")
+
+        if needs_review_val is None:
+            # infer from confidence or missing merchant
+            if (conf_val is not None and conf_val < 1) or (merchant_id is None):
+                needs_review_val = True
+            else:
+                needs_review_val = False
+
+        # reflect normalized values back
+        processed_tx['transaction_number'] = tx_num_cast
+        processed_tx['needs_review'] = needs_review_val
+
         upsert_payload = {
             "amount": processed_tx.get("amount"),
             "original_description": processed_tx.get("original_description"),
@@ -115,6 +162,7 @@ def transaction_upload(
             "user_metadata": processed_tx.get("user_metadata"),
             "account_id": processed_tx.get("account_id"),
             "user_id": processed_tx.get("user_id"),
+            "needs_review": processed_tx.get("needs_review"),
         }
         upsert_payloads.append(upsert_payload)
         # Save for category link after upsert
@@ -137,6 +185,7 @@ def transaction_upload(
     # Insert into transaction_categories for new transactions only, using upsert to avoid duplicate key errors
     category_inserted = 0
     category_duplicates = 0
+    # Use DB RPC to insert category links, set primary if unset, and write audit rows.
     for row in (response.data or []):
         # Find the matching category_id
         for upsert_payload, category_id in category_links:
@@ -149,18 +198,23 @@ def transaction_upload(
             ):
                 transaction_id = row.get("id") or row.get("transaction_id")
                 if transaction_id:
-                    # Use upsert to avoid duplicate key errors
-                    cat_link_resp = supabase.table("transaction_categories").upsert({
-                        "transaction_id": transaction_id,
-                        "category_id": category_id
-                    }, on_conflict="transaction_id,category_id").execute()
-                    # Count inserted vs. duplicate (if possible)
-                    if getattr(cat_link_resp, "status_code", 200) < 400:
-                        category_inserted += 1
+                    try:
+                        rpc_resp = supabase.rpc(
+                            "add_transaction_category_v2",
+                            {
+                                "p_tx_id": transaction_id,
+                                "p_cat_id": category_id,
+                                "p_user_id": payload.user_id,
+                            },
+                        ).execute()
+                    except Exception as e:
+                        errors.append({"transaction_id": transaction_id, "error": str(e)})
+                        break
+
+                    if getattr(rpc_resp, "error", None):
+                        errors.append({"transaction_id": transaction_id, "error": str(rpc_resp.error)})
                     else:
-                        category_duplicates += 1
-                    if getattr(cat_link_resp, "status_code", 200) >= 400:
-                        errors.append({"transaction_id": transaction_id, "error": f"category link: {cat_link_resp}"})
+                        category_inserted += 1
                 break
 
     return {

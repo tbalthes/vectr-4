@@ -8,6 +8,18 @@ export interface InfiniteTransactionsFilters {
   sortBy?: "date" | "amount" | "transaction_number";
   sortOrder?: "asc" | "desc";
   pageSize?: number;
+  // Date range filters
+  dateFrom?: string; // ISO date string
+  dateTo?: string; // ISO date string
+  // Category filter
+  category?: string;
+  // Amount filters
+  amountMin?: number;
+  amountMax?: number;
+  amountType?: "income" | "expense" | "all";
+  // Status filters
+  needsReview?: boolean;
+  hasManualEdit?: boolean;
 }
 
 export type DateHeader = {
@@ -34,6 +46,9 @@ export type InfiniteTransactionsResult = {
     pageSize: number;
     hasNextPage: boolean;
   };
+  // Optimistic update helpers
+  updateTransactionOptimistic?: (updated: Record<string, unknown>) => void;
+  revalidate?: () => Promise<unknown>;
 };
 
 type ApiResponse = {
@@ -69,7 +84,7 @@ export function useInfiniteTransactions(
     return `/api/transactions?${qs.stringify(params)}`;
   };
 
-  const { data, error, size, setSize, isValidating } = useSWRInfinite(
+  const { data, error, size, setSize, isValidating, mutate } = useSWRInfinite(
     getKey,
     fetcher,
     {
@@ -166,6 +181,57 @@ export function useInfiniteTransactions(
     }
   }, [isReachingEnd, setSize, size, meta]);
 
+  // Helper to convert snake_case keys from the detailed transaction into the flattened UI keys
+  const mapUpdatedFields = useCallback((updated: Record<string, unknown>) => {
+    const mapped: Record<string, unknown> = {};
+    if (updated.merchant_name !== undefined)
+      mapped.merchantName = updated.merchant_name;
+    if (updated.merchant_logo_url !== undefined)
+      mapped.merchantLogoUrl = updated.merchant_logo_url;
+    if (updated.category_name !== undefined)
+      mapped.categoryName = updated.category_name;
+    if (updated.category_icon !== undefined)
+      mapped.categoryIcon = updated.category_icon;
+    if (updated.transaction_note !== undefined)
+      mapped.note = updated.transaction_note;
+    if (updated.original_description !== undefined)
+      mapped.originalDescription = updated.original_description;
+    if (updated.amount !== undefined) mapped.amount = updated.amount;
+    if (updated.balance !== undefined) mapped.balance = updated.balance;
+    if (updated.date !== undefined) mapped.date = updated.date;
+    if (updated.transaction_number !== undefined)
+      mapped.transaction_number = updated.transaction_number;
+    return mapped as Partial<FormattedTransaction>;
+  }, []);
+
+  // Optimistic update helper: merge partial updated fields into the cached pages
+  const updateTransactionOptimistic = useCallback(
+    (updated: Record<string, unknown>) => {
+      if (!mutate) return;
+      mutate((pages: ApiResponse[] | undefined) => {
+        if (!pages) return pages;
+        const mapped = mapUpdatedFields(updated);
+        return pages.map((page) => {
+          if (!page || !Array.isArray(page.data)) return page;
+          return {
+            ...page,
+            data: page.data.map((t) =>
+              t.id === String((updated as Record<string, unknown>).id)
+                ? { ...t, ...mapped }
+                : t
+            ),
+          } as ApiResponse;
+        });
+      }, false);
+    },
+    [mutate, mapUpdatedFields]
+  );
+
+  const revalidate = useCallback(() => {
+    if (!mutate) return Promise.resolve();
+    return mutate();
+  }, [mutate]);
+
   return {
     transactions,
     isLoadingMore,
@@ -175,5 +241,8 @@ export function useInfiniteTransactions(
     size,
     setSize,
     meta,
+    // Optimistic update helpers
+    updateTransactionOptimistic,
+    revalidate,
   };
 }

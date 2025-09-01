@@ -8,9 +8,21 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { calculateDateRange, validateAnalyticsParams } from "@/lib/analytics/calculateDateRange";
+import {
+  calculateDateRange,
+  validateAnalyticsParams,
+} from "@/lib/analytics/calculateDateRange";
 
-type RangeKey = "7d" | "30d" | "90d" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "all";
+type RangeKey =
+  | "7d"
+  | "30d"
+  | "90d"
+  | "1M"
+  | "3M"
+  | "6M"
+  | "YTD"
+  | "1Y"
+  | "all";
 
 export interface CategoryRow {
   category: string;
@@ -24,16 +36,20 @@ const CACHE_HEADERS = {
 };
 
 export async function GET(request: NextRequest) {
-  const requestId = `cat_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const requestId = `cat_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = createRouteHandlerClient({ cookies });
     const { data: sessionRes } = await supabase.auth.getSession();
     const user = sessionRes.session?.user;
     if (!user) {
       return NextResponse.json(
         { error: "Unauthorized", message: "Valid authentication required" },
-        { status: 401, headers: { ...CACHE_HEADERS, "X-Request-ID": requestId } }
+        {
+          status: 401,
+          headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
+        }
       );
     }
 
@@ -61,13 +77,18 @@ export async function GET(request: NextRequest) {
         console.error("[categories namesOnly] Supabase error:", error.message);
         return NextResponse.json(
           { error: "Database Error", message: "Failed to fetch categories" },
-          { status: 500, headers: { ...CACHE_HEADERS, "X-Request-ID": requestId } }
+          {
+            status: 500,
+            headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
+          }
         );
       }
 
       const categoryNames = new Set<string>();
       type TxRow = {
-        merchants: { categories?: { name?: string | null } | { name?: string | null }[] } | null;
+        merchants: {
+          categories?: { name?: string | null } | { name?: string | null }[];
+        } | null;
       };
 
       for (const t of (data as TxRow[]) || []) {
@@ -99,12 +120,22 @@ export async function GET(request: NextRequest) {
       validateAnalyticsParams(range, start, end);
     } catch (e) {
       return NextResponse.json(
-        { error: "Bad Request", message: e instanceof Error ? e.message : "Invalid params" },
-        { status: 400, headers: { ...CACHE_HEADERS, "X-Request-ID": requestId } }
+        {
+          error: "Bad Request",
+          message: e instanceof Error ? e.message : "Invalid params",
+        },
+        {
+          status: 400,
+          headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
+        }
       );
     }
 
-    const dateRange = calculateDateRange(range, start ?? undefined, end ?? undefined);
+    const dateRange = calculateDateRange(
+      range,
+      start ?? undefined,
+      end ?? undefined
+    );
 
     // Fetch transactions for this user and date range; select minimal fields to aggregate client-side
     const { data, error } = await supabase
@@ -127,14 +158,20 @@ export async function GET(request: NextRequest) {
       console.error("[categories] Supabase error:", error.message);
       return NextResponse.json(
         { error: "Database Error", message: "Failed to fetch transactions" },
-        { status: 500, headers: { ...CACHE_HEADERS, "X-Request-ID": requestId } }
+        {
+          status: 500,
+          headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
+        }
       );
     }
 
     const rows: CategoryRow[] = [];
     type TxRow = {
       amount: number | null;
-      merchants: { name?: string | null; categories?: { name?: string | null } | { name?: string | null }[] } | null;
+      merchants: {
+        name?: string | null;
+        categories?: { name?: string | null } | { name?: string | null }[];
+      } | null;
     };
     for (const t of (data as TxRow[]) || []) {
       const amt = Number(t?.amount ?? 0);
@@ -143,8 +180,10 @@ export async function GET(request: NextRequest) {
       if (spend <= 0) continue;
       const merchant = t?.merchants?.name || null;
       const category = Array.isArray(t?.merchants?.categories)
-        ? (t.merchants!.categories as { name?: string | null }[])[0]?.name || "Uncategorized"
-        : (t?.merchants?.categories as { name?: string | null } | undefined)?.name || "Uncategorized";
+        ? (t.merchants!.categories as { name?: string | null }[])[0]?.name ||
+          "Uncategorized"
+        : (t?.merchants?.categories as { name?: string | null } | undefined)
+            ?.name || "Uncategorized";
       rows.push({ category, subcategory: null, merchant, amount: spend });
     }
 
@@ -164,7 +203,10 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error("[categories] Unexpected error", err);
     return NextResponse.json(
-      { error: "Internal Server Error", message: "An unexpected error occurred" },
+      {
+        error: "Internal Server Error",
+        message: "An unexpected error occurred",
+      },
       { status: 500, headers: { ...CACHE_HEADERS, "X-Request-ID": requestId } }
     );
   }

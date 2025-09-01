@@ -52,6 +52,35 @@ class DataCache:
         """Refresh all tables from Supabase (force reload)."""
         self.load_all_tables()
 
+    def refresh_merchants(self):
+        """Refresh only the merchants table from Supabase."""
+        with self._cache_lock:
+            print("[DataCache] Refreshing merchants table...")
+            self.merchants = self._fetch_table('merchants')
+            print(f"[DataCache] Refreshed {len(self.merchants)} merchants")
+
+    def get_category_by_id(self, category_id: str) -> Optional[Dict[str, Any]]:
+        """Get a category by its ID."""
+        if not category_id:
+            return None
+        for category in self.categories:
+            if str(category.get('id')) == str(category_id):
+                return category
+        return None
+
+    def get_merchant_by_id(self, merchant_id: str) -> Optional[Dict[str, Any]]:
+        """Get a merchant by its ID."""
+        if not merchant_id:
+            return None
+        for merchant in self.merchants:
+            if str(merchant.get('id')) == str(merchant_id):
+                return merchant
+        return None
+
+    def get_all_categories(self) -> List[Dict[str, Any]]:
+        """Get all categories."""
+        return self.categories.copy()
+
     def _fetch_table(self, table_name: str) -> List[Dict[str, Any]]:
         try:
             response = supabase.table(table_name).select('*').execute()

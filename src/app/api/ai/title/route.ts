@@ -29,11 +29,17 @@ export async function POST(req: Request) {
         if (t) accumulated += t;
       }
 
-      const title = (accumulated || "New Chat").trim().split("\n")[0].slice(0, 100);
+      const title = (accumulated || "New Chat")
+        .trim()
+        .split("\n")[0]
+        .slice(0, 100);
       return NextResponse.json({ title });
     } catch (err) {
       console.error("Title streaming error:", err);
-      return NextResponse.json({ error: "Failed to generate title" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to generate title" },
+        { status: 500 }
+      );
     }
   } catch (err) {
     console.error("Title generation error:", err);

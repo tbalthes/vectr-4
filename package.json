@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-  "dev:lan": "next dev -H 0.0.0.0 -p 3000",
-  "test:unit": "node -e \"console.log('To run unit tests: install a test runner (e.g. jest + ts-jest) with devDependencies and run npx jest --config=jest.config.cjs')\""
+    "dev:lan": "next dev -H 0.0.0.0 -p 3000",
+    "test:unit": "node -e \"console.log('To run unit tests: install a test runner (e.g. jest + ts-jest) with devDependencies and run npx jest --config=jest.config.cjs')\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

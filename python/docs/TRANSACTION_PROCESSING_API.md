@@ -20,9 +20,9 @@ The endpoint expects a JSON body with the following structure:
       "date": "YYYY-MM-DD",
       "transaction_number": "string",
       "description": "string", // Raw memo/description from the bank
-      "amount": 123.45,
+      "amount": 123.45
       // ...any additional custom fields (allowed)
-    },
+    }
     // ...more transactions
   ]
 }
@@ -38,20 +38,24 @@ The endpoint expects a JSON body with the following structure:
 For each transaction in the `transactions` array:
 
 1. **Cleaning & Normalization**
+
    - The `description` field is uppercased, special characters are removed, and whitespace is normalized.
 
 2. **High-Confidence Regex Matching**
+
    - The cleaned description is matched against regex rules in the `global_regex_rules` table (Supabase).
    - If a match is found, merchant and category info are extracted from the associated merchant record.
    - Confidence is set to 1.0, and `match_method` is `global_regex`.
 
 3. **Fallback: MCC and Heuristic Parsing**
+
    - If no regex match, attempts to extract a 4-digit MCC (Merchant Category Code) from the description.
    - If an MCC is found, looks up the corresponding category in the `mcc_category_map` table.
    - Attempts to parse a merchant name heuristically from the description.
    - Confidence is lower (0.7 if a name is parsed, 0.5 if not), and `match_method` is `mcc_and_parse` or `mcc_only`.
 
 4. **Category Name Lookup**
+
    - If a category_id is found, fetches the human-readable category name from the `categories` table.
 
 5. **Result Assembly**
@@ -72,13 +76,13 @@ For each transaction in the `transactions` array:
       "date": "2025-08-15",
       "transaction_number": "TXN001",
       "description": "Starbucks #1234 MC 5814",
-      "amount": 4.50
+      "amount": 4.5
     },
     {
       "date": "2025-08-15",
       "transaction_number": "TXN002",
       "description": "ACH DEPOSIT PAYROLL",
-      "amount": 1500.00
+      "amount": 1500.0
     }
   ]
 }
@@ -98,15 +102,15 @@ Returns an array of enriched transaction objects (one per input):
     "amount": 4.5,
     "original_description": "Starbucks #1234 MC 5814",
     "user_metadata": {},
-  "merchant_id": "...", // from merchant table if matched
-  "category_id": "5814", // from MCC or regex rule
-  "category_name": "Coffee Shops", // from categories table
-  "clean_description": "Starbucks", // parsed/normalized merchant name
-  "confidence": 1.0,
-  "match_method": "global_regex",
-  "needs_review": false,
-  "account_id": "acc_12345",
-  "balance": 995.50 // Pass-through from input
+    "merchant_id": "...", // from merchant table if matched
+    "category_id": "5814", // from MCC or regex rule
+    "category_name": "Coffee Shops", // from categories table
+    "clean_description": "Starbucks", // parsed/normalized merchant name
+    "confidence": 1.0,
+    "match_method": "global_regex",
+    "needs_review": false,
+    "account_id": "acc_12345",
+    "balance": 995.5 // Pass-through from input
   },
   {
     "date": "2025-08-15",
@@ -145,6 +149,7 @@ Returns an array of enriched transaction objects (one per input):
 ---
 
 ## Notes
+
 - This endpoint does not write to the database; it only returns processed results.
 - The `balance` field is passed through from input to output, unchanged, if present.
 - If you want to persist results, see the commented-out code in the router for an upsert example.
@@ -154,6 +159,7 @@ Returns an array of enriched transaction objects (one per input):
 ---
 
 For further details, see:
+
 - `python/app/routers/transactions.py` (API endpoint)
 - `python/core/transaction_processor.py` (processing logic)
 - `python/app/dependencies.py` (Supabase client dependency)

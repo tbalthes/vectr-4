@@ -5,6 +5,7 @@ import CustomIcons from "@/components/icons/CustomIcons";
 interface CategoryIconProps {
   iconName?: string;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 // Small alias map for legacy or DB values that don't match lucide exports
@@ -35,6 +36,7 @@ function normalizeIconName(name?: string) {
 export default function CategoryIcon({
   iconName,
   className = "w-5 h-5",
+  style,
 }: CategoryIconProps) {
   const name = normalizeIconName(iconName);
   // Prefer project-local overrides (so DB values like 'Rabbit' can map directly)
@@ -42,6 +44,7 @@ export default function CategoryIcon({
   if (Local)
     return React.createElement(Local as unknown as IconConstructor, {
       className,
+      style,
     });
 
   const Candidate = (Icons as unknown as Record<string, unknown>)[name];
@@ -55,6 +58,9 @@ export default function CategoryIcon({
     props: Record<string, unknown>
   ) => React.ReactElement | null;
   return Icon
-    ? React.createElement(Icon as unknown as IconConstructor, { className })
+    ? React.createElement(Icon as unknown as IconConstructor, {
+        className,
+        style,
+      })
     : null;
 }

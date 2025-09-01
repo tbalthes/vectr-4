@@ -1,18 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import {
   X,
   Calendar as CalendarIcon,
-  FileText,
-  Tag,
-  DollarSign,
-  StickyNote,
-  Building2,
   AlertTriangle,
-  Hash,
-  Receipt,
   Edit3,
   Trash2,
   RotateCcw,
@@ -23,7 +16,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerDescription,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +30,16 @@ import {
 import { cn } from "@/lib/utils/utils";
 import CategoryIcon from "./CategoryIcon";
 import MerchantLogo from "./MerchantLogo";
+import { MerchantPicker } from "@/components/private/merchants/MerchantPicker";
+import { CategoryTreePicker } from "@/components/private/categories/CategoryTreePicker";
+
+interface Category {
+  id: string;
+  name: string;
+  icon?: string;
+  parent_id?: string;
+  parent_name?: string;
+}
 
 interface DetailedTransaction {
   id: string;
@@ -52,8 +54,10 @@ interface DetailedTransaction {
   transaction_note: string | null;
   merchant_name: string;
   merchant_logo_url: string | null;
+  merchant_id?: string | null;
   category_name: string;
   category_icon: string;
+  category_id?: string | null;
   parent_category_name: string | null;
   custom_fields: Record<string, string | number | boolean>;
 }
@@ -62,7 +66,9 @@ interface TransactionDetailsDrawerProps {
   transactionId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit?: (transaction: DetailedTransaction) => void;
+  // Allow a looser shape so page-level handler can accept and forward
+  // merchant/category fields (including optional *_id keys).
+  onEdit?: (transaction: Record<string, unknown> & { id: string }) => void;
   onDelete?: (transactionId: string) => void;
 }
 
@@ -83,20 +89,16 @@ export function TransactionDetailsDrawer({
     useState<DetailedTransaction | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  useEffect(() => {
-    if (transactionId && isOpen) {
-      fetchTransactionDetails();
-    }
-  }, [transactionId, isOpen]);
-
-  const fetchTransactionDetails = async () => {
+  const fetchTransactionDetails = useCallback(async () => {
     if (!transactionId) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/transactions/${transactionId}`);
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch transaction: ${response.statusText}`);
@@ -115,7 +117,7 @@ export function TransactionDetailsDrawer({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [transactionId]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -143,14 +145,19 @@ export function TransactionDetailsDrawer({
         [field]: value,
       };
       setEditedTransaction(updatedTransaction);
-
-      // Auto-save on field change
-      if (onEdit) {
-        onEdit(updatedTransaction);
-        setTransaction(updatedTransaction);
-      }
+      // Do not auto-save on every keystroke. Saving is performed when the
+      // user clicks the Save Changes button to avoid accidental closes and
+      // to give users control over when changes are persisted.
+      setTransaction(updatedTransaction);
     }
   };
+
+  // Fetch details when transactionId or isOpen change
+  useEffect(() => {
+    if (transactionId && isOpen) {
+      void fetchTransactionDetails();
+    }
+  }, [transactionId, isOpen, fetchTransactionDetails]);
 
   const formatAmount = (amount: number) => {
     const isCredit = amount > 0;
@@ -198,7 +205,22 @@ export function TransactionDetailsDrawer({
   const currentTransaction = isEditing ? editedTransaction : transaction;
 
   return (
-    <Drawer open={isOpen} onOpenChange={onClose} direction="right">
+    <Drawer
+      open={isOpen}
+      onOpenChange={(open: boolean) => {
+        // Prevent accidental closes while the user is actively editing.
+        // Only call onClose when the drawer is being closed and we're not
+        // currently in edit mode.
+        if (!open) {
+          if (isEditing) {
+            // Ignore close while editing; keep drawer open until user saves/cancels
+            return;
+          }
+          onClose();
+        }
+      }}
+      direction="right"
+    >
       <DrawerContent className="w-96 sm:w-[500px] border-l">
         {/* Header with action buttons */}
         <DrawerHeader className="border-b px-6 py-4">
@@ -404,16 +426,60 @@ export function TransactionDetailsDrawer({
                     Merchant
                   </span>
                   {isEditing ? (
-                    <Input
-                      value={currentTransaction.merchant_name}
-                      onChange={(e) =>
-                        updateEditedField("merchant_name", e.target.value)
-                      }
-                      onBlur={(e) =>
-                        updateEditedField("merchant_name", e.target.value)
-                      }
-                      className="w-48 text-sm text-right"
-                    />
+                    <div className="w-48 text-right">
+                      <MerchantPicker
+                        selectedMerchant={
+                          currentTransaction.merchant_id
+                            ? {
+                                id: currentTransaction.merchant_id,
+                                name: currentTransaction.merchant_name,
+                                logoUrl: currentTransaction.merchant_logo_url,
+                                category: null, // We could enhance this later
+                              }
+                            : null
+                        }
+                        onMerchantSelect={(merchant) => {
+                          if (!editedTransaction) return;
+
+                          if (merchant) {
+                            const merged = {
+                              ...editedTransaction,
+                              merchant_name: merchant.name,
+                              merchant_logo_url: merchant.logoUrl || null,
+                              merchant_id: merchant.id,
+                            } as unknown as DetailedTransaction;
+                            setEditedTransaction(merged);
+                            setTransaction(merged);
+                          } else {
+                            // Clear merchant
+                            const merged = {
+                              ...editedTransaction,
+                              merchant_name: "",
+                              merchant_logo_url: null,
+                              merchant_id: undefined,
+                            } as unknown as DetailedTransaction;
+                            setEditedTransaction(merged);
+                            setTransaction(merged);
+                          }
+                        }}
+                        onCreateMerchant={(name) => {
+                          // For now, just set the name - could enhance to actually create merchant
+                          if (editedTransaction) {
+                            const merged = {
+                              ...editedTransaction,
+                              merchant_name: name,
+                              merchant_logo_url: null,
+                              merchant_id: undefined,
+                            } as unknown as DetailedTransaction;
+                            setEditedTransaction(merged);
+                            setTransaction(merged);
+                          }
+                        }}
+                        placeholder="Select merchant..."
+                        className="w-48"
+                        allowClear={true}
+                      />
+                    </div>
                   ) : (
                     <div className="flex items-center gap-2 text-right">
                       <MerchantLogo
@@ -433,16 +499,52 @@ export function TransactionDetailsDrawer({
                     Category
                   </span>
                   {isEditing ? (
-                    <Input
-                      value={currentTransaction.category_name}
-                      onChange={(e) =>
-                        updateEditedField("category_name", e.target.value)
-                      }
-                      onBlur={(e) =>
-                        updateEditedField("category_name", e.target.value)
-                      }
-                      className="w-48 text-sm text-right"
-                    />
+                    <div className="w-48 text-right">
+                      <CategoryTreePicker
+                        selectedCategoryIds={
+                          currentTransaction.category_id
+                            ? [currentTransaction.category_id]
+                            : []
+                        }
+                        onCategoriesChange={(
+                          categoryIds: string[],
+                          categories: Category[]
+                        ) => {
+                          if (
+                            editedTransaction &&
+                            categoryIds.length > 0 &&
+                            categories.length > 0
+                          ) {
+                            // For single select, take the first selected category
+                            const category = categories[0];
+                            const merged = {
+                              ...editedTransaction,
+                              category_id: category.id,
+                              category_name: category.name,
+                              category_icon: category.icon || "",
+                            } as unknown as DetailedTransaction;
+                            setEditedTransaction(merged);
+                            setTransaction(merged);
+                          } else if (
+                            editedTransaction &&
+                            categoryIds.length === 0
+                          ) {
+                            // Clear category selection
+                            const merged = {
+                              ...editedTransaction,
+                              category_id: undefined,
+                              category_name: "",
+                              category_icon: "",
+                            } as unknown as DetailedTransaction;
+                            setEditedTransaction(merged);
+                            setTransaction(merged);
+                          }
+                        }}
+                        multiSelect={false}
+                        className="w-full"
+                        placeholder="Select category"
+                      />
+                    </div>
                   ) : (
                     <div className="flex items-center gap-2 text-right">
                       <CategoryIcon
@@ -464,6 +566,30 @@ export function TransactionDetailsDrawer({
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Original description */}
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Clean Description
+                </div>
+                {isEditing ? (
+                  <Input
+                    value={currentTransaction.clean_description || ""}
+                    onChange={(e) =>
+                      updateEditedField("clean_description", e.target.value)
+                    }
+                    onBlur={(e) =>
+                      updateEditedField("clean_description", e.target.value)
+                    }
+                    className="text-sm"
+                    placeholder="Clean description"
+                  />
+                ) : (
+                  <div className="text-sm bg-muted/30 rounded-md p-3">
+                    {currentTransaction.clean_description}
+                  </div>
+                )}
               </div>
 
               {/* Original description */}
@@ -555,7 +681,22 @@ export function TransactionDetailsDrawer({
               {isEditing && (
                 <div className="pt-4 border-t space-y-2">
                   <Button
-                    onClick={() => setIsEditing(false)}
+                    onClick={() => {
+                      // Trigger save callback with the edited transaction.
+                      // Mark it explicitly so page-level handler can ignore
+                      // accidental onEdit calls from other places.
+                      if (editedTransaction && onEdit) {
+                        const payload = {
+                          ...editedTransaction,
+                          __explicit_save: true,
+                        } as unknown as Record<string, unknown> & {
+                          id: string;
+                          __explicit_save: true;
+                        };
+                        onEdit(payload);
+                      }
+                      setIsEditing(false);
+                    }}
                     className="w-full"
                   >
                     Save Changes
