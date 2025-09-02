@@ -216,7 +216,7 @@ export function useEnhancedUserRules({
         if (options.enabled !== undefined)
           params.append("enabled", options.enabled.toString());
 
-        const response = await fetch(`${API_BASE}/user-rules-v2?${params}`, {
+        const response = await fetch(`${API_BASE}?${params}`, {
           headers: {
             "Content-Type": "application/json",
           },
@@ -247,7 +247,7 @@ export function useEnhancedUserRules({
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}/user-rules-v2`, {
+        const response = await fetch(`${API_BASE}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -290,7 +290,7 @@ export function useEnhancedUserRules({
 
       try {
         const response = await fetch(
-          `${API_BASE}/user-rules-v2/${ruleId}?user_id=${userId}`,
+          `${API_BASE}/${ruleId}?user_id=${userId}`,
           {
             method: "PUT",
             headers: {
@@ -331,7 +331,7 @@ export function useEnhancedUserRules({
 
       try {
         const response = await fetch(
-          `${API_BASE}/user-rules-v2/${ruleId}?user_id=${userId}`,
+          `${API_BASE}/${ruleId}?user_id=${userId}`,
           {
             method: "DELETE",
             headers: {
@@ -368,7 +368,7 @@ export function useEnhancedUserRules({
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}/user-rules-v2/preview`, {
+        const response = await fetch(`${API_BASE}/preview`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -404,7 +404,7 @@ export function useEnhancedUserRules({
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}/user-rules-v2/reorder`, {
+        const response = await fetch(`${API_BASE}/reorder`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -438,7 +438,7 @@ export function useEnhancedUserRules({
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}/user-rules-v2/bulk`, {
+        const response = await fetch(`${API_BASE}/bulk`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -476,14 +476,11 @@ export function useEnhancedUserRules({
     setError(null);
 
     try {
-      const response = await fetch(
-        `${API_BASE}/user-rules-v2/export?user_id=${userId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE}/export?user_id=${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -507,7 +504,7 @@ export function useEnhancedUserRules({
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}/user-rules-v2/import`, {
+        const response = await fetch(`${API_BASE}/import`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

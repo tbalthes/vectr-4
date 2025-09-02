@@ -31,15 +31,9 @@ import { cn } from "@/lib/utils/utils";
 import CategoryIcon from "./CategoryIcon";
 import MerchantLogo from "./MerchantLogo";
 import { MerchantPicker } from "@/components/private/merchants/MerchantPicker";
-import { CategoryTreePicker } from "@/components/private/categories/CategoryTreePicker";
+import CategorySingleSelectPopover from "@/components/private/categories/CategorySingleSelectPopover";
 
-interface Category {
-  id: string;
-  name: string;
-  icon?: string;
-  parent_id?: string;
-  parent_name?: string;
-}
+// Category type now comes from CategorySingleSelectPopover callback
 
 interface DetailedTransaction {
   id: string;
@@ -200,7 +194,22 @@ export function TransactionDetailsDrawer({
       .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
-  if (!isOpen) return null;
+  // Keep the Drawer mounted even when closed to avoid abrupt unmounting while
+  // the underlying drawer primitive processes drag/gesture events which can
+  // briefly toggle open state during a pointer drag. Unmounting during those
+  // transitional states caused the UI to jump back and forth. Vaul's Drawer
+  // handles visibility/animation when closed, so we keep the component
+  // mounted and simply rely on the `open` prop below.
+
+  // When the drawer transitions from open -> closed, reset local editing
+  // state so a fresh state is used when re-opened.
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditing(false);
+      setEditedTransaction(null);
+      setShowDeleteConfirm(false);
+    }
+  }, [isOpen]);
 
   const currentTransaction = isEditing ? editedTransaction : transaction;
 
@@ -221,9 +230,9 @@ export function TransactionDetailsDrawer({
       }}
       direction="right"
     >
-      <DrawerContent className="w-96 sm:w-[500px] border-l">
+  <DrawerContent className="w-96 sm:w-[500px] border-l">
         {/* Header with action buttons */}
-        <DrawerHeader className="border-b px-6 py-4">
+  <DrawerHeader className="border-b px-4 py-3">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-lg font-semibold">
               {isEditing ? "Edit Transaction" : "Transaction Details"}
@@ -286,9 +295,9 @@ export function TransactionDetailsDrawer({
           )}
 
           {currentTransaction && (
-            <div className="p-6 space-y-6">
+            <div className="p-4 space-y-4">
               {/* Amount - Most important, gets prominence */}
-              <div className="text-center py-4">
+              <div className="text-center py-3">
                 <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
                   Amount
                 </div>
@@ -327,7 +336,7 @@ export function TransactionDetailsDrawer({
 
               {/* Key details in clean rows */}
               <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-border/50">
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
                   <span className="text-sm text-muted-foreground">Date</span>
                   {isEditing ? (
                     <Popover>
@@ -367,7 +376,7 @@ export function TransactionDetailsDrawer({
                   )}
                 </div>
 
-                <div className="flex justify-between items-center py-3 border-b border-border/50">
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
                   <span className="text-sm text-muted-foreground">
                     Transaction #
                   </span>
@@ -390,7 +399,7 @@ export function TransactionDetailsDrawer({
                 </div>
 
                 {currentTransaction.balance !== null && (
-                  <div className="flex justify-between items-center py-3 border-b border-border/50">
+                  <div className="flex justify-between items-center py-2 border-b border-border/50">
                     <span className="text-sm text-muted-foreground">
                       Balance
                     </span>
@@ -421,7 +430,7 @@ export function TransactionDetailsDrawer({
                   </div>
                 )}
 
-                <div className="flex justify-between items-start py-3 border-b border-border/50">
+                <div className="flex justify-between items-start py-2 border-b border-border/50">
                   <span className="text-sm text-muted-foreground">
                     Merchant
                   </span>
@@ -494,42 +503,26 @@ export function TransactionDetailsDrawer({
                   )}
                 </div>
 
-                <div className="flex justify-between items-start py-3 border-b border-border/50">
+                <div className="flex justify-between items-start py-2 border-b border-border/50">
                   <span className="text-sm text-muted-foreground">
                     Category
                   </span>
                   {isEditing ? (
                     <div className="w-48 text-right">
-                      <CategoryTreePicker
-                        selectedCategoryIds={
-                          currentTransaction.category_id
-                            ? [currentTransaction.category_id]
-                            : []
-                        }
-                        onCategoriesChange={(
-                          categoryIds: string[],
-                          categories: Category[]
-                        ) => {
-                          if (
-                            editedTransaction &&
-                            categoryIds.length > 0 &&
-                            categories.length > 0
-                          ) {
-                            // For single select, take the first selected category
-                            const category = categories[0];
+                      <CategorySingleSelectPopover
+                        value={currentTransaction.category_id || null}
+                        onChange={(categoryId: string | null, category?: { id?: string; name?: string; icon?: string | null } | null) => {
+                          if (!editedTransaction) return;
+                          if (categoryId) {
                             const merged = {
                               ...editedTransaction,
-                              category_id: category.id,
-                              category_name: category.name,
-                              category_icon: category.icon || "",
+                              category_id: categoryId,
+                              category_name: category?.name || "",
+                              category_icon: category?.icon || "",
                             } as unknown as DetailedTransaction;
                             setEditedTransaction(merged);
                             setTransaction(merged);
-                          } else if (
-                            editedTransaction &&
-                            categoryIds.length === 0
-                          ) {
-                            // Clear category selection
+                          } else {
                             const merged = {
                               ...editedTransaction,
                               category_id: undefined,
@@ -540,9 +533,8 @@ export function TransactionDetailsDrawer({
                             setTransaction(merged);
                           }
                         }}
-                        multiSelect={false}
+                        placeholder="Select category..."
                         className="w-full"
-                        placeholder="Select category"
                       />
                     </div>
                   ) : (
@@ -679,36 +671,35 @@ export function TransactionDetailsDrawer({
 
               {/* Save and Cancel buttons at bottom when editing */}
               {isEditing && (
-                <div className="pt-4 border-t space-y-2">
-                  <Button
-                    onClick={() => {
-                      // Trigger save callback with the edited transaction.
-                      // Mark it explicitly so page-level handler can ignore
-                      // accidental onEdit calls from other places.
-                      if (editedTransaction && onEdit) {
-                        const payload = {
-                          ...editedTransaction,
-                          __explicit_save: true,
-                        } as unknown as Record<string, unknown> & {
-                          id: string;
-                          __explicit_save: true;
-                        };
-                        onEdit(payload);
-                      }
-                      setIsEditing(false);
-                    }}
-                    className="w-full"
-                  >
-                    Save Changes
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleCancel}
-                    className="w-full"
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Cancel Changes
-                  </Button>
+                <div className="sticky bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm border-t p-3 z-40">
+                  <div className="max-w-none">
+                    <Button
+                      onClick={() => {
+                        if (editedTransaction && onEdit) {
+                          const payload = {
+                            ...editedTransaction,
+                            __explicit_save: true,
+                          } as unknown as Record<string, unknown> & {
+                            id: string;
+                            __explicit_save: true;
+                          };
+                          onEdit(payload);
+                        }
+                        setIsEditing(false);
+                      }}
+                      className="w-full mb-2"
+                    >
+                      Save Changes
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleCancel}
+                      className="w-full"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Cancel Changes
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -718,7 +709,7 @@ export function TransactionDetailsDrawer({
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-            <div className="bg-background border rounded-lg p-6 max-w-sm mx-4 shadow-lg">
+            <div className="bg-background border rounded-lg p-4 max-w-sm mx-4 shadow-lg">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-destructive/10 rounded-full">
                   <Trash2 className="w-5 h-5 text-destructive" />

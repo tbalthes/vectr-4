@@ -130,6 +130,12 @@ class ReorderRulesResponse(BaseModel):
     rules: List[EnhancedUserRuleResponse]
 
 
+class ReorderRulesRequest(BaseModel):
+    """Request model for reorder operation."""
+    user_id: str
+    rule_ids: List[str]
+
+
 class PreviewRulesRequest(BaseModel):
     """Request model for rule preview."""
     user_id: str
@@ -201,26 +207,25 @@ async def preview_enhanced_user_rules(
 
 @router.post("/reorder")
 async def reorder_enhanced_user_rules(
-    user_id: str,
-    rule_ids: List[str],
+    payload: ReorderRulesRequest,
     supabase=Depends(get_supabase_client)
 ) -> ReorderRulesResponse:
     """Reorder rules by updating their priority values."""
     try:
-        uuid.UUID(user_id)
-        for rule_id in rule_ids:
+        uuid.UUID(payload.user_id)
+        for rule_id in payload.rule_ids:
             uuid.UUID(rule_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid ID format")
     
     # Fetch all user's rules to determine current priority range
     try:
-        all_rules_res = supabase.table("user_rules").select("id", "priority").eq("user_id", user_id).order("priority").execute()
+        all_rules_res = supabase.table("user_rules").select("id", "priority").eq("user_id", payload.user_id).order("priority").execute()
         if not all_rules_res.data:
             return ReorderRulesResponse(message="No rules to reorder", rules=[])
         all_rules = all_rules_res.data if isinstance(all_rules_res.data, list) else [all_rules_res.data]
         all_ids = [r["id"] for r in all_rules]
-        
+
         # Find the maximum current priority to avoid conflicts
         max_priority = max((r["priority"] for r in all_rules), default=100)
         temp_base = max_priority + 1000  # Use high temporary priorities to avoid conflicts
@@ -229,9 +234,9 @@ async def reorder_enhanced_user_rules(
         raise HTTPException(status_code=500, detail=f"Failed to fetch user's rules: {str(e)}")
 
     # Build new order: start with provided rule_ids, then append remaining ids preserving existing order
-    provided_set = {rid for rid in rule_ids}
+    provided_set = {rid for rid in payload.rule_ids}
     new_order = []
-    for rid in rule_ids:
+    for rid in payload.rule_ids:
         if rid in all_ids:
             new_order.append(rid)
     for rid in all_ids:
@@ -251,7 +256,7 @@ async def reorder_enhanced_user_rules(
                 resp = supabase.table("user_rules").update({
                     "priority": temp_priority,
                     "updated_at": datetime.utcnow().isoformat()
-                }).eq("id", rid).eq("user_id", user_id).execute()
+                }).eq("id", rid).eq("user_id", payload.user_id).execute()
                 if not resp.data:
                     raise HTTPException(status_code=404, detail=f"Rule {rid} not found (phase 1)")
 
@@ -261,13 +266,13 @@ async def reorder_enhanced_user_rules(
                 resp = supabase.table("user_rules").update({
                     "priority": final_priority,
                     "updated_at": datetime.utcnow().isoformat()
-                }).eq("id", rid).eq("user_id", user_id).execute()
+                }).eq("id", rid).eq("user_id", payload.user_id).execute()
                 if not resp.data:
                     raise HTTPException(status_code=500, detail=f"Failed to set final priority for {rid}")
 
             # Fetch updated rules to return current state and avoid UI latency issues
             try:
-                updated_rules_res = supabase.table("user_rules").select("*").eq("user_id", user_id).order("priority").execute()
+                updated_rules_res = supabase.table("user_rules").select("*").eq("user_id", payload.user_id).order("priority").execute()
                 updated_rules = []
                 if updated_rules_res.data:
                     rules_data = updated_rules_res.data if isinstance(updated_rules_res.data, list) else [updated_rules_res.data]

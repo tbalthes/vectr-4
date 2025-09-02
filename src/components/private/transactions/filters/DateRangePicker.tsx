@@ -194,7 +194,7 @@ export function DateRangePicker({
                   size="sm"
                   onClick={applyCustomRange}
                   disabled={!customFrom && !customTo}
-                  className="flex-1"
+                  className="flex-1 text-white"
                 >
                   Apply
                 </Button>

@@ -368,29 +368,6 @@ export default function TransactionsPage() {
               onChange={(e) => setSearch(e.target.value)}
               style={{ minWidth: 200 }}
             />
-            <select
-              value={sortBy}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setSortBy(
-                  e.target.value as "date" | "amount" | "transaction_number"
-                )
-              }
-              className="border rounded px-2 py-1 text-sm"
-            >
-              <option value="date">Date</option>
-              <option value="amount">Amount</option>
-              <option value="transaction_number">Transaction #</option>
-            </select>
-            <select
-              value={sortOrder}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setSortOrder(e.target.value as "asc" | "desc")
-              }
-              className="border rounded px-2 py-1 text-sm"
-            >
-              <option value="desc">Desc</option>
-              <option value="asc">Asc</option>
-            </select>
             <DateRangePicker
               value={dateRange}
               onChange={setDateRange}

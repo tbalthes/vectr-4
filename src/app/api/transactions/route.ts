@@ -29,12 +29,14 @@ interface RawSupabaseTransaction {
       }[]
     | null;
   transaction_categories:
-    | {
-        categories: {
+    | ({
+        categories?: {
           name: string;
-          icon: string;
+          icon: string | null;
         };
-      }[]
+        name?: string;
+        icon?: string | null;
+      })[]
     | null;
 }
 
@@ -51,10 +53,31 @@ function transformToFormattedTransaction(
     : merchant?.categories;
 
   // Check for user category override first
-  const userCategoryData = Array.isArray(raw.transaction_categories)
-    ? raw.transaction_categories[0]
-    : raw.transaction_categories;
-  const userCategory = userCategoryData?.categories;
+  // transaction_categories can be either an array of objects with a nested
+  // `categories` property (PostgREST join style) or a flattened array where
+  // each entry directly has `name` and `icon`. Handle both shapes.
+  let userCategory: { name?: string; icon?: string | null } | undefined;
+  if (Array.isArray(raw.transaction_categories) && raw.transaction_categories.length > 0) {
+    const first = raw.transaction_categories[0];
+    if (first?.categories) {
+      userCategory = first.categories;
+    } else if (first?.name) {
+      userCategory = { name: first.name, icon: first.icon ?? null };
+    }
+  }
+
+  // If the backend stored a manual_category into user_metadata as a
+  // fallback (e.g., when join-table updates failed), prefer that value.
+  try {
+    const meta = raw.user_metadata as Record<string, unknown> | null;
+    const manual = meta && typeof meta === "object" ? meta["manual_category"] : undefined;
+    if (!userCategory && manual && typeof manual === "string") {
+      userCategory = { name: manual, icon: null };
+    }
+  } catch (err) {
+    // ignore
+    void err;
+  }
 
   // Prioritize user category over merchant category
   const category = userCategory || merchantCategory;
@@ -370,12 +393,13 @@ export async function GET(request: NextRequest) {
               icon
             )
           ),
-          transaction_categories!fk_tc_transaction (
-            categories!fk_tc_category (
+          transaction_categories (
+            categories (
               name,
               icon
             )
           )
+          
         `;
       } else if (needsCategoryInnerJoin) {
         // Only category filtering with inner join (no merchant filter)
@@ -398,8 +422,8 @@ export async function GET(request: NextRequest) {
               icon
             )
           ),
-          transaction_categories!fk_tc_transaction (
-            categories!fk_tc_category (
+          transaction_categories (
+            categories (
               name,
               icon
             )
@@ -426,8 +450,8 @@ export async function GET(request: NextRequest) {
               icon
             )
           ),
-          transaction_categories!fk_tc_transaction (
-            categories!fk_tc_category (
+          transaction_categories (
+            categories (
               name,
               icon
             )
@@ -463,8 +487,8 @@ export async function GET(request: NextRequest) {
               icon
             )
           ),
-          transaction_categories!fk_tc_transaction (
-            categories!fk_tc_category (
+          transaction_categories (
+            categories (
               name,
               icon
             )
