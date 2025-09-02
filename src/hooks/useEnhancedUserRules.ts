@@ -148,7 +148,7 @@ interface UseEnhancedUserRulesReturn {
 const API_BASE =
   process.env.NODE_ENV === "production"
     ? "https://your-api-domain.com/api"
-    : "/api";
+    : "/api/user-rules";
 
 export function useEnhancedUserRules({
   userId,

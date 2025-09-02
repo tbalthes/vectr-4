@@ -1,5 +1,5 @@
 /**
- * User Rules V2 Individual Rule API Proxy - Proxies requests for specific rules to FastAPI backend
+ * Individual Rule API Proxy - Proxies requests for specific rules to FastAPI backend
  */
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,25 +7,36 @@ const FASTAPI_BASE = "http://localhost:8000";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const body = await request.json();
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-    
-    const fastApiUrl = `${FASTAPI_BASE}/user_rules_v2/${params.id}?${searchParams.toString()}`;
-    
+
+    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${
+      resolvedParams.id
+    }?${searchParams.toString()}`;
+
+    // forward incoming headers (cookies/auth) to FastAPI
+    const forwardHeaders = Object.fromEntries(request.headers.entries());
+    forwardHeaders["content-type"] = "application/json";
+
     const response = await fetch(fastApiUrl, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: forwardHeaders,
       body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(
+        "FastAPI PUT error:",
+        fastApiUrl,
+        response.status,
+        errorText
+      );
       return NextResponse.json(
         { error: "FastAPI Error", details: errorText },
         { status: response.status }
@@ -37,7 +48,10 @@ export async function PUT(
   } catch (error) {
     console.error("Error proxying PUT to FastAPI:", error);
     return NextResponse.json(
-      { error: "Proxy Error", message: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Proxy Error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -45,23 +59,31 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-    
-    const fastApiUrl = `${FASTAPI_BASE}/user_rules_v2/${params.id}?${searchParams.toString()}`;
-    
+
+    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${
+      resolvedParams.id
+    }?${searchParams.toString()}`;
+
+    const forwardHeaders = Object.fromEntries(request.headers.entries());
     const response = await fetch(fastApiUrl, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: forwardHeaders,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(
+        "FastAPI DELETE error:",
+        fastApiUrl,
+        response.status,
+        errorText
+      );
       return NextResponse.json(
         { error: "FastAPI Error", details: errorText },
         { status: response.status }
@@ -73,7 +95,10 @@ export async function DELETE(
   } catch (error) {
     console.error("Error proxying DELETE to FastAPI:", error);
     return NextResponse.json(
-      { error: "Proxy Error", message: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Proxy Error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

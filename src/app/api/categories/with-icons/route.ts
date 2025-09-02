@@ -3,8 +3,6 @@
  * Returns all categories used by the current user's transactions, including their icons
  * Endpoint: GET /api/categories/with-icons
  */
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 const CACHE_HEADERS = {
@@ -18,103 +16,52 @@ export interface CategoryWithIcon {
   transaction_count?: number;
 }
 
-export async function GET() {
+const FASTAPI_BASE = process.env.FASTAPI_BASE_URL || "http://localhost:8000";
+
+export async function GET(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("user_id");
 
-    const { data: sessionRes } = await supabase.auth.getSession();
-    const user = sessionRes.session?.user;
+    // Build FastAPI URL for categories tree; include user_id if provided
+    const fastApiUrl = userId
+      ? `${FASTAPI_BASE}/categories/tree?user_id=${encodeURIComponent(
+          userId
+        )}&include_counts=true`
+      : `${FASTAPI_BASE}/categories/tree?include_counts=true`;
+    const response = await fetch(fastApiUrl);
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized", message: "Valid authentication required" },
-        { status: 401, headers: CACHE_HEADERS }
-      );
+    if (!response.ok) {
+      throw new Error(`FastAPI responded with ${response.status}`);
     }
 
-    // Query to get all unique categories from user's transactions
-    const { data: categoriesData, error } = await supabase
-      .from("transactions")
-      .select(
-        `
-        merchants (
-          categories (
-            id,
-            name,
-            icon
-          )
-        )
-      `
-      )
-      .eq("user_id", user.id)
-      .not("merchants", "is", null)
-      .not("merchants.categories", "is", null);
+    const treeData = await response.json();
 
-    if (error) {
-      console.error("Error fetching categories:", error);
-      return NextResponse.json(
-        { error: "Database error", message: error.message },
-        { status: 500, headers: CACHE_HEADERS }
-      );
-    }
-
-    // Group by category and count transactions
-    const categoryMap = new Map<string, CategoryWithIcon>();
-
-    if (categoriesData) {
-      categoriesData.forEach((row: Record<string, unknown>) => {
-        const merchant = row.merchants as Record<string, unknown> | null;
-        if (!merchant?.categories) return;
-
-        const categories = Array.isArray(merchant.categories)
-          ? merchant.categories
-          : [merchant.categories];
-
-        categories.forEach((category: Record<string, unknown>) => {
-          if (!category?.id || !category?.name) return;
-
-          const categoryKey = String(category.name);
-
-          if (categoryMap.has(categoryKey)) {
-            // Increment count
-            const existing = categoryMap.get(categoryKey)!;
-            existing.transaction_count = (existing.transaction_count || 0) + 1;
-          } else {
-            // Create new entry
-            categoryMap.set(categoryKey, {
-              id: String(category.id),
-              name: String(category.name),
-              icon: String(category.icon || "📋"),
-              transaction_count: 1,
-            });
-          }
+    // Flatten tree into a simple array of categories
+    const flatten: Array<Record<string, any>> = [];
+    const walk = (nodes: any[]) => {
+      for (const n of nodes || []) {
+        flatten.push({
+          id: n.id,
+          name: n.name,
+          icon: n.icon,
+          transaction_count: n.transaction_count || 0,
         });
-      });
-    }
-
-    // Convert to array and sort by name
-    const categories = Array.from(categoryMap.values()).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-
-    return NextResponse.json(
-      {
-        data: categories,
-        total: categories.length,
-      },
-      {
-        status: 200,
-        headers: CACHE_HEADERS,
+        if (n.children && n.children.length > 0) walk(n.children);
       }
-    );
+    };
+
+    walk(treeData.categories || []);
+
+    return NextResponse.json({ data: flatten }, { headers: CACHE_HEADERS });
   } catch (error) {
-    console.error("Unexpected error in categories/with-icons API:", error);
+    console.error("Categories API error:", error);
     return NextResponse.json(
       {
-        error: "Internal server error",
-        message: "An unexpected error occurred",
+        error: "Failed to fetch categories",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500, headers: CACHE_HEADERS }
+      { status: 500 }
     );
   }
 }

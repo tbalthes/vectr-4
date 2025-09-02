@@ -9,9 +9,9 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-    
-    const fastApiUrl = `${FASTAPI_BASE}/user_rules_v2/export?${searchParams.toString()}`;
-    
+
+    const fastApiUrl = `${FASTAPI_BASE}/user_rules/export?${searchParams.toString()}`;
+
     const response = await fetch(fastApiUrl, {
       method: "GET",
       headers: {
@@ -32,7 +32,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error proxying export to FastAPI:", error);
     return NextResponse.json(
-      { error: "Proxy Error", message: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Proxy Error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

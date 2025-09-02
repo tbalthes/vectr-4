@@ -11,7 +11,7 @@ export interface Category {
   count?: number;
 }
 
-export function useCategories() {
+export function useCategories(userId?: string) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +22,11 @@ export function useCategories() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/categories/with-icons", {
+        const url = userId
+          ? `/api/categories/with-icons?user_id=${encodeURIComponent(userId)}`
+          : "/api/categories/with-icons";
+
+        const response = await fetch(url, {
           credentials: "include",
         });
 
@@ -92,7 +96,7 @@ export function useCategories() {
     };
 
     fetchCategories();
-  }, []);
+  }, [userId]);
 
   return { categories, loading, error };
 }

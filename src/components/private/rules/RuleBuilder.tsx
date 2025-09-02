@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertCircle, Eye, Save, RotateCcw, X } from "lucide-react";
-import { CategoryTreePicker } from "@/components/private/categories/CategoryTreePicker";
+import CategorySingleSelectPopover from "@/components/private/categories/CategorySingleSelectPopover";
 import { RulePreviewPanel } from "./RulePreviewPanel";
 import {
   UserRule,
@@ -460,16 +460,11 @@ export function RuleBuilder({
           {/* Category Assignment */}
           <div className="space-y-2">
             <Label>Category Assignment</Label>
-            <CategoryTreePicker
-              selectedCategoryIds={
-                formData.category_id ? [formData.category_id] : []
+            <CategorySingleSelectPopover
+              value={formData.category_id || null}
+              onChange={(id: string | null) =>
+                setFormData((prev) => ({ ...prev, category_id: id || "" }))
               }
-              onCategoriesChange={(categoryIds: string[]) => {
-                // For single selection, take the first category ID
-                const categoryId = categoryIds.length > 0 ? categoryIds[0] : "";
-                setFormData((prev) => ({ ...prev, category_id: categoryId }));
-              }}
-              multiSelect={false}
               placeholder="Select a category for matching transactions"
               className={errors.category_id ? "border-red-300" : ""}
             />

@@ -11,7 +11,7 @@
 -- DROP TABLE IF EXISTS user_rules CASCADE;
 
 -- Create enhanced user_rules table
-CREATE TABLE IF NOT EXISTS user_rules_v2 (
+CREATE TABLE IF NOT EXISTS user_rules (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
   name text NOT NULL, -- User-friendly rule name like "Payroll Income"
@@ -34,14 +34,14 @@ CREATE TABLE IF NOT EXISTS user_rules_v2 (
 );
 
 -- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_user_rules_v2_user_enabled ON user_rules_v2(user_id, enabled);
-CREATE INDEX IF NOT EXISTS idx_user_rules_v2_priority ON user_rules_v2(user_id, priority) WHERE enabled = true;
+CREATE INDEX IF NOT EXISTS idx_user_rules_v2_user_enabled ON user_rules(user_id, enabled);
+CREATE INDEX IF NOT EXISTS idx_user_rules_v2_priority ON user_rules(user_id, priority) WHERE enabled = true;
 
 -- Enable RLS
-ALTER TABLE user_rules_v2 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_rules ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies
-CREATE POLICY user_rules_v2_user_isolation ON user_rules_v2
+CREATE POLICY user_rules_v2_user_isolation ON user_rules
   FOR ALL USING (auth.uid() = user_id);
 
 -- =============================================
@@ -124,7 +124,7 @@ DECLARE
 BEGIN
   -- Only run if old table exists and new table is empty
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_rules') 
-     AND NOT EXISTS (SELECT 1 FROM user_rules_v2 LIMIT 1) THEN
+     AND NOT EXISTS (SELECT 1 FROM user_rules LIMIT 1) THEN
     
     FOR rule IN SELECT * FROM user_rules LOOP
       -- Convert old single condition to new format
@@ -191,7 +191,7 @@ BEGIN
       END IF;
       
       -- Insert migrated rule
-      INSERT INTO user_rules_v2 (
+      INSERT INTO user_rules (
         user_id, name, description, enabled, priority, conditions, actions, created_at, updated_at
       ) VALUES (
         rule.user_id,
@@ -206,7 +206,7 @@ BEGIN
       );
     END LOOP;
     
-    RAISE NOTICE 'Migrated % rules to user_rules_v2', (SELECT COUNT(*) FROM user_rules);
+    RAISE NOTICE 'Migrated % rules to user_rules', (SELECT COUNT(*) FROM user_rules);
   END IF;
 END;
 $$;
@@ -370,7 +370,7 @@ $$;
 
 /*
 -- Example: Complex payroll rule
-INSERT INTO user_rules_v2 (user_id, name, conditions, actions) VALUES (
+INSERT INTO user_rules (user_id, name, conditions, actions) VALUES (
   'your-user-id'::uuid,
   'Payroll Income',
   '{
@@ -399,7 +399,7 @@ INSERT INTO user_rules_v2 (user_id, name, conditions, actions) VALUES (
 );
 
 -- Example: Amazon purchases
-INSERT INTO user_rules_v2 (user_id, name, conditions, actions) VALUES (
+INSERT INTO user_rules (user_id, name, conditions, actions) VALUES (
   'your-user-id'::uuid,
   'Amazon Purchases',
   '{
@@ -427,14 +427,14 @@ INSERT INTO user_rules_v2 (user_id, name, conditions, actions) VALUES (
 -- =============================================
 
 -- Grant access to authenticated users
-GRANT ALL ON user_rules_v2 TO authenticated;
+GRANT ALL ON user_rules TO authenticated;
 GRANT EXECUTE ON FUNCTION evaluate_condition(jsonb, jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION evaluate_condition_group(jsonb, jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION evaluate_rule_conditions(jsonb, jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION migrate_user_rules_to_v2() TO authenticated;
 
 -- Grant to service role for admin operations
-GRANT ALL ON user_rules_v2 TO service_role;
+GRANT ALL ON user_rules TO service_role;
 GRANT EXECUTE ON FUNCTION evaluate_condition(jsonb, jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION evaluate_condition_group(jsonb, jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION evaluate_rule_conditions(jsonb, jsonb) TO service_role;

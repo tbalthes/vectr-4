@@ -96,7 +96,7 @@ function CategoryNode({
     <div className="select-none">
       <div
         className={cn(
-          "flex items-center gap-2 py-2 px-3 hover:bg-gray-50 cursor-pointer rounded-md transition-colors",
+          "flex items-center gap-2 py-2 px-3 hover:border cursor-pointer rounded-md transition-colors",
           isSelected && "bg-blue-50 border-l-2 border-l-blue-500"
         )}
         style={{ paddingLeft: `${12 + Math.max(0, category.depth) * 20}px` }}
@@ -144,9 +144,9 @@ function CategoryNode({
         {/* Category Name */}
         <span
           className={cn(
-            "flex-1 text-sm font-medium",
-            isSelected ? "text-blue-700" : "text-gray-700",
-            matchesSearch && searchQuery && "bg-yellow-100 px-1 rounded"
+            "flex-1 text-xs font-light",
+            isSelected ? "text-blue-700" : "dark:text-gray-200",
+            matchesSearch && searchQuery && "px-1 rounded"
           )}
         >
           {category.name}
@@ -378,7 +378,7 @@ export function CategoryTreePicker({
 
         <div className="px-6 pb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-200 h-4 w-4" />
             <Input
               placeholder="Search categories..."
               value={searchQuery}

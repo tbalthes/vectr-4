@@ -8,8 +8,8 @@ const FASTAPI_BASE = "http://localhost:8000";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    const response = await fetch(`${FASTAPI_BASE}/user_rules_v2/import`, {
+
+    const response = await fetch(`${FASTAPI_BASE}/user_rules/import`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error proxying import to FastAPI:", error);
     return NextResponse.json(
-      { error: "Proxy Error", message: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Proxy Error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

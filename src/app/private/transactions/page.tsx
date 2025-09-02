@@ -446,7 +446,7 @@ export default function TransactionsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push("/private/rules/enhanced")}
+              onClick={() => router.push("/private/rules")}
             >
               Edit rules
             </Button>

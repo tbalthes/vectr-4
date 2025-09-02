@@ -9,9 +9,9 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const searchParams = url.searchParams;
-    
-    const fastApiUrl = `${FASTAPI_BASE}/user_rules_v2/?${searchParams.toString()}`;
-    
+
+    const fastApiUrl = `${FASTAPI_BASE}/user_rules/?${searchParams.toString()}`;
+
     const response = await fetch(fastApiUrl, {
       method: "GET",
       headers: {
@@ -32,7 +32,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Error proxying to FastAPI:", error);
     return NextResponse.json(
-      { error: "Proxy Error", message: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Proxy Error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -41,17 +44,24 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    const response = await fetch(`${FASTAPI_BASE}/user_rules_v2/`, {
+
+    const forwardHeaders = Object.fromEntries(request.headers.entries());
+    forwardHeaders["content-type"] = "application/json";
+
+    const response = await fetch(`${FASTAPI_BASE}/user_rules/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: forwardHeaders,
       body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(
+        "FastAPI POST error:",
+        `${FASTAPI_BASE}/user_rules/`,
+        response.status,
+        errorText
+      );
       return NextResponse.json(
         { error: "FastAPI Error", details: errorText },
         { status: response.status }
@@ -63,7 +73,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error proxying to FastAPI:", error);
     return NextResponse.json(
-      { error: "Proxy Error", message: error instanceof Error ? error.message : "Unknown error" },
+      {
+        error: "Proxy Error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

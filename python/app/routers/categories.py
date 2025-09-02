@@ -156,16 +156,31 @@ def get_categories_tree(
         # If transaction counts requested, fetch them
         if include_counts:
             try:
-                # Get transaction counts per category
-                counts_response = supabase.rpc(
-                    "get_category_transaction_counts",
-                    {"p_user_id": user_id} if user_id else {}
-                ).execute()
-                
-                if counts_response.data:
+                # Get transaction counts per category with simple retry to handle transient errors
+                attempts = 3
+                counts_response = None
+                for i in range(attempts):
+                    try:
+                        counts_response = supabase.rpc(
+                            "get_category_transaction_counts",
+                            {"p_user_id": user_id} if user_id else {}
+                        ).execute()
+                        break
+                    except Exception as e:
+                        # transient socket or schema-cache errors; retry briefly
+                        if i < attempts - 1:
+                            import time
+                            time.sleep(0.05)
+                            continue
+                        raise
+
+                if counts_response and counts_response.data:
                     count_map = {item['category_id']: item['count'] for item in counts_response.data}
                     for cat in categories:
                         cat['transaction_count'] = count_map.get(str(cat.get('id')), 0)
+                else:
+                    for cat in categories:
+                        cat['transaction_count'] = 0
             except Exception as e:
                 # Don't fail if counts can't be fetched
                 print(f"Warning: Could not fetch transaction counts: {e}")
