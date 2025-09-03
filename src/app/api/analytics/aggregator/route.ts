@@ -66,8 +66,15 @@ export async function GET(request: NextRequest) {
 
   try {
     // Initialize Supabase client with request-scoped authentication
-    // Pass the `cookies` function directly so the helper can resolve cookies correctly.
-    const supabase = createRouteHandlerClient({ cookies });
+    // The Supabase helper may call `cookies()` synchronously internally which
+    // Next.js disallows. Resolve the request cookies first and provide a
+    // lightweight synchronous cookie store wrapper that exposes `get`/`set`/`delete`.
+  const requestCookies = await cookies();
+
+  // Provide the already-resolved Next.js cookie store directly so the
+  // Supabase helper can synchronously read cookies (getSession will work).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createRouteHandlerClient({ cookies: () => (requestCookies as any) });
 
     // Dev-only: log whether any auth headers or cookies appear to be present (no secret values printed)
     try {

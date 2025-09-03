@@ -1,17 +1,26 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Use the auth-helpers client that automatically handles session management
+export const supabase = createClientComponentClient();
 
 export async function createSession(userId: string, title = "New Chat") {
+  // Use the provided userId since we're passing authenticated user's ID from context
+  console.log("createSession called with userId:", userId);
+  
+  // Double-check that we have an authenticated session
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  console.log("Current session in createSession:", session?.user?.id, "Error:", sessionError);
+  
   const { data, error } = await supabase
     .from("chat_sessions")
     .insert({ user_id: userId, title })
     .select("*")
     .single();
-  if (error) throw error;
+  
+  if (error) {
+    console.error("Insert error details:", error);
+    throw error;
+  }
   return data;
 }
 

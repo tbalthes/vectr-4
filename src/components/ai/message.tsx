@@ -35,7 +35,7 @@ const getRoleConfig = (role: MessageProps["from"]) => {
     case "assistant":
       return {
         icon: Bot,
-        label: "Assistant",
+        label: "Vectr AI",
         className: "bg-purple-100 text-purple-800 border-purple-200",
       };
     case "tool":

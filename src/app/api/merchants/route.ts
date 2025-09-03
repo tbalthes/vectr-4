@@ -34,7 +34,9 @@ export async function GET() {
     .toString(36)
     .slice(2, 8)}`;
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+  const requestCookies = await cookies();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createRouteHandlerClient({ cookies: () => (requestCookies as any) });
     const { data: sessionRes } = await supabase.auth.getSession();
     const user = sessionRes.session?.user;
     if (!user) {

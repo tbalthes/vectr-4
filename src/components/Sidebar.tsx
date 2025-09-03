@@ -16,8 +16,6 @@ import {
   HelpCircle,
   User,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
   PanelRight,
   PanelRightClose,
 } from "lucide-react";
@@ -75,25 +73,29 @@ export function Sidebar({
   ];
 
   return (
-    // Responsive: show/hide sidebar on mobile
-    <div
-      className={`h-screen fixed top-0 left-0 border-r border-border flex flex-col z-30 transition-all duration-200
-        ${open ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0`}
-      style={{
-        width: collapsed
-          ? "var(--sidebar-collapsed-width)"
-          : "var(--sidebar-width)",
-      }}
-    >
-      {/* Overlay for mobile */}
+    <>
+      {/* Mobile overlay - renders behind sidebar */}
       {open && onClose && (
         <div
-          className="fixed inset-0  z-20 md:hidden"
+          className="fixed inset-0 bg-black/50 z-[100] md:hidden"
           onClick={onClose}
           aria-label="Close sidebar overlay"
         />
       )}
+      
+      {/* Sidebar container */}
+      <aside
+        className={`
+          h-screen bg-background border-r border-border flex flex-col transition-all duration-200
+          fixed top-0 left-0 z-[101] md:static md:z-auto
+          ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
+        style={{
+          width: collapsed
+            ? "var(--sidebar-collapsed-width)"
+            : "var(--sidebar-width)",
+        }}
+      >
       {/* ...existing code... */}
       {/* Premium Logo and Toggle (rest of your header, if needed) */}
       <div
@@ -247,6 +249,7 @@ export function Sidebar({
           )}
         </div>
       </div>
-    </div>
+    </aside>
+    </>
   );
 }

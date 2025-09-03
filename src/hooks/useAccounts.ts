@@ -1,69 +1,50 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-// Step 1: Import the correct client hook from the auth helpers library
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-// The Account interface remains the same
+// The Account interface for the new API structure
 export interface Account {
   id: string;
-  created_at: string;
-  user_id: string;
   name: string;
+  mask?: string;
+  balance_amount: number;
+  available?: number;
   type: string;
-  balance: string; // Note: You might want to consider 'number' here in the future
-  plaid_access_token?: string;
+  currency?: string;
+  institution_name?: string;
+  institution_logo_url?: string;
+  last_synced_at?: string;
+  provider?: string;
 }
 
-// Step 2: Remove the userId parameter from the hook's signature
 export function useAccounts() {
-  // Step 3: Create the cookie-aware Supabase client inside the hook
-  const supabase = createClientComponentClient();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAccounts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      setError(null);
-
-      // Step 4: Get the current user's session from the client
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      // If there's no user, we can't fetch accounts.
-      if (!user) {
-        setAccounts([]);
-        // We are not throwing an error, just returning an empty state.
-        return;
+      const response = await fetch('/api/accounts');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
-      // Step 5: Use the authenticated user's ID in the query
-      const { data, error: supabaseError } = await supabase
-        .from("accounts")
-        .select("*")
-        .eq("user_id", user.id) // Query for the logged-in user
-        .order("name");
-
-      if (supabaseError) {
-        throw supabaseError;
-      }
-
-      setAccounts(data || []);
+      
+      const data = await response.json();
+      setAccounts(data.accounts || []);
     } catch (err) {
       console.error("Error fetching accounts:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch accounts";
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch accounts";
       setError(errorMessage);
-      setAccounts([]); // Ensure accounts are cleared on error
+      setAccounts([]);
     } finally {
       setLoading(false);
     }
-  }, [supabase]); // Dependency: refetch only if the supabase client instance changes
+  }, []);
 
-  // Use useEffect to fetch data on initial component mount
   useEffect(() => {
     fetchAccounts();
   }, [fetchAccounts]);
@@ -72,7 +53,6 @@ export function useAccounts() {
     accounts,
     loading,
     error,
-    // The refetch function is now just our stable fetchAccounts function
     refetch: fetchAccounts,
   };
 }

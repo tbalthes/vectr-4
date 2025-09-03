@@ -8,6 +8,7 @@ import {
   loadSessionMessages as loadSessionMessagesQuery,
   deleteSession as deleteSessionQuery,
 } from "@/lib/supabase/chat-queries";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface ChatSession {
   id: string;
@@ -28,11 +29,8 @@ export const ChatContext = React.createContext<Record<string, unknown> | null>(
 );
 export interface ChatContextValue {
   sessions: ChatSession[];
-  fetchSessions: (userId?: string) => Promise<void>;
-  createNewSession: (
-    userId?: string,
-    title?: string
-  ) => Promise<ChatSession | null>;
+  fetchSessions: () => Promise<void>;
+  createNewSession: (title?: string) => Promise<ChatSession | null>;
   openSession: (sessionId?: string) => Promise<ChatMessage[] | null> | null;
   addMessage: (sessionId: string, msg: ChatMessage) => Promise<ChatMessage>;
   removeSession: (sessionId: string) => Promise<void>;
@@ -48,12 +46,25 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     React.useState<ChatSession | null>(null);
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [loading, setLoading] = React.useState(false);
+  
+  // Get the authenticated user
+  const { userId, user, loading: authLoading } = useAuth();
+  
+  // Debug auth state
+  React.useEffect(() => {
+    console.log("ChatContext auth state:", { 
+      userId, 
+      hasUser: !!user, 
+      authLoading,
+      userEmail: user?.email 
+    });
+  }, [userId, user, authLoading]);
 
-  const fetchSessions = React.useCallback(async (userId?: string) => {
+  const fetchSessions = React.useCallback(async () => {
     console.log("ChatContext fetchSessions called with userId:", userId);
     try {
       if (!userId) {
-        console.log("No userId provided, skipping fetch");
+        console.log("No userId available, skipping fetch");
         return;
       }
       const res = await listSessionsQuery(userId);
@@ -62,29 +73,38 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("fetchSessions error:", err);
     }
-  }, []);
+  }, [userId]);
+
+  // Auto-fetch sessions when userId becomes available
+  React.useEffect(() => {
+    if (userId) {
+      fetchSessions();
+    }
+  }, [userId, fetchSessions]);
 
   const createNewSession = React.useCallback(
-    async (userId?: string, title?: string) => {
+    async (title?: string) => {
       console.log("ChatContext createNewSession called with:", {
         userId,
         title,
+        userIdType: typeof userId,
+        userIdLength: userId?.length
       });
       if (!userId) {
-        console.log("No userId provided, returning null");
+        console.log("No userId available, returning null");
         return null;
       }
       try {
         const res = await createSessionQuery(userId, title || "New Chat");
         console.log("Session created successfully:", res);
-        await fetchSessions(userId);
+        await fetchSessions();
         return res;
       } catch (err) {
         console.error("createNewSession error:", err);
         throw err;
       }
     },
-    [fetchSessions]
+    [userId, fetchSessions]
   );
 
   const openSession = React.useCallback(

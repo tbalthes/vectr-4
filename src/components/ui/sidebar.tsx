@@ -187,7 +187,8 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          // use a solid, opaque background and ensure it stacks above content
+          className="bg-white bg-opacity-100 text-sidebar-foreground w-full sm:w-(--sidebar-width) p-0 [&>button]:hidden z-60"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,

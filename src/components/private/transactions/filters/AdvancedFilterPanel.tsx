@@ -520,6 +520,7 @@ export function AdvancedFilterPanel({
                   hasAttachments: "Has Attachments",
                   isRecurring: "Recurring",
                   hasNotes: "Has Notes",
+                  uncategorized: "Uncategorized",
                 }).map(([key, label]) => (
                   <div key={key} className="flex items-center space-x-2">
                     <Checkbox

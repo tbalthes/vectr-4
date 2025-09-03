@@ -349,17 +349,14 @@ function VectrAIWithContext({
     if (userId && chatCtx?.fetchSessions && !sessionsLoadedRef.current) {
       console.log("Loading sessions for the first time for userId:", userId);
       sessionsLoadedRef.current = true;
-      chatCtx.fetchSessions(userId);
+      chatCtx.fetchSessions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth?.user?.id]);
 
   const handleCreateSession = async () => {
     try {
-      const userId = auth?.user?.id;
-      if (!userId) return;
-      await chatCtx?.createNewSession(userId, "New Chat");
-      await chatCtx?.fetchSessions(userId);
+      await chatCtx?.createNewSession("New Chat");
     } catch (err) {
       console.error(err);
     }
@@ -398,8 +395,8 @@ function VectrAIWithContext({
       const userId = auth?.user?.id;
       if (userId && !currentSessionId) {
         setDbStatus("Creating new session...");
-        const s = await chatCtx?.createNewSession(userId, "New Chat");
-        await chatCtx?.fetchSessions(userId);
+        const s = await chatCtx?.createNewSession("New Chat");
+        await chatCtx?.fetchSessions();
         if (s && s.id) {
           await chatCtx?.openSession(s.id);
           currentSessionId = s.id;
@@ -438,7 +435,7 @@ function VectrAIWithContext({
         setDbStatus("AI response saved");
 
         // Refresh sessions to ensure we have the latest state
-        await chatCtx?.fetchSessions(auth?.user?.id);
+        await chatCtx?.fetchSessions();
 
         // Generate title only if this is the first exchange and current title is default
         console.log("Current sessions after refresh:", chatCtx?.sessions);
@@ -482,7 +479,7 @@ function VectrAIWithContext({
                 console.log("Updating session title to:", json.title);
                 await updateSessionTitleQuery(currentSessionId, json.title);
                 // refresh session list to show new title
-                await chatCtx?.fetchSessions(auth?.user?.id);
+                await chatCtx?.fetchSessions();
                 setDbStatus("Title updated successfully");
               } else {
                 setDbStatus("No title returned from API");
@@ -571,9 +568,9 @@ function VectrAIWithContext({
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex-1 flex flex-col min-h-0 p-6 pt-4">
-          {showWelcome && chatMessages.length === 0 && (
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {showWelcome && chatMessages.length === 0 && (
+          <div className="flex-1 flex flex-col p-6 justify-center pt-4">
             <div className="max-w-4xl mx-auto py-8 text-center space-y-8">
               <div className="text-center space-y-4">
                 <h2 className="text-3xl font-bold">Welcome to Vectr AI</h2>
@@ -584,10 +581,15 @@ function VectrAIWithContext({
                 </p>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {chatMessages.length > 0 && (
-            <Conversation className="flex-1 mb-4">
+        {chatMessages.length > 0 && (
+          <div className="flex-1 flex flex-col px-6 pt-4 pb-0 overflow-hidden">
+            <Conversation
+              className="flex-1"
+              maxHeight="calc(100vh - 240px)"
+            >
               <ConversationContent>
                 {chatMessages.map((message) => (
                   <Message
@@ -613,8 +615,8 @@ function VectrAIWithContext({
                 <div ref={messagesEndRef} />
               </ConversationContent>
             </Conversation>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="border-t bg-background/95 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto px-4 py-4">

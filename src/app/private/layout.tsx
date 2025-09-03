@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import PageHeader from "@/components/private/PageHeader";
 
 export default function PrivateLayout({
   children,
@@ -50,7 +49,7 @@ export default function PrivateLayout({
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar: overlays on mobile, fixed on desktop */}
+      {/* Sidebar: overlays on mobile, static on desktop */}
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -58,10 +57,11 @@ export default function PrivateLayout({
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
+      
       {/* Hamburger button for mobile */}
       {!sidebarOpen && (
         <button
-          className="md:hidden fixed top-4 left-4 z-40 bg-background rounded-full shadow p-2 border border-border"
+          className="md:hidden fixed top-4 left-4 z-[50] bg-background rounded-full shadow p-2 border border-border"
           onClick={() => setSidebarOpen(true)}
           aria-label="Open sidebar"
         >
@@ -80,14 +80,9 @@ export default function PrivateLayout({
           </svg>
         </button>
       )}
-      {/* Main content: margin-left on desktop if sidebar open, none on mobile */}
-      <main
-        className={`flex-1 transition-all duration-200 ${
-          sidebarOpen && !sidebarCollapsed
-            ? "md:ml-[var(--sidebar-width)]"
-            : "md:ml-[var(--sidebar-collapsed-width)]"
-        }`}
-      >
+      
+      {/* Main content: full width on mobile, adjusted on desktop */}
+      <main className="flex-1 min-w-0">
         {children}
       </main>
     </div>
