@@ -12,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, Building } from "lucide-react";
+import { accountToasts } from "@/lib/notifications/account-notifications";
+import { useAccountSync } from "@/contexts/AccountSyncContext";
 
 interface ConnectAccountModalProps {
   open: boolean;
@@ -24,6 +26,7 @@ export function ConnectAccountModal({
   onOpenChange,
   onAccountConnected,
 }: ConnectAccountModalProps) {
+  const { startAccountSync, updateAccountSync, completeAccountSync, errorAccountSync } = useAccountSync();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,9 +59,10 @@ export function ConnectAccountModal({
       setLinkToken(data.link_token);
     } catch (err) {
       console.error("Error fetching link token:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to create link token"
-      );
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to create link token";
+      setError(errorMessage);
+      accountToasts.syncError("account connection", errorMessage, true);
     } finally {
       setLoading(false);
     }
@@ -71,10 +75,31 @@ export function ConnectAccountModal({
     console.log("=== PLAID SUCCESS HANDLER CALLED ===");
     console.log("Public token:", public_token.substring(0, 20) + "...");
     console.log("Metadata:", metadata);
+
     setLoading(true);
     setError(null);
+
+  // Show connection progress using sync context (hook values are from component scope)
+  startAccountSync({
+      accountName: "New Account",
+      step: 1,
+      totalSteps: 3,
+      currentOperation: "Exchanging secure token...",
+      estimatedTime: "30 seconds",
+    });
+
     try {
       console.log("Exchanging public token...");
+
+      // Step 2: Exchange token
+      updateAccountSync({
+        accountName: "New Account",
+        step: 2,
+        totalSteps: 3,
+        currentOperation: "Fetching account details...",
+        estimatedTime: "15 seconds",
+      });
+
       const response = await fetch(
         "/api/aggregator/plaid/exchange_public_token",
         {
@@ -83,10 +108,28 @@ export function ConnectAccountModal({
           body: JSON.stringify({ public_token }),
         }
       );
+
       console.log("Response status:", response.status);
       if (!response.ok) throw new Error("Failed to exchange token");
+
       const result = await response.json();
       console.log("Exchange successful:", result);
+
+      // Step 3: Final setup
+      updateAccountSync({
+        accountName: "New Account",
+        step: 3,
+        totalSteps: 3,
+        currentOperation: "Setting up account...",
+        estimatedTime: "5 seconds",
+      });
+
+      // Simulate final setup time
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  // Show success via sync context
+  completeAccountSync(result.accountName || "New Account", 0);
+
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -95,9 +138,10 @@ export function ConnectAccountModal({
       }, 2000);
     } catch (err) {
       console.error("Error in handlePlaidSuccess:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to connect account"
-      );
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to connect account";
+      setError(errorMessage);
+      errorAccountSync("New Account", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -131,14 +175,6 @@ export function ConnectAccountModal({
     }
   }, [open]);
 
-  // Don't auto-open Plaid Link, let user click the button
-  // React.useEffect(() => {
-  //   if (open && linkToken && ready && !success && !loading) {
-  //     console.log('Opening Plaid Link with token:', linkToken.substring(0, 20) + '...');
-  //     openPlaidLink();
-  //   }
-  // }, [open, linkToken, ready, openPlaidLink, success, loading]);
-
   const handleClose = () => {
     if (!loading) {
       setLinkToken(null);
@@ -157,7 +193,13 @@ export function ConnectAccountModal({
   const handleConnectClick = () => {
     console.log("Connect button clicked, opening Plaid Link...");
     if (linkToken && ready) {
-      openPlaidLink();
+      // Show pre-connection notification
+      accountToasts.connectionWarning(1, "1-2 minutes");
+
+      // Small delay to let user see the warning, then open Plaid
+      setTimeout(() => {
+        openPlaidLink();
+      }, 1000);
     } else {
       console.log("Link token or ready state not available:", {
         linkToken: !!linkToken,

@@ -10,11 +10,16 @@ import { useAccounts } from "@/hooks/useAccounts";
 
 export default function AccountsPage() {
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const { accounts, loading, error, refetch } = useAccounts();
+  const { accounts, loading, error, refetch, syncAccount, syncAllAccounts } =
+    useAccounts();
 
   const handleAccountConnected = () => {
     setShowConnectModal(false);
-    refetch();
+    refetch(true); // Show notifications on manual refresh
+  };
+
+  const handleRefresh = async () => {
+    await refetch(true); // Show notifications on manual refresh
   };
 
   return (
@@ -45,7 +50,9 @@ export default function AccountsPage() {
           accounts={accounts}
           loading={loading}
           error={error}
-          onRefresh={refetch}
+          onRefresh={handleRefresh}
+          onSyncAccount={syncAccount}
+          onSyncAll={syncAllAccounts}
         />
       </div>
 

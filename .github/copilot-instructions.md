@@ -19,7 +19,7 @@
 
 ## Developer Workflows
 
-- **Start frontend:** `npm run dev` (Next.js, port 3000)
+- **Start frontend:** `npm run dev` (Next.js, port 3000) -always ask user to check dev to validate changes
 - **Build frontend:** `npm run build`
 - **Lint:** `npm run lint`
 - **Backend:** Activate Python venv in `python/`, run FastAPI app (see `main.py`)

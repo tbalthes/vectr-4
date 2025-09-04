@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { AccountSyncProvider } from "@/contexts/AccountSyncContext";
 import { Sidebar } from "@/components/Sidebar";
 
 export default function PrivateLayout({
@@ -48,41 +49,43 @@ export default function PrivateLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar: overlays on mobile, static on desktop */}
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        collapsible={true}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
+    <AccountSyncProvider>
+      <div className="flex min-h-screen">
+        {/* Sidebar: overlays on mobile, static on desktop */}
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          collapsible={true}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
 
-      {/* Hamburger button for mobile */}
-      {!sidebarOpen && (
-        <button
-          className="md:hidden fixed top-4 left-4 z-[50] bg-background rounded-full shadow p-2 border border-border"
-          onClick={() => setSidebarOpen(true)}
-          aria-label="Open sidebar"
-        >
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
+        {/* Hamburger button for mobile */}
+        {!sidebarOpen && (
+          <button
+            className="md:hidden fixed top-4 left-4 z-[50] bg-background rounded-full shadow p-2 border border-border"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
-      )}
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        )}
 
-      {/* Main content: full width on mobile, adjusted on desktop */}
-      <main className="flex-1 min-w-0">{children}</main>
-    </div>
+        {/* Main content: full width on mobile, adjusted on desktop */}
+        <main className="flex-1 min-w-0">{children}</main>
+      </div>
+    </AccountSyncProvider>
   );
 }

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "./ui/theme-toggle";
+import { GlobalSyncIndicator } from "./layout/GlobalSyncIndicator";
 
 export function Sidebar({
   open = true,
@@ -156,6 +157,13 @@ export function Sidebar({
             )
           )}
         </div>
+
+        {/* Global Sync Indicator - placed between header and nav */}
+        {!collapsed && (
+          <div className="px-3 py-2">
+            <GlobalSyncIndicator showDetails={true} />
+          </div>
+        )}
         <nav className="flex-1 px-3 py-4 space-y-1 ">
           {navItems.map((item) => {
             const isActive = pathname === item.href;

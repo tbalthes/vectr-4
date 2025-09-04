@@ -2,20 +2,20 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
-// GET /api/accounts
-// Returns accounts joined with latest balance and institution meta
-export async function GET() {
+// POST /api/accounts/sync-all
+// Syncs all accounts for the current user (mock implementation for demo)
+export async function POST() {
   try {
     const cookieStore = await cookies();
 
     // Get all cookies for debugging
     const allCookies = cookieStore.getAll();
     console.log(
-      "All available cookies:",
+      "Bulk Sync: All available cookies:",
       allCookies.map((c) => ({ name: c.name, hasValue: !!c.value }))
     );
 
-    // Try to find Supabase auth token with various patterns
+    // Try to find Supabase auth token
     let authToken = null;
 
     // Pattern 1: Exact match for known project
@@ -29,41 +29,21 @@ export async function GET() {
       );
     }
 
-    // Pattern 3: Look for any supabase session token
     if (!authToken) {
-      authToken = allCookies.find(
-        (cookie) =>
-          (cookie.name.includes("supabase") || cookie.name.startsWith("sb-")) &&
-          (cookie.name.includes("token") || cookie.name.includes("session"))
-      );
-    }
-
-    // Pattern 4: Try to parse the auth token from a session cookie
-    if (!authToken) {
-      const sessionCookie = allCookies.find(
-        (cookie) =>
-          cookie.name.startsWith("sb-") && cookie.name.includes("auth-token")
-      );
-      if (sessionCookie) {
-        authToken = sessionCookie;
-      }
-    }
-
-    if (!authToken) {
-      console.log("No auth token found in cookies");
+      console.log("Bulk Sync: No auth token found in cookies");
       return NextResponse.json(
         {
+          successful: 0,
+          failed: 0,
+          failedAccounts: [],
+          totalNewTransactions: 0,
           error: "No auth token found",
-          debug: {
-            availableCookies: allCookies.map((c) => c.name),
-            message: "Please ensure you are logged in",
-          },
         },
         { status: 401 }
       );
     }
 
-    console.log("Using auth token from cookie:", authToken.name);
+    console.log("Bulk Sync: Using auth token from cookie:", authToken.name);
 
     // Try to parse the token value if it's a JSON object
     const tokenValue = authToken.value;
@@ -72,28 +52,32 @@ export async function GET() {
 
     try {
       const parsed = JSON.parse(tokenValue);
-      console.log("Parsed token structure:", Object.keys(parsed));
+      console.log("Bulk Sync: Parsed token structure:", Object.keys(parsed));
 
       // Handle array format (Supabase often stores session as [access_token, refresh_token, ...])
       if (Array.isArray(parsed) && parsed.length >= 2) {
-        console.log("Token is an array, extracting access and refresh tokens");
+        console.log(
+          "Bulk Sync: Token is an array, extracting access and refresh tokens"
+        );
         accessToken = parsed[0];
         refreshToken = parsed[1];
-        console.log("Extracted tokens:", {
+        console.log("Bulk Sync: Extracted tokens:", {
           hasAccessToken: !!accessToken,
           hasRefreshToken: !!refreshToken,
         });
       } else if (parsed.access_token) {
         accessToken = parsed.access_token;
         refreshToken = parsed.refresh_token;
-        console.log("Found access_token in parsed JSON");
+        console.log("Bulk Sync: Found access_token in parsed JSON");
       } else {
-        console.log("No access_token found in parsed JSON, using full value");
+        console.log(
+          "Bulk Sync: No access_token found in parsed JSON, using full value"
+        );
         accessToken = tokenValue;
       }
     } catch {
       // Token value is not JSON, use as-is
-      console.log("Token is not JSON, using as-is");
+      console.log("Bulk Sync: Token is not JSON, using as-is");
       accessToken = tokenValue;
     }
 
@@ -116,18 +100,22 @@ export async function GET() {
     // Try to get user info directly from the token instead of using getSession
     const { data: user, error: userError } = await supabase.auth.getUser();
 
-    console.log("User check result:", {
+    console.log("Bulk Sync: User check result:", {
       hasUser: !!user?.user,
       userError: userError?.message,
     });
 
     if (userError || !user?.user) {
       console.log(
-        "User validation failed:",
+        "Bulk Sync: User validation failed:",
         userError?.message || "No user found"
       );
       return NextResponse.json(
         {
+          successful: 0,
+          failed: 0,
+          failedAccounts: [],
+          totalNewTransactions: 0,
           error: "User validation failed",
           details: userError?.message || "No user found",
         },
@@ -137,22 +125,76 @@ export async function GET() {
 
     const userId = user.user.id;
 
-    // Prefer explicit filter by user_id to reduce payload size (RLS still enforced)
-    const { data, error } = await supabase
-      .from("v_accounts_with_latest_balance")
-      .select("*")
-      .eq("user_id", userId)
-      .order("name", { ascending: true });
+    // Get all user's accounts
+    const { data: accounts, error: accountsError } = await supabase
+      .from("accounts")
+      .select("id, name")
+      .eq("user_id", userId);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (accountsError) {
+      return NextResponse.json(
+        {
+          successful: 0,
+          failed: 0,
+          failedAccounts: [],
+          totalNewTransactions: 0,
+          error: accountsError.message,
+        },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ accounts: data ?? [] });
+    if (!accounts || accounts.length === 0) {
+      return NextResponse.json({
+        successful: 0,
+        failed: 0,
+        failedAccounts: [],
+        totalNewTransactions: 0,
+      });
+    }
+
+    // Mock bulk sync results
+    const results = {
+      successful: 0,
+      failed: 0,
+      failedAccounts: [] as string[],
+      totalNewTransactions: 0,
+    };
+
+    // Simulate processing each account
+    for (const account of accounts) {
+      // Mock sync delay
+      await new Promise((resolve) =>
+        setTimeout(resolve, 500 + Math.random() * 1000)
+      );
+
+      // 80% success rate
+      if (Math.random() > 0.2) {
+        results.successful++;
+        results.totalNewTransactions += Math.floor(Math.random() * 15);
+
+        // Update last sync time
+        await supabase
+          .from("accounts")
+          .update({ last_synced_at: new Date().toISOString() })
+          .eq("id", account.id);
+      } else {
+        results.failed++;
+        results.failedAccounts.push(account.name);
+      }
+    }
+
+    return NextResponse.json(results);
   } catch (error) {
-    console.error("Error in /api/accounts:", error);
+    console.error("Error in bulk sync:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        successful: 0,
+        failed: 0,
+        failedAccounts: [],
+        totalNewTransactions: 0,
+        error: "Bulk sync failed",
+      },
       { status: 500 }
     );
   }
