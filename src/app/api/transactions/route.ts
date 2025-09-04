@@ -29,14 +29,14 @@ interface RawSupabaseTransaction {
       }[]
     | null;
   transaction_categories:
-    | ({
+    | {
         categories?: {
           name: string;
           icon: string | null;
         };
         name?: string;
         icon?: string | null;
-      })[]
+      }[]
     | null;
 }
 
@@ -57,7 +57,10 @@ function transformToFormattedTransaction(
   // `categories` property (PostgREST join style) or a flattened array where
   // each entry directly has `name` and `icon`. Handle both shapes.
   let userCategory: { name?: string; icon?: string | null } | undefined;
-  if (Array.isArray(raw.transaction_categories) && raw.transaction_categories.length > 0) {
+  if (
+    Array.isArray(raw.transaction_categories) &&
+    raw.transaction_categories.length > 0
+  ) {
     const first = raw.transaction_categories[0];
     if (first?.categories) {
       userCategory = first.categories;
@@ -70,7 +73,8 @@ function transformToFormattedTransaction(
   // fallback (e.g., when join-table updates failed), prefer that value.
   try {
     const meta = raw.user_metadata as Record<string, unknown> | null;
-    const manual = meta && typeof meta === "object" ? meta["manual_category"] : undefined;
+    const manual =
+      meta && typeof meta === "object" ? meta["manual_category"] : undefined;
     if (!userCategory && manual && typeof manual === "string") {
       userCategory = { name: manual, icon: null };
     }

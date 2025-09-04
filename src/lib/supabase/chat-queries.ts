@@ -6,17 +6,25 @@ export const supabase = createClientComponentClient();
 export async function createSession(userId: string, title = "New Chat") {
   // Use the provided userId since we're passing authenticated user's ID from context
   console.log("createSession called with userId:", userId);
-  
+
   // Double-check that we have an authenticated session
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  console.log("Current session in createSession:", session?.user?.id, "Error:", sessionError);
-  
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+  console.log(
+    "Current session in createSession:",
+    session?.user?.id,
+    "Error:",
+    sessionError
+  );
+
   const { data, error } = await supabase
     .from("chat_sessions")
     .insert({ user_id: userId, title })
     .select("*")
     .single();
-  
+
   if (error) {
     console.error("Insert error details:", error);
     throw error;

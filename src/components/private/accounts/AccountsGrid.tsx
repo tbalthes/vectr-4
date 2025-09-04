@@ -30,19 +30,24 @@ interface AccountsGridProps {
 
 function AccountCard({ account }: { account: Account }) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: account.currency || 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: account.currency || "USD",
     }).format(amount);
   };
 
   const getAccountTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
-      case 'checking': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'savings': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'credit': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-      case 'investment': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      case "checking":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "savings":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "credit":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+      case "investment":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
   };
 
@@ -54,8 +59,8 @@ function AccountCard({ account }: { account: Account }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {account.institution_logo_url ? (
-              <Image 
-                src={account.institution_logo_url} 
+              <Image
+                src={account.institution_logo_url}
                 alt={account.institution_name || "Institution"}
                 width={32}
                 height={32}
@@ -67,7 +72,7 @@ function AccountCard({ account }: { account: Account }) {
             <div>
               <CardTitle className="text-lg">{account.name}</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {account.institution_name} 
+                {account.institution_name}
                 {account.mask && ` •••• ${account.mask}`}
               </p>
             </div>
@@ -81,29 +86,39 @@ function AccountCard({ account }: { account: Account }) {
         <div className="space-y-2">
           <div>
             <p className="text-sm text-muted-foreground">Current Balance</p>
-            <p className={`text-2xl font-bold ${isNegative ? 'text-red-600' : 'text-green-600'}`}>
+            <p
+              className={`text-2xl font-bold ${
+                isNegative ? "text-red-600" : "text-green-600"
+              }`}
+            >
               {formatCurrency(account.balance_amount || 0)}
             </p>
           </div>
-          
-          {account.available !== undefined && account.available !== account.balance_amount && (
-            <div>
-              <p className="text-sm text-muted-foreground">Available</p>
-              <p className="text-lg font-semibold">
-                {formatCurrency(account.available)}
-              </p>
-            </div>
-          )}
+
+          {account.available !== undefined &&
+            account.available !== account.balance_amount && (
+              <div>
+                <p className="text-sm text-muted-foreground">Available</p>
+                <p className="text-lg font-semibold">
+                  {formatCurrency(account.available)}
+                </p>
+              </div>
+            )}
 
           <div className="flex items-center justify-between pt-2">
             {account.provider && (
-              <Badge variant="outline" className="text-xs">
+              <Badge
+                variant="outline"
+                className="text-xs"
+                key={account.provider}
+              >
                 {account.provider}
               </Badge>
             )}
             {account.last_synced_at && (
               <p className="text-xs text-muted-foreground">
-                Last sync: {new Date(account.last_synced_at).toLocaleDateString()}
+                Last sync:{" "}
+                {new Date(account.last_synced_at).toLocaleDateString()}
               </p>
             )}
           </div>
@@ -144,7 +159,12 @@ function AccountCardSkeleton() {
   );
 }
 
-export function AccountsGrid({ accounts, loading, error, onRefresh }: AccountsGridProps) {
+export function AccountsGrid({
+  accounts,
+  loading,
+  error,
+  onRefresh,
+}: AccountsGridProps) {
   if (loading) {
     return (
       <div className="space-y-4">
@@ -157,7 +177,7 @@ export function AccountsGrid({ accounts, loading, error, onRefresh }: AccountsGr
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <AccountCardSkeleton key={i} />
+            <AccountCardSkeleton key={`skeleton-${i}`} />
           ))}
         </div>
       </div>

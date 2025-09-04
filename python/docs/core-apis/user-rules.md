@@ -7,6 +7,7 @@ The User Rules system allows users to create custom categorization rules that au
 ## Core Concepts
 
 ### Rule Structure
+
 - **Match Field**: Which transaction field to evaluate (description, merchant_name, amount, etc.)
 - **Match Operator**: How to compare values (equals, contains, regex, greater_than, etc.)
 - **Match Value**: The value to match against
@@ -15,6 +16,7 @@ The User Rules system allows users to create custom categorization rules that au
 - **Filters**: Optional amount and date range constraints
 
 ### Rule Processing
+
 - Rules are evaluated in priority order (ascending: 1, 2, 3...)
 - First matching rule wins (no further evaluation)
 - Rules with same priority: stable order by `updated_at`
@@ -27,6 +29,7 @@ The User Rules system allows users to create custom categorization rules that au
 List user's rules with optional filtering and pagination.
 
 **Query Parameters:**
+
 - `user_id` (uuid, required): User identifier
 - `search` (string): Search rule descriptions and values
 - `enabled` (boolean): Filter by enabled status
@@ -36,6 +39,7 @@ List user's rules with optional filtering and pagination.
 - `order` (string): Sort direction (`asc` | `desc`)
 
 **Response:**
+
 ```json
 {
   "rules": [
@@ -49,7 +53,7 @@ List user's rules with optional filtering and pagination.
       "priority": 1,
       "enabled": true,
       "amount_min": null,
-      "amount_max": -1.00,
+      "amount_max": -1.0,
       "date_from": null,
       "date_to": null,
       "description": "Coffee shop purchases",
@@ -69,6 +73,7 @@ List user's rules with optional filtering and pagination.
 Create a new user rule.
 
 **Request Body:**
+
 ```json
 {
   "user_id": "uuid",
@@ -79,7 +84,7 @@ Create a new user rule.
   "priority": 10,
   "enabled": true,
   "amount_min": null,
-  "amount_max": -1.00,
+  "amount_max": -1.0,
   "date_from": null,
   "date_to": null,
   "description": "Coffee shop purchases"
@@ -87,6 +92,7 @@ Create a new user rule.
 ```
 
 **Validation:**
+
 - `match_field`: Must be valid field (`description`, `clean_description`, `merchant_name`, `original_description`, `amount`)
 - `match_operator`: Must be compatible with field type
 - `match_value`: Required, validated based on operator (regex compilation for regex operator)
@@ -108,6 +114,7 @@ Delete a user rule permanently.
 Preview how a rule would match against existing transactions without applying changes.
 
 **Request Body:**
+
 ```json
 {
   "user_id": "uuid",
@@ -115,7 +122,7 @@ Preview how a rule would match against existing transactions without applying ch
   "match_operator": "contains",
   "match_value": "coffee",
   "amount_min": null,
-  "amount_max": -1.00,
+  "amount_max": -1.0,
   "date_from": null,
   "date_to": null,
   "sample_limit": 10
@@ -123,6 +130,7 @@ Preview how a rule would match against existing transactions without applying ch
 ```
 
 **Response:**
+
 ```json
 {
   "rule_summary": "description contains 'coffee'",
@@ -134,7 +142,7 @@ Preview how a rule would match against existing transactions without applying ch
       "description": "COFFEE SHOP DOWNTOWN",
       "clean_description": "COFFEE SHOP DOWNTOWN",
       "merchant_name": "Coffee Shop",
-      "amount": -4.50,
+      "amount": -4.5,
       "current_category_name": "Uncategorized",
       "matched_category_name": "Dining",
       "confidence": 1.0,
@@ -151,6 +159,7 @@ Preview how a rule would match against existing transactions without applying ch
 Apply rules to existing transactions retroactively.
 
 **Request Body:**
+
 ```json
 {
   "user_id": "uuid",
@@ -166,6 +175,7 @@ Apply rules to existing transactions retroactively.
 ```
 
 **Response (dry_run=true):**
+
 ```json
 {
   "total_transactions_scanned": 1500,
@@ -190,6 +200,7 @@ Apply rules to existing transactions retroactively.
 ```
 
 **Response (dry_run=false):**
+
 ```json
 {
   "total_updated": 45,
@@ -203,13 +214,14 @@ Apply rules to existing transactions retroactively.
 Bulk update rule priorities to change execution order.
 
 **Request Body:**
+
 ```json
 {
   "user_id": "uuid",
   "order": [
-    {"id": "uuid1", "priority": 1},
-    {"id": "uuid2", "priority": 2},
-    {"id": "uuid3", "priority": 3}
+    { "id": "uuid1", "priority": 1 },
+    { "id": "uuid2", "priority": 2 },
+    { "id": "uuid3", "priority": 3 }
   ]
 }
 ```
@@ -217,6 +229,7 @@ Bulk update rule priorities to change execution order.
 ## Match Fields & Operators
 
 ### Available Fields
+
 - `description`: Cleaned transaction description
 - `clean_description`: Further normalized description
 - `merchant_name`: Extracted merchant name
@@ -226,6 +239,7 @@ Bulk update rule priorities to change execution order.
 ### Operators by Field Type
 
 **Text Fields** (`description`, `clean_description`, `merchant_name`, `original_description`):
+
 - `equals`: Exact match (case-insensitive)
 - `contains`: Substring match
 - `startswith`: Prefix match
@@ -233,6 +247,7 @@ Bulk update rule priorities to change execution order.
 - `regex`: Regular expression match
 
 **Numeric Fields** (`amount`):
+
 - `equals`: Exact amount match
 - `greater_than`: Amount greater than value
 - `less_than`: Amount less than value
@@ -242,11 +257,13 @@ Bulk update rule priorities to change execution order.
 ## Rule Priority & Conflicts
 
 ### Priority Rules
+
 1. Lower priority numbers = higher precedence (1 executes before 10)
 2. Rules with same priority: stable order by `updated_at`
 3. First matching rule wins - no further evaluation
 
 ### Best Practices
+
 - Use priority 1-10 for critical/specific rules
 - Use priority 100+ for broad catch-all rules
 - Leave gaps (1, 10, 20) to insert rules later
@@ -255,7 +272,9 @@ Bulk update rule priorities to change execution order.
 ## Frontend Integration
 
 ### Rule Builder Component
+
 The `RuleBuilder.tsx` component provides:
+
 - Field/operator/value selection with validation
 - Category picker integration
 - Real-time preview functionality
@@ -263,6 +282,7 @@ The `RuleBuilder.tsx` component provides:
 - Amount and date range filters
 
 ### Preview Integration
+
 - Live preview as user types
 - Sample matching transactions
 - Override count warnings
@@ -271,12 +291,14 @@ The `RuleBuilder.tsx` component provides:
 ## Error Handling
 
 ### Validation Errors
+
 - Invalid regex patterns
 - Incompatible field/operator combinations
 - Missing required fields
 - Invalid category references
 
 ### Runtime Errors
+
 - Database connection failures
 - Transaction processing errors
 - Rate limiting on bulk operations
@@ -296,4 +318,4 @@ The `RuleBuilder.tsx` component provides:
 
 ---
 
-*Updated: September 1, 2025*
+_Updated: September 1, 2025_

@@ -30,6 +30,7 @@ The transaction processing system handles batch processing of bank transactions,
 ```
 
 **Required Fields:**
+
 - `account_id`: Account identifier (string)
 - `date`: Transaction date in YYYY-MM-DD format
 - `transaction_number`: Unique transaction identifier
@@ -37,6 +38,7 @@ The transaction processing system handles batch processing of bank transactions,
 - `amount`: Transaction amount (negative for debits)
 
 **Optional Fields:**
+
 - `balance`: Account balance after transaction (pass-through)
 - Any custom fields (preserved in output)
 
@@ -45,16 +47,19 @@ The transaction processing system handles batch processing of bank transactions,
 For each transaction, the system performs:
 
 1. **Cleaning & Normalization**
+
    - Uppercase description, remove special characters
    - Normalize whitespace and punctuation
    - Validate date and amount formats
 
 2. **High-Confidence Regex Matching**
+
    - Match against `global_regex_rules` table
    - Extract merchant and category from matched rules
    - Set confidence to 1.0, match_method to `global_regex`
 
 3. **Fallback Processing**
+
    - Use MCC (Merchant Category Code) mapping
    - Apply heuristic parsing for merchant names
    - Set lower confidence levels
@@ -72,8 +77,8 @@ For each transaction, the system performs:
     "date": "2024-08-01",
     "transaction_number": "TXN001",
     "description": "COFFEE SHOP",
-    "amount": -4.50,
-    "balance": 995.50,
+    "amount": -4.5,
+    "balance": 995.5,
     "merchant_id": "uuid",
     "merchant_name": "Local Coffee Shop",
     "category_id": "uuid",
@@ -110,11 +115,13 @@ Use `GET /data-table-status/` to check cache health:
 ### Upload Flow
 
 1. **CSV Upload** (`CSVUploader.tsx`)
+
    - Parse CSV client-side
    - Map columns to required fields
    - Send to processing endpoint
 
 2. **Processing Response**
+
    - Receive enriched transactions
    - Format for UI using `formatApiDataForUI`
    - Update page state
@@ -153,4 +160,4 @@ CSV File → Parse → Column Mapping → API Call → Enrichment → UI Format 
 
 ---
 
-*Updated: September 1, 2025*
+_Updated: September 1, 2025_

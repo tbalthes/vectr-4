@@ -95,7 +95,7 @@ export default function ChatSidebar({
             display: none !important;
           }
         `}</style>
-  <SheetHeader className="p-4 border-b border-muted/45">
+        <SheetHeader className="p-4 border-b border-muted/45">
           <VisuallyHidden>
             <SheetTitle>Chat History</SheetTitle>
           </VisuallyHidden>
@@ -115,7 +115,7 @@ export default function ChatSidebar({
             </div>
           </div>
         </SheetHeader>
-  <div className="px-4 py-2">
+        <div className="px-4 py-2">
           <Input
             placeholder="Search chats..."
             value={query}
@@ -138,7 +138,7 @@ export default function ChatSidebar({
                   "flex items-center group justify-between px-3 py-2 rounded-lg transition-colors cursor-pointer border border-transparent",
                   loadingSessionId === s.id
                     ? "opacity-60 pointer-events-none"
-                    : "hover:bg-accent/60 hover:border-accent",
+                    : "hover:bg-accent/60 hover:border-accent"
                 )}
                 tabIndex={0}
                 onClick={() => {
@@ -159,7 +159,9 @@ export default function ChatSidebar({
                 </div>
                 <div className="ml-2 flex items-center gap-1">
                   {loadingSessionId === s.id ? (
-                    <div className="text-muted-foreground text-xs">Loading...</div>
+                    <div className="text-muted-foreground text-xs">
+                      Loading...
+                    </div>
                   ) : (
                     <button
                       onClick={(e) => {

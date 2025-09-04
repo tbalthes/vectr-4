@@ -247,8 +247,7 @@ export default function HomePage() {
               </Button>
               <Button asChild>
                 <a href="/public/register" className="group">
-                  Get Started Free
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  Sign Up
                 </a>
               </Button>
             </div>
@@ -307,7 +306,7 @@ export default function HomePage() {
                     <a href="/public/login">Sign In</a>
                   </Button>
                   <Button className="w-full" asChild>
-                    <a href="/public/register">Get Started Free</a>
+                    <a href="/public/register">Sign Up</a>
                   </Button>
                 </div>
               </div>

@@ -18,7 +18,10 @@ interface AccountsStatsCardsProps {
   loading: boolean;
 }
 
-export function AccountsStatsCards({ accounts, loading }: AccountsStatsCardsProps) {
+export function AccountsStatsCards({
+  accounts,
+  loading,
+}: AccountsStatsCardsProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -38,19 +41,22 @@ export function AccountsStatsCards({ accounts, loading }: AccountsStatsCardsProp
     );
   }
 
-  const totalBalance = accounts.reduce((sum, account) => sum + (account.balance_amount || 0), 0);
+  const totalBalance = accounts.reduce(
+    (sum, account) => sum + (account.balance_amount || 0),
+    0
+  );
   const totalAssets = accounts
-    .filter(account => (account.balance_amount || 0) > 0)
+    .filter((account) => (account.balance_amount || 0) > 0)
     .reduce((sum, account) => sum + (account.balance_amount || 0), 0);
   const totalDebt = accounts
-    .filter(account => (account.balance_amount || 0) < 0)
+    .filter((account) => (account.balance_amount || 0) < 0)
     .reduce((sum, account) => sum + Math.abs(account.balance_amount || 0), 0);
   const accountCount = accounts.length;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -62,10 +68,10 @@ export function AccountsStatsCards({ accounts, loading }: AccountsStatsCardsProp
           <Wallet className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(totalBalance)}</div>
-          <p className="text-xs text-muted-foreground">
-            Assets minus debts
-          </p>
+          <div className="text-2xl font-bold">
+            {formatCurrency(totalBalance)}
+          </div>
+          <p className="text-xs text-muted-foreground">Assets minus debts</p>
         </CardContent>
       </Card>
 
@@ -75,10 +81,10 @@ export function AccountsStatsCards({ accounts, loading }: AccountsStatsCardsProp
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-green-600">{formatCurrency(totalAssets)}</div>
-          <p className="text-xs text-muted-foreground">
-            All positive balances
-          </p>
+          <div className="text-2xl font-bold text-green-600">
+            {formatCurrency(totalAssets)}
+          </div>
+          <p className="text-xs text-muted-foreground">All positive balances</p>
         </CardContent>
       </Card>
 
@@ -88,10 +94,10 @@ export function AccountsStatsCards({ accounts, loading }: AccountsStatsCardsProp
           <TrendingDown className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-red-600">{formatCurrency(totalDebt)}</div>
-          <p className="text-xs text-muted-foreground">
-            All negative balances
-          </p>
+          <div className="text-2xl font-bold text-red-600">
+            {formatCurrency(totalDebt)}
+          </div>
+          <p className="text-xs text-muted-foreground">All negative balances</p>
         </CardContent>
       </Card>
 

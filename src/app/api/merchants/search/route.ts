@@ -35,9 +35,11 @@ export async function GET(request: NextRequest) {
     .slice(2, 8)}`;
 
   try {
-  const requestCookies = await cookies();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createRouteHandlerClient({ cookies: () => (requestCookies as any) });
+    const requestCookies = await cookies();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase = createRouteHandlerClient({
+      cookies: () => requestCookies as any,
+    });
 
     // Check authentication
     const { data: sessionRes } = await supabase.auth.getSession();

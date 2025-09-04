@@ -27,17 +27,18 @@ export function useAccounts() {
     setError(null);
 
     try {
-      const response = await fetch('/api/accounts');
-      
+      const response = await fetch("/api/accounts");
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       setAccounts(data.accounts || []);
     } catch (err) {
       console.error("Error fetching accounts:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch accounts";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch accounts";
       setError(errorMessage);
       setAccounts([]);
     } finally {

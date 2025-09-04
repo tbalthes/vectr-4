@@ -17,7 +17,9 @@ The Vectr-4 application uses a PostgreSQL database hosted on Supabase with a com
 ### User Management
 
 #### `profiles` Table
+
 Central user profile information extending Supabase auth.users:
+
 ```sql
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id),
@@ -41,6 +43,7 @@ CREATE TABLE profiles (
 ```
 
 **Key Features**:
+
 - Extends Supabase auth for additional user metadata
 - Subscription and billing management
 - User preferences and settings
@@ -49,7 +52,9 @@ CREATE TABLE profiles (
 ### Financial Core Tables
 
 #### `accounts` Table
+
 User financial accounts (banks, credit cards, etc.):
+
 ```sql
 CREATE TABLE accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -64,14 +69,16 @@ CREATE TABLE accounts (
 ```
 
 #### `transactions` Table
+
 The core transactions table with comprehensive metadata:
+
 ```sql
 CREATE TABLE transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   account_id UUID REFERENCES accounts(id) ON DELETE CASCADE,
-  
+
   -- Core transaction data
   date DATE NOT NULL,
   amount NUMERIC(12,2) NOT NULL,
@@ -79,12 +86,12 @@ CREATE TABLE transactions (
   original_description TEXT NOT NULL,
   clean_description TEXT, -- Normalized description
   balance NUMERIC(12,2), -- Account balance after transaction
-  
+
   -- Categorization & enrichment
   merchant_id UUID REFERENCES merchants(id),
   primary_category_id UUID REFERENCES categories(id),
   merchant_name_override TEXT, -- Manual merchant name override
-  
+
   -- User management
   needs_review BOOLEAN DEFAULT FALSE,
   manual_edit BOOLEAN DEFAULT FALSE,
@@ -92,20 +99,21 @@ CREATE TABLE transactions (
   edited_by UUID REFERENCES profiles(id),
   hidden BOOLEAN DEFAULT FALSE,
   review_status review_status DEFAULT 'pending',
-  
+
   -- Metadata
   user_metadata JSONB DEFAULT '{}',
   transaction_note TEXT,
   goal_id UUID REFERENCES goals(id),
-  
+
   -- AI/ML features
   embedding VECTOR(1536), -- OpenAI embeddings for semantic search
-  
+
   UNIQUE(user_id, transaction_number, date, amount) -- Prevent duplicates
 );
 ```
 
 **Key Features**:
+
 - Comprehensive transaction metadata
 - Support for manual overrides and editing
 - AI embeddings for semantic search
@@ -113,7 +121,9 @@ CREATE TABLE transactions (
 - Flexible categorization system
 
 #### `categories` Table
+
 Hierarchical category system:
+
 ```sql
 CREATE TABLE categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -123,19 +133,22 @@ CREATE TABLE categories (
   parent_id UUID REFERENCES categories(id), -- Self-referential for hierarchy
   icon TEXT, -- Lucide icon name
   icon_kebab TEXT, -- Kebab-case icon name
-  
+
   UNIQUE(user_id, name) -- Unique per user, system categories have NULL user_id
 );
 ```
 
 **Features**:
+
 - Supports both system-wide and user-specific categories
 - Hierarchical structure with parent-child relationships
 - Icon support for UI display
 - Flexible naming with uniqueness constraints
 
 #### `merchants` Table
+
 Merchant information and metadata:
+
 ```sql
 CREATE TABLE merchants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -151,7 +164,9 @@ CREATE TABLE merchants (
 ### Transaction Processing Tables
 
 #### `transaction_categories` Table
+
 Many-to-many relationship between transactions and categories:
+
 ```sql
 CREATE TABLE transaction_categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -161,13 +176,15 @@ CREATE TABLE transaction_categories (
   confidence NUMERIC(3,2) DEFAULT 1.0, -- AI/rule confidence score
   source TEXT DEFAULT 'manual', -- 'manual', 'rule', 'ai', 'regex'
   is_primary BOOLEAN DEFAULT FALSE,
-  
+
   UNIQUE(transaction_id, category_id)
 );
 ```
 
 #### `transaction_edits` Table
+
 Comprehensive audit trail for transaction modifications:
+
 ```sql
 CREATE TABLE transaction_edits (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -187,7 +204,9 @@ CREATE TABLE transaction_edits (
 ### User Rules System
 
 #### `user_rules` Table
+
 Custom user-defined categorization rules:
+
 ```sql
 CREATE TABLE user_rules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -200,12 +219,13 @@ CREATE TABLE user_rules (
   actions JSONB NOT NULL, -- Actions to take when matched
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   UNIQUE(user_id, priority) -- Ensure unique priority per user
 );
 ```
 
 **Rule Structure Examples**:
+
 ```json
 // Conditions
 {
@@ -229,7 +249,9 @@ CREATE TABLE user_rules (
 ### Lookup & Reference Tables
 
 #### `global_regex_rules` Table
+
 System-wide regex patterns for merchant/category matching:
+
 ```sql
 CREATE TABLE global_regex_rules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -242,7 +264,9 @@ CREATE TABLE global_regex_rules (
 ```
 
 #### `mcc_category_map` Table
+
 Mapping of Merchant Category Codes to categories:
+
 ```sql
 CREATE TABLE mcc_category_map (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -255,7 +279,9 @@ CREATE TABLE mcc_category_map (
 ### Chat Features
 
 #### `chat_sessions` Table
+
 Canonical conversation/session entity used by both AI and chat UIs:
+
 ```sql
 CREATE TABLE chat_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -269,7 +295,9 @@ CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_id ON chat_sessions(user_id);
 ```
 
 #### `chat_messages` Table
+
 Append-only message stream for conversations. Stores per-message payloads and metadata:
+
 ```sql
 CREATE TABLE chat_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -285,6 +313,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session
 ## Database Relationships
 
 ### Primary Relationships
+
 ```
 profiles (users)
 ├── accounts (1:many)
@@ -312,6 +341,7 @@ categories
 ```
 
 ### Foreign Key Constraints
+
 - **CASCADE DELETE**: User deletion removes all related data
 - **SET NULL**: Category deletion preserves transactions but removes reference
 - **RESTRICT**: Prevent deletion if dependent records exist
@@ -319,6 +349,7 @@ categories
 ## Row Level Security (RLS)
 
 ### Security Policies
+
 All user tables implement RLS policies:
 
 ```sql
@@ -337,7 +368,9 @@ CREATE POLICY "Users can delete own transactions" ON transactions
 ```
 
 ### Public Tables
+
 Some tables are publicly readable but only admin-writable:
+
 - `categories` (system categories where user_id IS NULL)
 - `merchants` (shared merchant database)
 - `mcc_category_map` (standard MCC mappings)
@@ -345,6 +378,7 @@ Some tables are publicly readable but only admin-writable:
 ## Indexes & Performance
 
 ### Critical Indexes
+
 ```sql
 -- Transaction performance indexes
 CREATE INDEX idx_transactions_user_date ON transactions(user_id, date DESC);
@@ -364,6 +398,7 @@ CREATE INDEX idx_transactions_description_gin ON transactions USING gin(to_tsvec
 ```
 
 ### Vector Search Index
+
 ```sql
 -- AI embedding similarity search
 CREATE INDEX idx_transactions_embedding ON transactions USING ivfflat (embedding vector_cosine_ops)
@@ -373,6 +408,7 @@ WITH (lists = 100);
 ## Data Types & Enums
 
 ### Custom Types
+
 ```sql
 -- Review status enum
 CREATE TYPE review_status AS ENUM ('pending', 'approved', 'rejected', 'needs_attention');
@@ -382,6 +418,7 @@ CREATE TYPE transaction_type AS ENUM ('debit', 'credit', 'transfer', 'fee');
 ```
 
 ### JSONB Usage
+
 - **user_metadata**: Flexible transaction metadata
 - **preferences**: User settings and preferences
 - **conditions**: Rule matching logic
@@ -390,16 +427,18 @@ CREATE TYPE transaction_type AS ENUM ('debit', 'credit', 'transfer', 'fee');
 ## Migration Strategy
 
 ### Schema Versioning
+
 - Sequential numbered migrations in `sql/` directory
 - Each migration includes both up and down operations
 - Database version tracking in metadata table
 
 ### Example Migration
+
 ```sql
 -- 003_add_transaction_ids.sql
-ALTER TABLE transactions 
+ALTER TABLE transactions
 ADD COLUMN transaction_number TEXT,
-ADD CONSTRAINT unique_transaction_per_account 
+ADD CONSTRAINT unique_transaction_per_account
   UNIQUE(user_id, account_id, transaction_number);
 
 CREATE INDEX idx_transactions_number ON transactions(transaction_number);
@@ -408,12 +447,14 @@ CREATE INDEX idx_transactions_number ON transactions(transaction_number);
 ## Data Integrity & Constraints
 
 ### Business Rules
+
 - **Unique Transactions**: Prevent duplicate transactions per user
 - **Valid Amounts**: Ensure realistic transaction amounts
 - **Date Constraints**: Prevent future-dated transactions
 - **User Isolation**: RLS ensures complete data separation
 
 ### Audit Requirements
+
 - All modifications tracked in `transaction_edits`
 - User actions logged with timestamps
 - API endpoint and user context captured
@@ -422,12 +463,14 @@ CREATE INDEX idx_transactions_number ON transactions(transaction_number);
 ## Integration Patterns
 
 ### Frontend Integration
+
 - Supabase client with automatic RLS enforcement
 - Real-time subscriptions for live updates
 - Optimistic updates with rollback capability
 - Type-safe database operations
 
 ### Backend Integration
+
 - Service account for admin operations
 - Connection pooling for performance
 - Prepared statements for security
@@ -436,12 +479,14 @@ CREATE INDEX idx_transactions_number ON transactions(transaction_number);
 ## Performance Monitoring
 
 ### Key Metrics
+
 - Query execution times by endpoint
 - Index usage and effectiveness
 - Connection pool utilization
 - RLS policy performance impact
 
 ### Optimization Strategies
+
 - Materialized views for complex analytics
 - Partial indexes for filtered queries
 - Query result caching at application layer
@@ -450,12 +495,14 @@ CREATE INDEX idx_transactions_number ON transactions(transaction_number);
 ## Backup & Recovery
 
 ### Backup Strategy
+
 - Automated daily backups via Supabase
 - Point-in-time recovery capability
 - Cross-region backup replication
 - Encrypted backup storage
 
 ### Disaster Recovery
+
 - RTO (Recovery Time Objective): < 1 hour
 - RPO (Recovery Point Objective): < 15 minutes
 - Automated failover procedures
@@ -463,4 +510,4 @@ CREATE INDEX idx_transactions_number ON transactions(transaction_number);
 
 ---
 
-*Updated: September 1, 2025*
+_Updated: September 1, 2025_

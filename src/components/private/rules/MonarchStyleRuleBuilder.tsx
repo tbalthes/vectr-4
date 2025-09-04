@@ -684,7 +684,7 @@ export function MonarchStyleRuleBuilder({
           return rv ? { needs_review: rv === "needs_review" } : {};
         })(),
       },
-  run_on_past: runOnPast,
+      run_on_past: runOnPast,
     };
 
     onSave(ruleData);
@@ -934,33 +934,33 @@ export function MonarchStyleRuleBuilder({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-4 pt-4 border-t">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePreview}
-                disabled={isLoadingPreview}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Preview changes
-              </Button>
-              <span className="text-xs text-gray-500">
-                {isLoadingPreview ? "..." : previewCount}
-              </span>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="runOnPast"
-                checked={runOnPast}
-                onCheckedChange={(v) => setRunOnPast(Boolean(v))}
-              />
-              <Label htmlFor="runOnPast" className="text-xs text-gray-200">
-                Run rule on past transactions
-              </Label>
-            </div>
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePreview}
+              disabled={isLoadingPreview}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview changes
+            </Button>
+            <span className="text-xs text-gray-500">
+              {isLoadingPreview ? "..." : previewCount}
+            </span>
           </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="runOnPast"
+              checked={runOnPast}
+              onCheckedChange={(v) => setRunOnPast(Boolean(v))}
+            />
+            <Label htmlFor="runOnPast" className="text-xs text-gray-200">
+              Run rule on past transactions
+            </Label>
+          </div>
+        </div>
 
         <div className="flex space-x-2">
           <Button variant="outline" onClick={onCancel}>

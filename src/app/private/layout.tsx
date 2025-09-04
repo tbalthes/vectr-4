@@ -57,7 +57,7 @@ export default function PrivateLayout({
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      
+
       {/* Hamburger button for mobile */}
       {!sidebarOpen && (
         <button
@@ -80,11 +80,9 @@ export default function PrivateLayout({
           </svg>
         </button>
       )}
-      
+
       {/* Main content: full width on mobile, adjusted on desktop */}
-      <main className="flex-1 min-w-0">
-        {children}
-      </main>
+      <main className="flex-1 min-w-0">{children}</main>
     </div>
   );
 }

@@ -7,6 +7,7 @@ Vectr-4 is a full-stack financial transaction management application with a Next
 ## Technology Stack
 
 ### Frontend
+
 - **Framework**: Next.js 14 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui components
@@ -15,6 +16,7 @@ Vectr-4 is a full-stack financial transaction management application with a Next
 - **Data Fetching**: Native fetch with Next.js patterns
 
 ### Backend
+
 - **Framework**: Python FastAPI
 - **Language**: Python 3.11+
 - **Database**: PostgreSQL via Supabase
@@ -22,6 +24,7 @@ Vectr-4 is a full-stack financial transaction management application with a Next
 - **API Documentation**: OpenAPI/Swagger auto-generation
 
 ### Infrastructure
+
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with RLS
 - **Hosting**: Vercel (frontend), self-hosted (backend)
@@ -104,6 +107,7 @@ Vectr-4 is a full-stack financial transaction management application with a Next
 The project uses Next.js API routes (the `/api/*` layer) as a lightweight proxy in front of the FastAPI backend. The primary reason is to securely bridge the browser's auth/session context and the server environment so requests can be authorized, shaped, and executed without exposing service credentials or creating CORS/session problems.
 
 Why this matters in this repo:
+
 - Auth/session translation: Next.js middleware and server components can validate Supabase sessions (cookies/JWT) and forward an authenticated context or user_id to FastAPI. This avoids requiring the browser to hold service credentials or to call the backend with raw service keys.
 - Secrets protection: Server-only secrets (service role keys, admin credentials) stay on server routes or API handlers in Next.js and are never exposed to the browser.
 - Cookies, CORS and RLS compatibility: Proxying under the same origin avoids cross-origin cookie issues and makes Supabase RLS and cookie-based sessions reliable for SSR and client requests.
@@ -112,12 +116,13 @@ Why this matters in this repo:
 - Observability & ops: Centralizing logging, metrics, retries, and feature flags in the proxy layer makes operational debugging easier and gives a single place to implement circuit breakers or backoffs.
 
 Practical recommendation:
-- Keep auth-sensitive and admin operations behind the Next.js proxy or call FastAPI from server-side code only; forward session cookies or validated user context and reserve the Supabase service role key for server-only operations.
 
+- Keep auth-sensitive and admin operations behind the Next.js proxy or call FastAPI from server-side code only; forward session cookies or validated user context and reserve the Supabase service role key for server-only operations.
 
 ## Authentication Flow
 
 ### Supabase Authentication
+
 ```
 1. User Login Request
    ├── Email/Password OR OAuth (Google/GitHub)
@@ -138,6 +143,7 @@ Practical recommendation:
 ```
 
 ### Session Management
+
 - **Frontend**: Supabase client handles session refresh
 - **Backend**: Session validation on each request
 - **Security**: RLS policies ensure data isolation
@@ -146,6 +152,7 @@ Practical recommendation:
 ## Data Processing Pipeline
 
 ### Transaction Processing Flow
+
 ```
 CSV Upload → Parse → Validate → Enrich → Store/Return
 
@@ -173,6 +180,7 @@ CSV Upload → Parse → Validate → Enrich → Store/Return
 ```
 
 ### Caching Strategy
+
 - **In-Memory Cache**: Global regex rules, MCC mappings, categories
 - **Cache Refresh**: Manual trigger via special transaction
 - **Performance**: Sub-millisecond lookups for transaction processing
@@ -181,6 +189,7 @@ CSV Upload → Parse → Validate → Enrich → Store/Return
 ## AI Integration Architecture
 
 ### VectrAI System Flow
+
 ```
 User Query → Planner → Validation → Data Fetch → Analysis → Response
 
@@ -204,6 +213,7 @@ User Query → Planner → Validation → Data Fetch → Analysis → Response
 ```
 
 ### AI Safety & Validation
+
 - **Request Validation**: Whitelist allowed analytics endpoints
 - **Quota Management**: Per-user request limiting
 - **Data Sanitization**: Summary format prevents data leakage
@@ -212,6 +222,7 @@ User Query → Planner → Validation → Data Fetch → Analysis → Response
 ## Database Design
 
 ### Core Tables
+
 - **transactions**: User financial transactions
 - **categories**: Hierarchical category system
 - **merchants**: Merchant information and metadata
@@ -219,6 +230,7 @@ User Query → Planner → Validation → Data Fetch → Analysis → Response
 - **global_regex_rules**: System-wide matching patterns
 
 ### Relationships
+
 ```
 users (Supabase Auth)
 ├── transactions (1:many)
@@ -236,6 +248,7 @@ categories
 ```
 
 ### Security (Row Level Security)
+
 - All tables have RLS policies based on user_id
 - Public tables (categories, merchants) have read-only access
 - Audit tables track sensitive operations
@@ -244,18 +257,21 @@ categories
 ## Performance Considerations
 
 ### Frontend Performance
+
 - **Code Splitting**: Route-based and component-based splitting
 - **Lazy Loading**: Components and data loaded on demand
 - **Caching**: Browser caching for static assets
 - **Optimization**: Image optimization, tree shaking
 
 ### Backend Performance
+
 - **In-Memory Caching**: Critical lookup tables cached
 - **Database Indexing**: Optimized queries with proper indexes
 - **Connection Pooling**: Efficient database connection management
 - **Async Processing**: Non-blocking I/O for concurrent requests
 
 ### Scaling Considerations
+
 - **Horizontal Scaling**: Stateless backend services
 - **Database Scaling**: Read replicas for analytics queries
 - **CDN Integration**: Static asset delivery optimization
@@ -264,12 +280,14 @@ categories
 ## Security Architecture
 
 ### Data Protection
+
 - **Encryption**: TLS in transit, encryption at rest
 - **Authentication**: Multi-factor authentication support
 - **Authorization**: Granular permissions with RLS
 - **Input Validation**: Comprehensive request validation
 
 ### API Security
+
 - **Rate Limiting**: Prevent abuse and DoS attacks
 - **CORS**: Properly configured cross-origin policies
 - **Request Validation**: Schema validation for all inputs
@@ -278,12 +296,14 @@ categories
 ## Deployment Architecture
 
 ### Frontend Deployment (Vercel)
+
 - **Build Process**: Next.js static generation
 - **Edge Functions**: API routes deployed to edge
 - **Environment**: Separate staging and production
 - **Monitoring**: Performance and error tracking
 
 ### Backend Deployment
+
 - **Containerization**: Docker containers for consistency
 - **Process Management**: Gunicorn with multiple workers
 - **Health Checks**: Endpoint monitoring and alerting
@@ -292,6 +312,7 @@ categories
 ## Development Workflow
 
 ### Local Development
+
 ```bash
 # Frontend
 npm run dev          # Start Next.js dev server
@@ -303,6 +324,7 @@ python -m uvicorn app.main:app --reload
 ```
 
 ### Testing Strategy
+
 - **Unit Tests**: Component and function testing
 - **Integration Tests**: API endpoint testing
 - **E2E Tests**: Critical user workflow testing
@@ -311,12 +333,14 @@ python -m uvicorn app.main:app --reload
 ## Monitoring & Observability
 
 ### Application Monitoring
+
 - **Error Tracking**: Comprehensive error logging
 - **Performance Metrics**: Response time and throughput
 - **User Analytics**: Usage patterns and feature adoption
 - **Health Checks**: System availability monitoring
 
 ### Business Metrics
+
 - **Transaction Volume**: Processing throughput
 - **Categorization Accuracy**: AI and rule performance
 - **User Engagement**: Feature usage analytics
@@ -331,4 +355,4 @@ python -m uvicorn app.main:app --reload
 
 ---
 
-*Updated: September 1, 2025*
+_Updated: September 1, 2025_

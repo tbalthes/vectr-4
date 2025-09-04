@@ -230,9 +230,9 @@ export function TransactionDetailsDrawer({
       }}
       direction="right"
     >
-  <DrawerContent className="w-96 sm:w-[500px] border-l">
+      <DrawerContent className="w-96 sm:w-[500px] border-l">
         {/* Header with action buttons */}
-  <DrawerHeader className="border-b px-4 py-3">
+        <DrawerHeader className="border-b px-4 py-3">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-lg font-semibold">
               {isEditing ? "Edit Transaction" : "Transaction Details"}
@@ -511,7 +511,14 @@ export function TransactionDetailsDrawer({
                     <div className="w-48 text-right">
                       <CategorySingleSelectPopover
                         value={currentTransaction.category_id || null}
-                        onChange={(categoryId: string | null, category?: { id?: string; name?: string; icon?: string | null } | null) => {
+                        onChange={(
+                          categoryId: string | null,
+                          category?: {
+                            id?: string;
+                            name?: string;
+                            icon?: string | null;
+                          } | null
+                        ) => {
                           if (!editedTransaction) return;
                           if (categoryId) {
                             const merged = {

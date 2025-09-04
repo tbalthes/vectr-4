@@ -7,7 +7,10 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 export async function GET() {
   const supabase = createRouteHandlerClient({ cookies });
 
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
   if (sessionError) {
     return NextResponse.json({ error: sessionError.message }, { status: 500 });
   }

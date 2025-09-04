@@ -586,10 +586,7 @@ function VectrAIWithContext({
 
         {chatMessages.length > 0 && (
           <div className="flex-1 flex flex-col px-6 pt-4 pb-0 overflow-hidden">
-            <Conversation
-              className="flex-1"
-              maxHeight="calc(100vh - 240px)"
-            >
+            <Conversation className="flex-1" maxHeight="calc(100vh - 240px)">
               <ConversationContent>
                 {chatMessages.map((message) => (
                   <Message

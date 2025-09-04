@@ -27,9 +27,11 @@ export interface MerchantWithCount {
 
 export async function GET() {
   try {
-  const requestCookies = await cookies();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createRouteHandlerClient({ cookies: () => (requestCookies as any) });
+    const requestCookies = await cookies();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase = createRouteHandlerClient({
+      cookies: () => requestCookies as any,
+    });
 
     const { data: sessionRes } = await supabase.auth.getSession();
     const user = sessionRes.session?.user;

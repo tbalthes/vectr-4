@@ -46,17 +46,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     React.useState<ChatSession | null>(null);
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [loading, setLoading] = React.useState(false);
-  
+
   // Get the authenticated user
   const { userId, user, loading: authLoading } = useAuth();
-  
+
   // Debug auth state
   React.useEffect(() => {
-    console.log("ChatContext auth state:", { 
-      userId, 
-      hasUser: !!user, 
+    console.log("ChatContext auth state:", {
+      userId,
+      hasUser: !!user,
       authLoading,
-      userEmail: user?.email 
+      userEmail: user?.email,
     });
   }, [userId, user, authLoading]);
 
@@ -88,7 +88,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         userId,
         title,
         userIdType: typeof userId,
-        userIdLength: userId?.length
+        userIdLength: userId?.length,
       });
       if (!userId) {
         console.log("No userId available, returning null");
