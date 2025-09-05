@@ -5,10 +5,14 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { arrayMove } from '@dnd-kit/sortable';
+import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { arrayMove } from "@dnd-kit/sortable";
 import { Account } from "@/hooks/useAccounts";
 import { accountToasts } from "@/lib/notifications/account-notifications";
 import { toast } from "sonner";
@@ -119,7 +123,9 @@ function applySavedOrder(data: GroupData[]): GroupData[] {
   const result = orderedGroups.map((g) => {
     const savedAcc = saved.accountsByGroup[g.id];
     if (!savedAcc) return g;
-    const accMap = new Map<string, TransformedAccount>(g.accounts.map((a) => [a.id, a]));
+    const accMap = new Map<string, TransformedAccount>(
+      g.accounts.map((a) => [a.id, a])
+    );
     const ordered: TransformedAccount[] = [];
     for (const aid of savedAcc) {
       const a = accMap.get(aid);
@@ -265,16 +271,60 @@ const Icons = {
   ),
   eye: (props: IconProps) => (
     <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path
+        d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   ),
   trash: (props: IconProps) => (
     <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path d="m3 6 3 13h12l3-13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="10" y1="11" x2="10" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="14" y1="11" x2="14" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path
+        d="m3 6 3 13h12l3-13"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="10"
+        y1="11"
+        x2="10"
+        y2="17"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="14"
+        y1="11"
+        x2="14"
+        y2="17"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   ),
 };
@@ -286,12 +336,16 @@ interface SparklineProps {
 }
 
 const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
-  const [tooltip, setTooltip] = useState<{x: number, y: number, value: number} | null>(null);
+  const [tooltip, setTooltip] = useState<{
+    x: number;
+    y: number;
+    value: number;
+  } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const width = 120;
   const height = 50;
   const strokeColor = positive ? "#22c55e" : "#ef4444";
-  
+
   if (!data || data.length === 0) {
     return <div className="w-full h-full bg-gray-100 rounded" />;
   }
@@ -404,7 +458,11 @@ interface AccountActionsMenuProps {
   onDelete: (account: TransformedAccount) => void;
 }
 
-const AccountActionsMenu: React.FC<AccountActionsMenuProps> = ({ account, onView, onDelete }) => {
+const AccountActionsMenu: React.FC<AccountActionsMenuProps> = ({
+  account,
+  onView,
+  onDelete,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -416,11 +474,11 @@ const AccountActionsMenu: React.FC<AccountActionsMenuProps> = ({ account, onView
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
 
@@ -442,7 +500,7 @@ const AccountActionsMenu: React.FC<AccountActionsMenuProps> = ({ account, onView
       >
         <Icons.moreVertical className="w-5 h-5" />
       </button>
-      
+
       {isOpen && (
         <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50 min-w-[150px]">
           <button
@@ -505,10 +563,11 @@ const groupAccountsByType = (accounts: Account[]): GroupData[] => {
   };
 
   const grouped = accounts.reduce((acc: Record<string, GroupData>, account) => {
-    const groupKey = account.type || 'other';
+    const groupKey = account.type || "other";
     if (!acc[groupKey]) {
       acc[groupKey] = {
-        ...categoryMap[groupKey as keyof typeof categoryMap] || categoryMap.other,
+        ...(categoryMap[groupKey as keyof typeof categoryMap] ||
+          categoryMap.other),
         id: `group-${groupKey}`,
         accounts: [],
         timeframes: {
@@ -530,13 +589,13 @@ const groupAccountsByType = (accounts: Account[]): GroupData[] => {
         },
       };
     }
-    
+
     // Transform API account to match expected format
     const transformedAccount = {
       id: account.id,
       name: account.name,
       mask: account.mask || "****",
-      type: account.type || 'other',
+      type: account.type || "other",
       subtype: account.subtype,
       institution_name: account.institution_name || "Unknown Bank",
       institution_logo_url: account.institution_logo_url,
@@ -544,7 +603,7 @@ const groupAccountsByType = (accounts: Account[]): GroupData[] => {
       available: account.available,
       last_synced_at: account.last_synced_at || new Date().toISOString(),
     };
-    
+
     acc[groupKey].accounts.push(transformedAccount);
     return acc;
   }, {});
@@ -561,12 +620,16 @@ const groupAccountsByType = (accounts: Account[]): GroupData[] => {
       const days = parseInt(tf.replace("D", ""));
       group.timeframes[tf].history = Array.from(
         { length: Math.max(1, days) },
-        (_, i) => total * (1 + (Math.random() - 0.5) * 0.1 * (i / Math.max(1, days)))
+        (_, i) =>
+          total * (1 + (Math.random() - 0.5) * 0.1 * (i / Math.max(1, days)))
       );
       const changeAmount = (Math.random() - 0.4) * total * 0.05;
       group.timeframes[tf].change = {
         amount: changeAmount,
-        percent: total !== 0 ? parseFloat(((changeAmount / total) * 100).toFixed(2)) : 0,
+        percent:
+          total !== 0
+            ? parseFloat(((changeAmount / total) * 100).toFixed(2))
+            : 0,
         positive: changeAmount >= 0,
       };
     });
@@ -584,12 +647,12 @@ interface AccountLedgerRowProps {
   onDeleteAccount: (account: TransformedAccount) => void;
 }
 
-const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({ 
-  account, 
-  dndAttributes, 
-  dndListeners, 
-  onViewAccount, 
-  onDeleteAccount 
+const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
+  account,
+  dndAttributes,
+  dndListeners,
+  onViewAccount,
+  onDeleteAccount,
 }) => {
   const {
     name,
@@ -600,55 +663,67 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
     available,
     last_synced_at,
   } = account;
-  
+
   return (
-  <div className="flex items-center justify-between px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 first:border-t-0 group">
+    <div className="flex items-center justify-between px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 first:border-t-0 group">
       {/* Left side - Logo and Account Info */}
       <div className="flex items-center space-x-3 flex-1 min-w-0">
         {/* Drag Handle */}
-        <div className="text-slate-300 dark:text-slate-500 cursor-grab hover:text-slate-500 transition-colors" {...dndAttributes} {...dndListeners}>
+        <div
+          className="text-slate-300 dark:text-slate-500 cursor-grab hover:text-slate-500 transition-colors"
+          {...dndAttributes}
+          {...dndListeners}
+        >
           <Icons.grip className="w-3.5 h-3.5" />
         </div>
-        
+
         {/* Institution Logo */}
         <div className="flex-shrink-0">
           <InstitutionLogo url={institution_logo_url} name={institution_name} />
         </div>
-        
+
         {/* Account Details */}
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-slate-900 dark:text-slate-100 truncate text-sm">{name}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{institution_name} •••• {mask}</p>
+          <p className="font-medium text-slate-900 dark:text-slate-100 truncate text-sm">
+            {name}
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {institution_name} •••• {mask}
+          </p>
         </div>
       </div>
-      
+
       {/* Right side - Balance and Actions */}
       <div className="flex items-center space-x-3">
         {/* Balance */}
         <div className="text-right">
           <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
-            ${Math.abs(balance_amount).toLocaleString("en-US", {
+            $
+            {Math.abs(balance_amount).toLocaleString("en-US", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
           </p>
-          {available !== null && available !== undefined && available !== balance_amount && (
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Available: ${available.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </p>
-          )}
+          {available !== null &&
+            available !== undefined &&
+            available !== balance_amount && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Available: $
+                {available.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+            )}
         </div>
-        
+
         {/* Last Synced */}
-  <div className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">
+        <div className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">
           {timeAgo(last_synced_at)}
         </div>
-        
+
         {/* Actions Menu */}
-  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
           <AccountActionsMenu
             account={account}
             onView={onViewAccount}
@@ -667,10 +742,10 @@ interface SortableAccountLedgerRowProps {
   onDeleteAccount: (account: TransformedAccount) => void;
 }
 
-const SortableAccountLedgerRow: React.FC<SortableAccountLedgerRowProps> = ({ 
-  account, 
-  onViewAccount, 
-  onDeleteAccount 
+const SortableAccountLedgerRow: React.FC<SortableAccountLedgerRowProps> = ({
+  account,
+  onViewAccount,
+  onDeleteAccount,
 }) => {
   const {
     attributes,
@@ -678,20 +753,20 @@ const SortableAccountLedgerRow: React.FC<SortableAccountLedgerRowProps> = ({
     setNodeRef,
     transform,
     transition,
-    isDragging
+    isDragging,
   } = useSortable({ id: account.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    backgroundColor: isDragging ? '#f1f5f9' : 'transparent',
+    backgroundColor: isDragging ? "#f1f5f9" : "transparent",
   };
 
   return (
-  <div ref={setNodeRef} style={style}>
-      <AccountLedgerRow 
-        account={account} 
-        dndAttributes={attributes} 
+    <div ref={setNodeRef} style={style}>
+      <AccountLedgerRow
+        account={account}
+        dndAttributes={attributes}
         dndListeners={listeners}
         onViewAccount={onViewAccount}
         onDeleteAccount={onDeleteAccount}
@@ -709,19 +784,19 @@ interface FinancialInsightCardProps {
   onDeleteAccount: (account: TransformedAccount) => void;
 }
 
-const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({ 
-  groupData, 
-  dndAttributes, 
-  dndListeners, 
-  onViewAccount, 
-  onDeleteAccount 
+const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
+  groupData,
+  dndAttributes,
+  dndListeners,
+  onViewAccount,
+  onDeleteAccount,
 }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [activeTimeframe, setActiveTimeframe] = useState("30D");
   const { category, icon, timeframes, accounts } = groupData;
   const { totalBalance, change, history } = timeframes[activeTimeframe];
   const IconComponent = Icons[icon as keyof typeof Icons];
-  
+
   const formattedBalance = totalBalance.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
@@ -729,7 +804,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
 
   const [shimmerActive, setShimmerActive] = useState(false);
   return (
-  <div className="bg-card rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-border group/card hover:scale-[1.02] hover:border-slate-300 dark:hover:border-slate-700">
+    <div className="bg-card rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-border group/card hover:scale-[1.02] hover:border-slate-300 dark:hover:border-slate-700">
       {/* Shimmer Animation Styles */}
       <style>{`
         @keyframes vectr-shimmer {
@@ -761,7 +836,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
       `}</style>
 
       {/* Card Header */}
-  <div className="flex items-center justify-between p-5 pb-3">
+      <div className="flex items-center justify-between p-5 pb-3">
         <div className="flex items-center space-x-3">
           <div
             className="flex-shrink-0 text-slate-300 cursor-grab hover:text-slate-500 transition-colors"
@@ -799,21 +874,26 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
       </div>
 
       {/* Balance and Chart */}
-  <div className="px-6 pb-4">
-        <div className="flex items-center justify-between" onMouseEnter={() => setShimmerActive(true)}>
+      <div className="px-6 pb-4">
+        <div
+          className="flex items-center justify-between"
+          onMouseEnter={() => setShimmerActive(true)}
+        >
           <div>
             <p
-              className={`text-xl font-bold text-slate-900 dark:text-slate-100 ${shimmerActive ? 'vectr-shift vectr-run' : ''}`}
+              className={`text-xl font-bold text-slate-900 dark:text-slate-100 ${
+                shimmerActive ? "vectr-shift vectr-run" : ""
+              }`}
               data-text={formattedBalance}
               onMouseEnter={() => setShimmerActive(true)}
               onAnimationEnd={() => setShimmerActive(false)}
             >
               {formattedBalance}
             </p>
-    <div className="flex items-center mt-0.5">
+            <div className="flex items-center mt-0.5">
               <span
                 className={`text-xs font-medium ${
-      change.positive ? "text-green-600" : "text-red-500"
+                  change.positive ? "text-green-600" : "text-red-500"
                 }`}
               >
                 {change.positive ? "▲" : "▼"} {Math.abs(change.percent)}%
@@ -848,8 +928,6 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
         </div>
       </div>
 
-     
-
       {/* Accounts List */}
       <div
         className={`transition-all duration-300 ease-in-out ${
@@ -883,18 +961,16 @@ interface SortableFinancialInsightCardProps {
   onDeleteAccount: (account: TransformedAccount) => void;
 }
 
-const SortableFinancialInsightCard: React.FC<SortableFinancialInsightCardProps> = ({ 
-  groupData, 
-  onViewAccount, 
-  onDeleteAccount 
-}) => {
+const SortableFinancialInsightCard: React.FC<
+  SortableFinancialInsightCardProps
+> = ({ groupData, onViewAccount, onDeleteAccount }) => {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-    isDragging
+    isDragging,
   } = useSortable({ id: groupData.id });
 
   const style = {
@@ -906,9 +982,9 @@ const SortableFinancialInsightCard: React.FC<SortableFinancialInsightCardProps> 
 
   return (
     <div ref={setNodeRef} style={style}>
-      <FinancialInsightCard 
-        groupData={groupData} 
-        dndAttributes={attributes} 
+      <FinancialInsightCard
+        groupData={groupData}
+        dndAttributes={attributes}
         dndListeners={listeners}
         onViewAccount={onViewAccount}
         onDeleteAccount={onDeleteAccount}
@@ -952,7 +1028,7 @@ export function LuxuryAccountsGrid({
     const overId = String(over.id);
 
     // Check if we are dragging a card
-    if (activeId.startsWith('group-') && overId.startsWith('group-')) {
+    if (activeId.startsWith("group-") && overId.startsWith("group-")) {
       if (activeId !== overId) {
         setSortedGroupedData((items: GroupData[]) => {
           const oldIndex = items.findIndex((item) => item.id === activeId);
@@ -965,7 +1041,7 @@ export function LuxuryAccountsGrid({
     }
 
     // Check if we are dragging a row (active is an account id)
-    else if (!activeId.startsWith('group-')) {
+    else if (!activeId.startsWith("group-")) {
       setSortedGroupedData((prevData: GroupData[]) => {
         const newData = [...prevData];
         const findPos = (id: string): { g: number; i: number } | null => {
@@ -978,9 +1054,10 @@ export function LuxuryAccountsGrid({
         const activePos = findPos(activeId);
         // over may be a row id or a group id; if group id, place at end of that group
         let overPos: { g: number; i: number } | null = null;
-        if (overId.startsWith('group-')) {
+        if (overId.startsWith("group-")) {
           const gi = newData.findIndex((g) => g.id === overId);
-          if (gi !== -1) overPos = { g: gi, i: newData[gi].accounts.length - 1 };
+          if (gi !== -1)
+            overPos = { g: gi, i: newData[gi].accounts.length - 1 };
         } else {
           overPos = findPos(overId);
         }
@@ -1000,21 +1077,21 @@ export function LuxuryAccountsGrid({
   };
 
   const handleViewAccount = (account: TransformedAccount) => {
-    console.log('View account:', account);
+    console.log("View account:", account);
     toast.info(`Viewing details for ${account.name}`);
   };
 
   const handleDeleteAccount = async (account: TransformedAccount) => {
     try {
       // Remove from local state immediately for better UX
-      setAccounts(prev => prev.filter(a => a.id !== account.id));
+      setAccounts((prev) => prev.filter((a) => a.id !== account.id));
       toast.success(`Account ${account.name} has been removed`);
-      console.log('Delete account:', account);
+      console.log("Delete account:", account);
     } catch (error) {
       // Revert the local state if delete fails
       setAccounts(initialAccounts);
-      toast.error('Failed to delete account');
-      console.error('Error deleting account:', error);
+      toast.error("Failed to delete account");
+      console.error("Error deleting account:", error);
     }
   };
 
@@ -1033,7 +1110,11 @@ export function LuxuryAccountsGrid({
     try {
       const result = await onSyncAll();
       if (result) {
-        accountToasts.bulkSyncComplete(result.successful, result.failed, result.failedAccounts);
+        accountToasts.bulkSyncComplete(
+          result.successful,
+          result.failed,
+          result.failedAccounts
+        );
       }
     } catch (error) {
       console.error("Error syncing all accounts:", error);
@@ -1128,10 +1209,13 @@ export function LuxuryAccountsGrid({
         </div>
 
         {/* Luxury Account Cards Grid */}
-        <SortableContext items={sortedGroupedData.map((g: GroupData) => g.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={sortedGroupedData.map((g: GroupData) => g.id)}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-5">
             {sortedGroupedData.map((group: GroupData) => (
-              <SortableFinancialInsightCard 
+              <SortableFinancialInsightCard
                 key={group.id}
                 groupData={group}
                 onViewAccount={handleViewAccount}

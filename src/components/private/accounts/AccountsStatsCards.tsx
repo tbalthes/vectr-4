@@ -103,7 +103,9 @@ export function AccountsStatsCards({
           <div className="text-2xl font-bold text-red-600">
             {formatCurrency(totalDebt)}
           </div>
-          <p className="text-xs text-muted-foreground">All loan and credit balances</p>
+          <p className="text-xs text-muted-foreground">
+            All loan and credit balances
+          </p>
         </CardContent>
       </Card>
 

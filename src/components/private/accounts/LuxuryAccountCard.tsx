@@ -1,8 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { DndContext, closestCenter } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 // --- DATA PROCESSING & GROUPING LOGIC ---
 type Account = {
@@ -35,7 +40,10 @@ interface GroupData {
 }
 
 const groupAccountsByType = (accounts: Account[]) => {
-  const categoryMap: Record<string, { category: string; icon: keyof typeof Icons }> = {
+  const categoryMap: Record<
+    string,
+    { category: string; icon: keyof typeof Icons }
+  > = {
     depository: { category: "Cash & Liquid Assets", icon: "cash" },
     investment: { category: "Investments", icon: "invest" },
     credit: { category: "Credit Cards", icon: "credit" },
@@ -54,7 +62,11 @@ const groupAccountsByType = (accounts: Account[]) => {
       timeframes: {
         [key: string]: {
           totalBalance: number;
-          change: { amount: number; percent: number | string; positive: boolean };
+          change: {
+            amount: number;
+            percent: number | string;
+            positive: boolean;
+          };
           history: number[];
         };
       };
@@ -62,7 +74,9 @@ const groupAccountsByType = (accounts: Account[]) => {
   };
 
   const grouped = accounts.reduce((acc: GroupedType, account) => {
-    const groupKey = (account.type in categoryMap ? account.type : "other") as CategoryKey;
+    const groupKey = (
+      account.type in categoryMap ? account.type : "other"
+    ) as CategoryKey;
     if (!acc[groupKey]) {
       acc[groupKey] = {
         ...categoryMap[groupKey],
@@ -327,22 +341,73 @@ const Icons = {
   ),
   eye: (p: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" {...p}>
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path
+        d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   ),
   trash: (p: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" {...p}>
-      <path d="m3 6 3 13h12l3-13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="10" y1="11" x2="10" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <line x1="14" y1="11" x2="14" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path
+        d="m3 6 3 13h12l3-13"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="10"
+        y1="11"
+        x2="10"
+        y2="17"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="14"
+        y1="11"
+        x2="14"
+        y2="17"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   ),
 };
 
-const InteractiveSparkline: React.FC<{ data: number[]; positive: boolean }> = ({ data, positive }) => {
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; value: number } | null>(null);
+const InteractiveSparkline: React.FC<{ data: number[]; positive: boolean }> = ({
+  data,
+  positive,
+}) => {
+  const [tooltip, setTooltip] = useState<{
+    x: number;
+    y: number;
+    value: number;
+  } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const width = 120;
   const height = 50;
@@ -467,11 +532,11 @@ const AccountActionsMenu = ({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
 
@@ -493,7 +558,7 @@ const AccountActionsMenu = ({
       >
         <Icons.moreVertical className="w-5 h-5" />
       </button>
-      
+
       {isOpen && (
         <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50 min-w-[150px]">
           <button
@@ -516,7 +581,10 @@ const AccountActionsMenu = ({
   );
 };
 
-const InstitutionLogo: React.FC<{ url: string | null; name: string }> = ({ url, name }) => {
+const InstitutionLogo: React.FC<{ url: string | null; name: string }> = ({
+  url,
+  name,
+}) => {
   const [hasError, setHasError] = useState(false);
   const fallbackInitial = name ? name.charAt(0).toUpperCase() : "?";
 
@@ -547,7 +615,13 @@ type AccountLedgerRowProps = {
   onDeleteAccount: (account: Account) => void;
 };
 
-const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({ account, dndAttributes, dndListeners, onViewAccount, onDeleteAccount }) => {
+const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
+  account,
+  dndAttributes,
+  dndListeners,
+  onViewAccount,
+  onDeleteAccount,
+}) => {
   const {
     name,
     mask,
@@ -557,10 +631,14 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({ account, dndAttribu
     available,
     last_synced_at,
   } = account;
-  
+
   return (
     <div className="flex items-center py-4 px-5 border-t border-slate-200/60 group">
-      <div className="text-slate-300 cursor-grab group-hover:text-slate-500 transition-colors" {...dndAttributes} {...dndListeners}>
+      <div
+        className="text-slate-300 cursor-grab group-hover:text-slate-500 transition-colors"
+        {...dndAttributes}
+        {...dndListeners}
+      >
         <Icons.grip className="w-5 h-5 -ml-1" />
       </div>
       <div className="flex-shrink-0 mr-4 ml-3">
@@ -591,7 +669,7 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({ account, dndAttribu
           )}
         </div>
         <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <AccountActionsMenu 
+          <AccountActionsMenu
             account={account}
             onView={onViewAccount}
             onDelete={onDeleteAccount}
@@ -608,27 +686,31 @@ type SortableAccountLedgerRowProps = {
   onDeleteAccount: (account: Account) => void;
 };
 
-const SortableAccountLedgerRow: React.FC<SortableAccountLedgerRowProps> = ({ account, onViewAccount, onDeleteAccount }) => {
+const SortableAccountLedgerRow: React.FC<SortableAccountLedgerRowProps> = ({
+  account,
+  onViewAccount,
+  onDeleteAccount,
+}) => {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-    isDragging
+    isDragging,
   } = useSortable({ id: account.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    backgroundColor: isDragging ? '#f1f5f9' : 'transparent',
+    backgroundColor: isDragging ? "#f1f5f9" : "transparent",
   };
 
   return (
     <div ref={setNodeRef} style={style}>
-      <AccountLedgerRow 
-        account={account} 
-        dndAttributes={attributes} 
+      <AccountLedgerRow
+        account={account}
+        dndAttributes={attributes}
         dndListeners={listeners}
         onViewAccount={onViewAccount}
         onDeleteAccount={onDeleteAccount}
@@ -657,7 +739,13 @@ type FinancialInsightCardProps = {
   onDeleteAccount: (account: Account) => void;
 };
 
-const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({ groupData, dndAttributes, dndListeners, onViewAccount, onDeleteAccount }) => {
+const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
+  groupData,
+  dndAttributes,
+  dndListeners,
+  onViewAccount,
+  onDeleteAccount,
+}) => {
   const [isOpen, setIsOpen] = useState(true);
   const [activeTimeframe, setActiveTimeframe] = useState("30D");
   const { category, icon, timeframes, accounts } = groupData;
@@ -674,7 +762,11 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({ groupData, 
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-start">
-          <div className="flex-shrink-0 text-slate-400 cursor-grab pr-4 pt-1" {...dndAttributes} {...dndListeners}>
+          <div
+            className="flex-shrink-0 text-slate-400 cursor-grab pr-4 pt-1"
+            {...dndAttributes}
+            {...dndListeners}
+          >
             <Icons.grip className="w-6 h-6" />
           </div>
           <div className="flex-grow">
@@ -741,11 +833,14 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({ groupData, 
           isOpen ? "max-h-[1000px]" : "max-h-0"
         }`}
       >
-        <SortableContext items={accounts.map(a => a.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={accounts.map((a) => a.id)}
+          strategy={verticalListSortingStrategy}
+        >
           <div>
             {accounts.map((account) => (
-              <SortableAccountLedgerRow 
-                key={account.id} 
+              <SortableAccountLedgerRow
+                key={account.id}
                 account={account}
                 onViewAccount={onViewAccount}
                 onDeleteAccount={onDeleteAccount}
@@ -764,14 +859,16 @@ type SortableFinancialInsightCardProps = {
   onDeleteAccount: (account: Account) => void;
 };
 
-const SortableFinancialInsightCard: React.FC<SortableFinancialInsightCardProps> = ({ groupData, onViewAccount, onDeleteAccount }) => {
+const SortableFinancialInsightCard: React.FC<
+  SortableFinancialInsightCardProps
+> = ({ groupData, onViewAccount, onDeleteAccount }) => {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-    isDragging
+    isDragging,
   } = useSortable({ id: groupData.id });
 
   const style = {
@@ -783,9 +880,9 @@ const SortableFinancialInsightCard: React.FC<SortableFinancialInsightCardProps> 
 
   return (
     <div ref={setNodeRef} style={style}>
-      <FinancialInsightCard 
-        groupData={groupData} 
-        dndAttributes={attributes} 
+      <FinancialInsightCard
+        groupData={groupData}
+        dndAttributes={attributes}
         dndListeners={listeners}
         onViewAccount={onViewAccount}
         onDeleteAccount={onDeleteAccount}
@@ -799,17 +896,22 @@ interface LuxuryAccountCardProps {
   accounts: Account[];
 }
 
-export default function LuxuryAccountCard({ accounts = [] }: LuxuryAccountCardProps) {
-  const initialGroupedData = useMemo(() => groupAccountsByType(accounts), [accounts]);
+export default function LuxuryAccountCard({
+  accounts = [],
+}: LuxuryAccountCardProps) {
+  const initialGroupedData = useMemo(
+    () => groupAccountsByType(accounts),
+    [accounts]
+  );
   const [groupedData, setGroupedData] = useState(initialGroupedData);
-  
+
   // Update grouped data when accounts change
   useEffect(() => {
     const fresh = groupAccountsByType(accounts);
     setGroupedData(fresh);
   }, [accounts]);
 
-  const handleDragEnd = (event: import('@dnd-kit/core').DragEndEvent) => {
+  const handleDragEnd = (event: import("@dnd-kit/core").DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
@@ -818,32 +920,44 @@ export default function LuxuryAccountCard({ accounts = [] }: LuxuryAccountCardPr
 
     // Check if we are dragging a card
     if (
-      String(activeId).startsWith('group-') &&
-      String(overId).startsWith('group-')
+      String(activeId).startsWith("group-") &&
+      String(overId).startsWith("group-")
     ) {
       if (activeId !== overId) {
         setGroupedData((items: GroupData[]) => {
-          const oldIndex = items.findIndex((item: GroupData) => item.id === activeId);
-          const newIndex = items.findIndex((item: GroupData) => item.id === overId);
+          const oldIndex = items.findIndex(
+            (item: GroupData) => item.id === activeId
+          );
+          const newIndex = items.findIndex(
+            (item: GroupData) => item.id === overId
+          );
           return arrayMove(items, oldIndex, newIndex);
         });
       }
     }
 
     if (
-      String(activeId).startsWith('acc-') &&
-      String(overId).startsWith('acc-')
+      String(activeId).startsWith("acc-") &&
+      String(overId).startsWith("acc-")
     ) {
       setGroupedData((prevData: GroupData[]) => {
         const newData = [...prevData];
-        const activeGroupIndex = newData.findIndex((group: GroupData) => group.accounts.some((acc: Account) => acc.id === activeId));
-        const overGroupIndex = newData.findIndex((group: GroupData) => group.accounts.some((acc: Account) => acc.id === overId));
+        const activeGroupIndex = newData.findIndex((group: GroupData) =>
+          group.accounts.some((acc: Account) => acc.id === activeId)
+        );
+        const overGroupIndex = newData.findIndex((group: GroupData) =>
+          group.accounts.some((acc: Account) => acc.id === overId)
+        );
 
         // Handle reordering within the same group
         if (activeGroupIndex === overGroupIndex) {
           const group = newData[activeGroupIndex];
-          const oldIndex = group.accounts.findIndex((acc: Account) => acc.id === activeId);
-          const newIndex = group.accounts.findIndex((acc: Account) => acc.id === overId);
+          const oldIndex = group.accounts.findIndex(
+            (acc: Account) => acc.id === activeId
+          );
+          const newIndex = group.accounts.findIndex(
+            (acc: Account) => acc.id === overId
+          );
           if (oldIndex !== newIndex) {
             group.accounts = arrayMove(group.accounts, oldIndex, newIndex);
           }
@@ -854,18 +968,22 @@ export default function LuxuryAccountCard({ accounts = [] }: LuxuryAccountCardPr
   };
 
   const handleViewAccount = (account: Account) => {
-    console.log('View account:', account);
+    console.log("View account:", account);
     // Implement view account logic here
   };
 
   const handleDeleteAccount = (account: Account) => {
-    console.log('Delete account:', account);
+    console.log("Delete account:", account);
     // Implement delete account logic here
     setGroupedData((prevData: GroupData[]) => {
-      return prevData.map((group: GroupData) => ({
-        ...group,
-        accounts: group.accounts.filter((acc: Account) => acc.id !== account.id)
-      })).filter((group: GroupData) => group.accounts.length > 0);
+      return prevData
+        .map((group: GroupData) => ({
+          ...group,
+          accounts: group.accounts.filter(
+            (acc: Account) => acc.id !== account.id
+          ),
+        }))
+        .filter((group: GroupData) => group.accounts.length > 0);
     });
   };
 
@@ -886,11 +1004,14 @@ export default function LuxuryAccountCard({ accounts = [] }: LuxuryAccountCardPr
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext items={groupedData.map((g: GroupData) => g.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext
+              items={groupedData.map((g: GroupData) => g.id)}
+              strategy={verticalListSortingStrategy}
+            >
               <div>
                 {groupedData.map((group: GroupData) => (
-                  <SortableFinancialInsightCard 
-                    key={group.id} 
+                  <SortableFinancialInsightCard
+                    key={group.id}
                     groupData={group}
                     onViewAccount={handleViewAccount}
                     onDeleteAccount={handleDeleteAccount}

@@ -3,15 +3,31 @@
 import React, { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw, Eye, EyeOff, MoreHorizontal, Building2 } from "lucide-react";
+import {
+  AlertCircle,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  MoreHorizontal,
+  Building2,
+} from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import Image from "next/image";
-import { DndContext, closestCenter } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { arrayMove } from '@dnd-kit/sortable';
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
 import LuxuryAccountCard from "./LuxuryAccountCard";
 import { Account } from "@/hooks/useAccounts";
 import { accountToasts } from "@/lib/notifications/account-notifications";
