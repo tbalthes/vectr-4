@@ -16,6 +16,12 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: unknown }>;
+  signUp: (
+    email: string,
+    password: string,
+    name?: string
+  ) => Promise<{ error: unknown }>;
   // Optional: Expose the client if other components need it
   supabase: SupabaseClient;
 }
@@ -34,7 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       console.log(`Initial session. User: ${session?.user?.id ?? "null"}`);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -76,7 +84,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   };
 
-  const value = { user, loading, signOut, supabase };
+  const signIn = async (email: string, password: string) => {
+    const res = await supabase.auth.signInWithPassword({ email, password });
+    if (res.error) return { error: res.error };
+    if (res.data?.user) setUser(res.data.user);
+    return { error: null };
+  };
+
+  const signUp = async (email: string, password: string, name?: string) => {
+    const res = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } },
+    });
+    if (res.error) return { error: res.error };
+    if (res.data?.user) setUser(res.data.user);
+    return { error: null };
+  };
+
+  const value = { user, loading, signOut, signIn, signUp, supabase };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 export default function AuthForm() {

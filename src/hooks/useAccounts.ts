@@ -12,11 +12,18 @@ export interface Account {
   balance_amount: number;
   available?: number;
   type: string;
+  subtype?: string;
   currency?: string;
+  provider?: string;
+  aggregator_account_id?: string;
+  institution_id?: string;
   institution_name?: string;
   institution_logo_url?: string;
+  institution_url?: string;
+  institution_primary_color?: string;
+  account_logo?: string;
   last_synced_at?: string;
-  provider?: string;
+  as_of?: string;
 }
 
 export function useAccounts() {
@@ -36,10 +43,16 @@ export function useAccounts() {
       }
 
       const data = await response.json();
+      const previousCount = accounts.length;
       setAccounts(data.accounts || []);
 
-      if (showNotifications && data.accounts?.length > 0) {
-        accountToasts.bulkSuccess(data.accounts.length, "refreshed");
+      // Only show bulk success toast for explicit refresh actions 
+      // (when showNotifications is true AND we're not adding new accounts)
+      if (showNotifications && data.accounts?.length > 0 && data.accounts.length === previousCount) {
+        // Small delay to avoid overlapping with other notifications
+        setTimeout(() => {
+          accountToasts.bulkSuccess(data.accounts.length, "refreshed");
+        }, 500);
       }
     } catch (err) {
       console.error("Error fetching accounts:", err);
@@ -54,7 +67,7 @@ export function useAccounts() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [accounts.length]);
 
   // Enhanced sync function with notifications
   const { startAccountSync, updateAccountSync, completeAccountSync, errorAccountSync } =
@@ -123,7 +136,7 @@ export function useAccounts() {
   );
 
   // Enhanced bulk sync function
-  const { startBulkSync, updateBulkSync, completeBulkSync } = useAccountSync();
+  const { startBulkSync, completeBulkSync } = useAccountSync();
 
   const syncAllAccounts = useCallback(async () => {
     if (accounts.length === 0) {
@@ -175,7 +188,7 @@ export function useAccounts() {
       accountToasts.syncError("bulk sync", errorMessage, true);
       throw err;
     }
-  }, [accounts, fetchAccounts, startBulkSync, updateBulkSync, completeBulkSync]);
+  }, [accounts, fetchAccounts, startBulkSync, completeBulkSync]);
 
   useEffect(() => {
     fetchAccounts();

@@ -26,128 +26,26 @@ export async function POST(req: Request) {
       { status: 400 }
     );
 
-  const useMock =
-    !process.env.PLAID_CLIENT_ID ||
-    !process.env.PLAID_SECRET ||
-    public_token.startsWith("public-sandbox-test-") ||
-    public_token.startsWith("public-sandbox-guest-");
+  // Validate required environment variables
+  if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
+    console.error("Missing required Plaid configuration:");
+    console.error("- PLAID_CLIENT_ID present:", !!process.env.PLAID_CLIENT_ID);
+    console.error("- PLAID_SECRET present:", !!process.env.PLAID_SECRET);
+    return NextResponse.json(
+      {
+        error:
+          "Plaid configuration missing. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.",
+      },
+      { status: 500 }
+    );
+  }
 
   console.log("Exchange token request received:");
   console.log("- public_token:", public_token.substring(0, 20) + "...");
-  console.log("- useMock:", useMock);
-  console.log("- PLAID_CLIENT_ID present:", !!process.env.PLAID_CLIENT_ID);
-  console.log("- PLAID_SECRET present:", !!process.env.PLAID_SECRET);
-  console.log(
-    "- Force mock for test token:",
-    public_token.startsWith("public-sandbox-test-")
-  );
-  console.log(
-    "- Force mock for guest token:",
-    public_token.startsWith("public-sandbox-guest-")
-  );
+  console.log("- PLAID_ENV:", process.env.PLAID_ENV || "sandbox");
 
   try {
-    if (useMock) {
-      console.log("Using mock Plaid integration...");
-      // Create mock institution and accounts for development
-      const mockInstitution = {
-        id: crypto.randomUUID(), // Use proper UUID
-        provider: "plaid" as const,
-        name: "Mock Bank",
-        logo_url: null,
-      };
-
-      const { data: institution, error: instError } = await supabase
-        .from("institutions")
-        .insert(mockInstitution)
-        .select()
-        .single();
-
-      if (instError) {
-        console.error("Institution insert error:", instError);
-        return NextResponse.json({ error: instError.message }, { status: 500 });
-      }
-      console.log("Created institution:", institution);
-
-      // Create account_link
-      const { error: linkError } = await supabase.from("account_links").insert({
-        user_id: session.user.id,
-        provider: "plaid",
-        item_id: `mock-item-${Date.now()}`,
-        access_token_encrypted: `mock-access-token-from-${public_token}`,
-        status: "active",
-      });
-
-      if (linkError) {
-        console.error("Account link insert error:", linkError);
-        return NextResponse.json({ error: linkError.message }, { status: 500 });
-      }
-      console.log("Created account link");
-
-      // Create mock accounts
-      const mockAccounts = [
-        {
-          user_id: session.user.id,
-          name: "Plaid Checking",
-          mask: "0000",
-          type: "checking",
-          currency: "USD",
-          provider: "plaid",
-          aggregator_account_id: `plaid-acc-${Date.now()}-1`,
-          institution_id: institution.id,
-          plaid_access_token: `mock-access-token-${Date.now()}-1`,
-          last_synced_at: new Date().toISOString(),
-        },
-        {
-          user_id: session.user.id,
-          name: "Plaid Savings",
-          mask: "1111",
-          type: "savings",
-          currency: "USD",
-          provider: "plaid",
-          aggregator_account_id: `plaid-acc-${Date.now()}-2`,
-          institution_id: institution.id,
-          plaid_access_token: `mock-access-token-${Date.now()}-2`,
-          last_synced_at: new Date().toISOString(),
-        },
-      ];
-
-      const { data: accounts, error: accountsError } = await supabase
-        .from("accounts")
-        .insert(mockAccounts)
-        .select();
-
-      if (accountsError) {
-        console.error("Accounts insert error:", accountsError);
-        return NextResponse.json(
-          { error: accountsError.message },
-          { status: 500 }
-        );
-      }
-      console.log("Created accounts:", accounts);
-
-      // Create mock balances
-      const mockBalances =
-        accounts?.map((account) => ({
-          account_id: account.id,
-          balance_amount: Math.floor(Math.random() * 10000) + 1000, // Random balance 1000-11000
-          available: Math.floor(Math.random() * 5000) + 500,
-          as_of: new Date().toISOString(),
-        })) || [];
-
-      if (mockBalances.length > 0) {
-        const { error: balancesError } = await supabase
-          .from("balances")
-          .insert(mockBalances);
-
-        if (balancesError)
-          console.warn("Failed to create mock balances:", balancesError);
-      }
-
-      return NextResponse.json({ ok: true, mocked: true });
-    }
-
-    // Real Plaid integration
+    // Plaid integration
     const configuration = new Configuration({
       basePath:
         PlaidEnvironments[
@@ -203,13 +101,27 @@ export async function POST(req: Request) {
         country_codes: [CountryCode.Us],
       });
       institution = institutionResponse.data.institution;
-      console.log("Institution details fetched:", institution.name);
+      console.log("Institution details fetched:", {
+        name: institution.name,
+        institution_id: institution.institution_id,
+        logo: institution.logo,
+        primary_color: institution.primary_color,
+        url: institution.url,
+        has_logo: !!institution.logo,
+      });
     }
 
     // Store institution
     console.log("Storing institution in database...");
     let institutionRecord = null;
     if (institution) {
+      console.log("Institution data to store:", {
+        id: institution.institution_id,
+        name: institution.name,
+        logo_url: institution.logo || null,
+        has_logo: !!institution.logo,
+      });
+
       // First try to find existing institution
       const { data: existingInstitution } = await supabase
         .from("institutions")
@@ -229,6 +141,12 @@ export async function POST(req: Request) {
             provider: "plaid",
             name: institution.name,
             logo_url: institution.logo || null,
+            url: institution.url || null,
+            primary_color: institution.primary_color || null,
+            country_codes: institution.country_codes || null,
+            metadata: {
+              plaid_institution_data: institution,
+            },
           })
           .select()
           .single();
@@ -266,6 +184,7 @@ export async function POST(req: Request) {
       name: account.name,
       mask: account.mask || null,
       type: account.type.toLowerCase(),
+      subtype: account.subtype || null,
       currency: account.balances.iso_currency_code || "USD",
       provider: "plaid",
       aggregator_account_id: account.account_id,
@@ -328,6 +247,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       accounts: createdAccounts?.length || 0,
+      accountName: createdAccounts?.[0]?.name || "Unknown Account",
     });
   } catch (error) {
     console.error("Plaid token exchange error:", error);

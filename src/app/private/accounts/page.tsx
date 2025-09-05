@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/private/PageHeader";
-import { AccountsGrid } from "@/components/private/accounts/AccountsGrid";
+import { LuxuryAccountsGrid } from "@/components/private/accounts/LuxuryAccountsGrid";
 import { AccountsStatsCards } from "@/components/private/accounts/AccountsStatsCards";
 import { ConnectAccountModal } from "@/components/private/accounts/ConnectAccountModal";
 import { useAccounts } from "@/hooks/useAccounts";
@@ -15,7 +15,7 @@ export default function AccountsPage() {
 
   const handleAccountConnected = () => {
     setShowConnectModal(false);
-    refetch(true); // Show notifications on manual refresh
+    refetch(false); // Don't show notifications - we already showed success for account creation
   };
 
   const handleRefresh = async () => {
@@ -35,7 +35,7 @@ export default function AccountsPage() {
               onClick={() => setShowConnectModal(true)}
             >
               <LinkIcon className="mr-2 h-4 w-4" />
-              Connect Account
+              Add Account
             </Button>
           </div>
         }
@@ -46,7 +46,7 @@ export default function AccountsPage() {
         <AccountsStatsCards accounts={accounts} loading={loading} />
 
         {/* Accounts Grid */}
-        <AccountsGrid
+        <LuxuryAccountsGrid
           accounts={accounts}
           loading={loading}
           error={error}

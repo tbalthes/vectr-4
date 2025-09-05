@@ -51,7 +51,7 @@ import Link from "next/link";
 
 import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
 import { useCategories } from "@/hooks/useCategories";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Type definitions for rule structure
 interface RuleCondition {

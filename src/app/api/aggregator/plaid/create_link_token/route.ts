@@ -33,13 +33,21 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const useMock = !process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET;
-  console.log("Using mock:", useMock);
-
-  if (useMock) {
-    console.log("Returning mock link token");
-    return NextResponse.json({ link_token: "mock-link-token" });
+  // Validate required environment variables
+  if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
+    console.error("Missing required Plaid configuration:");
+    console.error("- PLAID_CLIENT_ID present:", !!process.env.PLAID_CLIENT_ID);
+    console.error("- PLAID_SECRET present:", !!process.env.PLAID_SECRET);
+    return NextResponse.json(
+      {
+        error:
+          "Plaid configuration missing. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.",
+      },
+      { status: 500 }
+    );
   }
+
+  console.log("Using Plaid environment:", process.env.PLAID_ENV || "sandbox");
 
   console.log("=== PLAID SANDBOX INSTRUCTIONS ===");
   console.log("At phone verification screen:");

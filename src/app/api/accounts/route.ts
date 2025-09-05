@@ -148,7 +148,13 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ accounts: data ?? [] });
+    // Map account_id to id for frontend compatibility
+    const mappedAccounts = (data || []).map((account) => ({
+      ...account,
+      id: account.account_id, // Map account_id to id
+    }));
+
+    return NextResponse.json({ accounts: mappedAccounts });
   } catch (error) {
     console.error("Error in /api/accounts:", error);
     return NextResponse.json(

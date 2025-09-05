@@ -5,13 +5,30 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle, Building } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertCircle,
+  CheckCircle,
+  Building,
+  Plus,
+  CreditCard,
+  PiggyBank,
+  TrendingUp,
+  Landmark,
+} from "lucide-react";
 import { accountToasts } from "@/lib/notifications/account-notifications";
 import { useAccountSync } from "@/contexts/AccountSyncContext";
 
@@ -21,18 +38,52 @@ interface ConnectAccountModalProps {
   onAccountConnected: () => void;
 }
 
+type ModalView = "main" | "plaid" | "manual";
+
+interface ManualAccountForm {
+  institutionName: string;
+  accountName: string;
+  accountType: "depository" | "credit" | "loan" | "investment" | "other";
+  accountSubtype: string;
+  mask: string;
+  currency: string;
+  initialBalance: string;
+}
+
 export function ConnectAccountModal({
   open,
   onOpenChange,
   onAccountConnected,
 }: ConnectAccountModalProps) {
-  const { startAccountSync, updateAccountSync, completeAccountSync, errorAccountSync } = useAccountSync();
+  const [view, setView] = useState<ModalView>("main");
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [manualForm, setManualForm] = useState<ManualAccountForm>({
+    institutionName: "",
+    accountName: "",
+    accountType: "depository",
+    accountSubtype: "",
+    mask: "",
+    currency: "USD",
+    initialBalance: "",
+  });
 
-  // --- Handlers must be defined before usePlaidLink ---
+  const {
+    startAccountSync,
+    updateAccountSync,
+    completeAccountSync,
+    errorAccountSync,
+  } = useAccountSync();
+
+  // Fetch link token when switching to Plaid view
+  React.useEffect(() => {
+    if (view === "plaid" && !linkToken && !loading) {
+      fetchLinkToken();
+    }
+  }, [view, linkToken, loading]);
+
   const fetchLinkToken = async () => {
     setLoading(true);
     setError(null);
@@ -41,21 +92,15 @@ export function ConnectAccountModal({
       const response = await fetch("/api/aggregator/plaid/create_link_token", {
         method: "POST",
       });
-      console.log("Link token response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Link token response error:", errorText);
         throw new Error(
           `Failed to create link token: ${response.status} ${errorText}`
         );
       }
 
       const data = await response.json();
-      console.log(
-        "Link token received:",
-        data.link_token?.substring(0, 20) + "..."
-      );
       setLinkToken(data.link_token);
     } catch (err) {
       console.error("Error fetching link token:", err);
@@ -68,19 +113,11 @@ export function ConnectAccountModal({
     }
   };
 
-  const handlePlaidSuccess = async (
-    public_token: string,
-    metadata: unknown
-  ) => {
-    console.log("=== PLAID SUCCESS HANDLER CALLED ===");
-    console.log("Public token:", public_token.substring(0, 20) + "...");
-    console.log("Metadata:", metadata);
-
+  const handlePlaidSuccess = async (public_token: string) => {
     setLoading(true);
     setError(null);
 
-  // Show connection progress using sync context (hook values are from component scope)
-  startAccountSync({
+    startAccountSync({
       accountName: "New Account",
       step: 1,
       totalSteps: 3,
@@ -89,9 +126,6 @@ export function ConnectAccountModal({
     });
 
     try {
-      console.log("Exchanging public token...");
-
-      // Step 2: Exchange token
       updateAccountSync({
         accountName: "New Account",
         step: 2,
@@ -109,13 +143,9 @@ export function ConnectAccountModal({
         }
       );
 
-      console.log("Response status:", response.status);
       if (!response.ok) throw new Error("Failed to exchange token");
-
       const result = await response.json();
-      console.log("Exchange successful:", result);
 
-      // Step 3: Final setup
       updateAccountSync({
         accountName: "New Account",
         step: 3,
@@ -124,20 +154,21 @@ export function ConnectAccountModal({
         estimatedTime: "5 seconds",
       });
 
-      // Simulate final setup time
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  // Show success via sync context
-  completeAccountSync(result.accountName || "New Account", 0);
+      // Clear any existing notifications before showing success
+      accountToasts.clearAll();
+
+      completeAccountSync(result.accountName || "New Account", 0);
 
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         setLinkToken(null);
+        setView("main");
         onAccountConnected();
       }, 2000);
     } catch (err) {
-      console.error("Error in handlePlaidSuccess:", err);
       const errorMessage =
         err instanceof Error ? err.message : "Failed to connect account";
       setError(errorMessage);
@@ -147,147 +178,391 @@ export function ConnectAccountModal({
     }
   };
 
-  const handlePlaidExit = (err: unknown, metadata: unknown) => {
-    console.log("=== PLAID EXIT HANDLER CALLED ===");
-    console.log("Error:", err);
-    console.log("Metadata:", metadata);
-
-    // Only treat as true cancellation - don't try to detect success here
-    // Let onSuccess handle actual successful connections
-    console.log("User cancelled or exited Plaid Link");
+  const handlePlaidExit = () => {
     setLoading(false);
+    setView("main");
   };
 
-  // --- usePlaidLink hook must come after handlers ---
   const { open: openPlaidLink, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: handlePlaidSuccess,
     onExit: handlePlaidExit,
   });
 
-  // Fetch link token when modal opens
-  React.useEffect(() => {
-    if (open) {
-      setLinkToken(null);
-      setError(null);
-      setSuccess(false);
-      fetchLinkToken();
-    }
-  }, [open]);
-
-  const handleClose = () => {
-    if (!loading) {
-      setLinkToken(null);
-      setError(null);
-      setSuccess(false);
-      onOpenChange(false);
-    }
-  };
-
-  // Manual test function
-  const handleManualTest = () => {
-    console.log("Manual test triggered");
-    handlePlaidSuccess("public-sandbox-test-token-12345", { test: true });
-  };
-
   const handleConnectClick = () => {
-    console.log("Connect button clicked, opening Plaid Link...");
     if (linkToken && ready) {
-      // Show pre-connection notification
       accountToasts.connectionWarning(1, "1-2 minutes");
-
-      // Small delay to let user see the warning, then open Plaid
-      setTimeout(() => {
-        openPlaidLink();
-      }, 1000);
-    } else {
-      console.log("Link token or ready state not available:", {
-        linkToken: !!linkToken,
-        ready,
-      });
+      setTimeout(() => openPlaidLink(), 1000);
     }
   };
+
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Create institution
+      const institutionResponse = await fetch("/api/institutions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: "manual",
+          name: manualForm.institutionName,
+        }),
+      });
+
+      let institution;
+      if (institutionResponse.status === 409) {
+        // Institution already exists, use the existing one
+        const conflictData = await institutionResponse.json();
+        institution = conflictData.existing;
+      } else if (institutionResponse.ok) {
+        institution = await institutionResponse.json();
+      } else {
+        throw new Error("Failed to create institution");
+      }
+
+      // Create account
+      const accountResponse = await fetch("/api/accounts/manual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          institution_id: institution.id,
+          name: manualForm.accountName,
+          type: manualForm.accountType,
+          subtype: manualForm.accountSubtype || null,
+          mask: manualForm.mask || null,
+          currency: manualForm.currency,
+          initial_balance: parseFloat(manualForm.initialBalance) || 0,
+        }),
+      });
+
+      if (!accountResponse.ok) throw new Error("Failed to create account");
+
+      // Clear any existing notifications and show success
+      accountToasts.clearAll();
+      accountToasts.connected(
+        manualForm.accountName,
+        "Account added successfully!"
+      );
+
+      setManualForm({
+        institutionName: "",
+        accountName: "",
+        accountType: "depository",
+        accountSubtype: "",
+        mask: "",
+        currency: "USD",
+        initialBalance: "",
+      });
+
+      setView("main");
+      onAccountConnected();
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to add account";
+      setError(errorMessage);
+      accountToasts.syncError("manual account", errorMessage, true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getAccountTypeIcon = (type: string) => {
+    switch (type) {
+      case "depository":
+        return <PiggyBank className="h-5 w-5" />;
+      case "credit":
+        return <CreditCard className="h-5 w-5" />;
+      case "investment":
+        return <TrendingUp className="h-5 w-5" />;
+      case "loan":
+        return <Landmark className="h-5 w-5" />;
+      default:
+        return <Building className="h-5 w-5" />;
+    }
+  };
+
+  const renderMainView = () => (
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h3 className="text-lg font-semibold">
+          How would you like to connect?
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Choose your preferred method to add accounts
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <Button
+          onClick={() => setView("plaid")}
+          className="w-full h-auto p-4 flex items-center justify-start space-x-3 bg-blue-600 hover:bg-blue-700"
+        >
+          <Building className="h-6 w-6" />
+          <div className="text-left">
+            <div className="font-semibold">Connect with Plaid</div>
+            <div className="text-sm opacity-90">
+              Link your bank account securely
+            </div>
+          </div>
+        </Button>
+
+        <Button
+          onClick={() => setView("manual")}
+          variant="outline"
+          className="w-full h-auto p-4 flex items-center justify-start space-x-3"
+        >
+          <Plus className="h-6 w-6" />
+          <div className="text-left">
+            <div className="font-semibold">Add manual account</div>
+            <div className="text-sm text-muted-foreground">
+              Enter account details manually
+            </div>
+          </div>
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderPlaidView = () => (
+    <div className="space-y-4">
+      <Button
+        variant="ghost"
+        onClick={() => setView("main")}
+        className="p-0 h-auto text-sm text-muted-foreground"
+      >
+        ← Back to options
+      </Button>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {success && (
+        <Alert>
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>
+            Account connected successfully! Setting up your data...
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="text-center space-y-4">
+        <h3 className="text-lg font-semibold">Connect with Plaid</h3>
+        <p className="text-sm text-muted-foreground">
+          Securely connect your bank account through Plaid
+        </p>
+
+        {linkToken && ready ? (
+          <Button
+            onClick={handleConnectClick}
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? "Connecting..." : "Connect Account"}
+          </Button>
+        ) : (
+          <Button variant="outline" disabled className="w-full">
+            {loading ? "Loading..." : "Preparing connection..."}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderManualView = () => (
+    <div className="space-y-4">
+      <Button
+        variant="ghost"
+        onClick={() => setView("main")}
+        className="p-0 h-auto text-sm text-muted-foreground"
+      >
+        ← Back to options
+      </Button>
+
+      <form onSubmit={handleManualSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="institutionName">Bank/Institution Name</Label>
+          <Input
+            id="institutionName"
+            value={manualForm.institutionName}
+            onChange={(e) =>
+              setManualForm({ ...manualForm, institutionName: e.target.value })
+            }
+            placeholder="e.g., Chase, Wells Fargo"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="accountName">Account Name</Label>
+          <Input
+            id="accountName"
+            value={manualForm.accountName}
+            onChange={(e) =>
+              setManualForm({ ...manualForm, accountName: e.target.value })
+            }
+            placeholder="e.g., Main Checking, Savings"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="accountType">Account Type</Label>
+            <Select
+              value={manualForm.accountType}
+              onValueChange={(value: typeof manualForm.accountType) =>
+                setManualForm({ ...manualForm, accountType: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="depository">
+                  <div className="flex items-center space-x-2">
+                    {getAccountTypeIcon("depository")}
+                    <span>Depository</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="credit">
+                  <div className="flex items-center space-x-2">
+                    {getAccountTypeIcon("credit")}
+                    <span>Credit</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="investment">
+                  <div className="flex items-center space-x-2">
+                    {getAccountTypeIcon("investment")}
+                    <span>Investment</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="loan">
+                  <div className="flex items-center space-x-2">
+                    {getAccountTypeIcon("loan")}
+                    <span>Loan</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="other">
+                  <div className="flex items-center space-x-2">
+                    {getAccountTypeIcon("other")}
+                    <span>Other</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="accountSubtype">Subtype (Optional)</Label>
+            <Input
+              id="accountSubtype"
+              value={manualForm.accountSubtype}
+              onChange={(e) =>
+                setManualForm({ ...manualForm, accountSubtype: e.target.value })
+              }
+              placeholder="e.g., checking, savings"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="mask">Account Mask (Optional)</Label>
+            <Input
+              id="mask"
+              value={manualForm.mask}
+              onChange={(e) =>
+                setManualForm({ ...manualForm, mask: e.target.value })
+              }
+              placeholder="e.g., 1234"
+              maxLength={4}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="currency">Currency</Label>
+            <Select
+              value={manualForm.currency}
+              onValueChange={(value) =>
+                setManualForm({ ...manualForm, currency: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="CAD">CAD</SelectItem>
+                <SelectItem value="EUR">EUR</SelectItem>
+                <SelectItem value="GBP">GBP</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="initialBalance">Initial Balance (Optional)</Label>
+          <Input
+            id="initialBalance"
+            type="number"
+            step="0.01"
+            value={manualForm.initialBalance}
+            onChange={(e) =>
+              setManualForm({ ...manualForm, initialBalance: e.target.value })
+            }
+            placeholder="0.00"
+          />
+        </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="flex space-x-2 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setView("main")}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading} className="flex-1">
+            {loading ? "Adding..." : "Add Account"}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
 
   return (
-    <Dialog open={open} onOpenChange={handleClose} modal={false}>
-      <DialogContent
-        className="sm:max-w-md"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Building className="h-5 w-5" />
-            <span>Connect Your Account</span>
+            <Plus className="h-5 w-5" />
+            <span>Add Account</span>
           </DialogTitle>
           <DialogDescription>
-            Securely connect your bank account using Plaid to automatically sync
-            your transactions and balances.
+            Connect your bank accounts to track your finances
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {success && (
-            <Alert className="border-green-200 bg-green-50 text-green-800">
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                Account connected successfully! Your data will sync shortly.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {!success && (
-            <div className="text-center space-y-4">
-              <div className="space-y-2">
-                <h4 className="font-medium">What happens next?</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>
-                    • You&apos;ll be redirected to your bank&apos;s secure login
-                  </li>
-                  <li>
-                    • We&apos;ll fetch your accounts and recent transactions
-                  </li>
-                  <li>• Your data stays encrypted and secure</li>
-                </ul>
-              </div>
-            </div>
-          )}
+        <div className="py-4">
+          {view === "main" && renderMainView()}
+          {view === "plaid" && renderPlaidView()}
+          {view === "manual" && renderManualView()}
         </div>
-
-        <DialogFooter className="flex space-x-2">
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
-            Cancel
-          </Button>
-          {!success && (
-            <div className="flex space-x-2">
-              {linkToken && ready ? (
-                <Button onClick={handleConnectClick} disabled={loading}>
-                  {loading ? "Connecting..." : "Connect Account"}
-                </Button>
-              ) : (
-                <Button variant="outline" disabled>
-                  {loading
-                    ? "Loading..."
-                    : `Waiting for Link (Token: ${!!linkToken}, Ready: ${ready})`}
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                onClick={handleManualTest}
-                disabled={loading}
-              >
-                Test Mock
-              </Button>
-            </div>
-          )}
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

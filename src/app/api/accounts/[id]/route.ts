@@ -5,9 +5,17 @@ import { createClient } from "@supabase/supabase-js";
 // DELETE /api/accounts/[id]
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
+
+    if (!resolvedParams.id || resolvedParams.id === "undefined") {
+      return NextResponse.json(
+        { error: "Invalid account ID" },
+        { status: 400 }
+      );
+    }
     const cookieStore = await cookies();
     const allCookies = cookieStore.getAll();
     let authToken = cookieStore.get("sb-htcjadaqeuydztascaqc-auth-token");
@@ -25,15 +33,12 @@ export async function DELETE(
     }
     const tokenValue = authToken.value;
     let accessToken = null;
-    let refreshToken = null;
     try {
       const parsed = JSON.parse(tokenValue);
       if (Array.isArray(parsed) && parsed.length >= 2) {
         accessToken = parsed[0];
-        refreshToken = parsed[1];
       } else if (parsed.access_token) {
         accessToken = parsed.access_token;
-        refreshToken = parsed.refresh_token;
       } else {
         accessToken = tokenValue;
       }
@@ -58,7 +63,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const userId = user.user.id;
-    const accountId = params.id;
+    const accountId = resolvedParams.id;
     // Delete the account for this user
     const { error: deleteError } = await supabase
       .from("accounts")
@@ -69,7 +74,8 @@ export async function DELETE(
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
+    console.error("Error in DELETE /api/accounts/[id]");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

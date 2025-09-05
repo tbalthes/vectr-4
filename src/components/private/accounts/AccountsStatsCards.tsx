@@ -48,9 +48,15 @@ export function AccountsStatsCards({
   const totalAssets = accounts
     .filter((account) => (account.balance_amount || 0) > 0)
     .reduce((sum, account) => sum + (account.balance_amount || 0), 0);
-  const totalDebt = accounts
-    .filter((account) => (account.balance_amount || 0) < 0)
-    .reduce((sum, account) => sum + Math.abs(account.balance_amount || 0), 0);
+  const totalDebt = accounts.reduce((sum, account) => {
+    const bal = account.balance_amount || 0;
+    const type = (account.type || "").toLowerCase();
+    // Count all loan and credit balances as debt (absolute value)
+    if (type === "loan" || type === "credit") {
+      return sum + Math.abs(bal);
+    }
+    return sum;
+  }, 0);
   const accountCount = accounts.length;
 
   const formatCurrency = (amount: number) => {
@@ -97,7 +103,7 @@ export function AccountsStatsCards({
           <div className="text-2xl font-bold text-red-600">
             {formatCurrency(totalDebt)}
           </div>
-          <p className="text-xs text-muted-foreground">All negative balances</p>
+          <p className="text-xs text-muted-foreground">All loan and credit balances</p>
         </CardContent>
       </Card>
 

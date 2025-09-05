@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileUploadStep } from "@/components/private/csv-uploader/FileUploadStep";
@@ -155,14 +154,12 @@ export default function UploadPage() {
       }).format(combinedAmount);
 
       // Add custom fields
-      Object.entries(mapping.customFields).forEach(
-        ([fieldName, columnName]) => {
-          const colIndex = headers.indexOf(columnName);
-          if (colIndex >= 0) {
-            record[columnName] = row[colIndex];
-          }
+      Object.entries(mapping.customFields).forEach(([, columnName]) => {
+        const colIndex = headers.indexOf(columnName);
+        if (colIndex >= 0) {
+          record[columnName] = row[colIndex];
         }
-      );
+      });
 
       return record;
     });
@@ -181,20 +178,25 @@ export default function UploadPage() {
   // Only show loading state if we've been loading for a while
   if (authLoading && !user) {
     return (
-      <div className="flex-1 space-y-6 p-6 animate-fade-in">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
+      <>
+        <PageHeader
+          title="Upload Transactions"
+          subtitle="Import transactions from a CSV file and map them to your account"
+        />
+        <div className="flex-1 space-y-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto animate-fade-in">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6 animate-fade-in">
-      {/* Header */}
+    <>
       <PageHeader
         title="Upload Transactions"
         subtitle="Import transactions from a CSV file and map them to your account"
@@ -212,114 +214,115 @@ export default function UploadPage() {
         }
       />
 
-      {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4 space-y-4">
-          {steps.map((step, index) => (
-            <div key={index} className="flex items-center">
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-medium ${
-                  index <= currentStep
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background text-muted-foreground border-border"
-                }`}
-              >
-                {index + 1}
-              </div>
-              <span
-                className={`ml-2 text-sm font-medium ${
-                  index <= currentStep
-                    ? "text-foreground"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {step}
-              </span>
-              {index < steps.length - 1 && (
+      <div className="flex-1 space-y-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto animate-fade-in">
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            {steps.map((step, index) => (
+              <div key={index} className="flex items-center">
                 <div
-                  className={`w-12 h-0.5 ml-4 ${
-                    index < currentStep ? "bg-primary" : "bg-border"
+                  className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-medium ${
+                    index <= currentStep
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-muted-foreground border-border"
                   }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Upload Content */}
-      <CardContent className="p-6">
-        {currentStep === 0 && (
-          <FileUploadStep onFileUpload={handleFileUploaded} />
-        )}
-
-        {currentStep === 1 && headerDetection && (
-          <HeaderDetectionStep
-            rows={csvData}
-            headerDetection={headerDetection}
-            selectedHeaderRow={selectedHeaderRow}
-            onHeaderSelect={(headerRowIndex) => {
-              setSelectedHeaderRow(headerRowIndex);
-              // Re-detect column mapping with new headers
-              const headers = csvData[headerRowIndex] || [];
-              const autoMapping = getColumnSuggestions(headers);
-              setMapping({
-                amountColumns: autoMapping.amountColumns || [],
-                customFields: {},
-                ...autoMapping,
-              });
-            }}
-            onContinue={handleHeaderSelected}
-            onBack={() => setCurrentStep(0)}
-          />
-        )}
-
-        {currentStep === 2 && (
-          <ColumnMappingStep
-            headers={headers}
-            mapping={mapping}
-            onMappingChange={setMapping}
-            onComplete={handleMappingComplete}
-            onBack={() => setCurrentStep(1)}
-            rawRows={csvData}
-            selectedHeaderRow={selectedHeaderRow}
-          />
-        )}
-
-        {currentStep === 3 && (
-          <DataPreviewStep
-            data={transformDataForPreview()}
-            mapping={mapping}
-            onContinue={handlePreviewComplete}
-            onBack={() => setCurrentStep(2)}
-          />
-        )}
-
-        {currentStep === 4 && (
-          <>
-            {selectedAccountId ? (
-              <PreviewStep
-                data={transformDataForPreview(false)}
-                mapping={mapping}
-                user_id={authUserId || user?.id || ""}
-                account_id={selectedAccountId}
-                supabase={supabaseClient}
-                onComplete={handleUploadComplete}
-                onBack={() => setCurrentStep(3)}
-              />
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">
-                  No account selected. Please go back and select an account.
-                </p>
-                <Button onClick={() => setCurrentStep(2)} variant="outline">
-                  Go Back to Column Mapping
-                </Button>
+                >
+                  {index + 1}
+                </div>
+                <span
+                  className={`ml-2 text-sm font-medium ${
+                    index <= currentStep
+                      ? "text-foreground"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {step}
+                </span>
+                {index < steps.length - 1 && (
+                  <div
+                    className={`w-12 h-0.5 ml-4 ${
+                      index < currentStep ? "bg-primary" : "bg-border"
+                    }`}
+                  />
+                )}
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Upload Content */}
+        <Card>
+          <CardContent className="p-6">
+            {currentStep === 0 && (
+              <FileUploadStep onFileUpload={handleFileUploaded} />
             )}
-          </>
-        )}
-      </CardContent>
-    </div>
+
+            {currentStep === 1 && headerDetection && (
+              <HeaderDetectionStep
+                rows={csvData}
+                headerDetection={headerDetection}
+                selectedHeaderRow={selectedHeaderRow}
+                onHeaderSelect={(headerRowIndex) => {
+                  setSelectedHeaderRow(headerRowIndex);
+                  // Re-detect column mapping with new headers
+                  const headers = csvData[headerRowIndex] || [];
+                  const autoMapping = getColumnSuggestions(headers);
+                  setMapping({
+                    amountColumns: autoMapping.amountColumns || [],
+                    customFields: {},
+                    ...autoMapping,
+                  });
+                }}
+                onContinue={handleHeaderSelected}
+                onBack={() => setCurrentStep(0)}
+              />
+            )}
+
+            {currentStep === 2 && (
+              <ColumnMappingStep
+                headers={headers}
+                mapping={mapping}
+                onMappingChange={setMapping}
+                onComplete={handleMappingComplete}
+                onBack={() => setCurrentStep(1)}
+                rawRows={csvData}
+                selectedHeaderRow={selectedHeaderRow}
+              />
+            )}
+
+            {currentStep === 3 && (
+              <DataPreviewStep
+                data={transformDataForPreview()}
+                mapping={mapping}
+                onContinue={handlePreviewComplete}
+                onBack={() => setCurrentStep(2)}
+              />
+            )}
+
+            {currentStep === 4 &&
+              (selectedAccountId ? (
+                <PreviewStep
+                  data={transformDataForPreview(false)}
+                  mapping={mapping}
+                  user_id={authUserId || user?.id || ""}
+                  account_id={selectedAccountId}
+                  supabase={supabaseClient}
+                  onComplete={handleUploadComplete}
+                  onBack={() => setCurrentStep(3)}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    No account selected. Please go back and select an account.
+                  </p>
+                  <Button onClick={() => setCurrentStep(2)} variant="outline">
+                    Go Back to Column Mapping
+                  </Button>
+                </div>
+              ))}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

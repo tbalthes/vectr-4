@@ -224,16 +224,16 @@
 :root [data-sonner-toast],
 /* handle when no .dark class */
 html:not(.dark) [data-sonner-toast] {
-  background-color: rgba(255,255,255,0.98) !important;
-  color: rgba(17,24,39,1) !important; /* slate-900 */
-  border: 1px solid rgba(15,23,42,0.06) !important;
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  color: rgba(17, 24, 39, 1) !important; /* slate-900 */
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
 }
 
 /* Dark theme: dark card, light text */
 .dark [data-sonner-toast] {
-  background-color: rgba(6,8,10,0.92) !important;
-  color: rgba(236,241,248,0.96) !important;
-  border: 1px solid rgba(255,255,255,0.04) !important;
+  background-color: rgba(6, 8, 10, 0.92) !important;
+  color: rgba(236, 241, 248, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
 }
 
 /* Ensure child elements inherit solid colors and are opaque */

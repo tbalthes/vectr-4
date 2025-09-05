@@ -1,25 +1,18 @@
 "use client";
 
-import React from "react";
-import {
-  RefreshCw,
-  MoreHorizontal,
-  Building2,
-  Eye,
-  EyeOff,
-  AlertCircle,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React, { useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, RefreshCw, Eye, EyeOff, MoreHorizontal, Building2 } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import Image from "next/image";
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { arrayMove } from '@dnd-kit/sortable';
+import LuxuryAccountCard from "./LuxuryAccountCard";
 import { Account } from "@/hooks/useAccounts";
 import { accountToasts } from "@/lib/notifications/account-notifications";
 import { toast } from "sonner";
@@ -130,7 +123,24 @@ function AccountCard({
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-lg bg-muted">
-              <Building2 className="h-4 w-4" />
+              {account.institution_logo_url ? (
+                <Image
+                  src={account.institution_logo_url}
+                  alt={`${account.institution_name || "Bank"} logo`}
+                  width={16}
+                  height={16}
+                  className="object-contain"
+                  onError={() => {
+                    // Show fallback icon if logo fails to load
+                    console.log(
+                      "Institution logo failed to load:",
+                      account.institution_logo_url
+                    );
+                  }}
+                />
+              ) : (
+                <Building2 className="h-4 w-4" />
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <CardTitle className="text-lg font-semibold truncate">

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
 import { useCategories } from "@/hooks/useCategories";
 import { MonarchStyleRuleBuilder } from "@/components/private/rules/MonarchStyleRuleBuilder";

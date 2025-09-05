@@ -441,7 +441,7 @@ export function PreviewStep({
       )}
 
       {/* Navigation */}
-      <div className="sticky bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 pt-4 pb-4 z-20 flex justify-between border-t border-zinc-200 dark:border-zinc-800 mt-8">
+      <div className="sticky bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 pt-6 pb-4 z-20 flex justify-between border-t border-zinc-200 dark:border-zinc-800 mt-8">
         <Button
           variant="outline"
           onClick={onBack}

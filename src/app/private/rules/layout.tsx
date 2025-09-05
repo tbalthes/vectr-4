@@ -5,7 +5,7 @@ import PageHeader from "@/components/private/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Plus, Download, Upload } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
 import { useSelectedLayoutSegments } from "next/navigation";
 

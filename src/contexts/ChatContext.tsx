@@ -8,7 +8,7 @@ import {
   loadSessionMessages as loadSessionMessagesQuery,
   deleteSession as deleteSessionQuery,
 } from "@/lib/supabase/chat-queries";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface ChatSession {
   id: string;
@@ -48,7 +48,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = React.useState(false);
 
   // Get the authenticated user
-  const { userId, user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const userId = user?.id ?? null;
 
   // Debug auth state
   React.useEffect(() => {

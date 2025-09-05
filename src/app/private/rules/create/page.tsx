@@ -6,7 +6,7 @@ import { MonarchStyleRuleBuilder } from "@/components/private/rules/MonarchStyle
 import { useCategories } from "@/hooks/useCategories";
 import { useRouter } from "next/navigation";
 import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function CreateRulePage() {
   const router = useRouter();

@@ -48,23 +48,27 @@ export function DataPreviewStep({
 
   return (
     <div className="space-y-6">
-      <Card className="space-y-6 p-6">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <div className="space-y-6">
+        {/* Removed Card wrapper */}
+        <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+          {/* Header */}
           <div className="space-y-1">
-            <CardTitle className="flex items-center gap-3 text-2xl font-bold">
+            <h2 className="flex items-center gap-3 text-2xl font-bold">
               <Eye className="h-8 w-8 text-primary" />
               Data Preview
-            </CardTitle>
-            <CardDescription className="text-base">
+            </h2>
+            <p className="text-base text-muted-foreground">
               Preview of your mapped data showing how transactions will be
               processed
-            </CardDescription>
+            </p>
           </div>
           <Badge variant="secondary" className="text-sm py-1 px-3">
             Showing {previewData.length} of {totalRows} rows
           </Badge>
-        </CardHeader>
-        <CardContent className="space-y-6 pb-6">
+        </div>
+        {/* End header */}
+        <div className="space-y-6">
+          {/* Content area */}
           {!hasValidData && (
             <Alert variant="destructive" className="border-destructive/30">
               <AlertCircle className="h-4 w-4" />
@@ -200,8 +204,10 @@ export function DataPreviewStep({
               )}
             </CardContent>
           </Card>
-        </CardContent>
-      </Card>
+        </div>
+        {/* End main content */}
+      </div>
+      {/* End content area */}
 
       {/* Navigation */}
       <div className="sticky bottom-0 left-0 right-0 bg-background pt-4 pb-4 z-20 flex justify-between border-t border-border mt-8">
