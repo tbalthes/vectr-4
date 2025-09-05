@@ -234,9 +234,11 @@ export function SignupForm({
 
           {/* Side Image */}
           <div className="bg-muted relative hidden md:block">
-            <img
+            <Image
               src="https://cdn.bathroomtakeaway.com/media/catalog/product/9/e/9eb1_130-0601-4005pp_lifestyle1.jpg?width=700&height=700&store=uk_view&image-type=image"
               alt="Modern financial dashboard on mobile and desktop"
+              width={700}
+              height={700}
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
