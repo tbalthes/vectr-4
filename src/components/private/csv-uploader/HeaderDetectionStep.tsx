@@ -1,6 +1,5 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
@@ -48,16 +47,14 @@ export function HeaderDetectionStep({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <CardTitle className="flex text-2xl items-center gap-2">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <FileText className="w-8 h-8" />
           Header Detection
-        </CardTitle>
-        <CardDescription className="pt-2 font-semibold">
-          <i>
-            We&apos;ve analyzed your CSV file to identify the header row. Please
-            verify or select the correct row that contains your column headers.
-          </i>
-        </CardDescription>
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          We&apos;ve analyzed your CSV file to identify the header row. Please
+          verify or select the correct row that contains your column headers.
+        </p>
       </div>
 
       {/* Content */}

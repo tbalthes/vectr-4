@@ -1,6 +1,3 @@
-export const GET = async () => new Response(null, { status: 204 });
-export const PUT = async () => new Response(null, { status: 204 });
-export const DELETE = async () => new Response(null, { status: 204 });
 /**
  * Individual Rule API Proxy - Proxies requests for specific rules to FastAPI backend
  */

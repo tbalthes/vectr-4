@@ -1,12 +1,5 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileText, AlertCircle } from "lucide-react";
 
@@ -17,10 +10,9 @@ interface FileUploadStepProps {
 function getDropzoneClassName(isDragging: boolean, isLoading: boolean) {
   const base =
     "border-2 border-dashed rounded-lg p-8 text-center transition-colors";
-  const drag =
-    isDragging
-      ? "border-zinc-900 bg-zinc-900/5 dark:border-zinc-300 dark:bg-zinc-300/5"
-      : "border-zinc-200 hover:border-zinc-900/50 dark:border-zinc-800 dark:hover:border-zinc-300/50";
+  const drag = isDragging
+    ? "border-zinc-900 bg-zinc-900/5 dark:border-zinc-300 dark:bg-zinc-300/5"
+    : "border-zinc-200 hover:border-zinc-900/50 dark:border-zinc-800 dark:hover:border-zinc-300/50";
   const loading = isLoading ? "opacity-50 pointer-events-none" : "";
   return [base, drag, loading].join(" ");
 }
@@ -116,6 +108,14 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Upload CSV File</h1>
+        <p className="text-muted-foreground mt-2">
+          Select or drag and drop your CSV file to begin the import process.
+        </p>
+      </div>
+
       {error && (
         <Alert className="relative w-full rounded-lg border border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-900/20 dark:text-red-300 mb-4">
           <AlertCircle className="w-4 h-4 absolute left-4 top-3.5" />
@@ -166,48 +166,41 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
         </div>
       </div>
 
-      <Card className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm">
-        <CardHeader className="p-6">
-          <CardTitle className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-            Supported Formats
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 pt-0 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <h4 className="font-medium text-zinc-900 dark:text-zinc-50">
-                File Requirements
-              </h4>
-              <ul className="text-zinc-500 dark:text-zinc-400 space-y-1 text-sm list-disc list-inside">
-                <li>CSV format (.csv)</li>
-                <li>Maximum 10MB file size</li>
-                <li>UTF-8 or ASCII encoding</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-medium text-zinc-900 dark:text-zinc-50">
-                Common Sources
-              </h4>
-              <ul className="text-zinc-500 dark:text-zinc-400 space-y-1 text-sm list-disc list-inside">
-                <li>Bank statements</li>
-                <li>Credit card statements</li>
-                <li>PayPal exports</li>
-                <li>Accounting software exports</li>
-              </ul>
-            </div>
+      {/* Supported Formats Info */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground">
+          Supported Formats
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <h4 className="font-medium text-foreground">File Requirements</h4>
+            <ul className="text-muted-foreground space-y-1 text-sm list-disc list-inside">
+              <li>CSV format (.csv)</li>
+              <li>Maximum 10MB file size</li>
+              <li>UTF-8 or ASCII encoding</li>
+            </ul>
           </div>
 
-          <Alert className="relative w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/40 p-4 text-zinc-900 dark:text-zinc-50">
-            <AlertDescription className="text-sm">
-              <strong>Note:</strong> Different banks format their CSV files
-              differently. Our intelligent header detection will help identify
-              the correct columns automatically, but you&#39;ll have a chance to
-              review and adjust the mapping.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+          <div className="space-y-2">
+            <h4 className="font-medium text-foreground">Common Sources</h4>
+            <ul className="text-muted-foreground space-y-1 text-sm list-disc list-inside">
+              <li>Bank statements</li>
+              <li>Credit card statements</li>
+              <li>PayPal exports</li>
+              <li>Accounting software exports</li>
+            </ul>
+          </div>
+        </div>
+
+        <Alert className="relative w-full rounded-lg border border-border bg-muted/30 p-4 text-foreground">
+          <AlertDescription className="text-sm">
+            <strong>Note:</strong> Different banks format their CSV files
+            differently. Our intelligent header detection will help identify the
+            correct columns automatically, but you&#39;ll have a chance to
+            review and adjust the mapping.
+          </AlertDescription>
+        </Alert>
+      </div>
     </div>
   );
 }

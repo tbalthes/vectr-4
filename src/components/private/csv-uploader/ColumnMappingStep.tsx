@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CardDescription, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,7 +20,6 @@ import {
 import { type ColumnMapping, hasBalanceColumn } from "./csv-utils";
 import { useAccounts } from "@/hooks/useAccounts";
 import AccountSelectorDropdown from "@/components/AccountSelectorDropdown";
-import { useAuth } from "@/hooks/useAuth";
 
 interface ColumnMappingStepProps {
   headers: string[];
@@ -43,7 +41,7 @@ export function ColumnMappingStep({
   selectedHeaderRow = 0,
 }: ColumnMappingStepProps) {
   // Get current user (for potential future use)
-  const { userId } = useAuth();
+  // const { user } = useAuth();
 
   // Fetch user's accounts
   const { loading: accountsLoading } = useAccounts();
@@ -263,13 +261,13 @@ export function ColumnMappingStep({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <CardTitle className="flex text-2xl items-center gap-2">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Settings className="w-8 h-8" />
           Column Mapping
-        </CardTitle>
-        <CardDescription className="pt-2 font-semibold">
-          <i>Map your CSV columns to the required transaction fields.</i>
-        </CardDescription>
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          Map your CSV columns to the required transaction fields.
+        </p>
       </div>
 
       {/* Account Selection */}
