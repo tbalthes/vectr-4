@@ -53,7 +53,7 @@ export async function GET() {
           merchant_id,
           name,
           logo_url,
-          categories (
+          categories:default_category_id (
             category_id,
             name,
             icon

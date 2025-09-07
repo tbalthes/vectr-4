@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
           merchant_id,
           name,
           logo_url,
-          categories (
+          categories:default_category_id (
             category_id,
             name,
             plain_name,
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
         merchant_id,
         name,
         logo_url,
-        categories (
+        categories:default_category_id (
           category_id,
           name,
           plain_name,
