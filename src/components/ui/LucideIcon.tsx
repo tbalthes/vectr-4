@@ -8,14 +8,6 @@ interface LucideIconProps {
   size?: number;
 }
 
-// Helper function to convert kebab-case to PascalCase
-function kebabToPascal(str: string): string {
-  return str
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join("");
-}
-
 export function LucideIcon({
   name,
   className = "h-4 w-4",
@@ -26,21 +18,16 @@ export function LucideIcon({
     return <LucideIcons.HelpCircle className={className} size={size} />;
   }
 
-  // Convert kebab-case to PascalCase (e.g., "heart-crack" -> "HeartCrack")
-  const pascalCaseName = name.includes("-") ? kebabToPascal(name) : name;
-
   // Get the icon component from Lucide Icons
   const icons = LucideIcons as unknown as Record<
     string,
     React.ComponentType<{ className?: string; size?: number }>
   >;
-  const IconComponent = icons[pascalCaseName];
+  const IconComponent = icons[name];
 
   // If the icon doesn't exist, fallback to HelpCircle
   if (!IconComponent) {
-    console.warn(
-      `Lucide icon "${name}" (converted to "${pascalCaseName}") not found, using HelpCircle fallback`
-    );
+    console.warn(`Lucide icon "${name}" not found, using HelpCircle fallback`);
     return <LucideIcons.HelpCircle className={className} size={size} />;
   }
 
