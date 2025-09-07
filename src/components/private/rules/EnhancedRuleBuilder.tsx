@@ -60,7 +60,7 @@ interface EnhancedRuleBuilderProps {
   rule?: EnhancedUserRule;
   onSave: (rule: Omit<EnhancedUserRule, "id">) => void;
   onCancel: () => void;
-  categories: Array<{ id: string; name: string; color?: string }>;
+  categories: Array<{ category_id: string; name: string; color?: string }>;
   userId: string;
 }
 
@@ -163,7 +163,7 @@ export function EnhancedRuleBuilder({
     // Format actions
     const actionsParts: string[] = [];
     if (selectedCategoryId && selectedCategoryId !== "no-change") {
-      const category = categories.find((c) => c.id === selectedCategoryId);
+      const category = categories.find((c) => c.category_id === selectedCategoryId);
       actionsParts.push(`categorize as ${category?.name || "Unknown"}`);
     }
     if (renameTo) {
@@ -621,7 +621,7 @@ export function EnhancedRuleBuilder({
                 <SelectContent>
                   <SelectItem value="no-change">No category change</SelectItem>
                   {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.category_id} value={category.category_id}>
                       <div className="flex items-center space-x-2">
                         {category.color && (
                           <div

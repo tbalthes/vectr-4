@@ -12,17 +12,17 @@ const CACHE_HEADERS = {
 };
 
 interface MerchantData {
-  id: string;
+  merchant_id: string;  // Fixed: merchants table uses merchant_id
   name: string;
   logo_url: string | null;
   categories:
     | {
-        id: string;
+        category_id: string;  // Fixed: categories table uses category_id
         name: string;
         icon: string;
       }
     | {
-        id: string;
+        category_id: string;  // Fixed: categories table uses category_id
         name: string;
         icon: string;
       }[]
@@ -35,8 +35,8 @@ export async function GET() {
     .slice(2, 8)}`;
   try {
     const requestCookies = await cookies();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = createRouteHandlerClient({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cookies: () => requestCookies as any,
     });
     const { data: sessionRes } = await supabase.auth.getSession();
@@ -56,11 +56,11 @@ export async function GET() {
       .from("merchants")
       .select(
         `
-        id,
+        merchant_id,
         name,
         logo_url,
         categories (
-          id,
+          category_id,
           name,
           icon
         )
@@ -95,12 +95,12 @@ export async function GET() {
       }
 
       return {
-        id: merchant.id,
+        id: merchant.merchant_id,
         name: merchant.name,
         logoUrl: merchant.logo_url,
         category: category
           ? {
-              id: category.id,
+              id: category.category_id,
               name: category.name,
               icon: category.icon,
             }

@@ -80,13 +80,15 @@ export async function GET(
         needs_review,
         transaction_note,
         merchant_id,
+        category_id,
         merchants (
-          id,
+          merchant_id,
           name,
           logo_url,
           categories (
-            id,
+            category_id,
             name,
+            plain_name,
             icon,
             parent_id
           )
@@ -113,48 +115,76 @@ export async function GET(
     // Prefer an explicit transaction->category mapping when present. Some
     // deployments store the category mapping in a join table
     // `transaction_categories`. Read that first; if not present fall back to
-    // the merchant's categories (legacy behavior) or user_metadata.manual_category.
+    // the direct category_id field on transactions, then merchant's categories, 
+    // or user_metadata.manual_category.
     let category: {
       id?: string;
       name?: string;
       icon?: string;
       parent_id?: string;
     } | null = null;
-    try {
-      const { data: txCat, error: txCatErr } = await serviceSupabase
-        .from("transaction_categories")
-        .select("category_id")
-        .eq("transaction_id", transactionId)
-        .limit(1)
-        .maybeSingle();
 
-      if (
-        !txCatErr &&
-        txCat &&
-        (txCat as Record<string, unknown>).category_id
-      ) {
-        const cid = String((txCat as Record<string, unknown>).category_id);
-        const { data: catRow, error: catErr } = await serviceSupabase
+    // First, check for direct category_id on the transaction
+    if (transactionData.category_id) {
+      try {
+        const { data: directCat, error: directCatErr } = await serviceSupabase
           .from("categories")
-          .select("id, name, icon, parent_id")
-          .eq("id", cid)
+          .select("category_id, name, plain_name, icon, parent_id")
+          .eq("category_id", transactionData.category_id)
           .limit(1)
           .maybeSingle();
 
-        if (!catErr && catRow) {
-          category = catRow as {
-            id?: string;
-            name?: string;
-            icon?: string;
-            parent_id?: string;
+        if (!directCatErr && directCat) {
+          category = {
+            id: directCat.category_id,
+            name: directCat.plain_name || directCat.name,
+            icon: directCat.icon,
+            parent_id: directCat.parent_id
           };
         }
+      } catch (e) {
+        console.warn("Failed to fetch direct category_id, falling back to transaction_categories", e);
       }
-    } catch (e) {
-      console.warn(
-        "Failed to fetch transaction_categories mapping or category row, falling back to merchant categories",
-        e
-      );
+    }
+
+    // If no direct category, try transaction_categories table
+    if (!category) {
+      try {
+        const { data: txCat, error: txCatErr } = await serviceSupabase
+          .from("transaction_categories")
+          .select("category_id")
+          .eq("transaction_id", transactionId)
+          .limit(1)
+          .maybeSingle();
+
+        if (
+          !txCatErr &&
+          txCat &&
+          (txCat as Record<string, unknown>).category_id
+        ) {
+          const cid = String((txCat as Record<string, unknown>).category_id);
+          const { data: catRow, error: catErr } = await serviceSupabase
+            .from("categories")
+            .select("category_id, name, plain_name, icon, parent_id")
+            .eq("category_id", cid)
+            .limit(1)
+            .maybeSingle();
+
+          if (!catErr && catRow) {
+            category = {
+              id: catRow.category_id,
+              name: catRow.plain_name || catRow.name,
+              icon: catRow.icon,
+              parent_id: catRow.parent_id
+            };
+          }
+        }
+      } catch (e) {
+        console.warn(
+          "Failed to fetch transaction_categories mapping or category row, falling back to merchant categories",
+          e
+        );
+      }
     }
 
     // Fallback to merchant.categories if no explicit mapping found
@@ -171,12 +201,12 @@ export async function GET(
     if (category?.parent_id) {
       const { data: parentCategory, error: parentError } = await serviceSupabase
         .from("categories")
-        .select("name")
-        .eq("id", category.parent_id)
+        .select("name, plain_name")
+        .eq("category_id", category.parent_id)
         .single();
 
       if (!parentError && parentCategory) {
-        parentCategoryName = parentCategory.name;
+        parentCategoryName = parentCategory.plain_name || parentCategory.name;
       }
     }
 
@@ -225,7 +255,7 @@ export async function GET(
       transaction_note: transactionData.transaction_note,
       merchant_name: merchant?.name || "Unknown",
       merchant_logo_url: merchant?.logo_url || null,
-      merchant_id: merchant?.id || (transactionData.merchant_id ?? null),
+      merchant_id: merchant?.merchant_id || (transactionData.merchant_id ?? null),
       category_name: category?.name || "Uncategorized",
       category_icon: category?.icon || "HelpCircle",
       category_id: category?.id ?? null,
@@ -345,26 +375,26 @@ export async function PUT(
       } else {
         try {
           // Try exact match first, then case-insensitive match
-          type IdRow = { id?: string | number | null } | null;
+          type IdRow = { merchant_id?: string | number | null } | null;
           const { data: merchantExact } = (await serviceSupabase
             .from("merchants")
-            .select("id")
+            .select("merchant_id")
             .eq("name", name)
             .limit(1)
             .maybeSingle()) as { data: IdRow };
 
-          if (merchantExact && merchantExact.id) {
-            updateObject.merchant_id = merchantExact.id as string;
+          if (merchantExact && merchantExact.merchant_id) {
+            updateObject.merchant_id = merchantExact.merchant_id as string;
           } else {
             const { data: merchantLike } = (await serviceSupabase
               .from("merchants")
-              .select("id")
+              .select("merchant_id")
               .ilike("name", name)
               .limit(1)
               .maybeSingle()) as { data: IdRow };
 
-            if (merchantLike && merchantLike.id) {
-              updateObject.merchant_id = merchantLike.id as string;
+            if (merchantLike && merchantLike.merchant_id) {
+              updateObject.merchant_id = merchantLike.merchant_id as string;
             } else {
               // No matching merchant found; set null so transaction is uncoupled
               updateObject.merchant_id = null;
@@ -397,7 +427,7 @@ export async function PUT(
         try {
           // Try exact match first, then case-insensitive, then wildcard ilike.
           // Do NOT auto-create categories here; an explicit match is required.
-          type IdRow = { id?: string | number | null } | null;
+          type IdRow = { category_id?: string | number | null } | null;
 
           console.log(
             "API: resolving category_name -> id for:",
@@ -406,7 +436,7 @@ export async function PUT(
 
           const { data: catExact, error: catExactErr } = (await serviceSupabase
             .from("categories")
-            .select("id, name")
+            .select("category_id, name")
             .eq("name", cname)
             .limit(1)
             .maybeSingle()) as { data: IdRow; error?: unknown };
@@ -419,13 +449,13 @@ export async function PUT(
           (debugCategoryLookup as Record<string, unknown>).exact =
             catExact ?? null;
 
-          if (catExact?.id != null) {
-            updateObject.category_id = String((catExact as IdRow).id!);
+          if (catExact?.category_id != null) {
+            updateObject.category_id = String(catExact.category_id!);
           } else {
             // try ilike without wildcard first (case-insensitive exact)
             const { data: catLike, error: catLikeErr } = (await serviceSupabase
               .from("categories")
-              .select("id, name")
+              .select("category_id, name")
               .ilike("name", cname)
               .limit(1)
               .maybeSingle()) as { data: IdRow; error?: unknown };
@@ -437,8 +467,8 @@ export async function PUT(
             (debugCategoryLookup as Record<string, unknown>).ilike =
               catLike ?? null;
 
-            if (catLike?.id != null) {
-              updateObject.category_id = String((catLike as IdRow).id!);
+            if (catLike?.category_id != null) {
+              updateObject.category_id = String(catLike.category_id!);
             } else {
               // final attempt: wildcard ilike
               const safe = cname.replace(/%/g, "").trim();
@@ -446,7 +476,7 @@ export async function PUT(
               const { data: catLikeWildcard, error: catLikeWildcardErr } =
                 (await serviceSupabase
                   .from("categories")
-                  .select("id, name")
+                  .select("category_id, name")
                   .ilike("name", pattern)
                   .limit(1)
                   .maybeSingle()) as { data: IdRow; error?: unknown };
@@ -461,10 +491,8 @@ export async function PUT(
                 pattern,
               };
 
-              if (catLikeWildcard?.id != null) {
-                updateObject.category_id = String(
-                  (catLikeWildcard as IdRow).id!
-                );
+              if (catLikeWildcard?.category_id != null) {
+                updateObject.category_id = String(catLikeWildcard.category_id!);
               } else {
                 // No match found; explicitly unset mapping (do not create new category)
                 console.log(
@@ -629,7 +657,7 @@ export async function PUT(
             // Don't throw here, continue with the insert
           }
 
-          // Use the RPC function to properly handle both join table and primary_category_id
+          // Use the RPC function to properly handle both join table and category_id
           const { data: rpcResult, error: rpcErr } = await serviceSupabase.rpc(
             "add_transaction_category_v2",
             {
@@ -649,17 +677,17 @@ export async function PUT(
 
           console.log("API: add_transaction_category_v2 result:", rpcResult);
 
-          // Also ensure primary_category_id is updated even if it was already set
-          const { error: primaryErr } = await serviceSupabase
+          // Update category_id directly instead of primary_category_id
+          const { error: categoryErr } = await serviceSupabase
             .from("transactions")
-            .update({ primary_category_id: updateObject.category_id })
+            .update({ category_id: updateObject.category_id })
             .eq("id", transactionId)
             .eq("user_id", user.id);
 
-          if (primaryErr) {
+          if (categoryErr) {
             console.warn(
-              "API: warning updating primary_category_id:",
-              primaryErr
+              "API: warning updating category_id:",
+              categoryErr
             );
             // Don't throw here, the join table is the main thing
           }
@@ -704,7 +732,7 @@ export async function PUT(
         try {
           const { data: mappingRows, error: mappingErr } = await serviceSupabase
             .from("transaction_categories")
-            .select("category_id, categories(id, name, icon)")
+            .select("category_id, categories(category_id, name, icon)")
             .eq("transaction_id", transactionId);
 
           if (!mappingErr) {
@@ -805,7 +833,7 @@ export async function PUT(
     try {
       const { data: mr } = await serviceSupabase
         .from("transaction_categories")
-        .select("category_id, categories(id, name, icon)")
+        .select("category_id, categories(category_id, name, icon)")
         .eq("transaction_id", transactionId);
       mappingRows = mr;
     } catch (e) {

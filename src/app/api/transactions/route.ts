@@ -159,6 +159,7 @@ export async function GET(request: NextRequest) {
     const amountMax = url.searchParams.get("amountMax");
     const amountType = url.searchParams.get("amountType"); // "income" | "expense"
     const needsReview = url.searchParams.get("needsReview");
+    const uncategorized = url.searchParams.get("uncategorized");
 
     // Debug logging
     console.log("🔍 API Filter Debug:", {
@@ -181,6 +182,7 @@ export async function GET(request: NextRequest) {
       amountMin,
       amountMax,
       needsReview,
+      uncategorized,
       q,
     });
 
@@ -228,6 +230,10 @@ export async function GET(request: NextRequest) {
       } else if (needsReview === "false") {
         query = query.eq("needs_review", false);
       }
+
+      // Uncategorized filter will be handled in post-processing
+      // since it requires checking transaction_categories table
+      // For now, we'll let all transactions through and filter them later
 
       return query;
     };
@@ -309,8 +315,21 @@ export async function GET(request: NextRequest) {
     const needsCategoryInnerJoin =
       category && category !== "all" && !category.includes("Uncategorized");
     const needsMerchantInnerJoin = merchants && merchants.trim();
+    const needsUncategorizedFiltering = uncategorized === "true";
 
-    if (needsCategoryInnerJoin || needsMerchantInnerJoin) {
+    if (needsUncategorizedFiltering) {
+      // Uncategorized filtering requires special handling with LEFT JOIN
+      countQuery = serviceSupabase
+        .from("transactions")
+        .select(`
+          id,
+          transaction_categories!left (
+            transaction_id
+          )
+        `, { count: "exact", head: false })
+        .eq("user_id", user.id)
+        .is("transaction_categories.transaction_id", null);
+    } else if (needsCategoryInnerJoin || needsMerchantInnerJoin) {
       // Need inner joins for proper filtering
       let selectClause = "id";
 
@@ -372,7 +391,42 @@ export async function GET(request: NextRequest) {
     let query;
 
     // Use the filtering requirements already determined above
-    if (needsCategoryInnerJoin || needsMerchantInnerJoin) {
+    if (needsUncategorizedFiltering) {
+      // Uncategorized filtering - use LEFT JOIN to find transactions without categories
+      query = serviceSupabase
+        .from("transactions")
+        .select(`
+          id,
+          transaction_number,
+          date,
+          clean_description,
+          amount,
+          original_description,
+          balance,
+          user_metadata,
+          needs_review,
+          transaction_note,
+          merchants (
+            name,
+            logo_url,
+            categories (
+              name,
+              icon
+            )
+          ),
+          transaction_categories!left (
+            transaction_id,
+            categories (
+              name,
+              icon
+            )
+          )
+        `)
+        .eq("user_id", user.id)
+        .is("transaction_categories.transaction_id", null)
+        .order(sortField, { ascending: sortOrder === "asc" })
+        .range(from, to);
+    } else if (needsCategoryInnerJoin || needsMerchantInnerJoin) {
       // Need inner joins for proper filtering
       let selectClause;
 
@@ -502,11 +556,19 @@ export async function GET(request: NextRequest) {
         .eq("user_id", user.id);
     }
 
-    query = applyFilters(query);
-    query = applyCategoryFilter(query);
-    query = applyMerchantFilter(query);
-    query = query.order(sortField, { ascending: sortOrder === "asc" });
-    query = query.range(from, to);
+    if (needsUncategorizedFiltering) {
+      // For uncategorized filtering, apply basic filters but skip category/merchant
+      query = applyFilters(query);
+      // Skip applyCategoryFilter and applyMerchantFilter since uncategorized
+      // query already has its own filtering logic and different join structure
+    } else {
+      // Apply all filters normally
+      query = applyFilters(query);
+      query = applyCategoryFilter(query);
+      query = applyMerchantFilter(query);
+      query = query.order(sortField, { ascending: sortOrder === "asc" });
+      query = query.range(from, to);
+    }
     const { data, error, status } = await query;
 
     // Debug logging for filtered data

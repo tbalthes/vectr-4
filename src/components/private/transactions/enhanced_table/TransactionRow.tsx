@@ -98,7 +98,7 @@ export function TransactionRow({
   return (
     <>
       {/* Merchant Logo */}
-      <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+      <td className="px-3 py-2 border-b border-gray-200 dark:border-gray-800 group-hover:bg-accent/30 dark:group-hover:bg-accent/20 transition-colors duration-200">
         <div className="flex items-center justify-center">
           <MerchantLogo
             merchantName={transaction.merchantName}
@@ -109,7 +109,7 @@ export function TransactionRow({
       </td>
 
       {/* Description */}
-      <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+      <td className="px-3 py-2 border-b border-gray-200 dark:border-gray-800 group-hover:bg-accent/30 dark:group-hover:bg-accent/20 transition-colors duration-200">
         <div className="flex flex-col">
           <div className="font-medium text-foreground dark:text-foreground truncate flex items-center gap-2 text-xs">
             {transaction.description}
@@ -133,17 +133,17 @@ export function TransactionRow({
       </td>
 
       {/* Category */}
-      <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+      <td className="px-3 py-2 border-b border-gray-200 dark:border-gray-800 group-hover:bg-accent/30 dark:group-hover:bg-accent/20 transition-colors duration-200">
         <div className="flex items-center justify-center">
           <CategoryIcon
             iconName={transaction.categoryIcon}
-            className="w-5 h-5 text-primary dark:text-primary"
+            className="w-6 h-6 text-primary dark:text-primary"
           />
         </div>
       </td>
 
       {/* Account */}
-      <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+      <td className="px-3 py-2 border-b border-gray-200 dark:border-gray-800 group-hover:bg-accent/30 dark:group-hover:bg-accent/20 transition-colors duration-200">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded-full bg-muted dark:bg-muted flex items-center justify-center">
             <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground dark:bg-muted-foreground"></div>
@@ -155,7 +155,7 @@ export function TransactionRow({
       </td>
 
       {/* Amount */}
-      <td className="px-3 py-2 text-right bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
+      <td className="px-3 py-2 text-right border-b border-gray-200 dark:border-gray-800 group-hover:bg-accent/30 dark:group-hover:bg-accent/20 transition-colors duration-200">
         <div className="flex items-center justify-end gap-3">
           {(!transaction.categoryName ||
             transaction.categoryName === "Uncategorized" ||
@@ -174,7 +174,7 @@ export function TransactionRow({
             className="h-6 w-6 p-0 hover:bg-muted"
             onClick={handleOpenDetails}
           >
-            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-muted-foreground" />
+            <ChevronRight className="w-5 h-5 text-muted-foreground dark:text-muted-foreground" />
           </Button>
         </div>
       </td>

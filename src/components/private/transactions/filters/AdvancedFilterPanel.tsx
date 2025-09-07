@@ -1,13 +1,14 @@
 // src/components/private/transactions/filters/AdvancedFilterPanel.tsx
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import {
   X,
   Filter,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   DollarSign,
   Building2,
   Tag,
@@ -17,9 +18,67 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useCategories } from "@/hooks/useCategories";
 import { useMerchants } from "@/hooks/useMerchants";
 import { LucideIcon } from "@/components/ui/LucideIcon";
+
+// Component for merchant logo with reliable fallback
+interface MerchantLogoProps {
+  merchant: {
+    id: string;
+    name: string;
+    logo_url?: string | null;
+  };
+}
+
+function MerchantLogo({ merchant }: MerchantLogoProps) {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Reset state when merchant changes
+  useEffect(() => {
+    setImageError(false);
+    setImageLoaded(false);
+  }, [merchant.id, merchant.logo_url]);
+
+  const hasValidUrl = isValidImageUrl(merchant.logo_url || null);
+  const showFallback = !hasValidUrl || imageError;
+
+  if (showFallback) {
+    return (
+      <div className="w-5 h-5 rounded bg-white flex items-center justify-center flex-shrink-0">
+        <Building2 className="h-4 w-4 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-5 h-5 flex-shrink-0 relative">
+      <Image
+        src={
+          merchant.logo_url!.startsWith("http:")
+            ? merchant.logo_url!.replace("http:", "https:")
+            : merchant.logo_url!
+        }
+        alt={merchant.name}
+        width={20}
+        height={20}
+        className="rounded object-cover w-full h-full"
+        onError={() => {
+          setImageError(true);
+        }}
+        onLoad={() => {
+          setImageLoaded(true);
+        }}
+      />
+      {/* Show fallback while loading */}
+      {!imageLoaded && !imageError && (
+        <div className="absolute inset-0 rounded bg-muted flex items-center justify-center">
+          <Building2 className="h-3 w-3 text-muted-foreground animate-pulse" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Helper function to validate image URLs
 const isValidImageUrl = (url: string | null): boolean => {
@@ -33,6 +92,16 @@ const isValidImageUrl = (url: string | null): boolean => {
     return false;
   }
 };
+
+// Extended category interface with parent info for tree structure
+interface TreeCategory {
+  category_id: string;
+  name: string;
+  icon?: string;
+  parent_id?: string;
+  children: TreeCategory[];
+  depth: number;
+}
 
 export interface AdvancedFilterState {
   selectedCategories: string[];
@@ -52,6 +121,7 @@ export interface AdvancedFilterState {
     hasAttachments: boolean;
     isRecurring: boolean;
     hasNotes: boolean;
+    uncategorized: boolean;
   };
 }
 
@@ -62,6 +132,7 @@ interface AdvancedFilterPanelProps {
   onFiltersChange: (filters: AdvancedFilterState) => void;
   onApply: () => void;
   onClear: () => void;
+  userId?: string;
 }
 
 interface FilterSectionProps {
@@ -114,10 +185,53 @@ export function AdvancedFilterPanel({
   onFiltersChange,
   onApply,
   onClear,
+  userId,
 }: AdvancedFilterPanelProps) {
   // Fetch real data from APIs
-  const { categories, loading: categoriesLoading } = useCategories();
   const { merchants, loading: merchantsLoading } = useMerchants();
+
+  // State for tree categories
+  const [treeCategories, setTreeCategories] = useState<TreeCategory[]>([]);
+  const [loadingTreeCategories, setLoadingTreeCategories] = useState(true);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+
+  // Load tree categories
+  useEffect(() => {
+    const loadTreeCategories = async () => {
+      try {
+        setLoadingTreeCategories(true);
+        
+        // Build URL with userId parameter if available
+        const params = new URLSearchParams();
+        if (userId) {
+          params.append('user_id', userId);
+        }
+        
+        const url = `/api/categories/tree${params.toString() ? `?${params.toString()}` : ''}`;
+        console.log('Loading categories from:', url);
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to load categories tree');
+        const data = await response.json();
+        
+        console.log('Loaded categories:', data.categories?.length || 0, 'categories');
+        setTreeCategories(data.categories || []);
+        
+        // Start with all categories collapsed by default
+        setExpandedCategories(new Set<string>());
+        
+      } catch (error) {
+        console.error('Error loading tree categories:', error);
+        setTreeCategories([]);
+      } finally {
+        setLoadingTreeCategories(false);
+      }
+    };
+
+    if (isOpen) {
+      loadTreeCategories();
+    }
+  }, [isOpen, userId]);
 
   const [expandedSections, setExpandedSections] = useState({
     categories: true,
@@ -138,6 +252,177 @@ export function AdvancedFilterPanel({
     },
     []
   );
+
+  // Helper function to get all children category names recursively
+  const getAllChildrenNames = (category: TreeCategory): string[] => {
+    const children: string[] = [];
+    const traverse = (cat: TreeCategory) => {
+      if (cat.children && cat.children.length > 0) {
+        cat.children.forEach(child => {
+          children.push(child.name);
+          traverse(child);
+        });
+      }
+    };
+    traverse(category);
+    return children;
+  };
+
+  // Helper function to check if all children are selected
+  const areAllChildrenSelected = (category: TreeCategory): boolean => {
+    const childrenNames = getAllChildrenNames(category);
+    return childrenNames.length > 0 && childrenNames.every(name => 
+      filters.selectedCategories.includes(name)
+    );
+  };
+
+  // Helper function to check if some children are selected (for indeterminate state)
+  const areSomeChildrenSelected = (category: TreeCategory): boolean => {
+    const childrenNames = getAllChildrenNames(category);
+    return childrenNames.length > 0 && childrenNames.some(name => 
+      filters.selectedCategories.includes(name)
+    );
+  };
+
+  // Helper function to toggle category expansion
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
+  // Enhanced category toggle with parent-child logic
+  const handleCategoryToggleWithChildren = (category: TreeCategory) => {
+    const isSelected = filters.selectedCategories.includes(category.name);
+    const childrenNames = getAllChildrenNames(category);
+    
+    let newSelected: string[];
+    
+    if (isSelected) {
+      // If parent is selected, unselect parent and all children
+      newSelected = filters.selectedCategories.filter(name => 
+        name !== category.name && !childrenNames.includes(name)
+      );
+    } else {
+      // If parent is not selected, select parent and all children
+      newSelected = [
+        ...filters.selectedCategories.filter(name => name !== category.name && !childrenNames.includes(name)),
+        category.name,
+        ...childrenNames
+      ];
+    }
+    
+    updateFilters({ selectedCategories: newSelected });
+  };
+
+  // Helper function to flatten tree categories
+  const flattenTreeCategories = (categories: TreeCategory[]): TreeCategory[] => {
+    const flattened: TreeCategory[] = [];
+    const traverse = (cats: TreeCategory[]) => {
+      cats.forEach(cat => {
+        flattened.push(cat);
+        if (cat.children && cat.children.length > 0) {
+          traverse(cat.children);
+        }
+      });
+    };
+    traverse(categories);
+    return flattened;
+  };
+
+  // Helper function to render category tree with collapsible functionality
+  const renderCategoryTree = (categories: TreeCategory[], depth = 0): React.ReactNode => {
+    return categories.map((category) => {
+      const hasChildren = category.children && category.children.length > 0;
+      const isExpanded = expandedCategories.has(category.category_id);
+      const isSelected = filters.selectedCategories.includes(category.name);
+      const someChildrenSelected = hasChildren && areSomeChildrenSelected(category);
+      const allChildrenSelected = hasChildren && areAllChildrenSelected(category);
+      
+      // Determine checkbox state
+      const checkboxState = isSelected ? 'checked' : 
+                           (someChildrenSelected && !allChildrenSelected) ? 'indeterminate' : 
+                           'unchecked';
+
+      return (
+        <div key={category.category_id} className="space-y-0.5">
+          {/* Category Item */}
+          <div 
+            className="flex items-center space-x-2 py-1 px-1 rounded hover:bg-muted/30 transition-colors"
+            style={{ marginLeft: `${depth * 16}px` }}
+          >
+            {/* Expand/Collapse button for parent categories */}
+            {hasChildren ? (
+              <button
+                onClick={() => toggleCategoryExpansion(category.category_id)}
+                className="flex-shrink-0 p-0.5 hover:bg-muted rounded transition-colors"
+              >
+                {isExpanded ? (
+                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                )}
+              </button>
+            ) : (
+              <div className="flex-shrink-0 w-4 h-4" /> 
+            )}
+
+            <div className="relative flex-shrink-0 w-4 h-4">
+              <Checkbox
+                id={category.category_id}
+                checked={checkboxState === 'checked'}
+                onCheckedChange={() => {
+                  if (hasChildren) {
+                    handleCategoryToggleWithChildren(category);
+                  } else {
+                    handleCategoryToggle(category.name);
+                  }
+                }}
+                className="w-4 h-4"
+              />
+              {/* Visual indicator for indeterminate state */}
+              {checkboxState === 'indeterminate' && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-2 h-0.5 bg-primary rounded-sm" />
+                </div>
+              )}
+            </div>
+            <label
+              htmlFor={category.category_id}
+              className="flex items-center gap-2 text-sm cursor-pointer flex-1"
+            >
+              <LucideIcon
+                name={category.icon || "tag"}
+                className="h-4 w-4 text-[#6700EE]"
+              />
+              <span className={depth === 0 ? "font-medium" : ""}>{category.name}</span>
+            </label>
+          </div>
+          
+          {/* Render children if expanded */}
+          {hasChildren && (
+            <div 
+              className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              {isExpanded && (
+                <div className="space-y-1">
+                  {renderCategoryTree(category.children, depth + 1)}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
 
   const updateFilters = useCallback(
     (updates: Partial<AdvancedFilterState>) => {
@@ -172,7 +457,7 @@ export function AdvancedFilterPanel({
     (section: "categories" | "merchants" | "accounts" | "tags" | "goals") => {
       switch (section) {
         case "categories":
-          const allCategoryIds = categories.map((c) => c.name);
+          const allCategoryIds = flattenTreeCategories(treeCategories).map((c) => c.name);
           updateFilters({
             selectedCategories:
               filters.selectedCategories.length === allCategoryIds.length
@@ -192,7 +477,7 @@ export function AdvancedFilterPanel({
         // Add other cases as needed
       }
     },
-    [filters, updateFilters, categories, merchants]
+    [filters, updateFilters, treeCategories, merchants]
   );
 
   const getSelectedCount = useCallback(() => {
@@ -265,47 +550,47 @@ export function AdvancedFilterPanel({
                     onClick={() => handleSelectAll("categories")}
                     className="text-xs"
                   >
-                    {filters.selectedCategories.length === categories.length
+                    {filters.selectedCategories.length === flattenTreeCategories(treeCategories).length
                       ? "Deselect All"
                       : "Select All"}
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const allParentIds = new Set<string>();
+                      const findParents = (categories: TreeCategory[]) => {
+                        categories.forEach(cat => {
+                          if (cat.children && cat.children.length > 0) {
+                            allParentIds.add(cat.category_id);
+                            findParents(cat.children);
+                          }
+                        });
+                      };
+                      findParents(treeCategories);
+                      
+                      // Toggle between expand all and collapse all
+                      const allExpanded = Array.from(allParentIds).every(id => expandedCategories.has(id));
+                      setExpandedCategories(allExpanded ? new Set() : allParentIds);
+                    }}
+                    className="text-xs"
+                  >
+                    {expandedCategories.size > 0 ? "Collapse All" : "Expand All"}
+                  </Button>
                 </div>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {categoriesLoading ? (
-                    <div className="text-sm text-muted-foreground">
+                <div className="space-y-1 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+                  {loadingTreeCategories ? (
+                    <div className="text-sm text-muted-foreground p-2">
                       Loading categories...
                     </div>
-                  ) : categories.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">
+                  ) : treeCategories.length === 0 ? (
+                    <div className="text-sm text-muted-foreground p-2">
                       No categories found
                     </div>
                   ) : (
-                    categories.map((category) => (
-                      <div
-                        key={category.id}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={category.id}
-                          checked={filters.selectedCategories.includes(
-                            category.name
-                          )}
-                          onCheckedChange={() =>
-                            handleCategoryToggle(category.name)
-                          }
-                        />
-                        <label
-                          htmlFor={category.id}
-                          className="flex items-center gap-2 text-sm cursor-pointer flex-1"
-                        >
-                          <LucideIcon
-                            name={category.icon || ""}
-                            className="h-4 w-4 text-[#6700EE]"
-                          />
-                          <span>{category.name}</span>
-                        </label>
-                      </div>
-                    ))
+                    <div className="space-y-1 pb-2">
+                      {renderCategoryTree(treeCategories)}
+                    </div>
                   )}
                 </div>
               </div>
@@ -359,33 +644,7 @@ export function AdvancedFilterPanel({
                           className="flex items-center gap-2 text-sm cursor-pointer flex-1"
                         >
                           <div className="flex items-center gap-2 flex-1">
-                            {isValidImageUrl(merchant.logo_url) ? (
-                              <Image
-                                src={
-                                  merchant.logo_url!.startsWith("http:")
-                                    ? merchant.logo_url!.replace(
-                                        "http:",
-                                        "https:"
-                                      )
-                                    : merchant.logo_url!
-                                }
-                                alt={merchant.name}
-                                width={20}
-                                height={20}
-                                className="rounded object-cover flex-shrink-0"
-                                onError={(e) => {
-                                  console.log(
-                                    "Merchant logo load error:",
-                                    merchant.logo_url
-                                  );
-                                  e.currentTarget.style.display = "none";
-                                }}
-                              />
-                            ) : (
-                              <div className="w-5 h-5 rounded bg-muted flex items-center justify-center flex-shrink-0">
-                                <Building2 className="h-3 w-3 text-muted-foreground" />
-                              </div>
-                            )}
+                            <MerchantLogo merchant={merchant} />
                             <span className="flex-1">{merchant.name}</span>
                           </div>
                           <span className="text-xs text-muted-foreground">

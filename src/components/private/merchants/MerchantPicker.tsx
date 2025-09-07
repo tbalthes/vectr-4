@@ -184,7 +184,10 @@ export function MerchantPicker({
           <Building2 className="h-4 w-4 flex-shrink-0" />
           {selectedMerchant ? (
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {selectedMerchant.logoUrl && (
+              {selectedMerchant.logoUrl && 
+               selectedMerchant.logoUrl.trim() !== "" && 
+               selectedMerchant.logoUrl !== "\\" &&
+               (selectedMerchant.logoUrl.startsWith("http://") || selectedMerchant.logoUrl.startsWith("https://")) && (
                 <Image
                   src={
                     selectedMerchant.logoUrl.startsWith("http:")
@@ -308,7 +311,10 @@ export function MerchantPicker({
                         onClick={() => handleMerchantSelect(merchant)}
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          {merchant.logoUrl ? (
+                          {merchant.logoUrl && 
+                           merchant.logoUrl.trim() !== "" && 
+                           merchant.logoUrl !== "\\" &&
+                           (merchant.logoUrl.startsWith("http://") || merchant.logoUrl.startsWith("https://")) ? (
                             <Image
                               src={
                                 merchant.logoUrl.startsWith("http:")
@@ -328,7 +334,7 @@ export function MerchantPicker({
                               }}
                             />
                           ) : (
-                            <div className="h-6 w-6 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                            <div className="h-6 w-6 rounded bg-white flex items-center justify-center flex-shrink-0">
                               <Building2 className="h-3 w-3" />
                             </div>
                           )}

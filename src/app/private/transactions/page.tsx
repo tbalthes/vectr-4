@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import TransactionTableVirtuoso from "@/components/private/transactions/enhanced_table/TransactionTableVirtuoso";
 import { TransactionDetailsDrawer } from "@/components/private/transactions/enhanced_table/TransactionDetailsDrawer";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,9 @@ import {
 } from "@/components/ui/sheet";
 
 export default function TransactionsPage() {
+  // Get authenticated user
+  const { user } = useAuth();
+  
   // TODO: Integrate useInfiniteTransactions and new data flow (WBS 3.1)
   // Placeholder for future filter panel (WBS 5.1)
   const [search, setSearch] = useState("");
@@ -58,6 +62,7 @@ export default function TransactionsPage() {
       hasAttachments: false,
       isRecurring: false,
       hasNotes: false,
+      uncategorized: false,
     },
   });
 
@@ -128,6 +133,7 @@ export default function TransactionsPage() {
       merchants: advancedFilters.selectedMerchants.join(","),
     }),
     ...(advancedFilters.otherFilters.needsReview && { needsReview: true }),
+    ...(advancedFilters.otherFilters.uncategorized && { uncategorized: true }),
   };
 
   // Infinite loading hook with server-side filtering
@@ -251,9 +257,13 @@ export default function TransactionsPage() {
         return;
       }
 
+      console.log("handleDrawerEdit: saving transaction", transaction);
+
+      // Apply optimistic update first
       if (updateTransactionOptimistic) {
         updateTransactionOptimistic(transaction as Record<string, unknown>);
         didOptimisticallyUpdate = true;
+        console.log("Applied optimistic update for transaction:", transaction.id);
       }
 
       // Persist to server
@@ -273,8 +283,14 @@ export default function TransactionsPage() {
       const result = await response.json();
       console.log("Transaction updated successfully:", result);
 
-      // Revalidate from server for final truth
-      if (revalidate) await revalidate();
+      // Wait a bit before revalidating to ensure DB has updated
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Revalidate from server for final truth, but preserve optimistic updates
+      if (revalidate) {
+        await revalidate();
+        console.log("Data revalidated from server");
+      }
 
       // Close the drawer only after a successful save
       handleCloseDrawer();
@@ -282,7 +298,10 @@ export default function TransactionsPage() {
       console.error("Error updating transaction:", err);
       // Rollback by revalidating from server if we applied an optimistic update
       try {
-        if (didOptimisticallyUpdate && revalidate) await revalidate();
+        if (didOptimisticallyUpdate && revalidate) {
+          await revalidate();
+          console.log("Rolled back optimistic update due to error");
+        }
       } catch (reErr) {
         console.error("Error revalidating after failed update:", reErr);
       }
@@ -398,6 +417,7 @@ export default function TransactionsPage() {
                     // Filters are automatically applied via the apiFilters effect
                     setFiltersOpen(false);
                   }}
+                  userId={user?.id}
                   onClear={() => {
                     setAdvancedFilters({
                       selectedCategories: [],
@@ -414,6 +434,7 @@ export default function TransactionsPage() {
                         hasAttachments: false,
                         isRecurring: false,
                         hasNotes: false,
+                        uncategorized: false,
                       },
                     });
                   }}

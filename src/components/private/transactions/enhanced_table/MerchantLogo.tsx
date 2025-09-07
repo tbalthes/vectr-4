@@ -1,5 +1,8 @@
 // This component is mostly correct already, just ensure props are named well.
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 
 interface MerchantLogoProps {
   merchantName: string;
@@ -12,6 +15,8 @@ export function MerchantLogo({
   logoUrl,
   className = "w-8 h-8",
 }: MerchantLogoProps) {
+  const [imageLoadError, setImageLoadError] = useState(false);
+
   // Guard merchantName
   const name = merchantName || "";
 
@@ -20,7 +25,10 @@ export function MerchantLogo({
   if (
     typeof logoUrl === "string" &&
     logoUrl.trim() !== "" &&
-    /^(https?:\/\/|\/|data:)/.test(logoUrl.trim())
+    /^(https?:\/\/|\/|data:)/.test(logoUrl.trim()) &&
+    !imageLoadError && // Don't render if image has failed to load
+    logoUrl.trim() !== "\\" && // Filter out malformed URLs like "\"
+    logoUrl.trim().length > 1 // Prevent single character malformed URLs
   ) {
     // Convert HTTP to HTTPS for Clearbit and other image services
     const secureUrl = logoUrl.startsWith("http:")
@@ -38,6 +46,7 @@ export function MerchantLogo({
         // `unoptimized` must be a boolean; only set true for data URIs.
         unoptimized={typeof logoUrl === "string" && logoUrl.startsWith("data:")}
         onError={() => {
+          setImageLoadError(true);
           console.log(
             "MerchantLogo load error:",
             logoUrl,
@@ -45,11 +54,15 @@ export function MerchantLogo({
             secureUrl
           );
         }}
+        onLoad={() => {
+          // Reset error state if component re-mounts with a different URL that loads successfully
+          setImageLoadError(false);
+        }}
       />
     );
   }
 
-  // Fallback to initial if no logoUrl - use theme colors
+  // Fallback to initial if no logoUrl or image failed to load - use theme colors
   const colors = [
     "bg-chart-1/20 text-chart-1",
     "bg-chart-2/20 text-chart-2",

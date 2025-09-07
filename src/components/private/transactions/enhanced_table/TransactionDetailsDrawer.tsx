@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   X,
   Calendar as CalendarIcon,
@@ -82,6 +83,9 @@ export function TransactionDetailsDrawer({
   const [editedTransaction, setEditedTransaction] =
     useState<DetailedTransaction | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Get authenticated user for category loading
+  const { user } = useAuth();
 
   const fetchTransactionDetails = useCallback(async () => {
     if (!transactionId) return;
@@ -177,7 +181,9 @@ export function TransactionDetailsDrawer({
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Parse the date string as local time to avoid timezone issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // Month is 0-indexed
     return date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
@@ -347,7 +353,10 @@ export function TransactionDetailsDrawer({
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {currentTransaction.date ? (
-                            format(new Date(currentTransaction.date), "PPP")
+                            format((() => {
+                              const [year, month, day] = currentTransaction.date.split('-').map(Number);
+                              return new Date(year, month - 1, day);
+                            })(), "PPP")
                           ) : (
                             <span>Pick a date</span>
                           )}
@@ -356,7 +365,10 @@ export function TransactionDetailsDrawer({
                       <PopoverContent className="w-auto p-0" align="end">
                         <Calendar
                           mode="single"
-                          selected={new Date(currentTransaction.date)}
+                          selected={(() => {
+                            const [year, month, day] = currentTransaction.date.split('-').map(Number);
+                            return new Date(year, month - 1, day);
+                          })()}
                           onSelect={(date) => {
                             if (date) {
                               updateEditedField(
@@ -511,6 +523,7 @@ export function TransactionDetailsDrawer({
                     <div className="w-48 text-right">
                       <CategorySingleSelectPopover
                         value={currentTransaction.category_id || null}
+                        userId={user?.id}
                         onChange={(
                           categoryId: string | null,
                           category?: {
@@ -569,8 +582,8 @@ export function TransactionDetailsDrawer({
 
               {/* Original description */}
               <div className="space-y-2">
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Clean Description
+                <div className="text-xs font- font-medium text-muted-foreground uppercase tracking-wide">
+                  Description
                 </div>
                 {isEditing ? (
                   <Input

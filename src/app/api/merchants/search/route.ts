@@ -12,19 +12,23 @@ const CACHE_HEADERS = {
 };
 
 interface MerchantSearchResult {
-  id: string;
+  merchant_id: string;  // Fixed: merchants table uses merchant_id
   name: string;
   logo_url: string | null;
   categories:
     | {
-        id: string;
+        category_id: string;
         name: string;
-        icon: string;
+        plain_name?: string;
+        lucide_icon?: string;
+        icon?: string;
       }
     | {
-        id: string;
+        category_id: string;
         name: string;
-        icon: string;
+        plain_name?: string;
+        lucide_icon?: string;
+        icon?: string;
       }[]
     | null;
 }
@@ -36,8 +40,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const requestCookies = await cookies();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = createRouteHandlerClient({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cookies: () => requestCookies as any,
     });
 
@@ -65,12 +69,14 @@ export async function GET(request: NextRequest) {
         .from("merchants")
         .select(
           `
-          id,
+          merchant_id,
           name,
           logo_url,
           categories (
-            id,
+            category_id,
             name,
+            plain_name,
+            lucide_icon,
             icon
           )
         `
@@ -115,19 +121,19 @@ export async function GET(request: NextRequest) {
       .from("merchants")
       .select(
         `
-        id,
+        merchant_id,
         name,
         logo_url,
         categories (
-          id,
+          category_id,
           name,
+          plain_name,
+          lucide_icon,
           icon
         )
       `
       )
-      .or(
-        `name.ilike.${searchQuery},name.ilike.${searchQuery}*,name.ilike.*${searchQuery}*`
-      )
+      .ilike('name', `%${searchQuery}%`)
       .order("name")
       .limit(limit);
 
@@ -185,14 +191,14 @@ function transformMerchantData(data: MerchantSearchResult[]) {
     }
 
     return {
-      id: merchant.id,
+      id: merchant.merchant_id,
       name: merchant.name,
       logoUrl: merchant.logo_url,
       category: category
         ? {
-            id: category.id,
-            name: category.name,
-            icon: category.icon,
+            id: category.category_id,
+            name: category.plain_name || category.name,
+            icon: category.lucide_icon || category.icon || "HelpCircle",
           }
         : null,
     };

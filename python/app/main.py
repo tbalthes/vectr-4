@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import categorize, transactions, user_rules, merchants, retroactive_rules, categories
 from .routers import data_status
-from .routers import transaction_upload
+from .routers import transaction_upload, csv_processor, normalize
 
 app = FastAPI()
 
@@ -30,3 +30,5 @@ app.include_router(retroactive_rules.router)
 app.include_router(categories.router)
 app.include_router(data_status.router)
 app.include_router(transaction_upload.router)
+app.include_router(csv_processor.router)
+app.include_router(normalize.router)

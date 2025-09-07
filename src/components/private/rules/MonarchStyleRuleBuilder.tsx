@@ -365,6 +365,7 @@ export function MonarchStyleRuleBuilder({
           <div className="md:col-span-2 min-w-[18rem] md:min-w-[24rem]">
             <CategorySingleSelectPopover
               value={isCategoryUUID ? (condition.value as string) : null}
+              userId={userId}
               onChange={(id, cat) => {
                 const categoryName = cat?.name || id || "";
                 updateCondition(condition.id, { value: categoryName });
@@ -449,6 +450,7 @@ export function MonarchStyleRuleBuilder({
         return (
           <CategorySingleSelectPopover
             value={action.value || null}
+            userId={userId}
             onChange={(id) => updateAction(action.id, { value: id || "" })}
             placeholder="Select category..."
             className="w-full"

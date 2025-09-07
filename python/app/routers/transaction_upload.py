@@ -157,6 +157,7 @@ def transaction_upload(
             "clean_description": processed_tx.get("clean_description"),
             "date": processed_tx.get("date"),
             "merchant_id": processed_tx.get("merchant_id"),
+            "category_id": processed_tx.get("category_id"),  # ✅ ADD: Direct category foreign key
             "transaction_number": processed_tx.get("transaction_number"),
             "balance": processed_tx.get("balance"),
             "user_metadata": processed_tx.get("user_metadata"),

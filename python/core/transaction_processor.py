@@ -79,7 +79,8 @@ def _match_by_user_rules(transaction_data: Dict[str, Any], user_rules: list, cat
             category_id = rule.get('category_id')
             category_name = None
             if category_id:
-                category_name = next((c.get('name') for c in categories if str(c.get('id')) == str(category_id)), None)
+                # Updated for new Plaid categories structure
+                category_name = next((c.get('plain_name') or c.get('name') for c in categories if str(c.get('category_id')) == str(category_id)), None)
             return {
                 "category_id": category_id,
                 "category_name": category_name,
@@ -151,44 +152,52 @@ def _parse_merchant_name(text: str) -> str:
 def _fetch_category_name(category_id: str, categories: list) -> Optional[str]:
     """
     Fetches the category name from the in-memory categories list using the category_id.
+    Updated for new Plaid categories structure with category_id as primary key.
     """
     for cat in categories:
-        if str(cat.get('id')) == str(category_id):
-            return cat.get('name')
+        # Use category_id as the primary key (new Plaid structure)
+        if str(cat.get('category_id')) == str(category_id):
+            # Prefer plain_name (display name) over name
+            return cat.get('plain_name') or cat.get('name')
     return None
-def _match_by_regex_rules(cleaned_memo: str, global_regex_rules: list, categories: list, merchants: list) -> Optional[Dict[str, Any]]:
+def _match_by_merchant_regex(cleaned_memo: str, merchants: list, categories: list) -> Optional[Dict[str, Any]]:
     """
-    Matches the memo against the in-memory global_regex_rules list.
-    This is the highest confidence matching method.
+    Matches the memo against merchant regex patterns from the new merchants table.
+    This replaces the old global_regex_rules system.
     """
-
-
-    for rule in global_regex_rules:
-        pattern = rule.get('regex_pattern', '')
-        if re.search(pattern, cleaned_memo):
-            merchant_id = rule.get('merchant_id')
-            merchant = None
-            if merchant_id:
-                merchant = next((m for m in merchants if str(m.get('id')) == str(merchant_id)), None)
-            if merchant:
-                category_id = merchant.get('default_category_id')
-                category_name = _fetch_category_name(category_id, categories) if category_id else None
+    if not cleaned_memo or not merchants:
+        return None
+        
+    for merchant in merchants:
+        regex_pattern = merchant.get('regex_match')
+        if not regex_pattern:
+            continue
+            
+        try:
+            # Perform case-insensitive regex matching
+            if re.search(regex_pattern, cleaned_memo, re.IGNORECASE):
+                merchant_id = merchant.get('merchant_id')
                 merchant_name = merchant.get('name')
+                category_id = merchant.get('default_category_id')
                 logo_url = merchant.get('logo_url')
-            else:
-                category_id = None
-                category_name = None
-                merchant_name = None
-                logo_url = None
-            return {
-                "merchant_id": merchant_id,
-                "merchant_name": merchant_name,
-                "logo_url": logo_url,
-                "category_id": category_id,
-                "category_name": category_name,
-                "confidence": 1.0 if merchant_id else 0.9,
-                "match_method": "regex"
-            }
+                
+                # Get category name using new category_id field
+                category_name = _fetch_category_name(category_id, categories) if category_id else None
+                
+                return {
+                    "merchant_id": merchant_id,
+                    "merchant_name": merchant_name,
+                    "logo_url": logo_url,
+                    "category_id": category_id,
+                    "category_name": category_name,
+                    "confidence": 1.0,
+                    "match_method": "merchant_regex"
+                }
+        except re.error as e:
+            # Skip invalid regex patterns and log error
+            print(f"Invalid regex pattern in merchant {merchant.get('name', 'Unknown')}: {regex_pattern} - {e}")
+            continue
+            
     return None
 
 def _match_by_mcc_and_parsing(cleaned_memo: str, mcc_category_map: list, categories: list) -> Optional[Dict[str, Any]]:
@@ -243,12 +252,11 @@ def process_transaction(transaction_data: Dict[str, Any], data_cache: Any, user_
     if user_rules is None:
         user_rules = []
 
-    # 2. Strategy 1: Attempt to match with high-confidence global regex rules
-    match_result = _match_by_regex_rules(
+    # 2. Strategy 1: Attempt to match with merchant regex patterns (replaces global_regex_rules)
+    match_result = _match_by_merchant_regex(
         cleaned_memo,
-        data_cache.global_regex_rules,
-        data_cache.categories,
-        data_cache.merchants
+        data_cache.merchants,
+        data_cache.categories
     )
 
     # 3. Strategy 2: If no regex match, fall back to MCC parsing

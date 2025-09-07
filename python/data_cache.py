@@ -23,7 +23,7 @@ class DataCache:
     def __init__(self):
         if getattr(self, '_initialized', False):
             return
-        self.global_regex_rules: List[Dict[str, Any]] = []
+        # Removed global_regex_rules - consolidated into merchants.regex_match
         self.mcc_category_map: List[Dict[str, Any]] = []
         self.categories: List[Dict[str, Any]] = []
         self.merchants: List[Dict[str, Any]] = []
@@ -35,8 +35,7 @@ class DataCache:
         """Fetch all required tables from Supabase and store in memory. Updates last_refresh timestamp."""
         with self._cache_lock:
             print("[DataCache] Loading all tables from Supabase...")
-            self.global_regex_rules = self._fetch_table('global_regex_rules')
-            print(f"[DataCache] Loaded {len(self.global_regex_rules)} global_regex_rules")
+            # Removed global_regex_rules - patterns now in merchants.regex_match
             self.mcc_category_map = self._fetch_table('mcc_category_map')
             print(f"[DataCache] Loaded {len(self.mcc_category_map)} mcc_category_map entries")
             self.categories = self._fetch_table('categories')

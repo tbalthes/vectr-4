@@ -5,6 +5,12 @@ import { FileText, AlertCircle } from "lucide-react";
 
 interface FileUploadStepProps {
   onFileUpload: (file: File, content: string) => void;
+  onDirectProcessing?: (
+    file: File,
+    mapping: Record<string, string>,
+    accountId: string
+  ) => Promise<unknown>;
+  enableDirectProcessing?: boolean;
 }
 
 function getDropzoneClassName(isDragging: boolean, isLoading: boolean) {

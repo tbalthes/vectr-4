@@ -462,6 +462,7 @@ export function RuleBuilder({
             <Label>Category Assignment</Label>
             <CategorySingleSelectPopover
               value={formData.category_id || null}
+              userId={userId}
               onChange={(id: string | null) =>
                 setFormData((prev) => ({ ...prev, category_id: id || "" }))
               }

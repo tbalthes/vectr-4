@@ -17,17 +17,23 @@ router = APIRouter(
 
 
 class CategoryResponse(BaseModel):
-    """Response model for category data."""
-    id: str
-    name: str
-    icon: Optional[str] = None
+    """Response model for category data - Updated for Plaid categories."""
+    category_id: str  # New primary key
+    name: str  # Display name (plain_name for compatibility)
+    plain_name: str  # Plaid display name  
+    category: str  # Plaid category constant
+    parent_category: Optional[str] = None  # Parent Plaid category constant
     parent_id: Optional[str] = None
     parent_name: Optional[str] = None
+    icon: Optional[str] = None  # For compatibility
+    icon_kebab: Optional[str] = None  # kebab-case icon
+    lucide_icon: Optional[str] = None  # PascalCase Lucide icon
+    description: Optional[str] = None
+    user_id: Optional[str] = None
     children: List['CategoryResponse'] = Field(default_factory=list)
     depth: int = 0
     transaction_count: Optional[int] = None
     created_at: Optional[str] = None
-    updated_at: Optional[str] = None
 
 
 class CategoryTreeResponse(BaseModel):
@@ -52,6 +58,30 @@ class CategoryUpdate(BaseModel):
     parent_id: Optional[str] = None
 
 
+def _build_category_response(cat: Dict[str, Any], transaction_count: Optional[int] = None) -> CategoryResponse:
+    """Helper function to build CategoryResponse from database row - Updated for Plaid schema."""
+    return CategoryResponse(
+        category_id=str(cat.get('category_id')),
+        name=cat.get('plain_name') or cat.get('name', ''),  # Use plain_name as display name
+        plain_name=cat.get('plain_name', ''),
+        category=cat.get('category', ''),
+        parent_category=cat.get('parent_category'),
+        parent_id=str(cat.get('parent_id')) if cat.get('parent_id') else None,
+        parent_name=None,  # Will be populated if needed
+        icon=cat.get('lucide_icon') or cat.get('icon'),  # Prefer lucide_icon
+        icon_kebab=cat.get('icon_kebab'),
+        lucide_icon=cat.get('lucide_icon'),
+        description=cat.get('description'),
+        user_id=str(cat.get('user_id')) if cat.get('user_id') else None,
+        children=[],
+        depth=0,
+        transaction_count=transaction_count,
+        created_at=str(cat.get('created_at')) if cat.get('created_at') else None,
+    )
+    icon: Optional[str] = Field(None, max_length=50)
+    parent_id: Optional[str] = None
+
+
 def _build_category_tree(categories: List[Dict[str, Any]]) -> List[CategoryResponse]:
     """
     Build a hierarchical tree structure from flat category list.
@@ -65,19 +95,8 @@ def _build_category_tree(categories: List[Dict[str, Any]]) -> List[CategoryRespo
     # Create lookup map
     category_map = {}
     for cat in categories:
-        cat_id = str(cat.get('id'))
-        category_map[cat_id] = CategoryResponse(
-            id=cat_id,
-            name=cat.get('name', ''),
-            icon=cat.get('icon'),
-            parent_id=str(cat.get('parent_id')) if cat.get('parent_id') else None,
-            parent_name=None,  # Will be filled later
-            children=[],
-            depth=0,
-            transaction_count=cat.get('transaction_count', 0),
-            created_at=str(cat.get('created_at')) if cat.get('created_at') else None,
-            updated_at=str(cat.get('updated_at')) if cat.get('updated_at') else None,
-        )
+        cat_id = str(cat.get('category_id'))  # Updated for new primary key
+        category_map[cat_id] = _build_category_response(cat, cat.get('transaction_count', 0))
     
     # Build tree structure
     root_categories = []
@@ -177,7 +196,7 @@ def get_categories_tree(
                 if counts_response and counts_response.data:
                     count_map = {item['category_id']: item['count'] for item in counts_response.data}
                     for cat in categories:
-                        cat['transaction_count'] = count_map.get(str(cat.get('id')), 0)
+                        cat['transaction_count'] = count_map.get(str(cat.get('category_id')), 0)
                 else:
                     for cat in categories:
                         cat['transaction_count'] = 0
@@ -239,21 +258,28 @@ def search_categories(
         matching_categories = []
         
         # Create parent lookup map for context
-        parent_map = {str(cat.get('id')): cat.get('name', '') for cat in categories}
+        parent_map = {str(cat.get('category_id')): cat.get('plain_name') or cat.get('name', '') for cat in categories}
         
         for cat in categories:
-            cat_name = cat.get('name', '').lower()
+            cat_name = (cat.get('plain_name') or cat.get('name', '')).lower()
             if query_lower in cat_name:
                 matching_categories.append(CategoryResponse(
-                    id=str(cat.get('id')),
-                    name=cat.get('name', ''),
-                    icon=cat.get('icon'),
+                    category_id=str(cat.get('category_id')),
+                    name=cat.get('plain_name') or cat.get('name', ''),
+                    plain_name=cat.get('plain_name', ''),
+                    category=cat.get('category', ''),
+                    parent_category=cat.get('parent_category'),
                     parent_id=str(cat.get('parent_id')) if cat.get('parent_id') else None,
                     parent_name=parent_map.get(str(cat.get('parent_id'))) if cat.get('parent_id') else None,
-                    children=[],  # Don't include children in search results
+                    icon=cat.get('lucide_icon') or cat.get('icon'),
+                    icon_kebab=cat.get('icon_kebab'),
+                    lucide_icon=cat.get('lucide_icon'),
+                    description=cat.get('description'),
+                    user_id=str(cat.get('user_id')) if cat.get('user_id') else None,
+                    children=[],
                     depth=0,
+                    transaction_count=cat.get('transaction_count'),
                     created_at=str(cat.get('created_at')) if cat.get('created_at') else None,
-                    updated_at=str(cat.get('updated_at')) if cat.get('updated_at') else None,
                 ))
         
         # Sort by relevance (exact match first, then alphabetical)
@@ -292,13 +318,13 @@ def get_category(
         # Look in cached categories first
         category = None
         for cat in data_cache.categories:
-            if str(cat.get('id')) == category_id:
+            if str(cat.get('category_id')) == category_id:
                 category = cat
                 break
         
         # If not found in cache, try database
         if not category:
-            response = supabase.table("categories").select("*").eq("id", category_id).single().execute()
+            response = supabase.table("categories").select("*").eq("category_id", category_id).single().execute()
             if not response.data:
                 raise HTTPException(status_code=404, detail="Category not found")
             category = response.data
@@ -307,37 +333,51 @@ def get_category(
         parent_name = None
         if category.get('parent_id'):
             parent = next(
-                (cat for cat in data_cache.categories if str(cat.get('id')) == str(category.get('parent_id'))),
+                (cat for cat in data_cache.categories if str(cat.get('category_id')) == str(category.get('parent_id'))),
                 None
             )
             if parent:
                 parent_name = parent.get('name')
         
         result = CategoryResponse(
-            id=str(category.get('id')),
-            name=category.get('name', ''),
-            icon=category.get('icon'),
+            category_id=str(category.get('category_id')),
+            name=category.get('plain_name') or category.get('name', ''),
+            plain_name=category.get('plain_name', ''),
+            category=category.get('category', ''),
+            parent_category=category.get('parent_category'),
             parent_id=str(category.get('parent_id')) if category.get('parent_id') else None,
             parent_name=parent_name,
+            icon=category.get('lucide_icon') or category.get('icon'),
+            icon_kebab=category.get('icon_kebab'),
+            lucide_icon=category.get('lucide_icon'),
+            description=category.get('description'),
+            user_id=str(category.get('user_id')) if category.get('user_id') else None,
             children=[],
             depth=0,
+            transaction_count=category.get('transaction_count'),
             created_at=str(category.get('created_at')) if category.get('created_at') else None,
-            updated_at=str(category.get('updated_at')) if category.get('updated_at') else None,
         )
         
         # Include children if requested
         if include_children:
             children = [
                 CategoryResponse(
-                    id=str(cat.get('id')),
-                    name=cat.get('name', ''),
-                    icon=cat.get('icon'),
+                    category_id=str(cat.get('category_id')),
+                    name=cat.get('plain_name') or cat.get('name', ''),
+                    plain_name=cat.get('plain_name', ''),
+                    category=cat.get('category', ''),
+                    parent_category=cat.get('parent_category'),
                     parent_id=str(cat.get('parent_id')) if cat.get('parent_id') else None,
                     parent_name=category.get('name'),
+                    icon=cat.get('lucide_icon') or cat.get('icon'),
+                    icon_kebab=cat.get('icon_kebab'),
+                    lucide_icon=cat.get('lucide_icon'),
+                    description=cat.get('description'),
+                    user_id=str(cat.get('user_id')) if cat.get('user_id') else None,
                     children=[],
                     depth=1,
+                    transaction_count=cat.get('transaction_count'),
                     created_at=str(cat.get('created_at')) if cat.get('created_at') else None,
-                    updated_at=str(cat.get('updated_at')) if cat.get('updated_at') else None,
                 )
                 for cat in data_cache.categories
                 if str(cat.get('parent_id')) == category_id
@@ -418,15 +458,22 @@ def create_category(
                 parent_name = parent_response.data.get('name')
         
         return CategoryResponse(
-            id=str(created_category.get('id')),
+            category_id=str(created_category.get('id')),
             name=created_category.get('name', ''),
-            icon=created_category.get('icon'),
+            plain_name=created_category.get('plain_name', created_category.get('name', '')),
+            category=created_category.get('category', ''),
+            parent_category=created_category.get('parent_category'),
             parent_id=str(created_category.get('parent_id')) if created_category.get('parent_id') else None,
             parent_name=parent_name,
+            icon=created_category.get('lucide_icon') or created_category.get('icon'),
+            icon_kebab=created_category.get('icon_kebab'),
+            lucide_icon=created_category.get('lucide_icon'),
+            description=created_category.get('description'),
+            user_id=str(created_category.get('user_id')) if created_category.get('user_id') else None,
             children=[],
             depth=0,
+            transaction_count=created_category.get('transaction_count'),
             created_at=str(created_category.get('created_at')) if created_category.get('created_at') else None,
-            updated_at=str(created_category.get('updated_at')) if created_category.get('updated_at') else None,
         )
         
     except HTTPException:
@@ -518,15 +565,22 @@ def update_category(
                 parent_name = parent_response.data.get('name')
         
         return CategoryResponse(
-            id=str(updated_category.get('id')),
-            name=updated_category.get('name', ''),
-            icon=updated_category.get('icon'),
+            category_id=str(updated_category.get('id')),
+            name=updated_category.get('plain_name') or updated_category.get('name', ''),
+            plain_name=updated_category.get('plain_name', updated_category.get('name', '')),
+            category=updated_category.get('category', ''),
+            parent_category=updated_category.get('parent_category'),
             parent_id=str(updated_category.get('parent_id')) if updated_category.get('parent_id') else None,
             parent_name=parent_name,
+            icon=updated_category.get('lucide_icon') or updated_category.get('icon'),
+            icon_kebab=updated_category.get('icon_kebab'),
+            lucide_icon=updated_category.get('lucide_icon'),
+            description=updated_category.get('description'),
+            user_id=str(updated_category.get('user_id')) if updated_category.get('user_id') else None,
             children=[],
             depth=0,
+            transaction_count=updated_category.get('transaction_count'),
             created_at=str(updated_category.get('created_at')) if updated_category.get('created_at') else None,
-            updated_at=str(updated_category.get('updated_at')) if updated_category.get('updated_at') else None,
         )
         
     except HTTPException:

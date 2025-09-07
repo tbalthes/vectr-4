@@ -205,6 +205,59 @@ async def preview_enhanced_user_rules(
         )
 
 
+@router.post("/")
+async def create_enhanced_user_rule(
+    rule: EnhancedUserRuleCreate,
+    supabase=Depends(get_supabase_client)
+) -> EnhancedUserRuleResponse:
+    """Create a new enhanced user rule."""
+    try:
+        # Validate user_id
+        uuid.UUID(rule.user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user_id format")
+    
+    try:
+        # Prepare rule data for database
+        rule_data = {
+            "id": str(uuid.uuid4()),
+            "user_id": rule.user_id,
+            "name": rule.name,
+            "description": rule.description,
+            "enabled": rule.enabled,
+            "priority": rule.priority,
+            "conditions": rule.conditions.dict(),
+            "actions": rule.actions.dict(),
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        
+        # Insert into database
+        result = supabase.table("user_rules").insert(rule_data).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to create rule")
+        
+        created_rule = result.data[0]
+        
+        return EnhancedUserRuleResponse(
+            id=created_rule["id"],
+            user_id=created_rule["user_id"],
+            name=created_rule["name"],
+            description=created_rule.get("description"),
+            enabled=created_rule["enabled"],
+            priority=created_rule["priority"],
+            conditions=RuleConditions(**created_rule["conditions"]),
+            actions=RuleActions(**created_rule["actions"]),
+            created_at=created_rule.get("created_at"),
+            updated_at=created_rule.get("updated_at")
+        )
+        
+    except Exception as e:
+        print(f"ERROR: failed to create rule: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create rule: {str(e)}")
+
+
 @router.post("/reorder")
 async def reorder_enhanced_user_rules(
     payload: ReorderRulesRequest,

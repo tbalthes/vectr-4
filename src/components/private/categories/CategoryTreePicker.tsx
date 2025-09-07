@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils/utils";
 import CategoryIcon from "@/components/private/transactions/enhanced_table/CategoryIcon";
 
 interface Category {
-  id: string;
+  category_id: string;  // Updated to match backend response
   name: string;
   icon?: string;
   parent_id?: string;
@@ -65,8 +65,8 @@ function CategoryNode({
   multiSelect,
   showCounts,
 }: CategoryNodeProps) {
-  const isSelected = selectedIds.includes(category.id);
-  const isExpanded = expandedIds.has(category.id);
+  const isSelected = selectedIds.includes(category.category_id);
+  const isExpanded = expandedIds.has(category.category_id);
   const hasChildren = category.children.length > 0;
   const matchesSearch = searchQuery
     ? category.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -100,7 +100,7 @@ function CategoryNode({
           isSelected && "bg-blue-50 border-l-2 border-l-blue-500"
         )}
         style={{ paddingLeft: `${12 + Math.max(0, category.depth) * 20}px` }}
-        onClick={() => onToggle(category.id)}
+        onClick={() => onToggle(category.category_id)}
       >
         {/* Expand/Collapse Button - Always reserve space */}
         <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
@@ -109,7 +109,7 @@ function CategoryNode({
               className="p-1 hover:bg-gray-200 rounded"
               onClick={(e) => {
                 e.stopPropagation();
-                onExpand(category.id);
+                onExpand(category.category_id);
               }}
             >
               {isExpanded ? (
@@ -165,7 +165,7 @@ function CategoryNode({
         <div className="ml-2">
           {category.children.map((child) => (
             <CategoryNode
-              key={child.id}
+              key={child.category_id}
               category={child}
               selectedIds={selectedIds}
               onToggle={onToggle}
@@ -208,6 +208,9 @@ export function CategoryTreePicker({
       const params = new URLSearchParams();
       if (userId) params.append("user_id", userId);
       if (showTransactionCounts) params.append("include_counts", "true");
+      
+      // Add cache busting parameter to force fresh data
+      params.append("_t", Date.now().toString());
 
       const response = await fetch(`/api/categories/tree?${params}`);
       if (!response.ok) {
@@ -215,10 +218,13 @@ export function CategoryTreePicker({
       }
 
       const data: CategoryTreeResponse = await response.json();
+      console.log("🐛 DEBUG: Loaded categories tree:", data.categories.length, "root categories");
+      console.log("🐛 DEBUG: General categories:", data.categories.filter(c => c.name.includes("General")).map(c => ({ name: c.name, childrenCount: c.children.length, children: c.children.map(ch => ch.name) })));
+      
       setCategories(data.categories);
 
       // Auto-expand first level by default
-      const firstLevelIds = data.categories.map((cat) => cat.id);
+      const firstLevelIds = data.categories.map((cat) => cat.category_id);
       setExpandedIds(new Set(firstLevelIds));
     } catch (err) {
       setError(
@@ -245,8 +251,8 @@ export function CategoryTreePicker({
         path: string[] = []
       ): string[] | null => {
         for (const cat of currentCats) {
-          const currentPath = [...path, cat.id];
-          if (cat.id === targetId) {
+          const currentPath = [...path, cat.category_id];
+          if (cat.category_id === targetId) {
             return currentPath.slice(0, -1); // Exclude the target itself
           }
           if (cat.children.length > 0) {
@@ -277,7 +283,7 @@ export function CategoryTreePicker({
       const result: Category[] = [];
       const findCategory = (id: string, cats: Category[]): Category | null => {
         for (const cat of cats) {
-          if (cat.id === id) return cat;
+          if (cat.category_id === id) return cat;
           const found = findCategory(id, cat.children);
           if (found) return found;
         }
@@ -309,13 +315,35 @@ export function CategoryTreePicker({
   };
 
   const handleExpand = (categoryId: string) => {
+    console.log("🐛 DEBUG: handleExpand called with:", categoryId);
+    console.log("🐛 DEBUG: Current expandedIds:", Array.from(expandedIds));
+    
+    const category = findCategoryById(categoryId);
+    console.log("🐛 DEBUG: Found category for expand:", category?.name);
+    
     const newExpandedIds = new Set(expandedIds);
     if (newExpandedIds.has(categoryId)) {
+      console.log("🐛 DEBUG: Collapsing category:", categoryId);
       newExpandedIds.delete(categoryId);
     } else {
+      console.log("🐛 DEBUG: Expanding category:", categoryId);
       newExpandedIds.add(categoryId);
     }
+    console.log("🐛 DEBUG: New expandedIds:", Array.from(newExpandedIds));
     setExpandedIds(newExpandedIds);
+  };
+
+  // Helper function to find category by ID in the tree
+  const findCategoryById = (id: string): Category | null => {
+    const searchInCategories = (cats: Category[]): Category | null => {
+      for (const cat of cats) {
+        if (cat.category_id === id) return cat;
+        const found = searchInCategories(cat.children);
+        if (found) return found;
+      }
+      return null;
+    };
+    return searchInCategories(categories);
   };
 
   const clearSelection = () => {
@@ -325,7 +353,7 @@ export function CategoryTreePicker({
   const getSelectedCategoryNames = () => {
     const findCategoryName = (id: string, cats: Category[]): string | null => {
       for (const cat of cats) {
-        if (cat.id === id) return cat.name;
+        if (cat.category_id === id) return cat.name;
         const found = findCategoryName(id, cat.children);
         if (found) return found;
       }
@@ -433,7 +461,7 @@ export function CategoryTreePicker({
               <div className="space-y-1">
                 {categories.map((category) => (
                   <CategoryNode
-                    key={category.id}
+                    key={category.category_id}
                     category={category}
                     selectedIds={selectedCategoryIds}
                     onToggle={handleCategoryToggle}

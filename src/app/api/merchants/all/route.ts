@@ -18,7 +18,7 @@ export interface MerchantWithCount {
   transaction_count: number;
   categories?:
     | {
-        id: string;
+        category_id: string;  // Fixed: categories table uses category_id
         name: string;
         icon: string;
       }[]
@@ -28,8 +28,8 @@ export interface MerchantWithCount {
 export async function GET() {
   try {
     const requestCookies = await cookies();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = createRouteHandlerClient({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cookies: () => requestCookies as any,
     });
 
@@ -50,11 +50,11 @@ export async function GET() {
       .select(
         `
         merchants (
-          id,
+          merchant_id,
           name,
           logo_url,
           categories (
-            id,
+            category_id,
             name,
             icon
           )
@@ -80,7 +80,7 @@ export async function GET() {
         const merchant = row.merchants as Record<string, unknown> | null;
         if (!merchant) return;
 
-        const merchantKey = String(merchant.id);
+        const merchantKey = String(merchant.merchant_id);
 
         if (merchantCounts.has(merchantKey)) {
           // Increment count
@@ -89,7 +89,7 @@ export async function GET() {
         } else {
           // Create new entry
           merchantCounts.set(merchantKey, {
-            id: String(merchant.id),
+            id: String(merchant.merchant_id),
             name: String(merchant.name),
             logo_url: merchant.logo_url as string | null,
             transaction_count: 1,

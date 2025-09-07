@@ -1,0 +1,1941 @@
+[
+  {
+    "table_name": "account_links",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "account_links",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "account_links",
+    "column_name": "provider",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "account_links",
+    "column_name": "item_id",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "account_links",
+    "column_name": "access_token_encrypted",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "account_links",
+    "column_name": "cursor",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "account_links",
+    "column_name": "status",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "account_links",
+    "column_name": "last_synced_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "account_links",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "account_links",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "type",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "balance",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "plaid_access_token",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "account_logo",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "provider",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "aggregator_account_id",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "institution_id_old",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "last_synced_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "mask",
+    "data_type": "character varying(8)",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "currency",
+    "data_type": "character varying(8)",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "institution_id",
+    "data_type": "text",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "institutions"
+  },
+  {
+    "table_name": "accounts",
+    "column_name": "subtype",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "balances",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "balances",
+    "column_name": "account_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "accounts"
+  },
+  {
+    "table_name": "balances",
+    "column_name": "balance_amount",
+    "data_type": "numeric(14,2)",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "balances",
+    "column_name": "available",
+    "data_type": "numeric(14,2)",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "balances",
+    "column_name": "as_of",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "balances",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "budget_categories",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "budget_categories",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "budget_categories",
+    "column_name": "category_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "budget_categories",
+    "column_name": "budgeted_amount",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "budget_categories",
+    "column_name": "budget_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "budgets"
+  },
+  {
+    "table_name": "budgets",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "budgets",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "users"
+  },
+  {
+    "table_name": "budgets",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "budgets",
+    "column_name": "month",
+    "data_type": "integer",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "budgets",
+    "column_name": "year",
+    "data_type": "integer",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "budgets",
+    "column_name": "total_income",
+    "data_type": "numeric(12,2)",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "budgets",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "category_id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "category",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "parent_category",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "parent_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "categories"
+  },
+  {
+    "table_name": "categories",
+    "column_name": "icon_kebab",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "plain_name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "icon",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "lucide_icon",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "categories",
+    "column_name": "description",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_messages",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_messages",
+    "column_name": "session_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "chat_sessions"
+  },
+  {
+    "table_name": "chat_messages",
+    "column_name": "type",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_messages",
+    "column_name": "content",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_messages",
+    "column_name": "timestamp",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_messages",
+    "column_name": "metadata",
+    "data_type": "jsonb",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_sessions",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_sessions",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "users"
+  },
+  {
+    "table_name": "chat_sessions",
+    "column_name": "title",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_sessions",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_sessions",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "chat_sessions",
+    "column_name": "is_archived",
+    "data_type": "boolean",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "contact_requests",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "contact_requests",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "contact_requests",
+    "column_name": "first_name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "contact_requests",
+    "column_name": "last_name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "contact_requests",
+    "column_name": "email",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "contact_requests",
+    "column_name": "phone",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "contact_requests",
+    "column_name": "company_name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "contact_requests",
+    "column_name": "message_body",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "goals",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "goals",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "goals",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "goals",
+    "column_name": "target_amount",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "goals",
+    "column_name": "current_amount",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "goals",
+    "column_name": "target_date",
+    "data_type": "date",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "institutions",
+    "column_name": "id",
+    "data_type": "text",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "institutions",
+    "column_name": "provider",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "institutions",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "institutions",
+    "column_name": "logo_url",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "institutions",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "institutions",
+    "column_name": "url",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "institutions",
+    "column_name": "primary_color",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "institutions",
+    "column_name": "country_codes",
+    "data_type": "text[]",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "institutions",
+    "column_name": "metadata",
+    "data_type": "jsonb",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "manual_assets",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "manual_assets",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "manual_assets",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "manual_assets",
+    "column_name": "type",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "manual_assets",
+    "column_name": "estimated_value",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "manual_assets",
+    "column_name": "date_acquired",
+    "data_type": "date",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "mcc_category_map",
+    "column_name": "mcc",
+    "data_type": "smallint",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "mcc_category_map",
+    "column_name": "description",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "mcc_category_map",
+    "column_name": "category_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "mcc_category_map",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "merchant_id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "default_category_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "categories"
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "logo_url",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "aliases",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "regex_match",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "confidence_score",
+    "data_type": "numeric(3,2)",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "last_matched_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "merchants",
+    "column_name": "match_count",
+    "data_type": "integer",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "net_worth_snapshots",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "net_worth_snapshots",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "net_worth_snapshots",
+    "column_name": "snapshot_date",
+    "data_type": "date",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "net_worth_snapshots",
+    "column_name": "total_assets",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "net_worth_snapshots",
+    "column_name": "total_liabilities",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "net_worth_snapshots",
+    "column_name": "net_worth",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "users"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "full_name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "company_name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "avatar_url",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "website",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "unsubscribed",
+    "data_type": "boolean",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "enabled_features",
+    "data_type": "jsonb",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "address",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "city",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "state",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "zip_code",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "phone_number",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "profile_complete",
+    "data_type": "boolean",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "securities",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "securities",
+    "column_name": "ticker_symbol",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "securities",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "securities",
+    "column_name": "type",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "securities",
+    "column_name": "last_price",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "securities",
+    "column_name": "price_updated_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "stripe_customers",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "users"
+  },
+  {
+    "table_name": "stripe_customers",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "stripe_customers",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "stripe_customers",
+    "column_name": "stripe_customer_id",
+    "data_type": "text",
+    "constraint_type": "UNIQUE",
+    "referenced_table": null
+  },
+  {
+    "table_name": "tags",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "tags",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "tags",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_categories",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "transactions"
+  },
+  {
+    "table_name": "transaction_categories",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_categories",
+    "column_name": "category_id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_categories",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_categories",
+    "column_name": "confidence",
+    "data_type": "numeric(3,2)",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_categories",
+    "column_name": "source",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_categories",
+    "column_name": "is_primary",
+    "data_type": "boolean",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_edits",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_edits",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "transactions"
+  },
+  {
+    "table_name": "transaction_edits",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "transactions"
+  },
+  {
+    "table_name": "transaction_edits",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "transaction_edits",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "transaction_edits",
+    "column_name": "changed_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_edits",
+    "column_name": "changes",
+    "data_type": "jsonb",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_edits",
+    "column_name": "note",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_edits",
+    "column_name": "source",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_tags",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "transactions"
+  },
+  {
+    "table_name": "transaction_tags",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transaction_tags",
+    "column_name": "tag_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "tags"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "account_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "accounts"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "constraint_type": "UNIQUE",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "clean_description",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "date",
+    "data_type": "date",
+    "constraint_type": "UNIQUE",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "embedding",
+    "data_type": "vector",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "merchant_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "merchants"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "original_description",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "transaction_number",
+    "data_type": "text",
+    "constraint_type": "UNIQUE",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "user_metadata",
+    "data_type": "jsonb",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "balance",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "transaction_note",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "manual_edit",
+    "data_type": "boolean",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "edited_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "edited_by",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "edited_by",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "primary_category_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "categories"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "needs_review",
+    "data_type": "boolean",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "merchant_name_override",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "goal_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "goals"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "hidden",
+    "data_type": "boolean",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "review_status",
+    "data_type": "review_status",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "aggregator_transaction_id",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "category_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "categories"
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "UNIQUE",
+    "referenced_table": null
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "users"
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "description",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "enabled",
+    "data_type": "boolean",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "priority",
+    "data_type": "integer",
+    "constraint_type": "UNIQUE",
+    "referenced_table": null
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "actions",
+    "data_type": "jsonb",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "conditions",
+    "data_type": "jsonb",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "user_rules",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "webhook_events",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "webhook_events",
+    "column_name": "provider",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "webhook_events",
+    "column_name": "event_type",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "webhook_events",
+    "column_name": "payload_json",
+    "data_type": "jsonb",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "webhook_events",
+    "column_name": "received_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "webhook_events",
+    "column_name": "processed_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "webhook_events",
+    "column_name": "status",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "webhook_events",
+    "column_name": "error",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zAI_chats_backup",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zAI_chats_backup",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zAI_chats_backup",
+    "column_name": "title",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zAI_chats_backup",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zAI_messages_backup",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zAI_messages_backup",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zAI_messages_backup",
+    "column_name": "conversation_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zAI_messages_backup",
+    "column_name": "role",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zAI_messages_backup",
+    "column_name": "content",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_backup",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_backup",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "UNIQUE",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_backup",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "UNIQUE",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_backup",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "UNIQUE",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_backup",
+    "column_name": "parent_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_backup",
+    "column_name": "icon_kebab",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_backup",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_backup",
+    "column_name": "icon",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "category",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "parent_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "icon_kebab",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "icon",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "parent_category",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "description",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zcategories_plaid",
+    "column_name": "plain_name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zinsurance_policies",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zinsurance_policies",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "zinsurance_policies",
+    "column_name": "policy_type",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zinsurance_policies",
+    "column_name": "provider",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zinsurance_policies",
+    "column_name": "coverage_amount",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zinsurance_policies",
+    "column_name": "premium",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zinsurance_policies",
+    "column_name": "premium_frequency",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zloans",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zloans",
+    "column_name": "account_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "accounts"
+  },
+  {
+    "table_name": "zloans",
+    "column_name": "original_amount",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zloans",
+    "column_name": "interest_rate",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zloans",
+    "column_name": "term_months",
+    "data_type": "smallint",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zloans",
+    "column_name": "minimum_payment",
+    "data_type": "numeric",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zloans",
+    "column_name": "loan_type",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_global_regex_rules_backup",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_global_regex_rules_backup",
+    "column_name": "merchant_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_global_regex_rules_backup",
+    "column_name": "regex_pattern",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_global_regex_rules_backup",
+    "column_name": "pattern_type",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_global_regex_rules_backup",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_merchants_backup",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_merchants_backup",
+    "column_name": "name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_merchants_backup",
+    "column_name": "logo_url",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_merchants_backup",
+    "column_name": "default_category_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_merchants_backup",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zold_merchants_backup",
+    "column_name": "aliases",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zsecure_documents",
+    "column_name": "id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zsecure_documents",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "profiles"
+  },
+  {
+    "table_name": "zsecure_documents",
+    "column_name": "file_name",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zsecure_documents",
+    "column_name": "document_type",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zsecure_documents",
+    "column_name": "storage_path",
+    "data_type": "text",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "zsecure_documents",
+    "column_name": "related_account_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "accounts"
+  },
+  {
+    "table_name": "ztransaction_categories_backup",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "ztransaction_categories_backup",
+    "column_name": "category_id",
+    "data_type": "uuid",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "ztransaction_categories_backup",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  },
+  {
+    "table_name": "ztransaction_categories_old",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "ztransaction_categories_old",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "transactions"
+  },
+  {
+    "table_name": "ztransaction_categories_old",
+    "column_name": "transaction_id",
+    "data_type": "uuid",
+    "constraint_type": "FOREIGN KEY",
+    "referenced_table": "transactions"
+  },
+  {
+    "table_name": "ztransaction_categories_old",
+    "column_name": "category_id",
+    "data_type": "uuid",
+    "constraint_type": "PRIMARY KEY",
+    "referenced_table": null
+  },
+  {
+    "table_name": "ztransaction_categories_old",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "constraint_type": "",
+    "referenced_table": null
+  }
+]
