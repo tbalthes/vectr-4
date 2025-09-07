@@ -14,3 +14,7 @@ if not service_role_key:
     raise EnvironmentError("SUPABASE_SERVICE_ROLE_KEY must be set in the .env file")
 
 supabase = create_client(url, service_role_key)
+
+# Provide a getter for the supabase client for external imports
+def get_supabase_client():
+    return supabase

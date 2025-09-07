@@ -1,18 +1,13 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from typing import Dict, Any, List, Optional
 import pandas as pd
 import json
 from io import StringIO
 from datetime import datetime
 import logging
-import sys
-import os
-
-# Add the parent directory to Python path to import core modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from core.transaction_processor import process_transaction
-from ..dependencies import get_supabase_client, get_data_cache
+from supabase_client.client import get_supabase_client
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -22,9 +17,7 @@ async def process_csv(
     file: UploadFile = File(...),
     user_id: str = Form(...),
     account_id: str = Form(...),
-    mapping: str = Form(...),
-    supabase=Depends(get_supabase_client),
-    data_cache=Depends(get_data_cache)
+    mapping: str = Form(...)
 ):
     """
     Process a CSV file and return normalized transactions
@@ -50,22 +43,28 @@ async def process_csv(
         if df.empty:
             raise HTTPException(status_code=400, detail="CSV file is empty")
         
+        # Prepare data cache and user rules (mock or fetch as needed)
+        from app.dependencies import get_data_cache
+        data_cache = get_data_cache()
+        user_rules = []  # TODO: fetch user rules for user_id if needed
+
         # Process transactions based on mapping
         normalized_transactions = []
         processing_errors = []
         
-        for row_num, (index, row) in enumerate(df.iterrows(), 1):
+        for row_num, (idx, row) in enumerate(df.iterrows(), start=1):
             try:
                 # Extract transaction data based on mapping
                 transaction_data = extract_transaction_data(row, mapping_config)
-                
-                # Add user and account info
+                # Add user_id and account_id to transaction_data if needed
                 transaction_data['user_id'] = user_id
                 transaction_data['account_id'] = account_id
-                
-                # Process the transaction using the process_transaction function
-                normalized_transaction = process_transaction(transaction_data, data_cache)
-                
+                # Normalize the transaction using process_transaction
+                normalized_transaction = process_transaction(
+                    transaction_data,
+                    data_cache,
+                    user_rules
+                )
                 normalized_transactions.append(normalized_transaction)
                 
             except Exception as e:
@@ -84,9 +83,9 @@ async def process_csv(
         
         # Optionally save to database
         if normalized_transactions:
+            supabase = get_supabase_client()
             # Save transactions to database here if needed
             # result = supabase.table('transactions').insert(normalized_transactions).execute()
-            pass
         
         return {
             "success": True,
