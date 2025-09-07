@@ -163,7 +163,9 @@ export function EnhancedRuleBuilder({
     // Format actions
     const actionsParts: string[] = [];
     if (selectedCategoryId && selectedCategoryId !== "no-change") {
-      const category = categories.find((c) => c.category_id === selectedCategoryId);
+      const category = categories.find(
+        (c) => c.category_id === selectedCategoryId
+      );
       actionsParts.push(`categorize as ${category?.name || "Unknown"}`);
     }
     if (renameTo) {
@@ -621,7 +623,10 @@ export function EnhancedRuleBuilder({
                 <SelectContent>
                   <SelectItem value="no-change">No category change</SelectItem>
                   {categories.map((category) => (
-                    <SelectItem key={category.category_id} value={category.category_id}>
+                    <SelectItem
+                      key={category.category_id}
+                      value={category.category_id}
+                    >
                       <div className="flex items-center space-x-2">
                         {category.color && (
                           <div

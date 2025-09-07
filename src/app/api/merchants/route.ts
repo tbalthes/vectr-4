@@ -12,17 +12,17 @@ const CACHE_HEADERS = {
 };
 
 interface MerchantData {
-  merchant_id: string;  // Fixed: merchants table uses merchant_id
+  merchant_id: string; // Fixed: merchants table uses merchant_id
   name: string;
   logo_url: string | null;
   categories:
     | {
-        category_id: string;  // Fixed: categories table uses category_id
+        category_id: string; // Fixed: categories table uses category_id
         name: string;
         icon: string;
       }
     | {
-        category_id: string;  // Fixed: categories table uses category_id
+        category_id: string; // Fixed: categories table uses category_id
         name: string;
         icon: string;
       }[]

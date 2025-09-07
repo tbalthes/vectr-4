@@ -184,29 +184,30 @@ export function MerchantPicker({
           <Building2 className="h-4 w-4 flex-shrink-0" />
           {selectedMerchant ? (
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {selectedMerchant.logoUrl && 
-               selectedMerchant.logoUrl.trim() !== "" && 
-               selectedMerchant.logoUrl !== "\\" &&
-               (selectedMerchant.logoUrl.startsWith("http://") || selectedMerchant.logoUrl.startsWith("https://")) && (
-                <Image
-                  src={
-                    selectedMerchant.logoUrl.startsWith("http:")
-                      ? selectedMerchant.logoUrl.replace("http:", "https:")
-                      : selectedMerchant.logoUrl
-                  }
-                  alt={selectedMerchant.name}
-                  width={16}
-                  height={16}
-                  className="rounded object-cover flex-shrink-0"
-                  onError={(e) => {
-                    console.log(
-                      "Selected merchant image load error:",
-                      selectedMerchant.logoUrl
-                    );
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              )}
+              {selectedMerchant.logoUrl &&
+                selectedMerchant.logoUrl.trim() !== "" &&
+                selectedMerchant.logoUrl !== "\\" &&
+                (selectedMerchant.logoUrl.startsWith("http://") ||
+                  selectedMerchant.logoUrl.startsWith("https://")) && (
+                  <Image
+                    src={
+                      selectedMerchant.logoUrl.startsWith("http:")
+                        ? selectedMerchant.logoUrl.replace("http:", "https:")
+                        : selectedMerchant.logoUrl
+                    }
+                    alt={selectedMerchant.name}
+                    width={16}
+                    height={16}
+                    className="rounded object-cover flex-shrink-0"
+                    onError={(e) => {
+                      console.log(
+                        "Selected merchant image load error:",
+                        selectedMerchant.logoUrl
+                      );
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                )}
               <span className="truncate">{selectedMerchant.name}</span>
               {selectedMerchant.category && (
                 <Badge variant="secondary" className="text-xs">
@@ -311,10 +312,11 @@ export function MerchantPicker({
                         onClick={() => handleMerchantSelect(merchant)}
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          {merchant.logoUrl && 
-                           merchant.logoUrl.trim() !== "" && 
-                           merchant.logoUrl !== "\\" &&
-                           (merchant.logoUrl.startsWith("http://") || merchant.logoUrl.startsWith("https://")) ? (
+                          {merchant.logoUrl &&
+                          merchant.logoUrl.trim() !== "" &&
+                          merchant.logoUrl !== "\\" &&
+                          (merchant.logoUrl.startsWith("http://") ||
+                            merchant.logoUrl.startsWith("https://")) ? (
                             <Image
                               src={
                                 merchant.logoUrl.startsWith("http:")

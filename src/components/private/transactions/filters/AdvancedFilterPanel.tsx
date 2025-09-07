@@ -193,35 +193,42 @@ export function AdvancedFilterPanel({
   // State for tree categories
   const [treeCategories, setTreeCategories] = useState<TreeCategory[]>([]);
   const [loadingTreeCategories, setLoadingTreeCategories] = useState(true);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set()
+  );
 
   // Load tree categories
   useEffect(() => {
     const loadTreeCategories = async () => {
       try {
         setLoadingTreeCategories(true);
-        
+
         // Build URL with userId parameter if available
         const params = new URLSearchParams();
         if (userId) {
-          params.append('user_id', userId);
+          params.append("user_id", userId);
         }
-        
-        const url = `/api/categories/tree${params.toString() ? `?${params.toString()}` : ''}`;
-        console.log('Loading categories from:', url);
-        
+
+        const url = `/api/categories/tree${
+          params.toString() ? `?${params.toString()}` : ""
+        }`;
+        console.log("Loading categories from:", url);
+
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to load categories tree');
+        if (!response.ok) throw new Error("Failed to load categories tree");
         const data = await response.json();
-        
-        console.log('Loaded categories:', data.categories?.length || 0, 'categories');
+
+        console.log(
+          "Loaded categories:",
+          data.categories?.length || 0,
+          "categories"
+        );
         setTreeCategories(data.categories || []);
-        
+
         // Start with all categories collapsed by default
         setExpandedCategories(new Set<string>());
-        
       } catch (error) {
-        console.error('Error loading tree categories:', error);
+        console.error("Error loading tree categories:", error);
         setTreeCategories([]);
       } finally {
         setLoadingTreeCategories(false);
@@ -258,7 +265,7 @@ export function AdvancedFilterPanel({
     const children: string[] = [];
     const traverse = (cat: TreeCategory) => {
       if (cat.children && cat.children.length > 0) {
-        cat.children.forEach(child => {
+        cat.children.forEach((child) => {
           children.push(child.name);
           traverse(child);
         });
@@ -271,22 +278,24 @@ export function AdvancedFilterPanel({
   // Helper function to check if all children are selected
   const areAllChildrenSelected = (category: TreeCategory): boolean => {
     const childrenNames = getAllChildrenNames(category);
-    return childrenNames.length > 0 && childrenNames.every(name => 
-      filters.selectedCategories.includes(name)
+    return (
+      childrenNames.length > 0 &&
+      childrenNames.every((name) => filters.selectedCategories.includes(name))
     );
   };
 
   // Helper function to check if some children are selected (for indeterminate state)
   const areSomeChildrenSelected = (category: TreeCategory): boolean => {
     const childrenNames = getAllChildrenNames(category);
-    return childrenNames.length > 0 && childrenNames.some(name => 
-      filters.selectedCategories.includes(name)
+    return (
+      childrenNames.length > 0 &&
+      childrenNames.some((name) => filters.selectedCategories.includes(name))
     );
   };
 
   // Helper function to toggle category expansion
   const toggleCategoryExpansion = (categoryId: string) => {
-    setExpandedCategories(prev => {
+    setExpandedCategories((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(categoryId)) {
         newSet.delete(categoryId);
@@ -301,31 +310,35 @@ export function AdvancedFilterPanel({
   const handleCategoryToggleWithChildren = (category: TreeCategory) => {
     const isSelected = filters.selectedCategories.includes(category.name);
     const childrenNames = getAllChildrenNames(category);
-    
+
     let newSelected: string[];
-    
+
     if (isSelected) {
       // If parent is selected, unselect parent and all children
-      newSelected = filters.selectedCategories.filter(name => 
-        name !== category.name && !childrenNames.includes(name)
+      newSelected = filters.selectedCategories.filter(
+        (name) => name !== category.name && !childrenNames.includes(name)
       );
     } else {
       // If parent is not selected, select parent and all children
       newSelected = [
-        ...filters.selectedCategories.filter(name => name !== category.name && !childrenNames.includes(name)),
+        ...filters.selectedCategories.filter(
+          (name) => name !== category.name && !childrenNames.includes(name)
+        ),
         category.name,
-        ...childrenNames
+        ...childrenNames,
       ];
     }
-    
+
     updateFilters({ selectedCategories: newSelected });
   };
 
   // Helper function to flatten tree categories
-  const flattenTreeCategories = (categories: TreeCategory[]): TreeCategory[] => {
+  const flattenTreeCategories = (
+    categories: TreeCategory[]
+  ): TreeCategory[] => {
     const flattened: TreeCategory[] = [];
     const traverse = (cats: TreeCategory[]) => {
-      cats.forEach(cat => {
+      cats.forEach((cat) => {
         flattened.push(cat);
         if (cat.children && cat.children.length > 0) {
           traverse(cat.children);
@@ -337,23 +350,30 @@ export function AdvancedFilterPanel({
   };
 
   // Helper function to render category tree with collapsible functionality
-  const renderCategoryTree = (categories: TreeCategory[], depth = 0): React.ReactNode => {
+  const renderCategoryTree = (
+    categories: TreeCategory[],
+    depth = 0
+  ): React.ReactNode => {
     return categories.map((category) => {
       const hasChildren = category.children && category.children.length > 0;
       const isExpanded = expandedCategories.has(category.category_id);
       const isSelected = filters.selectedCategories.includes(category.name);
-      const someChildrenSelected = hasChildren && areSomeChildrenSelected(category);
-      const allChildrenSelected = hasChildren && areAllChildrenSelected(category);
-      
+      const someChildrenSelected =
+        hasChildren && areSomeChildrenSelected(category);
+      const allChildrenSelected =
+        hasChildren && areAllChildrenSelected(category);
+
       // Determine checkbox state
-      const checkboxState = isSelected ? 'checked' : 
-                           (someChildrenSelected && !allChildrenSelected) ? 'indeterminate' : 
-                           'unchecked';
+      const checkboxState = isSelected
+        ? "checked"
+        : someChildrenSelected && !allChildrenSelected
+        ? "indeterminate"
+        : "unchecked";
 
       return (
         <div key={category.category_id} className="space-y-0.5">
           {/* Category Item */}
-          <div 
+          <div
             className="flex items-center space-x-2 py-1 px-1 rounded hover:bg-muted/30 transition-colors"
             style={{ marginLeft: `${depth * 16}px` }}
           >
@@ -370,13 +390,13 @@ export function AdvancedFilterPanel({
                 )}
               </button>
             ) : (
-              <div className="flex-shrink-0 w-4 h-4" /> 
+              <div className="flex-shrink-0 w-4 h-4" />
             )}
 
             <div className="relative flex-shrink-0 w-4 h-4">
               <Checkbox
                 id={category.category_id}
-                checked={checkboxState === 'checked'}
+                checked={checkboxState === "checked"}
                 onCheckedChange={() => {
                   if (hasChildren) {
                     handleCategoryToggleWithChildren(category);
@@ -387,7 +407,7 @@ export function AdvancedFilterPanel({
                 className="w-4 h-4"
               />
               {/* Visual indicator for indeterminate state */}
-              {checkboxState === 'indeterminate' && (
+              {checkboxState === "indeterminate" && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-2 h-0.5 bg-primary rounded-sm" />
                 </div>
@@ -401,15 +421,17 @@ export function AdvancedFilterPanel({
                 name={category.icon || "tag"}
                 className="h-4 w-4 text-[#6700EE]"
               />
-              <span className={depth === 0 ? "font-medium" : ""}>{category.name}</span>
+              <span className={depth === 0 ? "font-medium" : ""}>
+                {category.name}
+              </span>
             </label>
           </div>
-          
+
           {/* Render children if expanded */}
           {hasChildren && (
-            <div 
+            <div
               className={`overflow-hidden transition-all duration-200 ease-in-out ${
-                isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
               }`}
             >
               {isExpanded && (
@@ -457,7 +479,9 @@ export function AdvancedFilterPanel({
     (section: "categories" | "merchants" | "accounts" | "tags" | "goals") => {
       switch (section) {
         case "categories":
-          const allCategoryIds = flattenTreeCategories(treeCategories).map((c) => c.name);
+          const allCategoryIds = flattenTreeCategories(treeCategories).map(
+            (c) => c.name
+          );
           updateFilters({
             selectedCategories:
               filters.selectedCategories.length === allCategoryIds.length
@@ -550,7 +574,8 @@ export function AdvancedFilterPanel({
                     onClick={() => handleSelectAll("categories")}
                     className="text-xs"
                   >
-                    {filters.selectedCategories.length === flattenTreeCategories(treeCategories).length
+                    {filters.selectedCategories.length ===
+                    flattenTreeCategories(treeCategories).length
                       ? "Deselect All"
                       : "Select All"}
                   </Button>
@@ -560,7 +585,7 @@ export function AdvancedFilterPanel({
                     onClick={() => {
                       const allParentIds = new Set<string>();
                       const findParents = (categories: TreeCategory[]) => {
-                        categories.forEach(cat => {
+                        categories.forEach((cat) => {
                           if (cat.children && cat.children.length > 0) {
                             allParentIds.add(cat.category_id);
                             findParents(cat.children);
@@ -568,14 +593,20 @@ export function AdvancedFilterPanel({
                         });
                       };
                       findParents(treeCategories);
-                      
+
                       // Toggle between expand all and collapse all
-                      const allExpanded = Array.from(allParentIds).every(id => expandedCategories.has(id));
-                      setExpandedCategories(allExpanded ? new Set() : allParentIds);
+                      const allExpanded = Array.from(allParentIds).every((id) =>
+                        expandedCategories.has(id)
+                      );
+                      setExpandedCategories(
+                        allExpanded ? new Set() : allParentIds
+                      );
                     }}
                     className="text-xs"
                   >
-                    {expandedCategories.size > 0 ? "Collapse All" : "Expand All"}
+                    {expandedCategories.size > 0
+                      ? "Collapse All"
+                      : "Expand All"}
                   </Button>
                 </div>
                 <div className="space-y-1 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">

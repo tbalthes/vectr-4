@@ -18,7 +18,7 @@ export interface MerchantWithCount {
   transaction_count: number;
   categories?:
     | {
-        category_id: string;  // Fixed: categories table uses category_id
+        category_id: string; // Fixed: categories table uses category_id
         name: string;
         icon: string;
       }[]

@@ -115,7 +115,7 @@ export async function GET(
     // Prefer an explicit transaction->category mapping when present. Some
     // deployments store the category mapping in a join table
     // `transaction_categories`. Read that first; if not present fall back to
-    // the direct category_id field on transactions, then merchant's categories, 
+    // the direct category_id field on transactions, then merchant's categories,
     // or user_metadata.manual_category.
     let category: {
       id?: string;
@@ -139,11 +139,14 @@ export async function GET(
             id: directCat.category_id,
             name: directCat.plain_name || directCat.name,
             icon: directCat.icon,
-            parent_id: directCat.parent_id
+            parent_id: directCat.parent_id,
           };
         }
       } catch (e) {
-        console.warn("Failed to fetch direct category_id, falling back to transaction_categories", e);
+        console.warn(
+          "Failed to fetch direct category_id, falling back to transaction_categories",
+          e
+        );
       }
     }
 
@@ -175,7 +178,7 @@ export async function GET(
               id: catRow.category_id,
               name: catRow.plain_name || catRow.name,
               icon: catRow.icon,
-              parent_id: catRow.parent_id
+              parent_id: catRow.parent_id,
             };
           }
         }
@@ -255,7 +258,8 @@ export async function GET(
       transaction_note: transactionData.transaction_note,
       merchant_name: merchant?.name || "Unknown",
       merchant_logo_url: merchant?.logo_url || null,
-      merchant_id: merchant?.merchant_id || (transactionData.merchant_id ?? null),
+      merchant_id:
+        merchant?.merchant_id || (transactionData.merchant_id ?? null),
       category_name: category?.name || "Uncategorized",
       category_icon: category?.icon || "HelpCircle",
       category_id: category?.id ?? null,
@@ -685,10 +689,7 @@ export async function PUT(
             .eq("user_id", user.id);
 
           if (categoryErr) {
-            console.warn(
-              "API: warning updating category_id:",
-              categoryErr
-            );
+            console.warn("API: warning updating category_id:", categoryErr);
             // Don't throw here, the join table is the main thing
           }
         } else {

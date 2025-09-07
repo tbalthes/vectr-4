@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils/utils";
 import CategoryIcon from "@/components/private/transactions/enhanced_table/CategoryIcon";
 
 interface Category {
-  category_id: string;  // Updated to match backend response
+  category_id: string; // Updated to match backend response
   name: string;
   icon?: string;
   parent_id?: string;
@@ -208,7 +208,7 @@ export function CategoryTreePicker({
       const params = new URLSearchParams();
       if (userId) params.append("user_id", userId);
       if (showTransactionCounts) params.append("include_counts", "true");
-      
+
       // Add cache busting parameter to force fresh data
       params.append("_t", Date.now().toString());
 
@@ -218,9 +218,22 @@ export function CategoryTreePicker({
       }
 
       const data: CategoryTreeResponse = await response.json();
-      console.log("🐛 DEBUG: Loaded categories tree:", data.categories.length, "root categories");
-      console.log("🐛 DEBUG: General categories:", data.categories.filter(c => c.name.includes("General")).map(c => ({ name: c.name, childrenCount: c.children.length, children: c.children.map(ch => ch.name) })));
-      
+      console.log(
+        "🐛 DEBUG: Loaded categories tree:",
+        data.categories.length,
+        "root categories"
+      );
+      console.log(
+        "🐛 DEBUG: General categories:",
+        data.categories
+          .filter((c) => c.name.includes("General"))
+          .map((c) => ({
+            name: c.name,
+            childrenCount: c.children.length,
+            children: c.children.map((ch) => ch.name),
+          }))
+      );
+
       setCategories(data.categories);
 
       // Auto-expand first level by default
@@ -317,10 +330,10 @@ export function CategoryTreePicker({
   const handleExpand = (categoryId: string) => {
     console.log("🐛 DEBUG: handleExpand called with:", categoryId);
     console.log("🐛 DEBUG: Current expandedIds:", Array.from(expandedIds));
-    
+
     const category = findCategoryById(categoryId);
     console.log("🐛 DEBUG: Found category for expand:", category?.name);
-    
+
     const newExpandedIds = new Set(expandedIds);
     if (newExpandedIds.has(categoryId)) {
       console.log("🐛 DEBUG: Collapsing category:", categoryId);

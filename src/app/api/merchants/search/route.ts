@@ -12,7 +12,7 @@ const CACHE_HEADERS = {
 };
 
 interface MerchantSearchResult {
-  merchant_id: string;  // Fixed: merchants table uses merchant_id
+  merchant_id: string; // Fixed: merchants table uses merchant_id
   name: string;
   logo_url: string | null;
   categories:
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .ilike('name', `%${searchQuery}%`)
+      .ilike("name", `%${searchQuery}%`)
       .order("name")
       .limit(limit);
 

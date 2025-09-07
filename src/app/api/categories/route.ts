@@ -24,18 +24,30 @@ export async function POST(request: NextRequest) {
     const { data: sessionRes } = await supabase.auth.getSession();
     const user = sessionRes.session?.user;
     if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body: CreateCategoryRequest = await request.json();
-    const { name, description, category, parent_category, icon = "heart", parent_id, user_id } = body;
+    const {
+      name,
+      description,
+      category,
+      parent_category,
+      icon = "heart",
+      parent_id,
+      user_id,
+    } = body;
 
     const finalUserId = user_id || user.id;
     console.log("Creating category for user:", finalUserId);
-    console.log("Payload received:", { name, description, category, parent_category, icon, parent_id });
+    console.log("Payload received:", {
+      name,
+      description,
+      category,
+      parent_category,
+      icon,
+      parent_id,
+    });
 
     if (!name?.trim()) {
       return NextResponse.json(
@@ -54,7 +66,10 @@ export async function POST(request: NextRequest) {
 
     if (existingCategories && existingCategories.length > 0) {
       return NextResponse.json(
-        { error: "A category with this name already exists in the selected parent group" },
+        {
+          error:
+            "A category with this name already exists in the selected parent group",
+        },
         { status: 400 }
       );
     }
@@ -62,10 +77,10 @@ export async function POST(request: NextRequest) {
     // Create the new category - generate UUID for category_id
     const categoryId = crypto.randomUUID();
     console.log("Generated category_id:", categoryId);
-    
+
     const insertData = {
       category_id: categoryId,
-      category: category || name.trim().toUpperCase().replace(/\s+/g, '_'), // Use provided category or generate from name
+      category: category || name.trim().toUpperCase().replace(/\s+/g, "_"), // Use provided category or generate from name
       name: name.trim(),
       description: description || null,
       parent_category: parent_category || null,
@@ -75,13 +90,14 @@ export async function POST(request: NextRequest) {
       plain_name: name.trim(),
       lucide_icon: icon,
     };
-    
+
     console.log("About to insert:", insertData);
-    
+
     const { data: newCategory, error } = await supabase
       .from("categories")
       .insert(insertData)
-      .select(`
+      .select(
+        `
         category_id,
         category,
         name,
@@ -92,7 +108,8 @@ export async function POST(request: NextRequest) {
         user_id,
         plain_name,
         lucide_icon
-      `)
+      `
+      )
       .single();
 
     console.log("Database response:", { data: newCategory, error });
@@ -146,10 +163,7 @@ export async function GET(request: NextRequest) {
     const { data: sessionRes } = await supabase.auth.getSession();
     const user = sessionRes.session?.user;
     if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -157,7 +171,8 @@ export async function GET(request: NextRequest) {
 
     const { data: categories, error } = await supabase
       .from("categories")
-      .select(`
+      .select(
+        `
         category_id,
         name,
         icon,
@@ -165,7 +180,8 @@ export async function GET(request: NextRequest) {
         user_id,
         plain_name,
         lucide_icon
-      `)
+      `
+      )
       .or(`user_id.is.null,user_id.eq.${userId}`)
       .order("name");
 

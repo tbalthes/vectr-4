@@ -321,12 +321,15 @@ export async function GET(request: NextRequest) {
       // Uncategorized filtering requires special handling with LEFT JOIN
       countQuery = serviceSupabase
         .from("transactions")
-        .select(`
+        .select(
+          `
           id,
           transaction_categories!left (
             transaction_id
           )
-        `, { count: "exact", head: false })
+        `,
+          { count: "exact", head: false }
+        )
         .eq("user_id", user.id)
         .is("transaction_categories.transaction_id", null);
     } else if (needsCategoryInnerJoin || needsMerchantInnerJoin) {
@@ -395,7 +398,8 @@ export async function GET(request: NextRequest) {
       // Uncategorized filtering - use LEFT JOIN to find transactions without categories
       query = serviceSupabase
         .from("transactions")
-        .select(`
+        .select(
+          `
           id,
           transaction_number,
           date,
@@ -421,7 +425,8 @@ export async function GET(request: NextRequest) {
               icon
             )
           )
-        `)
+        `
+        )
         .eq("user_id", user.id)
         .is("transaction_categories.transaction_id", null)
         .order(sortField, { ascending: sortOrder === "asc" })

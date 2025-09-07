@@ -33,7 +33,7 @@ import {
 export default function TransactionsPage() {
   // Get authenticated user
   const { user } = useAuth();
-  
+
   // TODO: Integrate useInfiniteTransactions and new data flow (WBS 3.1)
   // Placeholder for future filter panel (WBS 5.1)
   const [search, setSearch] = useState("");
@@ -263,7 +263,10 @@ export default function TransactionsPage() {
       if (updateTransactionOptimistic) {
         updateTransactionOptimistic(transaction as Record<string, unknown>);
         didOptimisticallyUpdate = true;
-        console.log("Applied optimistic update for transaction:", transaction.id);
+        console.log(
+          "Applied optimistic update for transaction:",
+          transaction.id
+        );
       }
 
       // Persist to server
@@ -284,7 +287,7 @@ export default function TransactionsPage() {
       console.log("Transaction updated successfully:", result);
 
       // Wait a bit before revalidating to ensure DB has updated
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Revalidate from server for final truth, but preserve optimistic updates
       if (revalidate) {

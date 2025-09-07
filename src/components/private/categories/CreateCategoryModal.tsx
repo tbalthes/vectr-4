@@ -48,17 +48,17 @@ interface CreateCategoryModalProps {
 
 // Mapping of parent category names to their codes
 const PARENT_CATEGORY_CODES: Record<string, string> = {
-  "Entertainment": "ENTERTAINMENT",
+  Entertainment: "ENTERTAINMENT",
   "Food & Dining": "FOOD_DINING",
-  "Transportation": "TRANSPORTATION", 
-  "Shopping": "SHOPPING",
+  Transportation: "TRANSPORTATION",
+  Shopping: "SHOPPING",
   "Home & Garden": "HOME_IMPROVEMENT",
   "Bills & Utilities": "UTILITIES",
-  "Healthcare": "HEALTHCARE",
+  Healthcare: "HEALTHCARE",
   "Financial Services": "BANK_FEES",
-  "Travel": "TRAVEL",
-  "Business": "BUSINESS",
-  "Education": "EDUCATION",
+  Travel: "TRAVEL",
+  Business: "BUSINESS",
+  Education: "EDUCATION",
   "Personal Care": "PERSONAL_CARE",
   "Gifts & Donations": "GIFTS_DONATIONS",
   "Transfer In": "TRANSFER_IN",
@@ -74,35 +74,110 @@ const getAllLucideIcons = (): IconName[] => {
 // Common icon categories for quick access - using basic icons that definitely exist
 const SUGGESTED_ICONS = {
   "Most Popular": [
-    "home", "heart", "search", "settings", "user", "mail", "phone", "calendar",
-    "camera", "music", "shopping-cart", "car", "coffee", "gift", "star", "plus"
+    "home",
+    "heart",
+    "search",
+    "settings",
+    "user",
+    "mail",
+    "phone",
+    "calendar",
+    "camera",
+    "music",
+    "shopping-cart",
+    "car",
+    "coffee",
+    "gift",
+    "star",
+    "plus",
   ],
   "Money & Finance": [
-    "dollar-sign", "credit-card", "calculator", "trending-up", "trending-down", 
-    "coins", "receipt", "banknote", "wallet", "briefcase", "building"
+    "dollar-sign",
+    "credit-card",
+    "calculator",
+    "trending-up",
+    "trending-down",
+    "coins",
+    "receipt",
+    "banknote",
+    "wallet",
+    "briefcase",
+    "building",
   ],
-  "Transportation": [
-    "car", "bus", "train", "plane", "bike", "fuel", "map-pin", "navigation",
-    "ship", "truck", "compass", "map"
+  Transportation: [
+    "car",
+    "bus",
+    "train",
+    "plane",
+    "bike",
+    "fuel",
+    "map-pin",
+    "navigation",
+    "ship",
+    "truck",
+    "compass",
+    "map",
   ],
   "Food & Dining": [
-    "utensils", "coffee", "wine", "apple", "pizza", "soup", "cookie", "cake", "cherry"
+    "utensils",
+    "coffee",
+    "wine",
+    "apple",
+    "pizza",
+    "soup",
+    "cookie",
+    "cake",
+    "cherry",
   ],
-  "Shopping": [
-    "shopping-cart", "shopping-bag", "store", "package", "gift", "tag", "shirt"
+  Shopping: [
+    "shopping-cart",
+    "shopping-bag",
+    "store",
+    "package",
+    "gift",
+    "tag",
+    "shirt",
   ],
   "Home & Living": [
-    "home", "bed", "lightbulb", "wifi", "tv", "sofa", "wrench", "key", "lock"
+    "home",
+    "bed",
+    "lightbulb",
+    "wifi",
+    "tv",
+    "sofa",
+    "wrench",
+    "key",
+    "lock",
   ],
-  "Health": [
-    "heart", "activity", "pill", "shield", "smile", "brain", "eye", "zap"
+  Health: [
+    "heart",
+    "activity",
+    "pill",
+    "shield",
+    "smile",
+    "brain",
+    "eye",
+    "zap",
   ],
   "Work & Education": [
-    "book-open", "laptop", "award", "building", "book", "briefcase", "monitor"
+    "book-open",
+    "laptop",
+    "award",
+    "building",
+    "book",
+    "briefcase",
+    "monitor",
   ],
-  "Entertainment": [
-    "film", "headphones", "ticket", "music", "radio", "play", "pause", "camera"
-  ]
+  Entertainment: [
+    "film",
+    "headphones",
+    "ticket",
+    "music",
+    "radio",
+    "play",
+    "pause",
+    "camera",
+  ],
 };
 
 export default function CreateCategoryModal({
@@ -151,24 +226,35 @@ export default function CreateCategoryModal({
     setCreating(true);
     try {
       // Get the parent category info
-      const selectedParent = parentId === "no-parent" ? null : categories.find(cat => cat.category_id === parentId);
-      
+      const selectedParent =
+        parentId === "no-parent"
+          ? null
+          : categories.find((cat) => cat.category_id === parentId);
+
       // Generate the category code
-      let categoryCode = name.trim().toUpperCase().replace(/\s+/g, '_');
+      let categoryCode = name.trim().toUpperCase().replace(/\s+/g, "_");
       if (selectedParent) {
-        const parentCode = PARENT_CATEGORY_CODES[selectedParent.name] || selectedParent.name.toUpperCase().replace(/\s+/g, '_');
+        const parentCode =
+          PARENT_CATEGORY_CODES[selectedParent.name] ||
+          selectedParent.name.toUpperCase().replace(/\s+/g, "_");
         categoryCode = `${parentCode}_${categoryCode}`;
       }
 
       // Check for duplicate category codes
-      const existingCategories = categories.flatMap(cat => [cat, ...cat.children]);
-      const isDuplicate = existingCategories.some(cat => 
-        cat.name.toLowerCase() === name.trim().toLowerCase() && 
-        cat.parent_id === (parentId === "no-parent" ? null : parentId)
+      const existingCategories = categories.flatMap((cat) => [
+        cat,
+        ...cat.children,
+      ]);
+      const isDuplicate = existingCategories.some(
+        (cat) =>
+          cat.name.toLowerCase() === name.trim().toLowerCase() &&
+          cat.parent_id === (parentId === "no-parent" ? null : parentId)
       );
 
       if (isDuplicate) {
-        alert("A category with this name already exists in the selected parent group.");
+        alert(
+          "A category with this name already exists in the selected parent group."
+        );
         setCreating(false);
         return;
       }
@@ -177,7 +263,10 @@ export default function CreateCategoryModal({
         name: name.trim(),
         description: description.trim() || null,
         category: categoryCode,
-        parent_category: selectedParent ? (PARENT_CATEGORY_CODES[selectedParent.name] || selectedParent.name.toUpperCase().replace(/\s+/g, '_')) : null,
+        parent_category: selectedParent
+          ? PARENT_CATEGORY_CODES[selectedParent.name] ||
+            selectedParent.name.toUpperCase().replace(/\s+/g, "_")
+          : null,
         icon: selectedIcon,
         parent_id: parentId === "no-parent" ? null : parentId,
         user_id: userId, // Pass user_id to ensure user-specific categories
@@ -216,31 +305,31 @@ export default function CreateCategoryModal({
   };
 
   // Get only top-level categories for parent selection
-  const topLevelCategories = categories.filter(cat => !cat.parent_id);
+  const topLevelCategories = categories.filter((cat) => !cat.parent_id);
 
   // Get icons to display - either search results or suggested icons
   const getIconsToDisplay = (): { [key: string]: string[] } => {
     const allIcons = getAllLucideIcons();
-    
+
     if (iconSearch.trim()) {
       // Filter all icons based on search
       const searchLower = iconSearch.toLowerCase();
-      const filteredIcons = allIcons.filter(iconName =>
+      const filteredIcons = allIcons.filter((iconName) =>
         iconName.toLowerCase().includes(searchLower)
       );
-      
+
       if (filteredIcons.length > 0) {
         // Show search results without count in header
         const maxResults = 100;
         const results = filteredIcons.slice(0, maxResults);
-        return { 
-          "Search Results": results 
+        return {
+          "Search Results": results,
         };
       } else {
         return { "No Results": [] };
       }
     }
-    
+
     // Show suggested categories when no search - convert to string arrays
     const suggestedAsString: { [key: string]: string[] } = {};
     Object.entries(SUGGESTED_ICONS).forEach(([key, icons]) => {
@@ -262,8 +351,8 @@ export default function CreateCategoryModal({
     }
 
     return (
-      <DynamicIcon 
-        name={iconName as IconName} 
+      <DynamicIcon
+        name={iconName as IconName}
         className="w-6 h-6"
         fallback={() => (
           <div className="w-6 h-6 bg-red-100 rounded flex items-center justify-center text-xs text-red-600">
@@ -272,7 +361,8 @@ export default function CreateCategoryModal({
         )}
       />
     );
-  };  return (
+  };
+  return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
@@ -336,7 +426,10 @@ export default function CreateCategoryModal({
                 {Object.entries(iconsToDisplay).map(([category, icons]) => {
                   if (icons.length === 0 && category === "No Results") {
                     return (
-                      <div key={category} className="text-center py-4 text-muted-foreground">
+                      <div
+                        key={category}
+                        className="text-center py-4 text-muted-foreground"
+                      >
                         No icons found matching &ldquo;{iconSearch}&rdquo;
                       </div>
                     );
@@ -355,7 +448,8 @@ export default function CreateCategoryModal({
                             onClick={() => setSelectedIcon(iconName)}
                             className={cn(
                               "rounded hover:border border-primary transition-colors flex items-center justify-center aspect-square",
-                              selectedIcon === iconName && "bg-primary text-primary-foreground"
+                              selectedIcon === iconName &&
+                                "bg-primary text-primary-foreground"
                             )}
                             title={iconName} // Tooltip showing icon name
                           >
@@ -380,7 +474,9 @@ export default function CreateCategoryModal({
               <SelectContent className="max-h-60">
                 <SelectItem value="no-parent">No parent (top level)</SelectItem>
                 {loading ? (
-                  <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                  <SelectItem value="loading" disabled>
+                    Loading categories...
+                  </SelectItem>
                 ) : (
                   topLevelCategories.map((cat) => (
                     <SelectItem key={cat.category_id} value={cat.category_id}>
@@ -397,8 +493,8 @@ export default function CreateCategoryModal({
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleCreate} 
+          <Button
+            onClick={handleCreate}
             disabled={!name.trim() || creating}
             className="bg-primary hover:bg-primary/90"
           >

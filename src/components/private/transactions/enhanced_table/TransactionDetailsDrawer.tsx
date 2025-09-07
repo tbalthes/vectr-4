@@ -182,7 +182,7 @@ export function TransactionDetailsDrawer({
 
   const formatDate = (dateString: string) => {
     // Parse the date string as local time to avoid timezone issues
-    const [year, month, day] = dateString.split('-').map(Number);
+    const [year, month, day] = dateString.split("-").map(Number);
     const date = new Date(year, month - 1, day); // Month is 0-indexed
     return date.toLocaleDateString("en-US", {
       weekday: "long",
@@ -353,10 +353,16 @@ export function TransactionDetailsDrawer({
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {currentTransaction.date ? (
-                            format((() => {
-                              const [year, month, day] = currentTransaction.date.split('-').map(Number);
-                              return new Date(year, month - 1, day);
-                            })(), "PPP")
+                            format(
+                              (() => {
+                                const [year, month, day] =
+                                  currentTransaction.date
+                                    .split("-")
+                                    .map(Number);
+                                return new Date(year, month - 1, day);
+                              })(),
+                              "PPP"
+                            )
                           ) : (
                             <span>Pick a date</span>
                           )}
@@ -366,7 +372,9 @@ export function TransactionDetailsDrawer({
                         <Calendar
                           mode="single"
                           selected={(() => {
-                            const [year, month, day] = currentTransaction.date.split('-').map(Number);
+                            const [year, month, day] = currentTransaction.date
+                              .split("-")
+                              .map(Number);
                             return new Date(year, month - 1, day);
                           })()}
                           onSelect={(date) => {

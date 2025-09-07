@@ -1,16 +1,27 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { ChevronDown, ChevronRight, Search, Check, X, Plus } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Search,
+  Check,
+  X,
+  Plus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils/utils";
 import CategoryIcon from "@/components/private/transactions/enhanced_table/CategoryIcon";
 import CreateCategoryModal from "./CreateCategoryModal";
 
 interface Category {
-  category_id: string;  // Updated to match backend response
+  category_id: string; // Updated to match backend response
   name: string;
   icon?: string;
   parent_id?: string;
@@ -116,14 +127,20 @@ function CategoryNode({
         )}
 
         {/* Category Icon */}
-        <CategoryIcon iconName={category.icon} className="w-4 h-4 flex-shrink-0" style={{ color: "#6700EE" }} />
+        <CategoryIcon
+          iconName={category.icon}
+          className="w-4 h-4 flex-shrink-0"
+          style={{ color: "#6700EE" }}
+        />
 
         {/* Category Name */}
         <span
           className={cn(
             "flex-1 text-sm font-medium truncate",
             isSelected ? "text-primary" : "text-foreground",
-            matchesSearch && searchQuery && "bg-yellow-100 dark:bg-yellow-900/30 px-1 rounded"
+            matchesSearch &&
+              searchQuery &&
+              "bg-yellow-100 dark:bg-yellow-900/30 px-1 rounded"
           )}
         >
           {category.name}
@@ -131,14 +148,16 @@ function CategoryNode({
 
         {/* Count */}
         {showCounts && typeof category.transaction_count === "number" && (
-          <span className="text-xs text-muted-foreground flex-shrink-0">{category.transaction_count}</span>
+          <span className="text-xs text-muted-foreground flex-shrink-0">
+            {category.transaction_count}
+          </span>
         )}
       </div>
 
       {hasChildren && (
-        <div 
+        <div
           className={`overflow-hidden transition-all duration-200 ease-in-out ${
-            isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           {isExpanded && (
@@ -189,12 +208,13 @@ export default function CategorySingleSelectPopover({
       if (showTransactionCounts) params.append("include_counts", "true");
       const url = `/api/categories/tree?${params}`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`Failed to load categories: ${res.statusText}`);
-  const data: CategoryTreeResponse = await res.json();
-  setCategories(data.categories);
-  // Start with all categories collapsed for better UX
-  // const firstLevelIds = data.categories.map((cat) => cat.category_id);
-  // setExpandedIds(new Set(firstLevelIds)); // Keep collapsed for better performance and UX
+      if (!res.ok)
+        throw new Error(`Failed to load categories: ${res.statusText}`);
+      const data: CategoryTreeResponse = await res.json();
+      setCategories(data.categories);
+      // Start with all categories collapsed for better UX
+      // const firstLevelIds = data.categories.map((cat) => cat.category_id);
+      // setExpandedIds(new Set(firstLevelIds)); // Keep collapsed for better performance and UX
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load categories");
       console.error(e);
@@ -211,7 +231,11 @@ export default function CategorySingleSelectPopover({
   useEffect(() => {
     if (!value || categories.length === 0) return;
     const newExpanded = new Set<string>();
-    const findPath = (id: string, cats: Category[], path: string[] = []): string[] | null => {
+    const findPath = (
+      id: string,
+      cats: Category[],
+      path: string[] = []
+    ): string[] | null => {
       for (const cat of cats) {
         const currentPath = [...path, cat.category_id];
         if (cat.category_id === id) return currentPath.slice(0, -1);
@@ -227,17 +251,20 @@ export default function CategorySingleSelectPopover({
     setExpandedIds((prev) => new Set([...prev, ...newExpanded]));
   }, [value, categories]);
 
-  const getCategoryById = useCallback((id: string): Category | null => {
-    const search = (cats: Category[]): Category | null => {
-      for (const cat of cats) {
-        if (cat.category_id === id) return cat;
-        const found = search(cat.children);
-        if (found) return found;
-      }
-      return null;
-    };
-    return search(categories);
-  }, [categories]);
+  const getCategoryById = useCallback(
+    (id: string): Category | null => {
+      const search = (cats: Category[]): Category | null => {
+        for (const cat of cats) {
+          if (cat.category_id === id) return cat;
+          const found = search(cat.children);
+          if (found) return found;
+        }
+        return null;
+      };
+      return search(categories);
+    },
+    [categories]
+  );
 
   const selectedName = useMemo(() => {
     if (!value) return placeholder;
@@ -253,7 +280,8 @@ export default function CategorySingleSelectPopover({
 
   const onExpand = (id: string) => {
     const next = new Set(expandedIds);
-    if (next.has(id)) next.delete(id); else next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     setExpandedIds(next);
   };
 
@@ -327,7 +355,7 @@ export default function CategorySingleSelectPopover({
             </div>
           </div>
           <div className="flex-1 overflow-hidden">
-            <div 
+            <div
               className="max-h-[35vh] overflow-y-auto"
               onWheel={(e) => {
                 e.stopPropagation();
@@ -336,24 +364,30 @@ export default function CategorySingleSelectPopover({
                 const scrollAmount = e.deltaY * 0.5; // Slower, smoother scrolling
                 target.scrollTop += scrollAmount;
               }}
-              style={{ 
-                scrollBehavior: 'smooth',
-                scrollbarWidth: 'thin',
-                scrollbarColor: 'hsl(var(--muted)) transparent'
+              style={{
+                scrollBehavior: "smooth",
+                scrollbarWidth: "thin",
+                scrollbarColor: "hsl(var(--muted)) transparent",
               }}
             >
-              <div 
+              <div
                 className="px-2 py-2 space-y-0.5"
                 tabIndex={0}
-                style={{ outline: 'none' }}
+                style={{ outline: "none" }}
               >
                 {loading && (
                   <div className="text-center py-8">Loading categories...</div>
                 )}
                 {error && (
                   <div className="text-center py-8">
-                    <div className="text-red-500 mb-2">Error loading categories</div>
-                    <Button variant="outline" size="sm" onClick={loadCategories}>
+                    <div className="text-red-500 mb-2">
+                      Error loading categories
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadCategories}
+                    >
                       Try Again
                     </Button>
                   </div>
@@ -377,7 +411,7 @@ export default function CategorySingleSelectPopover({
                         </Button>
                       </div>
                     )}
-                    
+
                     {categories.map((category) => (
                       <CategoryNode
                         key={category.category_id}
@@ -396,7 +430,12 @@ export default function CategorySingleSelectPopover({
             </div>
           </div>
           <div className="px-2 py-1 bg-background border-t border-border/50 flex justify-end">
-            <Button variant="ghost" size="sm" onClick={clear} className="h-7 px-2 text-xs hover:bg-muted">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clear}
+              className="h-7 px-2 text-xs hover:bg-muted"
+            >
               <X className="h-3 w-3 mr-1" />
               Clear
             </Button>
