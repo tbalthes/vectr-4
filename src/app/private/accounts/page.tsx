@@ -41,7 +41,7 @@ export default function AccountsPage() {
         }
       />
 
-      <div className="flex-1 space-y-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto animate-fade-in">
+      <div className="flex-1 space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl mx-auto animate-fade-in">
         {/* Stats Cards */}
         <AccountsStatsCards accounts={accounts} loading={loading} />
 

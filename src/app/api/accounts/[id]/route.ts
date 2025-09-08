@@ -64,18 +64,36 @@ export async function DELETE(
     }
     const userId = user.user.id;
     const accountId = resolvedParams.id;
-    // Delete the account for this user
+
+    // First, delete all transactions for this account
+    const { error: transactionDeleteError } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("account_id", accountId)
+      .eq("user_id", userId);
+
+    if (transactionDeleteError) {
+      console.error("Error deleting transactions:", transactionDeleteError);
+      return NextResponse.json(
+        { error: transactionDeleteError.message },
+        { status: 500 }
+      );
+    }
+
+    // Then delete the account for this user
     const { error: deleteError } = await supabase
       .from("accounts")
       .delete()
       .eq("id", accountId)
       .eq("user_id", userId);
+
     if (deleteError) {
+      console.error("Error deleting account:", deleteError);
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
     return NextResponse.json({ success: true });
-  } catch {
-    console.error("Error in DELETE /api/accounts/[id]");
+  } catch (error) {
+    console.error("Error in DELETE /api/accounts/[id]:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -1,76 +1,194 @@
-# Safe Migration Strategy
+# Merchant Relationship Architecture & Plaid Integration Strategy
 
-## What We've Already Applied Safely ✅
+## Current Architecture Analysis ✅
 
-### Backend Improvements
-- ✅ Added `get_supabase_client()` getter function 
-- ✅ Fixed CSV processor imports and error handling
-- ✅ Improved transaction processing flow
+Based on the database schema analysis, the merchant system is properly architected:
 
-### Frontend Improvements  
-- ✅ Simplified LucideIcon component
-- ✅ Improved TransactionRow styling
-- ✅ Better visual consistency for tables
+### Merchant Data Store (`merchants` table)
 
-## What NOT to Apply (Breaking Changes) ❌
+```sql
+merchants (
+  merchant_id UUID PRIMARY KEY,
+  name TEXT NOT NULL,
+  default_category_id UUID REFERENCES categories(category_id),
+  logo_url TEXT,
+  aliases TEXT,
+  regex_match TEXT NOT NULL,
+  confidence_score NUMERIC(3,2) DEFAULT 1.0,
+  is_active BOOLEAN DEFAULT true,
+  last_matched_at TIMESTAMP,
+  match_count INTEGER DEFAULT 0
+)
+```
 
-### Database Schema Mismatches
-- ❌ Don't change `category_id` to `id` in API queries until database is updated
-- ❌ Don't change `merchant_id` to `id` in API queries until database is updated  
-- ❌ Don't remove `plain_name` field references until confirmed not needed
-- ❌ Don't remove direct `category_id` fallback logic from transaction queries
+### Transaction Enrichment Flow
 
-### Specific Problematic Changes from 8720e1f
-1. **Transaction API Route Changes**: The commit tried to standardize field names but database still uses original schema
-2. **Category References**: Frontend expects `id` but database uses `category_id`
-3. **Merchant References**: Frontend expects `id` but database uses `merchant_id`
+1. **Transaction Processing**: Transactions are enriched with merchant data via `merchant_id` foreign key
+2. **Merchant Matching**: Python backend matches transaction descriptions to merchants using regex patterns
+3. **Category Assignment**: Merchants have `default_category_id` for automatic categorization
+4. **User Customization**: Users can add custom merchants and update existing ones
 
-## Safe Path Forward 🛣️
+### Plaid Integration Points
 
-### Option 1: Database Schema Migration (Recommended)
-1. **Create migration scripts** to add `id` columns as aliases to existing primary keys
-2. **Update database views** to expose both old and new field names during transition
-3. **Gradually update frontend** to use new field names after database migration
-4. **Remove old field references** once migration is complete
+#### Account Management
 
-### Option 2: Frontend Adaptation (Alternative)
-1. **Keep database schema as-is** 
-2. **Create API adapters** that transform database responses to expected frontend format
-3. **Update frontend incrementally** while maintaining backward compatibility
-4. **Use TypeScript interfaces** to ensure type safety during transition
+- `account_links` table stores Plaid access tokens and sync status
+- `accounts` table includes `aggregator_account_id` for Plaid account mapping
+- `institutions` table stores Plaid institution metadata
 
-### Option 3: Hybrid Approach (Most Practical)
-1. **Start with API layer adapters** for immediate compatibility
-2. **Plan database migration** for long-term consistency  
-3. **Implement in phases** to minimize risk
+#### Transaction Sync
 
-## Next Steps 📋
+- `transactions.aggregator_transaction_id` maps to Plaid transaction IDs
+- `webhook_events` table processes Plaid webhook notifications
+- Unique constraint prevents duplicate Plaid transactions: `ux_tx_user_aggid`
 
-1. **Test current working state** - Ensure transaction drawer and category/merchant lookups work
-2. **Choose migration approach** based on project priorities  
-3. **Create detailed migration plan** with rollback strategies
-4. **Implement incrementally** with thorough testing at each step
+## Migration Strategy for Optimal Plaid Support 🚀
 
-## Files to Monitor 📁
+### Phase 1: Current State Validation
 
-### Critical API Routes
-- `src/app/api/transactions/[id]/route.ts` - Transaction details API
-- `src/app/api/categories/route.ts` - Category API  
-- `src/app/api/merchants/route.ts` - Merchant API
+**Status: Complete** ✅
 
-### Database Schema Files
-- All files in `sql/` directory
-- Pay special attention to foreign key relationships
+- Merchant matching system is working correctly
+- No data duplication exists
+- Foreign key relationships are proper
 
-### Frontend Components
-- Transaction components (drawer, table, etc.)
-- Category and merchant pickers
-- Rule builders
+### Phase 2: Enhanced Merchant Intelligence
 
-## Key Learnings 🎓
+**Priority: High** 🔥
 
-1. **Database schema changes require careful coordination** with frontend updates
-2. **Field name standardization** must be done systematically across all layers
-3. **Always test API compatibility** before deploying frontend changes
-4. **Keep rollback strategies** for major architectural changes
-5. **Use TypeScript** to catch field name mismatches early
+#### 2.1 Plaid Merchant Data Enhancement
+
+```python
+# Enhance merchant matching with Plaid data
+def enrich_merchant_from_plaid(plaid_transaction):
+    merchant_name = plaid_transaction.get('merchant_name')
+    if merchant_name:
+        # Check if merchant exists in our database
+        existing_merchant = find_merchant_by_name(merchant_name)
+        if not existing_merchant:
+            # Create new merchant from Plaid data
+            create_merchant_from_plaid(plaid_transaction)
+        else:
+            # Update match statistics
+            update_merchant_match_stats(existing_merchant)
+```
+
+#### 2.2 Merchant Logo Integration
+
+- Leverage Plaid's merchant logo URLs
+- Fall back to custom logos for manual merchants
+- Update `merchants.logo_url` during Plaid sync
+
+### Phase 3: Transaction Processing Optimization
+
+**Priority: Medium** 📊
+
+#### 3.1 Dual-Source Transaction Handling
+
+```python
+def process_transaction(transaction_data, source='manual'):
+    if source == 'plaid':
+        # Use Plaid merchant data directly
+        merchant_id = match_or_create_plaid_merchant(transaction_data)
+    else:
+        # Use existing regex matching for CSV uploads
+        merchant_id = match_merchant_by_description(transaction_data['description'])
+
+    return {
+        'merchant_id': merchant_id,
+        'clean_description': get_merchant_display_name(merchant_id),
+        # ... other fields
+    }
+```
+
+#### 3.2 Smart Description Handling
+
+- **Plaid transactions**: Use merchant name from Plaid
+- **CSV transactions**: Use regex-matched merchant name or parsed description
+- **Manual transactions**: Allow user-specified descriptions
+
+### Phase 4: User Experience Enhancements
+
+**Priority: Medium** 🎨
+
+#### 4.1 Category Editor Dropdown Enhancement
+
+- Show both system and user-custom categories
+- Display merchant-based category suggestions
+- Enable bulk merchant category updates
+
+#### 4.2 Merchant Management Interface
+
+- Allow users to edit merchant names and categories
+- Show merchant transaction history
+- Enable merchant merging for duplicates
+
+## Technical Implementation Plan 🔧
+
+### Backend Changes (Python)
+
+1. **Enhance merchant matching** with Plaid data awareness
+2. **Add Plaid webhook handlers** for real-time merchant updates
+3. **Implement merchant deduplication** logic
+4. **Add merchant statistics** tracking
+
+### Frontend Changes (TypeScript/React)
+
+1. **Update transaction displays** to show merchant logos
+2. **Enhance category selectors** with merchant context
+3. **Add merchant management** interface
+4. **Implement merchant search** and filtering
+
+### Database Optimizations
+
+1. **Add indexes** on frequently queried merchant fields
+2. **Implement merchant search** using full-text search
+3. **Add merchant aliases** table for better matching
+4. **Create merchant analytics** views
+
+## Validation & Testing Strategy 🧪
+
+### Unit Tests
+
+- Merchant matching algorithm accuracy
+- Plaid transaction processing
+- Category assignment logic
+
+### Integration Tests
+
+- End-to-end Plaid sync flow
+- CSV upload with merchant matching
+- User merchant customization
+
+### Performance Tests
+
+- Large transaction batch processing
+- Merchant search response times
+- Database query optimization
+
+## Risk Mitigation 🛡️
+
+### Data Integrity
+
+- Maintain transaction audit trail
+- Preserve original descriptions
+- Enable merchant assignment rollback
+
+### Plaid Integration Failures
+
+- Graceful degradation to manual processing
+- Retry mechanisms for failed syncs
+- Error logging and alerting
+
+### User Experience
+
+- Non-blocking merchant processing
+- Progressive enhancement of data
+- Clear feedback on sync status
+
+## Success Metrics 📈
+
+1. **Merchant Match Rate**: >90% of transactions automatically matched
+2. **User Satisfaction**: Reduced manual categorization by 80%
+3. **Sync Performance**: <5 seconds for 100 transaction batch
+4. **Data Quality**: <1% duplicate merchants created

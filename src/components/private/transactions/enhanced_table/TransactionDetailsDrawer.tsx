@@ -514,7 +514,7 @@ export function TransactionDetailsDrawer({
                       <MerchantLogo
                         merchantName={currentTransaction.merchant_name}
                         logoUrl={currentTransaction.merchant_logo_url}
-                        className="w-5 h-5"
+                        className="w-8 h-8 border border-border"
                       />
                       <span className="text-sm font-medium">
                         {currentTransaction.merchant_name}
@@ -569,12 +569,11 @@ export function TransactionDetailsDrawer({
                     <div className="flex items-center gap-2 text-right">
                       <CategoryIcon
                         iconName={currentTransaction.category_icon}
-                        className="w-4 h-4 text-muted-foreground"
+                        className="w-6 h-6 text-primary"
                       />
                       <div className="text-sm">
                         {currentTransaction.parent_category_name ? (
-                          <span className="text-muted-foreground">
-                            {currentTransaction.parent_category_name} →{" "}
+                          <span className="font-medium">
                             {currentTransaction.category_name}
                           </span>
                         ) : (

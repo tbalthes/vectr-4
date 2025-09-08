@@ -44,7 +44,7 @@ export class AccountNotifications {
   private static bulkSyncToastId: string | null = null;
 
   /**
-   * Account Connection Success
+   * Account Connection Success - Bottom-right dismissible popup
    */
   static connectionSuccess(accountName: string, syncMessage?: string): void {
     toast.success(
@@ -53,6 +53,8 @@ export class AccountNotifications {
       }`,
       {
         duration: 5000,
+        dismissible: true,
+        position: "bottom-right",
         description: syncMessage || "Syncing your accounts...",
         action: {
           label: "View Account",
@@ -93,7 +95,7 @@ export class AccountNotifications {
   }
 
   /**
-   * Single Account Sync Progress
+   * Single Account Sync Progress - Bottom-right dismissible popup
    */
   static accountSyncProgress(data: SyncProgressData): string {
     const toastId = `sync-${data.accountName}`;
@@ -109,7 +111,13 @@ export class AccountNotifications {
       id: existingId || toastId,
       duration: Infinity,
       description,
+      dismissible: true, // Allow user to dismiss
+      position: "bottom-right", // Bottom-right corner
       icon: React.createElement(Loader2, { className: "h-4 w-4 animate-spin" }),
+      action: {
+        label: "Dismiss",
+        onClick: () => toast.dismiss(existingId || toastId),
+      },
     });
     const idStr = String(id);
     this.activeToasts.set(toastId, idStr);
@@ -117,13 +125,13 @@ export class AccountNotifications {
   }
 
   /**
-   * Bulk Account Sync Progress
+   * Bulk Account Sync Progress - Bottom-right dismissible popup
    */
   static bulkSyncProgress(data: BulkSyncProgressData): string {
-  const progressPercentage = Math.round(
+    const progressPercentage = Math.round(
       (data.completedAccounts / data.totalAccounts) * 100
     );
-  const message = `🔄 Syncing accounts... ${data.completedAccounts} of ${data.totalAccounts} complete (${progressPercentage}%)`;
+    const message = `🔄 Syncing accounts... ${data.completedAccounts} of ${data.totalAccounts} complete (${progressPercentage}%)`;
 
     let description = "";
     if (data.currentAccount) {
@@ -143,18 +151,29 @@ export class AccountNotifications {
     // Always use a stable ID for bulk sync to prevent duplicates
     const stableId = "bulk-sync";
     const initialMessage = `🔄 Syncing ${data.totalAccounts} accounts... This may take 2-3 minutes`;
-    const id = toast.loading(data.completedAccounts === 0 ? initialMessage : message, {
-      id: this.bulkSyncToastId || stableId,
-      duration: Infinity,
-      description,
-      icon: React.createElement(Loader2, { className: "h-4 w-4 animate-spin" }),
-    });
+    const id = toast.loading(
+      data.completedAccounts === 0 ? initialMessage : message,
+      {
+        id: this.bulkSyncToastId || stableId,
+        duration: Infinity,
+        description,
+        dismissible: true, // Allow user to dismiss
+        position: "bottom-right", // Bottom-right corner
+        icon: React.createElement(Loader2, {
+          className: "h-4 w-4 animate-spin",
+        }),
+        action: {
+          label: "Dismiss",
+          onClick: () => toast.dismiss(this.bulkSyncToastId || stableId),
+        },
+      }
+    );
     this.bulkSyncToastId = String(id);
     return this.bulkSyncToastId;
   }
 
   /**
-   * Account Sync Completion
+   * Account Sync Completion - Bottom-right dismissible popup
    */
   static syncComplete(accountName: string, newTransactions?: number): void {
     const toastId = `sync-${accountName}`;
@@ -172,6 +191,8 @@ export class AccountNotifications {
       toast.success(message, {
         id: existingId,
         duration: 4000,
+        dismissible: true,
+        position: "bottom-right",
         description,
       });
       this.activeToasts.delete(toastId);

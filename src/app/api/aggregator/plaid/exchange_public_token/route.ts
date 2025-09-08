@@ -7,7 +7,7 @@ import { Configuration, PlaidApi, PlaidEnvironments, CountryCode } from "plaid";
 // Body: { public_token: string }
 export async function POST(req: Request) {
   const supabase = createRouteHandlerClient({
-    cookies: () => cookies(),
+    cookies: cookies,
   });
   const {
     data: { session },
@@ -241,6 +241,37 @@ export async function POST(req: Request) {
           balancesToInsert.length
         );
       }
+    }
+
+    // Trigger initial transaction sync
+    console.log("🔄 Triggering initial transaction sync...");
+    try {
+      const syncResponse = await fetch(`http://localhost:3000/api/aggregator/plaid/transactions/sync`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Forward the authentication cookies
+          "Cookie": req.headers.get("cookie") || "",
+        },
+        body: JSON.stringify({
+          access_token,
+          count: 500, // Get more transactions on initial sync
+        }),
+      });
+
+      if (syncResponse.ok) {
+        const syncResult = await syncResponse.json();
+        console.log("✅ Initial sync completed:", {
+          added: syncResult.added,
+          accounts: syncResult.accounts?.length || 0,
+        });
+      } else {
+        const errorText = await syncResponse.text();
+        console.warn("⚠️ Initial sync failed:", errorText);
+      }
+    } catch (syncError) {
+      console.warn("⚠️ Initial sync error:", syncError);
+      // Don't fail the whole flow for sync issues
     }
 
     console.log("=== PLAID INTEGRATION COMPLETE ===");

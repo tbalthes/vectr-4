@@ -10,6 +10,88 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+// --- PERSISTENCE HELPERS ---
+type SavedOrder = {
+  groups: string[];
+  accountsByGroup: Record<string, string[]>;
+};
+
+const ORDER_STORAGE_KEY = "vectr.accounts.view.order.v1";
+
+function saveOrderToStorage(data: GroupData[]) {
+  try {
+    const order: SavedOrder = {
+      groups: data.map((g) => g.id),
+      accountsByGroup: {},
+    };
+
+    data.forEach((group) => {
+      order.accountsByGroup[group.id] = group.accounts.map((acc) => acc.id);
+    });
+
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(order));
+  } catch (error) {
+    console.warn("Failed to save account order:", error);
+  }
+}
+
+function loadOrderFromStorage(): SavedOrder | null {
+  try {
+    const stored = localStorage.getItem(ORDER_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.warn("Failed to load account order:", error);
+    return null;
+  }
+}
+
+function applySavedOrder(data: GroupData[]): GroupData[] {
+  const savedOrder = loadOrderFromStorage();
+  if (!savedOrder) return data;
+
+  // Create maps for quick lookup
+  const groupMap = new Map(data.map((g) => [g.id, g]));
+  const result: GroupData[] = [];
+
+  // Apply group order
+  for (const groupId of savedOrder.groups) {
+    const group = groupMap.get(groupId);
+    if (group) {
+      // Apply account order within each group
+      const savedAccountOrder = savedOrder.accountsByGroup[groupId];
+      if (savedAccountOrder) {
+        const accountMap = new Map(group.accounts.map((acc) => [acc.id, acc]));
+        const orderedAccounts: Account[] = [];
+
+        // Add accounts in saved order
+        for (const accId of savedAccountOrder) {
+          const account = accountMap.get(accId);
+          if (account) {
+            orderedAccounts.push(account);
+            accountMap.delete(accId);
+          }
+        }
+
+        // Add any new accounts at the end
+        orderedAccounts.push(...Array.from(accountMap.values()));
+
+        result.push({
+          ...group,
+          accounts: orderedAccounts,
+        });
+      } else {
+        result.push(group);
+      }
+      groupMap.delete(groupId);
+    }
+  }
+
+  // Add any new groups at the end
+  result.push(...Array.from(groupMap.values()));
+
+  return result;
+}
+
 // Data processing & grouping logic (uses account data as-is)
 type TimeframeKey = "7D" | "30D" | "90D";
 type TimeframeData = {
@@ -823,7 +905,8 @@ export default function LuxuryAccountsView() {
 
   // Update ordered data when API data changes
   useEffect(() => {
-    setOrderedGroupedData(groupedData);
+    const orderedData = applySavedOrder(groupedData);
+    setOrderedGroupedData(orderedData);
   }, [groupedData]);
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -839,7 +922,12 @@ export default function LuxuryAccountsView() {
         setOrderedGroupedData((items) => {
           const oldIndex = items.findIndex((item) => item.id === activeId);
           const newIndex = items.findIndex((item) => item.id === overId);
-          return arrayMove(items, oldIndex, newIndex);
+          const newData = arrayMove(items, oldIndex, newIndex);
+
+          // Save the new order to localStorage
+          saveOrderToStorage(newData);
+
+          return newData;
         });
       }
     }
@@ -868,6 +956,10 @@ export default function LuxuryAccountsView() {
             group.accounts = arrayMove(group.accounts, oldIndex, newIndex);
           }
         }
+
+        // Save the new order to localStorage
+        saveOrderToStorage(newData);
+
         return newData;
       });
     }

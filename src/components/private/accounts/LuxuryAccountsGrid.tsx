@@ -4,7 +4,12 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { AlertCircle, RefreshCw, GripVertical } from "lucide-react";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -75,7 +80,36 @@ type SavedOrder = {
   accountsByGroup: Record<string, string[]>; // groupId -> [accountId]
 };
 
-const ORDER_STORAGE_KEY = "vectr.accounts.order.v1";
+// Get user-specific storage key
+function getUserStorageKey(): string {
+  // Try to get user ID from various sources
+  let userId = "default";
+
+  try {
+    // Try to get from localStorage (Supabase session)
+    const storedSessions = Object.keys(localStorage).filter(
+      (key) => key.includes("auth-token") && key.startsWith("sb-")
+    );
+
+    if (storedSessions.length > 0) {
+      const sessionData = localStorage.getItem(storedSessions[0]);
+      if (sessionData) {
+        const parsed = JSON.parse(sessionData);
+        if (
+          Array.isArray(parsed) &&
+          parsed.length >= 3 &&
+          parsed[2]?.user?.id
+        ) {
+          userId = parsed[2].user.id;
+        }
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to get user ID for storage:", error);
+  }
+
+  return `vectr.accounts.order.${userId}.v1`;
+}
 
 function saveOrderToStorage(data: GroupData[]) {
   try {
@@ -86,18 +120,19 @@ function saveOrderToStorage(data: GroupData[]) {
         return acc;
       }, {}),
     };
-    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(payload));
-  } catch {
-    // noop
+    localStorage.setItem(getUserStorageKey(), JSON.stringify(payload));
+  } catch (error) {
+    console.warn("Failed to save account order:", error);
   }
 }
 
 function loadOrderFromStorage(): SavedOrder | null {
   try {
-    const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+    const raw = localStorage.getItem(getUserStorageKey());
     if (!raw) return null;
     return JSON.parse(raw) as SavedOrder;
-  } catch {
+  } catch (error) {
+    console.warn("Failed to load account order:", error);
     return null;
   }
 }
@@ -241,16 +276,7 @@ const Icons = {
       />
     </svg>
   ),
-  grip: (props: IconProps) => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" {...props}>
-      <circle cx="12" cy="5" r="1.5" fill="currentColor" />
-      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-      <circle cx="12" cy="19" r="1.5" fill="currentColor" />
-      <circle cx="6" cy="5" r="1.5" fill="currentColor" />
-      <circle cx="6" cy="12" r="1.5" fill="currentColor" />
-      <circle cx="6" cy="19" r="1.5" fill="currentColor" />
-    </svg>
-  ),
+  grip: (props: IconProps) => <GripVertical {...props} />,
   chevron: (props: IconProps) => (
     <svg viewBox="0 0 24 24" fill="none" {...props}>
       <path
@@ -463,63 +489,52 @@ const AccountActionsMenu: React.FC<AccountActionsMenuProps> = ({
   onView,
   onDelete,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
+  const [open, setOpen] = useState(false);
 
   const handleView = () => {
     onView(account);
-    setIsOpen(false);
+    setOpen(false);
   };
 
   const handleDelete = () => {
     onDelete(account);
-    setIsOpen(false);
+    setOpen(false);
   };
 
   return (
-    <div className="relative" ref={menuRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors"
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className="p-2 rounded-full hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors">
+          <Icons.moreVertical className="w-5 h-5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-44 sm:w-48 p-0 bg-white border border-slate-200 rounded-lg shadow-lg"
+        align="end"
+        side="bottom"
+        sideOffset={4}
+        alignOffset={0}
+        avoidCollisions={true}
+        collisionPadding={16}
       >
-        <Icons.moreVertical className="w-5 h-5" />
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50 min-w-[150px]">
+        <div className="py-1">
           <button
             onClick={handleView}
-            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
           >
             <Icons.eye className="w-4 h-4 mr-3" />
             View Details
           </button>
           <button
             onClick={handleDelete}
-            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
           >
             <Icons.trash className="w-4 h-4 mr-3" />
             Delete Account
           </button>
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 };
 
@@ -665,16 +680,16 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
   } = account;
 
   return (
-    <div className="flex items-center justify-between px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 first:border-t-0 group">
+    <div className="flex items-center justify-between px-3 sm:px-5 border-t border-border py-2.5 hover:bg-accent dark:hover:bg-slate-800/60 group">
       {/* Left side - Logo and Account Info */}
-      <div className="flex items-center space-x-3 flex-1 min-w-0">
-        {/* Drag Handle */}
+      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+        {/* Drag Handle - Hidden on mobile */}
         <div
-          className="text-slate-300 dark:text-slate-500 cursor-grab hover:text-slate-500 transition-colors"
+          className="text-slate-300 dark:text-slate-500 cursor-grab hover:text-slate-500 transition-colors hidden sm:block"
           {...dndAttributes}
           {...dndListeners}
         >
-          <Icons.grip className="w-3.5 h-3.5" />
+          <Icons.grip className="w-5 h-5" />
         </div>
 
         {/* Institution Logo */}
@@ -687,14 +702,16 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
           <p className="font-medium text-slate-900 dark:text-slate-100 truncate text-sm">
             {name}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {institution_name} •••• {mask}
+          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+            <span className="hidden sm:inline">{institution_name} •••• </span>
+            <span className="sm:hidden">•••• </span>
+            {mask}
           </p>
         </div>
       </div>
 
       {/* Right side - Balance and Actions */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
         {/* Balance */}
         <div className="text-right">
           <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
@@ -707,7 +724,7 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
           {available !== null &&
             available !== undefined &&
             available !== balance_amount && (
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400 hidden lg:block">
                 Available: $
                 {available.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
@@ -717,13 +734,13 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
             )}
         </div>
 
-        {/* Last Synced */}
-        <div className="text-xs text-slate-400 dark:text-slate-500 hidden sm:block">
-          {timeAgo(last_synced_at)}
+        {/* Last Synced - Hidden on mobile */}
+        <div className="text-xs text-slate-400 dark:text-slate-500 hidden lg:block min-w-0">
+          <span className="truncate">{timeAgo(last_synced_at)}</span>
         </div>
 
         {/* Actions Menu */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
           <AccountActionsMenu
             account={account}
             onView={onViewAccount}
@@ -754,7 +771,7 @@ const SortableAccountLedgerRow: React.FC<SortableAccountLedgerRowProps> = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: account.id });
+  } = useSortable({ id: `acc-${account.id}` });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -804,7 +821,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
 
   const [shimmerActive, setShimmerActive] = useState(false);
   return (
-    <div className="bg-card rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-border group/card hover:scale-[1.02] hover:border-slate-300 dark:hover:border-slate-700">
+    <div className="bg-card rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-border group/card hover:scale-[1.02] hover:border-slate-300 dark:hover:border-slate-700">
       {/* Shimmer Animation Styles */}
       <style>{`
         @keyframes vectr-shimmer {
@@ -843,7 +860,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
             {...dndAttributes}
             {...dndListeners}
           >
-            <Icons.grip className="w-4 h-4" />
+            <Icons.grip className="w-5 h-5" />
           </div>
           <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
             <IconComponent className="w-4 h-4 text-slate-600 dark:text-slate-300" />
@@ -881,7 +898,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
         >
           <div>
             <p
-              className={`text-xl font-bold text-slate-900 dark:text-slate-100 ${
+              className={`text-2xl font-extrabold tracking-wide text-slate-900 dark:text-slate-200 ${
                 shimmerActive ? "vectr-shift vectr-run" : ""
               }`}
               data-text={formattedBalance}
@@ -935,7 +952,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
         } overflow-hidden`}
       >
         <SortableContext
-          items={accounts.map((a: TransformedAccount) => a.id)}
+          items={accounts.map((a: TransformedAccount) => `acc-${a.id}`)}
           strategy={verticalListSortingStrategy}
         >
           <div>
@@ -1027,7 +1044,7 @@ export function LuxuryAccountsGrid({
     const activeId = String(active.id);
     const overId = String(over.id);
 
-    // Check if we are dragging a card
+    // Check if we are dragging a group card
     if (activeId.startsWith("group-") && overId.startsWith("group-")) {
       if (activeId !== overId) {
         setSortedGroupedData((items: GroupData[]) => {
@@ -1040,37 +1057,49 @@ export function LuxuryAccountsGrid({
       }
     }
 
-    // Check if we are dragging a row (active is an account id)
-    else if (!activeId.startsWith("group-")) {
+    // Check if we are dragging an account row
+    else if (activeId.startsWith("acc-") && overId.startsWith("acc-")) {
       setSortedGroupedData((prevData: GroupData[]) => {
         const newData = [...prevData];
-        const findPos = (id: string): { g: number; i: number } | null => {
+
+        // Extract account IDs from prefixed strings
+        const activeAccountId = activeId.replace("acc-", "");
+        const overAccountId = overId.replace("acc-", "");
+
+        // Find the group and index for both accounts
+        const findAccountPosition = (
+          accountId: string
+        ): { groupIndex: number; accountIndex: number } | null => {
           for (let gi = 0; gi < newData.length; gi++) {
-            const idx = newData[gi].accounts.findIndex((acc) => acc.id === id);
-            if (idx !== -1) return { g: gi, i: idx };
+            const accountIndex = newData[gi].accounts.findIndex(
+              (acc) => acc.id === accountId
+            );
+            if (accountIndex !== -1) {
+              return { groupIndex: gi, accountIndex };
+            }
           }
           return null;
         };
-        const activePos = findPos(activeId);
-        // over may be a row id or a group id; if group id, place at end of that group
-        let overPos: { g: number; i: number } | null = null;
-        if (overId.startsWith("group-")) {
-          const gi = newData.findIndex((g) => g.id === overId);
-          if (gi !== -1)
-            overPos = { g: gi, i: newData[gi].accounts.length - 1 };
-        } else {
-          overPos = findPos(overId);
-        }
 
-        if (activePos && overPos && activePos.g === overPos.g) {
-          const group = newData[activePos.g];
-          const oldIndex = activePos.i;
-          const newIndex = overPos.i;
-          if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const activePos = findAccountPosition(activeAccountId);
+        const overPos = findAccountPosition(overAccountId);
+
+        // Only reorder if both accounts are in the same group
+        if (
+          activePos &&
+          overPos &&
+          activePos.groupIndex === overPos.groupIndex
+        ) {
+          const group = newData[activePos.groupIndex];
+          const oldIndex = activePos.accountIndex;
+          const newIndex = overPos.accountIndex;
+
+          if (oldIndex !== newIndex) {
             group.accounts = arrayMove(group.accounts, oldIndex, newIndex);
+            saveOrderToStorage(newData);
           }
         }
-        saveOrderToStorage(newData);
+
         return newData;
       });
     }
@@ -1085,13 +1114,47 @@ export function LuxuryAccountsGrid({
     try {
       // Remove from local state immediately for better UX
       setAccounts((prev) => prev.filter((a) => a.id !== account.id));
+
+      console.log(`Attempting to delete account: ${account.id}`);
+
+      // Actually delete the account from the backend
+      const response = await fetch(`/api/accounts/${account.id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const responseText = await response.text();
+      console.log(`Delete response status: ${response.status}`);
+      console.log(`Delete response body: ${responseText}`);
+
+      if (!response.ok) {
+        let errorMessage = `Failed to delete account (${response.status})`;
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = responseText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
       toast.success(`Account ${account.name} has been removed`);
-      console.log("Delete account:", account);
+      console.log("Account deleted successfully:", account.id);
+
+      // Trigger a refresh to sync with backend state
+      if (onRefresh) {
+        await onRefresh();
+      }
     } catch (error) {
+      console.error("Error deleting account:", error);
       // Revert the local state if delete fails
       setAccounts(initialAccounts);
-      toast.error("Failed to delete account");
-      console.error("Error deleting account:", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete account";
+      toast.error(errorMessage);
     }
   };
 
@@ -1176,9 +1239,9 @@ export function LuxuryAccountsGrid({
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="space-y-5">
+      <div className="space-y-4 sm:space-y-5">
         {/* Action buttons */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 className="text-xl font-semibold">Your Accounts</h2>
           <div className="flex items-center space-x-2">
             <button
@@ -1189,7 +1252,8 @@ export function LuxuryAccountsGrid({
               <RefreshCw
                 className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
               />
-              Refresh
+              <span className="hidden sm:inline">Refresh</span>
+              <span className="sm:hidden">Sync</span>
             </button>
             {accounts.length > 1 && onSyncAll && (
               <button
@@ -1202,7 +1266,8 @@ export function LuxuryAccountsGrid({
                     isBulkSyncing() ? "animate-spin" : ""
                   }`}
                 />
-                Sync All
+                <span className="hidden sm:inline">Sync All</span>
+                <span className="sm:hidden">All</span>
               </button>
             )}
           </div>
@@ -1213,7 +1278,7 @@ export function LuxuryAccountsGrid({
           items={sortedGroupedData.map((g: GroupData) => g.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
             {sortedGroupedData.map((group: GroupData) => (
               <SortableFinancialInsightCard
                 key={group.id}

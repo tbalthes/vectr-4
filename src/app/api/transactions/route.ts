@@ -18,6 +18,12 @@ interface RawSupabaseTransaction {
   user_metadata: Record<string, string | number | boolean> | null;
   needs_review: boolean;
   transaction_note: string | null;
+  accounts: {
+    id: string;
+    name: string;
+    mask: string | null;
+    type: string;
+  } | null;
   merchants:
     | {
         name: string;
@@ -86,6 +92,13 @@ function transformToFormattedTransaction(
   // Prioritize user category over merchant category
   const category = userCategory || merchantCategory;
 
+  // Format account name - include mask if available
+  const accountName = raw.accounts?.name || "Unknown Account";
+  const accountMask = raw.accounts?.mask;
+  const formattedAccountName = accountMask 
+    ? `${accountName} (...${accountMask})` 
+    : accountName;
+
   return {
     id: raw.id,
     transaction_number: raw.transaction_number,
@@ -103,7 +116,7 @@ function transformToFormattedTransaction(
     // Add required fields for compatibility
     type: raw.amount > 0 ? "income" : "expense",
     category: category?.name || "Uncategorized",
-    account: "Primary", // Default value for now
+    account: formattedAccountName, // Now uses actual account data!
     status: raw.needs_review ? "pending" : "completed",
     note: raw.transaction_note || undefined,
   };
@@ -410,6 +423,12 @@ export async function GET(request: NextRequest) {
           user_metadata,
           needs_review,
           transaction_note,
+          accounts (
+            id,
+            name,
+            mask,
+            type
+          ),
           merchants (
             name,
             logo_url,
@@ -542,6 +561,12 @@ export async function GET(request: NextRequest) {
           user_metadata,
           needs_review,
           transaction_note,
+          accounts (
+            id,
+            name,
+            mask,
+            type
+          ),
           merchants (
             name,
             logo_url,

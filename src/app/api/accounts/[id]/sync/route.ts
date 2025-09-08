@@ -148,8 +148,8 @@ export async function POST(
     const delay = 1000 + Math.random() * 2000;
     await new Promise((resolve) => setTimeout(resolve, delay));
 
-    // Mock sync results
-    const success = Math.random() > 0.2; // 80% success rate
+    // Mock sync results - High success rate for testing
+    const success = Math.random() > 0.05; // 95% success rate
 
     if (success) {
       const newTransactions = Math.floor(Math.random() * 15);
@@ -165,12 +165,24 @@ export async function POST(
         accountName: account.name,
         newTransactions,
         message: `Successfully synced ${account.name}`,
+        timestamp: new Date().toISOString(),
       });
     } else {
+      // Provide more realistic error messages for different account types
+      const errorMessages = [
+        "Temporary connection issue - please try again",
+        "Bank maintenance in progress",
+        "Account needs re-authentication",
+        "Rate limit exceeded - please wait",
+      ];
+
+      const randomError =
+        errorMessages[Math.floor(Math.random() * errorMessages.length)];
+
       return NextResponse.json(
         {
           success: false,
-          error: "Connection timeout",
+          error: randomError,
           accountName: account.name,
           canRetry: true,
         },

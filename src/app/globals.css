@@ -1,5 +1,54 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 
+/* Font rendering optimizations for crisp text */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "pnum" 1, "tnum" 0,
+    "onum" 1, "lnum" 0, "dlig" 0;
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  * {
+    -webkit-font-smoothing: subpixel-antialiased;
+  }
+}
+
+/* Ensure crisp SVG rendering */
+svg {
+  shape-rendering: geometricPrecision;
+  text-rendering: geometricPrecision;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Prevent blurry transforms and improve rendering */
+* {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* Improve button and interactive element rendering */
+button,
+input,
+select,
+textarea {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Force hardware acceleration for smooth animations */
+.transition,
+[class*="transition"] {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
 /*
   === DO NOT REMOVE: Toast Transparency & Stacking Fix ===
   This block ensures all toast notifications are fully opaque, solid, and properly stacked.
@@ -256,4 +305,119 @@ html:not(.dark) [data-sonner-toast] {
 [data-sonner-toast] [data-description] {
   opacity: 0.95 !important;
   font-size: 0.9375rem !important;
+}
+
+/* === PLAID MODAL Z-INDEX FIX === */
+/* Ensure Plaid's iframe and modal components always appear on top */
+[data-portal] iframe[src*="plaid"],
+iframe[src*="plaid.com"],
+iframe[src*="plaid-link"],
+[data-testid*="plaid"],
+div[data-rbd-droppable-id*="plaid"],
+#plaid-link-iframe-1,
+#plaid-link-iframe-2,
+#plaid-link-iframe-3 {
+  z-index: 999999 !important;
+  position: relative !important;
+}
+
+/* Plaid overlay and container fixes */
+div[style*="z-index"][style*="999"]:has(iframe[src*="plaid"]) {
+  z-index: 999999 !important;
+}
+
+/* Ensure Plaid modal background doesn't interfere */
+[data-radix-popper-content-wrapper]:has(iframe[src*="plaid"]) {
+  z-index: 999999 !important;
+}
+
+/* Fix for any React portals containing Plaid */
+[data-portal]:has(iframe[src*="plaid"]) {
+  z-index: 999999 !important;
+}
+
+/* Plaid Link specific fixes */
+.PlaidLink,
+.plaid-link,
+[class*="plaid-link"],
+[id*="plaid-link"] {
+  z-index: 999999 !important;
+}
+
+/* Fix input focus issues within Plaid iframe */
+iframe[src*="plaid"] input,
+iframe[src*="plaid"] [contenteditable],
+iframe[src*="plaid"] textarea {
+  z-index: 1000000 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure our dialog doesn't interfere with Plaid */
+[data-slot="dialog-content"]:has(iframe[src*="plaid"]) {
+  z-index: 999998 !important;
+}
+
+[data-slot="dialog-portal"]:has(iframe[src*="plaid"]) {
+  z-index: 999998 !important;
+}
+
+/* Force Plaid modals to appear on top of everything */
+#plaid-link-iframe-1,
+#plaid-link-iframe,
+[id*="plaid-link"],
+[class*="PlaidLink"],
+[data-module="PlaidLink"],
+iframe[src*="link.plaid.com"],
+iframe[src*="cdn.plaid.com"] {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+}
+
+/* Plaid container overrides */
+div[style*="z-index"]:has(iframe[src*="plaid"]) {
+  z-index: 2147483647 !important;
+}
+
+/* Generic high z-index iframe fix for Plaid */
+body > div[style*="position: fixed"]:has(iframe) {
+  z-index: 2147483647 !important;
+}
+
+/* CRITICAL: Fix Next.js development error overlay positioning
+   DO NOT REMOVE - This fixes the error overlay appearing behind sidebar */
+[data-nextjs-dialog-overlay],
+[data-nextjs-toast],
+.__next-dev-error-overlay,
+#__next-build-watcher,
+[id*="__next"],
+[class*="__next"] {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+/* Fix Next.js error dialog container */
+[data-nextjs-dialog] {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+}
+
+/* Ensure Next.js error content is visible */
+[data-nextjs-dialog-overlay] + * {
+  z-index: 2147483647 !important;
+  position: relative !important;
+}
+
+/* Fix sidebar positioning issues */
+[data-sidebar] {
+  position: fixed !important;
+  z-index: 40 !important;
+}
+
+/* Prevent layout shifts from error overlays */
+body:has([data-nextjs-dialog-overlay]) {
+  overflow: hidden !important;
 }

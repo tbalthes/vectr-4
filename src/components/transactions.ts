@@ -24,6 +24,12 @@ export async function getTransactionsWithDetails(): Promise<
       balance,
       user_metadata,
       needs_review,
+      accounts (
+        id,
+        name,
+        mask,
+        type
+      ),
       merchants (
         name,
         logo_url,

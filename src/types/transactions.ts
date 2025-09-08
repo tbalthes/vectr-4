@@ -22,6 +22,12 @@ export interface TransactionFromApi {
   user_metadata: Record<string, string | number | boolean> | null;
   needs_review: boolean;
   transaction_note: string | null;
+  accounts: {
+    id: string;
+    name: string;
+    mask: string | null;
+    type: string;
+  } | null;
   merchants: {
     name: string;
     logo_url: string | null;

@@ -34,6 +34,12 @@ export async function getTransactionsWithDetails(
       needs_review,
       transaction_note,
       user_id,
+      accounts (
+        id,
+        name,
+        mask,
+        type
+      ),
       merchants (
         name,
         logo_url,

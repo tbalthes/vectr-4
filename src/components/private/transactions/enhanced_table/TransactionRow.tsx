@@ -149,7 +149,7 @@ export function TransactionRow({
             <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground dark:bg-muted-foreground"></div>
           </div>
           <span className="text-xs text-foreground dark:text-foreground truncate">
-            My Money (...2733)
+            {transaction.account || "Unknown Account"}
           </span>
         </div>
       </td>
