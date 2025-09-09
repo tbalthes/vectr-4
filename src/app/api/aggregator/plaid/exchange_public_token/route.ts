@@ -246,18 +246,21 @@ export async function POST(req: Request) {
     // Trigger initial transaction sync
     console.log("🔄 Triggering initial transaction sync...");
     try {
-      const syncResponse = await fetch(`http://localhost:3000/api/aggregator/plaid/transactions/sync`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Forward the authentication cookies
-          "Cookie": req.headers.get("cookie") || "",
-        },
-        body: JSON.stringify({
-          access_token,
-          count: 500, // Get more transactions on initial sync
-        }),
-      });
+      const syncResponse = await fetch(
+        `http://localhost:3000/api/aggregator/plaid/transactions/sync`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // Forward the authentication cookies
+            Cookie: req.headers.get("cookie") || "",
+          },
+          body: JSON.stringify({
+            access_token,
+            count: 500, // Get more transactions on initial sync
+          }),
+        }
+      );
 
       if (syncResponse.ok) {
         const syncResult = await syncResponse.json();

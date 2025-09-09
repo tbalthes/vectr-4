@@ -189,7 +189,7 @@ async function handleTransactionsWebhook(
       console.log(
         `[webhook] ${removedTxs.length} transactions removed for item ${itemId}`
       );
-      
+
       // Call sync endpoint to handle removed transactions
       await triggerTransactionSync(itemId, "removal");
       break;
@@ -236,27 +236,32 @@ async function triggerTransactionSync(
 
     // For internal webhook calls, we need to authenticate properly
     // We'll use the service role to create a proper session
-    const { data: sessionData } = await supabase.auth.admin.getUserById(accountLink.user_id);
-    
+    const { data: sessionData } = await supabase.auth.admin.getUserById(
+      accountLink.user_id
+    );
+
     if (!sessionData?.user) {
       console.warn(`[webhook] No user found for ID ${accountLink.user_id}`);
       return;
     }
 
     // Call the sync endpoint with proper authentication headers
-    const syncResponse = await fetch(`http://localhost:3000/api/aggregator/plaid/transactions/sync`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        "X-User-ID": accountLink.user_id, // Pass user ID for internal auth
-      },
-      body: JSON.stringify({
-        access_token: accountLink.access_token_encrypted,
-        cursor: accountLink.cursor || undefined,
-        count: syncType === "initial" ? 500 : 100,
-      }),
-    });
+    const syncResponse = await fetch(
+      `http://localhost:3000/api/aggregator/plaid/transactions/sync`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          "X-User-ID": accountLink.user_id, // Pass user ID for internal auth
+        },
+        body: JSON.stringify({
+          access_token: accountLink.access_token_encrypted,
+          cursor: accountLink.cursor || undefined,
+          count: syncType === "initial" ? 500 : 100,
+        }),
+      }
+    );
 
     if (syncResponse.ok) {
       const result = await syncResponse.json();
@@ -270,11 +275,14 @@ async function triggerTransactionSync(
       // Continue syncing if there's more data
       if (result.has_more && result.next_cursor) {
         console.log(`[webhook] More data available, continuing sync...`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Rate limit
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Rate limit
         await triggerTransactionSync(itemId, syncType);
       }
     } else {
-      console.error(`[webhook] ${syncType} sync failed:`, await syncResponse.text());
+      console.error(
+        `[webhook] ${syncType} sync failed:`,
+        await syncResponse.text()
+      );
     }
   } catch (error) {
     console.error(`[webhook] Error triggering ${syncType} sync:`, error);

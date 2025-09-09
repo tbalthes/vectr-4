@@ -40,7 +40,7 @@ export function PlaidLinkPopup({
       const timer = setTimeout(() => {
         openPlaidLink();
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
   }, [isOpen, linkToken, ready, openPlaidLink]);
@@ -62,15 +62,19 @@ export function PlaidLinkPopup({
         >
           <X className="h-6 w-6" />
         </button>
-        
+
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-3 mb-6">
             <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">P</span>
             </div>
             <div className="text-left">
-              <h2 className="text-xl font-semibold text-gray-900">Connect with Plaid</h2>
-              <p className="text-sm text-gray-600">Securely link your bank account</p>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Connect with Plaid
+              </h2>
+              <p className="text-sm text-gray-600">
+                Securely link your bank account
+              </p>
             </div>
           </div>
 
@@ -83,7 +87,9 @@ export function PlaidLinkPopup({
                   <div className="h-4 bg-gray-300 rounded w-1/2"></div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500">Preparing secure connection...</p>
+              <p className="text-sm text-gray-500">
+                Preparing secure connection...
+              </p>
             </div>
           )}
 

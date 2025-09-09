@@ -7,10 +7,14 @@ export function createSupabaseServerClient() {
   const originalError = console.error;
   console.error = (...args: unknown[]) => {
     // Only suppress specific cookie-related errors
-    const message = (typeof args[0] === "object" && args[0] !== null && "toString" in args[0])
-      ? (args[0] as { toString: () => string }).toString()
-      : String(args[0] ?? '');
-    if (message.includes('cookies().get') || message.includes('should be awaited')) {
+    const message =
+      typeof args[0] === "object" && args[0] !== null && "toString" in args[0]
+        ? (args[0] as { toString: () => string }).toString()
+        : String(args[0] ?? "");
+    if (
+      message.includes("cookies().get") ||
+      message.includes("should be awaited")
+    ) {
       return; // Suppress this error
     }
     originalError.apply(console, args);

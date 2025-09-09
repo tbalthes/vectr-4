@@ -82,7 +82,9 @@ export async function POST() {
       products: [Products.Transactions, Products.Auth],
       country_codes: [CountryCode.Us],
       language: "en" as const,
-      webhook: process.env.PLAID_WEBHOOK_URL || `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/webhook`,
+      webhook:
+        process.env.PLAID_WEBHOOK_URL ||
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/webhook`,
       transactions: {
         days_requested: 730, // Maximum transaction history (2 years)
       },

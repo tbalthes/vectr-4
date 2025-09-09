@@ -21,28 +21,35 @@ export async function GET() {
       return NextResponse.json({ error: linksError.message }, { status: 500 });
     }
 
-    console.log(`Found ${accountLinks?.length || 0} active Plaid account links`);
+    console.log(
+      `Found ${accountLinks?.length || 0} active Plaid account links`
+    );
 
     const results = [];
 
     for (const link of accountLinks || []) {
       try {
-        console.log(`🔄 Forcing sync for account link ${link.id} (item: ${link.item_id})`);
+        console.log(
+          `🔄 Forcing sync for account link ${link.id} (item: ${link.item_id})`
+        );
 
         // Call the sync endpoint with service authentication
-        const syncResponse = await fetch(`http://localhost:3000/api/aggregator/plaid/transactions/sync`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-            "X-User-ID": link.user_id,
-          },
-          body: JSON.stringify({
-            access_token: link.access_token_encrypted,
-            cursor: link.cursor || undefined,
-            count: 500,
-          }),
-        });
+        const syncResponse = await fetch(
+          `http://localhost:3000/api/aggregator/plaid/transactions/sync`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+              "X-User-ID": link.user_id,
+            },
+            body: JSON.stringify({
+              access_token: link.access_token_encrypted,
+              cursor: link.cursor || undefined,
+              count: 500,
+            }),
+          }
+        );
 
         if (syncResponse.ok) {
           const result = await syncResponse.json();
@@ -85,7 +92,6 @@ export async function GET() {
       message: `Processed ${results.length} account links`,
       results,
     });
-
   } catch (error) {
     console.error("Force sync error:", error);
     return NextResponse.json(

@@ -22,9 +22,9 @@ export function ConnectAccountModal({
       console.log("Fetching Plaid link token...");
       const response = await fetch("/api/aggregator/plaid/create_link_token", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "no-cache"
+          "Cache-Control": "no-cache",
         },
       });
 
@@ -38,7 +38,8 @@ export function ConnectAccountModal({
       setLinkToken(link_token);
     } catch (err) {
       console.error("Error fetching link token:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to start account linking";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to start account linking";
       accountToasts.syncError("Plaid Link", errorMessage, true);
       onOpenChange(false);
     }
@@ -53,8 +54,8 @@ export function ConnectAccountModal({
   // Temporarily disable all Plaid CSS overrides to let modal_only work
   useEffect(() => {
     if (open) {
-      const style = document.createElement('style');
-      style.id = 'plaid-modal-only-fix';
+      const style = document.createElement("style");
+      style.id = "plaid-modal-only-fix";
       style.textContent = `
         /* DISABLE ALL PLAID Z-INDEX OVERRIDES */
         iframe[src*="plaid"],
@@ -71,9 +72,9 @@ export function ConnectAccountModal({
         }
       `;
       document.head.appendChild(style);
-      
+
       return () => {
-        const existingStyle = document.getElementById('plaid-modal-only-fix');
+        const existingStyle = document.getElementById("plaid-modal-only-fix");
         if (existingStyle) {
           document.head.removeChild(existingStyle);
         }
@@ -83,22 +84,25 @@ export function ConnectAccountModal({
 
   const { open: openPlaidLink, ready } = usePlaidLink({
     token: linkToken,
-    env: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
+    env: process.env.NODE_ENV === "production" ? "production" : "sandbox",
     onLoad: () => {
       console.log("🎯 Plaid Link loaded - checking for modal_only behavior...");
     },
     onSuccess: async (public_token, metadata) => {
       console.log("Plaid Link success, exchanging token...");
-      
+
       try {
-        const response = await fetch("/api/aggregator/plaid/exchange_public_token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            public_token,
-            metadata,
-          }),
-        });
+        const response = await fetch(
+          "/api/aggregator/plaid/exchange_public_token",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              public_token,
+              metadata,
+            }),
+          }
+        );
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -117,9 +121,9 @@ export function ConnectAccountModal({
         // Close modal and trigger callback
         onOpenChange(false);
         onAccountConnected();
-        
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to link account";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to link account";
         console.error("Error exchanging token:", err);
         accountToasts.syncError("Account Linking", errorMessage, true);
         onOpenChange(false);
@@ -127,12 +131,18 @@ export function ConnectAccountModal({
     },
     onExit: (err, metadata) => {
       console.log("Plaid Link exited:", { err, metadata });
-      
+
       if (err) {
         console.error("Plaid Link error:", err);
-        accountToasts.syncError("Account Linking", `Connection cancelled: ${err.error_message || err.error_code || "Unknown error"}`, false);
+        accountToasts.syncError(
+          "Account Linking",
+          `Connection cancelled: ${
+            err.error_message || err.error_code || "Unknown error"
+          }`,
+          false
+        );
       }
-      
+
       // Always close modal and reset
       setLinkToken(null);
       onOpenChange(false);

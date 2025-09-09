@@ -57,18 +57,21 @@ export async function POST(req: Request) {
     console.log(`🔄 Manual sync requested for account link ${account_link_id}`);
 
     // Call sync endpoint
-    const syncResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/plaid/transactions/sync`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cookie": req.headers.get("cookie") || "",
-      },
-      body: JSON.stringify({
-        access_token: accountLink.access_token_encrypted,
-        cursor: force_full_sync ? undefined : accountLink.cursor,
-        count: 500,
-      }),
-    });
+    const syncResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/plaid/transactions/sync`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: req.headers.get("cookie") || "",
+        },
+        body: JSON.stringify({
+          access_token: accountLink.access_token_encrypted,
+          cursor: force_full_sync ? undefined : accountLink.cursor,
+          count: 500,
+        }),
+      }
+    );
 
     if (!syncResponse.ok) {
       const errorText = await syncResponse.text();
@@ -87,21 +90,25 @@ export async function POST(req: Request) {
     let currentCursor = result.next_cursor;
     let syncCount = 1;
 
-    while (result.has_more && currentCursor && syncCount < 10) { // Limit to prevent infinite loops
+    while (result.has_more && currentCursor && syncCount < 10) {
+      // Limit to prevent infinite loops
       console.log(`🔄 Continuing sync (batch ${syncCount + 1})...`);
-      
-      const nextSyncResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/plaid/transactions/sync`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cookie": req.headers.get("cookie") || "",
-        },
-        body: JSON.stringify({
-          access_token: accountLink.access_token_encrypted,
-          cursor: currentCursor,
-          count: 500,
-        }),
-      });
+
+      const nextSyncResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/plaid/transactions/sync`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: req.headers.get("cookie") || "",
+          },
+          body: JSON.stringify({
+            access_token: accountLink.access_token_encrypted,
+            cursor: currentCursor,
+            count: 500,
+          }),
+        }
+      );
 
       if (nextSyncResponse.ok) {
         const nextResult = await nextSyncResponse.json();
@@ -109,25 +116,28 @@ export async function POST(req: Request) {
         totalModified += nextResult.modified;
         totalRemoved += nextResult.removed;
         currentCursor = nextResult.next_cursor;
-        
+
         if (!nextResult.has_more) break;
       } else {
         console.warn(`⚠️ Batch ${syncCount + 1} failed, stopping sync`);
         break;
       }
-      
+
       syncCount++;
-      
+
       // Small delay to be respectful of rate limits
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    console.log(`✅ Manual sync complete for account link ${account_link_id}:`, {
-      totalAdded,
-      totalModified,
-      totalRemoved,
-      batches: syncCount,
-    });
+    console.log(
+      `✅ Manual sync complete for account link ${account_link_id}:`,
+      {
+        totalAdded,
+        totalModified,
+        totalRemoved,
+        batches: syncCount,
+      }
+    );
 
     return NextResponse.json({
       success: true,
@@ -138,7 +148,6 @@ export async function POST(req: Request) {
       force_full_sync,
       accounts: result.accounts?.length || 0,
     });
-
   } catch (error) {
     console.error("❌ Manual sync error:", error);
     return NextResponse.json(

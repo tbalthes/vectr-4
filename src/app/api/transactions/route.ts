@@ -95,8 +95,8 @@ function transformToFormattedTransaction(
   // Format account name - include mask if available
   const accountName = raw.accounts?.name || "Unknown Account";
   const accountMask = raw.accounts?.mask;
-  const formattedAccountName = accountMask 
-    ? `${accountName} (...${accountMask})` 
+  const formattedAccountName = accountMask
+    ? `${accountName} (...${accountMask})`
     : accountName;
 
   return {

@@ -27,10 +27,13 @@ export function PlaidLinkButton({
 
     try {
       // Create link token
-      const tokenResponse = await fetch("/api/aggregator/plaid/create_link_token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const tokenResponse = await fetch(
+        "/api/aggregator/plaid/create_link_token",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (!tokenResponse.ok) {
         const errorData = await tokenResponse.json();
@@ -42,16 +45,18 @@ export function PlaidLinkButton({
       // Store the link token and callback info in sessionStorage for the redirect
       sessionStorage.setItem("plaid_link_token", link_token);
       sessionStorage.setItem("plaid_link_redirect", window.location.href);
-      
+
       if (onAccountConnected) {
         sessionStorage.setItem("plaid_link_callback", "true");
       }
 
       // Redirect to Plaid Link page
-      window.location.href = `/link-account?token=${encodeURIComponent(link_token)}`;
-
+      window.location.href = `/link-account?token=${encodeURIComponent(
+        link_token
+      )}`;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to start account linking";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to start account linking";
       setError(errorMessage);
       accountToasts.syncError("Plaid Link", errorMessage, true);
     } finally {

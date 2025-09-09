@@ -33,18 +33,21 @@ function PlaidLinkContent() {
     token: linkToken,
     onSuccess: async (public_token, metadata) => {
       setIsProcessing(true);
-      
+
       try {
         console.log("Plaid Link success, exchanging token...");
-        
-        const response = await fetch("/api/aggregator/plaid/exchange_public_token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            public_token,
-            metadata,
-          }),
-        });
+
+        const response = await fetch(
+          "/api/aggregator/plaid/exchange_public_token",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              public_token,
+              metadata,
+            }),
+          }
+        );
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -69,13 +72,14 @@ function PlaidLinkContent() {
 
         // Redirect back to original page
         if (redirectUrl) {
-          window.location.href = redirectUrl + (hasCallback ? "?connected=true" : "");
+          window.location.href =
+            redirectUrl + (hasCallback ? "?connected=true" : "");
         } else {
           router.push("/private/accounts");
         }
-        
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to link account";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to link account";
         setError(errorMessage);
         accountToasts.syncError("Account Linking", errorMessage, true);
       } finally {
@@ -84,17 +88,21 @@ function PlaidLinkContent() {
     },
     onExit: (err, metadata) => {
       console.log("Plaid Link exited:", { err, metadata });
-      
+
       // Clean up
       sessionStorage.removeItem("plaid_link_token");
       const redirectUrl = sessionStorage.getItem("plaid_link_redirect");
       sessionStorage.removeItem("plaid_link_redirect");
       sessionStorage.removeItem("plaid_link_callback");
-      
+
       if (err) {
-        setError(`Link process cancelled: ${err.error_message || err.error_code || "Unknown error"}`);
+        setError(
+          `Link process cancelled: ${
+            err.error_message || err.error_code || "Unknown error"
+          }`
+        );
       }
-      
+
       // Redirect back after a short delay
       setTimeout(() => {
         if (redirectUrl) {
@@ -118,7 +126,7 @@ function PlaidLinkContent() {
     sessionStorage.removeItem("plaid_link_token");
     sessionStorage.removeItem("plaid_link_redirect");
     sessionStorage.removeItem("plaid_link_callback");
-    
+
     if (redirectUrl) {
       window.location.href = redirectUrl;
     } else {
@@ -161,13 +169,14 @@ function PlaidLinkContent() {
               <span className="text-white font-bold text-xl">P</span>
             </div>
           </div>
-          
+
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               Connect Your Bank Account
             </h1>
             <p className="text-gray-600">
-              Securely link your bank account using Plaid&apos;s encrypted connection
+              Securely link your bank account using Plaid&apos;s encrypted
+              connection
             </p>
           </div>
 
@@ -195,8 +204,8 @@ function PlaidLinkContent() {
                   </span>
                 </div>
               </div>
-              <Button 
-                onClick={() => openPlaidLink()} 
+              <Button
+                onClick={() => openPlaidLink()}
                 className="w-full"
                 size="lg"
               >
@@ -206,11 +215,7 @@ function PlaidLinkContent() {
           )}
 
           <div className="pt-4 border-t">
-            <Button 
-              variant="ghost" 
-              onClick={handleGoBack}
-              className="w-full"
-            >
+            <Button variant="ghost" onClick={handleGoBack} className="w-full">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Go Back
             </Button>
@@ -223,11 +228,13 @@ function PlaidLinkContent() {
 
 export default function PlaidLinkPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
       <PlaidLinkContent />
     </Suspense>
   );

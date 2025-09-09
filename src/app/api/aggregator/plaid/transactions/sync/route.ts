@@ -15,17 +15,23 @@ export async function POST(req: Request) {
   // Check if this is an internal service call
   const authHeader = req.headers.get("authorization");
   const userIdHeader = req.headers.get("x-user-id");
-  
+
   let userId: string;
-  
+
   if (authHeader?.startsWith("Bearer ") && userIdHeader) {
     // Internal service call - validate service key and get user
     const serviceKey = authHeader.substring(7);
     if (serviceKey === process.env.SUPABASE_SERVICE_ROLE_KEY) {
       userId = userIdHeader;
-      console.log("🔧 Internal service call authenticated for user:", userIdHeader);
+      console.log(
+        "🔧 Internal service call authenticated for user:",
+        userIdHeader
+      );
     } else {
-      return NextResponse.json({ error: "Invalid service key" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Invalid service key" },
+        { status: 401 }
+      );
     }
   } else {
     // For webhook calls, we need to get the user from the request body
@@ -43,7 +49,7 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => ({}));
-  
+
   // If userId is empty, get it from the body (webhook case)
   if (!userId) {
     if (!body.user_id) {
@@ -51,11 +57,7 @@ export async function POST(req: Request) {
     }
     userId = body.user_id;
   }
-  const { 
-    access_token, 
-    cursor, 
-    count = 100
-  } = body;
+  const { access_token, cursor, count = 100 } = body;
 
   if (!access_token) {
     return NextResponse.json(
@@ -113,8 +115,10 @@ export async function POST(req: Request) {
       for (const transaction of allData.added) {
         try {
           // Get the internal account ID - simplified lookup
-          console.log(`🔍 Looking up account for aggregator_account_id: ${transaction.account_id}`);
-          
+          console.log(
+            `🔍 Looking up account for aggregator_account_id: ${transaction.account_id}`
+          );
+
           const { data: accountData, error: accountError } = await supabase
             .from("accounts")
             .select("id")
@@ -125,11 +129,14 @@ export async function POST(req: Request) {
           let finalAccountId: string;
 
           if (accountError || !accountData) {
-            console.warn(`⚠️ Account not found for aggregator_account_id: ${transaction.account_id}`, { 
-              accountError,
-              transaction_id: transaction.transaction_id 
-            });
-            
+            console.warn(
+              `⚠️ Account not found for aggregator_account_id: ${transaction.account_id}`,
+              {
+                accountError,
+                transaction_id: transaction.transaction_id,
+              }
+            );
+
             // Try to find account by partial match or create a placeholder
             const { data: fallbackAccount } = await supabase
               .from("accounts")
@@ -137,16 +144,18 @@ export async function POST(req: Request) {
               .eq("user_id", userId)
               .limit(1)
               .single();
-            
+
             if (!fallbackAccount) {
               console.error(`❌ No accounts found for user ${userId}`);
               continue;
             }
-            
+
             console.log(`🔄 Using fallback account: ${fallbackAccount.id}`);
             finalAccountId = fallbackAccount.id;
           } else {
-            console.log(`✅ Found matching account: ${accountData.id} for aggregator_account_id: ${transaction.account_id}`);
+            console.log(
+              `✅ Found matching account: ${accountData.id} for aggregator_account_id: ${transaction.account_id}`
+            );
             finalAccountId = accountData.id;
           }
 
@@ -160,7 +169,9 @@ export async function POST(req: Request) {
             .maybeSingle();
 
           if (existingByAggregatorId) {
-            console.log(`⏭️ Transaction already exists (by aggregator_transaction_id): ${transaction.transaction_id}`);
+            console.log(
+              `⏭️ Transaction already exists (by aggregator_transaction_id): ${transaction.transaction_id}`
+            );
             continue;
           }
 
@@ -175,7 +186,9 @@ export async function POST(req: Request) {
             .maybeSingle();
 
           if (existingByConstraint) {
-            console.log(`⏭️ Transaction already exists (by unique constraint): ${transaction.transaction_id}`);
+            console.log(
+              `⏭️ Transaction already exists (by unique constraint): ${transaction.transaction_id}`
+            );
             continue;
           }
 
@@ -193,9 +206,16 @@ export async function POST(req: Request) {
               transaction_number: transaction.transaction_id,
               needs_review: false, // Plaid transactions are generally clean
               // Map Plaid categories to your system
-              primary_category_id: await mapPlaidCategoryToSystem(supabase, transaction.personal_finance_category),
+              primary_category_id: await mapPlaidCategoryToSystem(
+                supabase,
+                transaction.personal_finance_category
+              ),
               // Try to find merchant by name/regex
-              merchant_id: await findOrCreateMerchant(supabase, transaction, userId),
+              merchant_id: await findOrCreateMerchant(
+                supabase,
+                transaction,
+                userId
+              ),
               user_metadata: {
                 plaid_data: {
                   category: transaction.category,
@@ -204,7 +224,8 @@ export async function POST(req: Request) {
                   authorized_date: transaction.authorized_date,
                   payment_channel: transaction.payment_channel,
                   pending: transaction.pending,
-                  personal_finance_category: transaction.personal_finance_category,
+                  personal_finance_category:
+                    transaction.personal_finance_category,
                   pending_transaction_id: transaction.pending_transaction_id,
                 },
               },
@@ -212,12 +233,18 @@ export async function POST(req: Request) {
             });
 
           if (insertError) {
-            console.error(`❌ Error inserting transaction ${transaction.transaction_id}:`, insertError);
+            console.error(
+              `❌ Error inserting transaction ${transaction.transaction_id}:`,
+              insertError
+            );
           } else {
             stored_added++;
           }
         } catch (txError) {
-          console.error(`❌ Error processing transaction ${transaction.transaction_id}:`, txError);
+          console.error(
+            `❌ Error processing transaction ${transaction.transaction_id}:`,
+            txError
+          );
         }
       }
     }
@@ -241,7 +268,8 @@ export async function POST(req: Request) {
                   authorized_date: transaction.authorized_date,
                   payment_channel: transaction.payment_channel,
                   pending: transaction.pending,
-                  personal_finance_category: transaction.personal_finance_category,
+                  personal_finance_category:
+                    transaction.personal_finance_category,
                   pending_transaction_id: transaction.pending_transaction_id,
                 },
               },
@@ -251,12 +279,18 @@ export async function POST(req: Request) {
             .eq("user_id", userId);
 
           if (updateError) {
-            console.error(`❌ Error updating transaction ${transaction.transaction_id}:`, updateError);
+            console.error(
+              `❌ Error updating transaction ${transaction.transaction_id}:`,
+              updateError
+            );
           } else {
             stored_modified++;
           }
         } catch (txError) {
-          console.error(`❌ Error processing modified transaction ${transaction.transaction_id}:`, txError);
+          console.error(
+            `❌ Error processing modified transaction ${transaction.transaction_id}:`,
+            txError
+          );
         }
       }
     }
@@ -275,12 +309,18 @@ export async function POST(req: Request) {
             .eq("user_id", userId);
 
           if (removeError) {
-            console.error(`❌ Error removing transaction ${removedTx.transaction_id}:`, removeError);
+            console.error(
+              `❌ Error removing transaction ${removedTx.transaction_id}:`,
+              removeError
+            );
           } else {
             stored_removed++;
           }
         } catch (txError) {
-          console.error(`❌ Error processing removed transaction ${removedTx.transaction_id}:`, txError);
+          console.error(
+            `❌ Error processing removed transaction ${removedTx.transaction_id}:`,
+            txError
+          );
         }
       }
     }
@@ -309,31 +349,41 @@ export async function POST(req: Request) {
       removed: stored_removed,
       next_cursor: allData.next_cursor,
       has_more: false, // We've processed all available data
-      accounts: allData.accounts?.map(acc => ({
-        account_id: acc.account_id,
-        name: acc.name,
-        type: acc.type,
-        subtype: acc.subtype,
-        balances: acc.balances,
-      })) || [],
+      accounts:
+        allData.accounts?.map((acc) => ({
+          account_id: acc.account_id,
+          name: acc.name,
+          type: acc.type,
+          subtype: acc.subtype,
+          balances: acc.balances,
+        })) || [],
       transactions_update_status: "COMPLETE",
     });
-
   } catch (error) {
     console.error("❌ Plaid transactions/sync error:", error);
-    
+
     // Check for specific Plaid errors
-    if (error && typeof error === 'object' && 'response' in error) {
-      const plaidError = error as { response?: { data?: { error_code?: string } } };
-      if (plaidError.response?.data?.error_code === 'TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION') {
-        console.error("⚠️ Sync mutation during pagination - should retry from beginning");
+    if (error && typeof error === "object" && "response" in error) {
+      const plaidError = error as {
+        response?: { data?: { error_code?: string } };
+      };
+      if (
+        plaidError.response?.data?.error_code ===
+        "TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION"
+      ) {
+        console.error(
+          "⚠️ Sync mutation during pagination - should retry from beginning"
+        );
         return NextResponse.json(
-          { error: "Sync mutation detected - please retry", error_code: "SYNC_MUTATION" },
+          {
+            error: "Sync mutation detected - please retry",
+            error_code: "SYNC_MUTATION",
+          },
           { status: 409 }
         );
       }
     }
-    
+
     return NextResponse.json(
       { error: "Failed to sync transactions" },
       { status: 500 }
@@ -346,8 +396,8 @@ export async function POST(req: Request) {
  * Following Plaid Academy tutorial pattern
  */
 async function fetchNewSyncData(
-  client: PlaidApi, 
-  access_token: string, 
+  client: PlaidApi,
+  access_token: string,
   initialCursor: string | null = null,
   retriesLeft: number = 3
 ): Promise<{
@@ -357,7 +407,6 @@ async function fetchNewSyncData(
   next_cursor: string | null;
   accounts?: any[];
 } | null> {
-  
   try {
     let keepGoing = true;
     const allData = {
@@ -369,8 +418,12 @@ async function fetchNewSyncData(
     };
 
     do {
-      console.log(`📥 Fetching sync batch with cursor: ${allData.next_cursor ? 'present' : 'null'}`);
-      
+      console.log(
+        `📥 Fetching sync batch with cursor: ${
+          allData.next_cursor ? "present" : "null"
+        }`
+      );
+
       const syncRequest: {
         access_token: string;
         count: number;
@@ -391,58 +444,78 @@ async function fetchNewSyncData(
       }
 
       const response = await client.transactionsSync(syncRequest);
-      const { added, modified, removed, next_cursor, has_more, accounts } = response.data;
+      const { added, modified, removed, next_cursor, has_more, accounts } =
+        response.data;
 
       // Concatenate new data
       allData.added = allData.added.concat(added);
       allData.modified = allData.modified.concat(modified);
       allData.removed = allData.removed.concat(removed);
       allData.next_cursor = next_cursor;
-      
+
       // Store accounts from first response
       if (!allData.accounts && accounts) {
         allData.accounts = accounts;
       }
 
       keepGoing = has_more;
-      
-      console.log(`📊 Batch received: ${added.length} added, ${modified.length} modified, ${removed.length} removed, has_more: ${has_more}`);
-      
+
+      console.log(
+        `📊 Batch received: ${added.length} added, ${modified.length} modified, ${removed.length} removed, has_more: ${has_more}`
+      );
+
       // Small delay to be respectful of rate limits
       if (keepGoing) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      
     } while (keepGoing);
 
-    console.log(`✅ All sync data fetched: ${allData.added.length} total added, ${allData.modified.length} total modified, ${allData.removed.length} total removed`);
-    
-    return allData;
+    console.log(
+      `✅ All sync data fetched: ${allData.added.length} total added, ${allData.modified.length} total modified, ${allData.removed.length} total removed`
+    );
 
+    return allData;
   } catch (error) {
     console.error("❌ Error in fetchNewSyncData:", error);
-    
+
     // Check for sync mutation error
-    if (error && typeof error === 'object' && 'response' in error) {
-      const plaidError = error as { response?: { data?: { error_code?: string } } };
-      if (plaidError.response?.data?.error_code === 'TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION') {
-        console.warn("⚠️ Sync mutation during pagination, retrying from beginning...");
-        
+    if (error && typeof error === "object" && "response" in error) {
+      const plaidError = error as {
+        response?: { data?: { error_code?: string } };
+      };
+      if (
+        plaidError.response?.data?.error_code ===
+        "TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION"
+      ) {
+        console.warn(
+          "⚠️ Sync mutation during pagination, retrying from beginning..."
+        );
+
         if (retriesLeft > 0) {
           // Wait a second and retry from the beginning
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return fetchNewSyncData(client, access_token, initialCursor, retriesLeft - 1);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          return fetchNewSyncData(
+            client,
+            access_token,
+            initialCursor,
+            retriesLeft - 1
+          );
         }
       }
     }
-    
+
     // For other errors, retry if we have retries left
     if (retriesLeft > 0) {
       console.warn(`⚠️ Retrying sync (${retriesLeft} retries left)...`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return fetchNewSyncData(client, access_token, initialCursor, retriesLeft - 1);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return fetchNewSyncData(
+        client,
+        access_token,
+        initialCursor,
+        retriesLeft - 1
+      );
     }
-    
+
     console.error("❌ Failed to fetch sync data after all retries");
     return null;
   }
@@ -459,7 +532,7 @@ async function mapPlaidCategoryToSystem(
   console.log("🏷️ Mapping Plaid category:", {
     primary: plaidCategory?.primary,
     detailed: plaidCategory?.detailed,
-    confidence_level: plaidCategory?.confidence_level
+    confidence_level: plaidCategory?.confidence_level,
   });
 
   if (!plaidCategory?.primary || !plaidCategory?.detailed) {
@@ -476,7 +549,11 @@ async function mapPlaidCategoryToSystem(
       .is("user_id", null) // System categories only
       .maybeSingle();
 
-    console.log("🔍 Exact match query:", { query: plaidCategory.detailed, exactMatch, exactError });
+    console.log("🔍 Exact match query:", {
+      query: plaidCategory.detailed,
+      exactMatch,
+      exactError,
+    });
 
     if (exactMatch) {
       console.log("✅ Found exact match:", exactMatch.category);
@@ -485,7 +562,7 @@ async function mapPlaidCategoryToSystem(
 
     // Try primary category match
     const { data: primaryMatch, error: primaryError } = await supabase
-      .from("categories") 
+      .from("categories")
       .select("category_id, category")
       .ilike("category", plaidCategory.primary)
       .is("user_id", null) // System categories only
@@ -502,9 +579,12 @@ async function mapPlaidCategoryToSystem(
       .select("category")
       .is("user_id", null)
       .limit(10);
-    
+
     console.log("🔍 Categories list query:", { allCategories, listError });
-    console.log("⚠️ No category match found. Available categories:", allCategories?.map((c: any) => c.category));
+    console.log(
+      "⚠️ No category match found. Available categories:",
+      allCategories?.map((c: any) => c.category)
+    );
 
     // Default to "Other" category
     const { data: otherCategory } = await supabase
@@ -536,9 +616,10 @@ async function findOrCreateMerchant(
   _userId: string // Mark as unused with underscore
 ): Promise<string | null> {
   // First try to find merchant by name
-  const merchantName = transaction.merchant_name || 
-                      extractMerchantFromDescription(transaction.name);
-  
+  const merchantName =
+    transaction.merchant_name ||
+    extractMerchantFromDescription(transaction.name);
+
   if (!merchantName) {
     return null;
   }
@@ -560,11 +641,17 @@ async function findOrCreateMerchant(
       .from("merchants")
       .insert({
         name: merchantName,
-        default_category_id: await mapPlaidCategoryToSystem(supabase, transaction.personal_finance_category),
-        regex_match: `.*${merchantName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*`,
+        default_category_id: await mapPlaidCategoryToSystem(
+          supabase,
+          transaction.personal_finance_category
+        ),
+        regex_match: `.*${merchantName.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&"
+        )}.*`,
         confidence_score: 0.8,
         is_active: true,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       })
       .select("merchant_id")
       .single();
@@ -586,22 +673,21 @@ async function findOrCreateMerchant(
  */
 function extractMerchantFromDescription(description: string): string | null {
   if (!description) return null;
-  
+
   // Clean up common prefixes/suffixes
   const cleaned = description
-    .replace(/^(DEBIT|CREDIT|ACH|WIRE|CHECK|ATM)\s+/i, '')
-    .replace(/\s+(PAYMENT|PURCHASE|WITHDRAWAL|DEPOSIT|FEE)$/i, '')
-    .replace(/\s+\d{4}$/, '') // Remove trailing card numbers
-    .replace(/\s+[A-Z]{2}$/, '') // Remove state codes
+    .replace(/^(DEBIT|CREDIT|ACH|WIRE|CHECK|ATM)\s+/i, "")
+    .replace(/\s+(PAYMENT|PURCHASE|WITHDRAWAL|DEPOSIT|FEE)$/i, "")
+    .replace(/\s+\d{4}$/, "") // Remove trailing card numbers
+    .replace(/\s+[A-Z]{2}$/, "") // Remove state codes
     .trim();
-  
+
   // Take first meaningful part
   const parts = cleaned.split(/\s+/);
-  const meaningfulParts = parts.filter(part => 
-    part.length > 2 && 
-    !/^\d+$/.test(part) && 
-    !/^[A-Z]{1,3}$/.test(part)
+  const meaningfulParts = parts.filter(
+    (part) =>
+      part.length > 2 && !/^\d+$/.test(part) && !/^[A-Z]{1,3}$/.test(part)
   );
-  
-  return meaningfulParts.slice(0, 2).join(' ') || cleaned;
+
+  return meaningfulParts.slice(0, 2).join(" ") || cleaned;
 }

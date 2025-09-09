@@ -171,7 +171,10 @@ export function ManualAccountModal({
               id="institutionName"
               value={manualForm.institutionName}
               onChange={(e) =>
-                setManualForm({ ...manualForm, institutionName: e.target.value })
+                setManualForm({
+                  ...manualForm,
+                  institutionName: e.target.value,
+                })
               }
               placeholder="e.g., Chase, Wells Fargo"
               required
@@ -244,7 +247,10 @@ export function ManualAccountModal({
                 id="accountSubtype"
                 value={manualForm.accountSubtype}
                 onChange={(e) =>
-                  setManualForm({ ...manualForm, accountSubtype: e.target.value })
+                  setManualForm({
+                    ...manualForm,
+                    accountSubtype: e.target.value,
+                  })
                 }
                 placeholder="e.g., checking, savings"
               />

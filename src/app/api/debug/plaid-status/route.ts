@@ -22,7 +22,8 @@ export async function GET() {
     // Get account links
     const { data: accountLinks } = await supabase
       .from("account_links")
-      .select(`
+      .select(
+        `
         id,
         provider,
         item_id,
@@ -31,14 +32,16 @@ export async function GET() {
         last_sync_at,
         cursor,
         error_details
-      `)
+      `
+      )
       .eq("user_id", session.user.id)
       .eq("provider", "plaid");
 
     // Get accounts
     const { data: accounts } = await supabase
       .from("accounts")
-      .select(`
+      .select(
+        `
         id,
         name,
         type,
@@ -46,7 +49,8 @@ export async function GET() {
         mask,
         aggregator_account_id,
         last_synced_at
-      `)
+      `
+      )
       .eq("user_id", session.user.id)
       .eq("provider", "plaid");
 
@@ -59,7 +63,8 @@ export async function GET() {
     // Get recent transactions
     const { data: recentTransactions } = await supabase
       .from("transactions")
-      .select(`
+      .select(
+        `
         id,
         date,
         amount,
@@ -67,7 +72,8 @@ export async function GET() {
         clean_description,
         aggregator_transaction_id,
         created_at
-      `)
+      `
+      )
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: false })
       .limit(5);
