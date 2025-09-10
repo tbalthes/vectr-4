@@ -224,8 +224,12 @@ export async function POST(req: Request) {
                   authorized_date: transaction.authorized_date,
                   payment_channel: transaction.payment_channel,
                   pending: transaction.pending,
+                  merchant_name: transaction.merchant_name,
+                  logo_url: transaction.logo_url,
+                  merchant_entity_id: transaction.merchant_entity_id,
                   personal_finance_category:
                     transaction.personal_finance_category,
+                  personal_finance_category_icon_url: transaction.personal_finance_category_icon_url,
                   pending_transaction_id: transaction.pending_transaction_id,
                 },
               },
@@ -268,8 +272,12 @@ export async function POST(req: Request) {
                   authorized_date: transaction.authorized_date,
                   payment_channel: transaction.payment_channel,
                   pending: transaction.pending,
+                  merchant_name: transaction.merchant_name,
+                  logo_url: transaction.logo_url,
+                  merchant_entity_id: transaction.merchant_entity_id,
                   personal_finance_category:
                     transaction.personal_finance_category,
+                  personal_finance_category_icon_url: transaction.personal_finance_category_icon_url,
                   pending_transaction_id: transaction.pending_transaction_id,
                 },
               },
@@ -541,32 +549,38 @@ async function mapPlaidCategoryToSystem(
   }
 
   try {
-    // Try to find exact match first
+    // Try to find EXACT match for detailed category first (this should work!)
     const { data: exactMatch, error: exactError } = await supabase
       .from("categories")
       .select("category_id, category")
-      .ilike("category", plaidCategory.detailed)
+      .eq("category", plaidCategory.detailed) // EXACT match, not ilike
       .is("user_id", null) // System categories only
       .maybeSingle();
 
-    console.log("🔍 Exact match query:", {
+    console.log("🔍 Exact detailed match query:", {
       query: plaidCategory.detailed,
       exactMatch,
       exactError,
     });
 
     if (exactMatch) {
-      console.log("✅ Found exact match:", exactMatch.category);
+      console.log("✅ Found exact detailed match:", exactMatch.category);
       return exactMatch.category_id;
     }
 
-    // Try primary category match
+    // Try exact match for primary category
     const { data: primaryMatch, error: primaryError } = await supabase
       .from("categories")
       .select("category_id, category")
-      .ilike("category", plaidCategory.primary)
+      .eq("category", plaidCategory.primary) // EXACT match, not ilike
       .is("user_id", null) // System categories only
       .maybeSingle();
+
+    console.log("🔍 Primary match query:", {
+      query: plaidCategory.primary,
+      primaryMatch,
+      primaryError,
+    });
 
     if (primaryMatch) {
       console.log("✅ Found primary match:", primaryMatch.category);
@@ -586,20 +600,20 @@ async function mapPlaidCategoryToSystem(
       allCategories?.map((c: any) => c.category)
     );
 
-    // Default to "Other" category
-    const { data: otherCategory } = await supabase
+    // Default to "UNCATEGORIZED" category (matching your table structure)
+    const { data: uncategorizedCategory } = await supabase
       .from("categories")
       .select("category_id")
-      .eq("category", "Other")
+      .eq("category", "UNCATEGORIZED")
       .is("user_id", null)
       .maybeSingle();
 
-    if (otherCategory) {
-      console.log("🔄 Using fallback 'Other' category");
-      return otherCategory.category_id;
+    if (uncategorizedCategory) {
+      console.log("🔄 Using fallback 'UNCATEGORIZED' category");
+      return uncategorizedCategory.category_id;
     }
 
-    console.log("❌ No 'Other' category found either!");
+    console.log("❌ No 'UNCATEGORIZED' category found either!");
     return null;
   } catch (error) {
     console.warn("Error mapping Plaid category:", error);
@@ -645,6 +659,7 @@ async function findOrCreateMerchant(
           supabase,
           transaction.personal_finance_category
         ),
+        logo_url: transaction.logo_url || null, // Store Plaid merchant logo
         regex_match: `.*${merchantName.replace(
           /[.*+?^${}()|[\]\\]/g,
           "\\$&"
