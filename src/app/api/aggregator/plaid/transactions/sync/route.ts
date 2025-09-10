@@ -229,7 +229,8 @@ export async function POST(req: Request) {
                   merchant_entity_id: transaction.merchant_entity_id,
                   personal_finance_category:
                     transaction.personal_finance_category,
-                  personal_finance_category_icon_url: transaction.personal_finance_category_icon_url,
+                  personal_finance_category_icon_url:
+                    transaction.personal_finance_category_icon_url,
                   pending_transaction_id: transaction.pending_transaction_id,
                 },
               },
@@ -277,7 +278,8 @@ export async function POST(req: Request) {
                   merchant_entity_id: transaction.merchant_entity_id,
                   personal_finance_category:
                     transaction.personal_finance_category,
-                  personal_finance_category_icon_url: transaction.personal_finance_category_icon_url,
+                  personal_finance_category_icon_url:
+                    transaction.personal_finance_category_icon_url,
                   pending_transaction_id: transaction.pending_transaction_id,
                 },
               },

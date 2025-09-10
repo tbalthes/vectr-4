@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { CleanPlaidTransactionProcessor, type PlaidTransaction } from "../clean-processor";
+import {
+  CleanPlaidTransactionProcessor,
+  type PlaidTransaction,
+} from "../clean-processor";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Clean Plaid Transaction Processing Route
  * Processes Plaid transactions with 1:1 mapping to database schema
- * 
- * This route doesn't interfere with CSV processing which uses 
+ *
+ * This route doesn't interfere with CSV processing which uses
  * the existing python/core/transaction_processor.py logic
  */
 export async function POST(request: NextRequest) {
@@ -47,7 +50,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`📊 Processing ${transactions.length} Plaid transactions for user ${user.id}`);
+    console.log(
+      `📊 Processing ${transactions.length} Plaid transactions for user ${user.id}`
+    );
 
     // Initialize clean processor
     const processor = new CleanPlaidTransactionProcessor();
@@ -62,17 +67,24 @@ export async function POST(request: NextRequest) {
     // Process each transaction
     for (const plaidTransaction of transactions as PlaidTransaction[]) {
       try {
-        console.log(`🔄 Processing transaction: ${plaidTransaction.transaction_id}`);
+        console.log(
+          `🔄 Processing transaction: ${plaidTransaction.transaction_id}`
+        );
 
         // Process with clean 1:1 mapping
-        const processedTransaction = await processor.processTransaction(plaidTransaction);
+        const processedTransaction = await processor.processTransaction(
+          plaidTransaction
+        );
 
         // Save to database
-        const saved = await processor.saveTransaction(processedTransaction, user.id);
+        const saved = await processor.saveTransaction(
+          processedTransaction,
+          user.id
+        );
 
         if (saved) {
           results.processed++;
-          
+
           // Track metrics
           if (processedTransaction.merchant_id) {
             results.matched_merchants++;
@@ -80,15 +92,22 @@ export async function POST(request: NextRequest) {
           if (processedTransaction.category_id) {
             results.categories_mapped++;
           }
-          
-          console.log(`✅ Successfully processed: ${plaidTransaction.transaction_id}`);
+
+          console.log(
+            `✅ Successfully processed: ${plaidTransaction.transaction_id}`
+          );
         } else {
           results.errors++;
-          console.error(`❌ Failed to save: ${plaidTransaction.transaction_id}`);
+          console.error(
+            `❌ Failed to save: ${plaidTransaction.transaction_id}`
+          );
         }
       } catch (error) {
         results.errors++;
-        console.error(`❌ Error processing transaction ${plaidTransaction.transaction_id}:`, error);
+        console.error(
+          `❌ Error processing transaction ${plaidTransaction.transaction_id}:`,
+          error
+        );
       }
     }
 
@@ -102,9 +121,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("❌ Error in clean transaction processing:", error);
     return NextResponse.json(
-      { 
+      {
         error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -122,10 +141,10 @@ export async function GET() {
     description: "Clean 1:1 mapping from Plaid transactions to database schema",
     features: [
       "VERY_HIGH confidence merchant regex matching",
-      "LOW confidence combined description parsing", 
+      "LOW confidence combined description parsing",
       "Automatic merchant creation with Plaid data",
       "Direct category mapping from Plaid detailed categories",
-      "Preserves CSV processing compatibility"
-    ]
+      "Preserves CSV processing compatibility",
+    ],
   });
 }

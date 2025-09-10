@@ -1,0 +1,979 @@
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction 3qlw74j1nvFZbloXgpynUWqKE6r5mRIZbNJ6D: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 3qlw74j1nvFZbloXgpynUWqKE6r5mRIZbNJ6D) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction 3qlw74j1nvFZbloXgpynUWqKE6r5mRIZbNJ6D: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 3qlw74j1nvFZbloXgpynUWqKE6r5mRIZbNJ6D) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction xPbwe14lDXFQW96Jrk35SlNjDyLwgvf6PWwjE: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, xPbwe14lDXFQW96Jrk35SlNjDyLwgvf6PWwjE) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction xPbwe14lDXFQW96Jrk35SlNjDyLwgvf6PWwjE: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, xPbwe14lDXFQW96Jrk35SlNjDyLwgvf6PWwjE) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction dp4anvWEMJupPmynALDbsKvePqWL57TJzANKW: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, dp4anvWEMJupPmynALDbsKvePqWL57TJzANKW) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction dp4anvWEMJupPmynALDbsKvePqWL57TJzANKW: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, dp4anvWEMJupPmynALDbsKvePqWL57TJzANKW) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction aMxyWvgp63uaDBnWXbyoULpEWP7zjgiZJG4wq: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, aMxyWvgp63uaDBnWXbyoULpEWP7zjgiZJG4wq) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction aMxyWvgp63uaDBnWXbyoULpEWP7zjgiZJG4wq: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, aMxyWvgp63uaDBnWXbyoULpEWP7zjgiZJG4wq) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction 4KqjeN7LnVcJABLZVmM7FjA3zKQedofJVE5zo: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 4KqjeN7LnVcJABLZVmM7FjA3zKQedofJVE5zo) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction 4KqjeN7LnVcJABLZVmM7FjA3zKQedofJVE5zo: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 4KqjeN7LnVcJABLZVmM7FjA3zKQedofJVE5zo) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ⏭️ Transaction already exists (by unique constraint): 3qlw74j1nvFZbloXgpynUWqKE6r5mRIZbNJ6D
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] ⏭️ Transaction already exists (by aggregator_transaction_id): xPbwe14lDXFQW96Jrk35SlNjDyLwgvf6PWwjE
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ⏭️ Transaction already exists (by aggregator_transaction_id): dp4anvWEMJupPmynALDbsKvePqWL57TJzANKW
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction NGkbxvzK8ncgRv4xQ7NVIrvx4ne3PWCypNZdG: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, NGkbxvzK8ncgRv4xQ7NVIrvx4ne3PWCypNZdG) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction NGkbxvzK8ncgRv4xQ7NVIrvx4ne3PWCypNZdG: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, NGkbxvzK8ncgRv4xQ7NVIrvx4ne3PWCypNZdG) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ⏭️ Transaction already exists (by aggregator_transaction_id): aMxyWvgp63uaDBnWXbyoULpEWP7zjgiZJG4wq
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] ⏭️ Transaction already exists (by aggregator_transaction_id): 4KqjeN7LnVcJABLZVmM7FjA3zKQedofJVE5zo
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ⏭️ Transaction already exists (by aggregator_transaction_id): NGkbxvzK8ncgRv4xQ7NVIrvx4ne3PWCypNZdG
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction PqnXav3zkEFrQBPa4jNXtz8wPK1Z7MFo5mdak: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, PqnXav3zkEFrQBPa4jNXtz8wPK1Z7MFo5mdak) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction PqnXav3zkEFrQBPa4jNXtz8wPK1Z7MFo5mdak: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, PqnXav3zkEFrQBPa4jNXtz8wPK1Z7MFo5mdak) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ⏭️ Transaction already exists (by aggregator_transaction_id): PqnXav3zkEFrQBPa4jNXtz8wPK1Z7MFo5mdak
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction jAQXqByELgu3ojgeEZVNUd7bWN69Q1C6mb4d4: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, jAQXqByELgu3ojgeEZVNUd7bWN69Q1C6mb4d4) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction jAQXqByELgu3ojgeEZVNUd7bWN69Q1C6mb4d4: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, jAQXqByELgu3ojgeEZVNUd7bWN69Q1C6mb4d4) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ⏭️ Transaction already exists (by aggregator_transaction_id): jAQXqByELgu3ojgeEZVNUd7bWN69Q1C6mb4d4
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction 7Bz3M7ZqRVuNyaxg31GRHVnpx4MWjEfdyVQPP: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 7Bz3M7ZqRVuNyaxg31GRHVnpx4MWjEfdyVQPP) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction 7Bz3M7ZqRVuNyaxg31GRHVnpx4MWjEfdyVQPP: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 7Bz3M7ZqRVuNyaxg31GRHVnpx4MWjEfdyVQPP) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction 7Bz3M7ZqRVuNyaxg31GRHVnpx4MWjEfdyVQPP: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 7Bz3M7ZqRVuNyaxg31GRHVnpx4MWjEfdyVQPP) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction eoNQklAEMJibpx9JeL1AfQpaXkPmzecrBnDQG: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, eoNQklAEMJibpx9JeL1AfQpaXkPmzecrBnDQG) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction eoNQklAEMJibpx9JeL1AfQpaXkPmzecrBnDQG: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, eoNQklAEMJibpx9JeL1AfQpaXkPmzecrBnDQG) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction eoNQklAEMJibpx9JeL1AfQpaXkPmzecrBnDQG: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, eoNQklAEMJibpx9JeL1AfQpaXkPmzecrBnDQG) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction QKbg4wxBpWcGm1jvKzNJHR8njr1VZLFw6AoXn: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, QKbg4wxBpWcGm1jvKzNJHR8njr1VZLFw6AoXn) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction QKbg4wxBpWcGm1jvKzNJHR8njr1VZLFw6AoXn: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, QKbg4wxBpWcGm1jvKzNJHR8njr1VZLFw6AoXn) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction QKbg4wxBpWcGm1jvKzNJHR8njr1VZLFw6AoXn: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, QKbg4wxBpWcGm1jvKzNJHR8njr1VZLFw6AoXn) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction ZNlD1XQ7EjCJG5ov8L3XFqvAgP3a8QiemkLpw: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, ZNlD1XQ7EjCJG5ov8L3XFqvAgP3a8QiemkLpw) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction ZNlD1XQ7EjCJG5ov8L3XFqvAgP3a8QiemkLpw: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, ZNlD1XQ7EjCJG5ov8L3XFqvAgP3a8QiemkLpw) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB      
+[dev:next] ❌ Error inserting transaction ZNlD1XQ7EjCJG5ov8L3XFqvAgP3a8QiemkLpw: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, ZNlD1XQ7EjCJG5ov8L3XFqvAgP3a8QiemkLpw) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'LOAN_PAYMENTS',
+[dev:next]   detailed: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '96116692-e14d-4436-bc43-ef4e050fd846',
+[dev:next]     category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: LOAN_PAYMENTS_CREDIT_CARD_PAYMENT
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction MAWG3vrqgZujGya3E1PZUndRaVLzgBFLpZxvb: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, MAWG3vrqgZujGya3E1PZUndRaVLzgBFLpZxvb) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction MAWG3vrqgZujGya3E1PZUndRaVLzgBFLpZxvb: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, MAWG3vrqgZujGya3E1PZUndRaVLzgBFLpZxvb) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ❌ Error inserting transaction MAWG3vrqgZujGya3E1PZUndRaVLzgBFLpZxvb: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, MAWG3vrqgZujGya3E1PZUndRaVLzgBFLpZxvb) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] 🔍 Looking up account for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] ✅ Found matching account: 73d0f860-775e-412a-ae57-4840b02945d8 for aggregator_account_id: v4G9jZdXgRCD3age56zrHVJp6b5vNaFqMqEeB
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🏷️ Mapping Plaid category: {
+[dev:next]   primary: 'INCOME',
+[dev:next]   detailed: 'INCOME_WAGES',
+[dev:next]   confidence_level: 'LOW'
+[dev:next] }
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] 🔍 Exact detailed match query: {
+[dev:next]   query: 'INCOME_WAGES',
+[dev:next]   exactMatch: {
+[dev:next]     category_id: '949bf48b-1b2b-400d-a4b4-5b2f688d1235',
+[dev:next]     category: 'INCOME_WAGES'
+[dev:next]   },
+[dev:next]   exactError: null
+[dev:next] }
+[dev:next] ✅ Found exact detailed match: INCOME_WAGES
+[dev:next] ❌ Error inserting transaction 1GX3kdNZ6wcPWKaLG1BvhKkGrv8xeqTpXv7RQ: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 1GX3kdNZ6wcPWKaLG1BvhKkGrv8xeqTpXv7RQ) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] ✅ Transaction sync complete { stored_added: 87, stored_modified: 0, stored_removed: 0 }
+[dev:next]  POST /api/aggregator/plaid/transactions/sync 200 in 71431ms
+[dev:next] [webhook] historical sync completed: { added: 87, modified: 0, removed: 0, has_more: false }
+[dev:next] ❌ Error inserting transaction 1GX3kdNZ6wcPWKaLG1BvhKkGrv8xeqTpXv7RQ: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 1GX3kdNZ6wcPWKaLG1BvhKkGrv8xeqTpXv7RQ) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] ✅ Transaction sync complete { stored_added: 73, stored_modified: 0, stored_removed: 0 }
+[dev:next]  POST /api/aggregator/plaid/transactions/sync 200 in 71409ms
+[dev:next] [webhook] sync sync completed: { added: 73, modified: 0, removed: 0, has_more: false }
+[dev:next] ✅ Transaction sync complete { stored_added: 7, stored_modified: 0, stored_removed: 0 }
+[dev:next]  POST /api/aggregator/plaid/transactions/sync 200 in 31355ms
+[dev:next] [webhook] historical sync completed: { added: 7, modified: 0, removed: 0, has_more: false }
+[dev:next] ❌ Error inserting transaction 1GX3kdNZ6wcPWKaLG1BvhKkGrv8xeqTpXv7RQ: {
+[dev:next]   code: '23505',
+[dev:next]   details: 'Key (user_id, aggregator_transaction_id)=(436dc420-d182-48c7-a605-88b33b8918de, 1GX3kdNZ6wcPWKaLG1BvhKkGrv8xeqTpXv7RQ) already exists.',
+[dev:next]   hint: null,
+[dev:next]   message: 'duplicate key value violates unique constraint "ux_tx_user_aggid"'
+[dev:next] }
+[dev:next] ✅ Transaction sync complete { stored_added: 17, stored_modified: 0, stored_removed: 0 }
+[dev:next]  POST /api/aggregator/plaid/transactions/sync 200 in 31435ms
+[dev:next] [webhook] sync sync completed: { added: 17, modified: 0, removed: 0, has_more: false }

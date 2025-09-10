@@ -7,16 +7,19 @@ I've created a new **Clean Plaid Transaction Processor** that provides 1:1 mappi
 ## Key Features
 
 ### ✅ **1:1 Database Mapping**
+
 - Direct field mapping from Plaid transaction structure to your database tables
 - Uses the new fields you added to the database (confidence levels, merchant data, etc.)
 - No complex transformations or fallback logic
 
 ### ✅ **Confidence-Based Processing**
+
 - **VERY_HIGH confidence**: Attempts merchant regex matching, creates new merchant if no match
 - **LOW confidence**: Concatenates name + merchant_name, processes through existing regex logic
 - **MEDIUM/HIGH confidence**: Uses counterparty name directly
 
 ### ✅ **CSV Processing Preserved**
+
 - Your existing `python/core/transaction_processor.py` remains unchanged
 - CSV uploads continue to use the existing merchant regex matching system
 - No breaking changes to current functionality
@@ -37,6 +40,7 @@ src/app/api/aggregator/plaid/transactions/
 The clean processor uses all the new fields you added:
 
 ### Transactions Table
+
 - `original_description` ← Plaid `name`
 - `check_number` ← Plaid `check_number`
 - `pending` ← Plaid `pending`
@@ -51,6 +55,7 @@ The clean processor uses all the new fields you added:
 - `plaid_entity_id` ← Plaid `counterparties[0].entity_id`
 
 ### Merchants Table (when creating new merchants)
+
 - Uses all Plaid counterparty data
 - Creates regex patterns automatically
 - Links to categories via `default_category_id`
@@ -58,6 +63,7 @@ The clean processor uses all the new fields you added:
 ## Processing Logic
 
 ### VERY_HIGH Confidence Counterparty
+
 ```
 1. Extract counterparty name from Plaid
 2. Check existing merchants table for regex match
@@ -65,7 +71,8 @@ The clean processor uses all the new fields you added:
 4. If no match: create new merchant with Plaid data
 ```
 
-### LOW Confidence Counterparty  
+### LOW Confidence Counterparty
+
 ```
 1. Combine Plaid name + merchant_name
 2. Process through existing regex matching (CSV-style)
@@ -74,6 +81,7 @@ The clean processor uses all the new fields you added:
 ```
 
 ### Category Mapping
+
 ```
 1. Use Plaid detailed category (e.g., "FOOD_AND_DRINK_COFFEE")
 2. Direct lookup in categories table where category = detailed
@@ -83,28 +91,34 @@ The clean processor uses all the new fields you added:
 ## API Endpoints
 
 ### New Clean Processing
+
 ```
 POST /api/aggregator/plaid/transactions/clean
 ```
+
 - Processes Plaid transactions with 1:1 mapping
 - Returns processing statistics
 - Handles authentication and error logging
 
 ### Health Check
+
 ```
 GET /api/aggregator/plaid/transactions/clean
 ```
+
 - Returns processor status and feature list
 
 ## Integration Points
 
 ### Existing Systems Preserved
+
 - ✅ CSV processing via `python/core/transaction_processor.py`
 - ✅ Existing Plaid webhook processing
 - ✅ User rules system
 - ✅ Transaction editing and categorization UI
 
 ### New Capabilities Added
+
 - ✅ Clean Plaid data storage with full fidelity
 - ✅ Automatic merchant creation from Plaid counterparties
 - ✅ Confidence-based processing logic
