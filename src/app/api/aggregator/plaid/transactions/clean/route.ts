@@ -19,29 +19,39 @@ export async function POST(request: NextRequest) {
   try {
     console.log("🔄 Starting clean Plaid transaction processing");
 
-    // Authenticate user
-    const requestCookies = await cookies();
-    const supabase = createRouteHandlerClient({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cookies: () => requestCookies as any,
-    });
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error("❌ Authentication error:", userError);
-      return NextResponse.json(
-        { error: "User not authenticated" },
-        { status: 401 }
-      );
-    }
-
-    // Parse request body
+    // Parse request body first to check for internal call indicator
     const body = await request.json();
-    const { transactions } = body;
+    const { transactions, internal_user_id } = body;
+
+    let userId: string;
+
+    if (internal_user_id) {
+      // Internal service call - use the provided user ID directly
+      userId = internal_user_id;
+      console.log("🔧 Internal service call for user:", userId);
+    } else {
+      // Regular cookie-based authentication
+      const requestCookies = await cookies();
+      const supabase = createRouteHandlerClient({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        cookies: () => requestCookies as any,
+      });
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.error("❌ Authentication error:", userError);
+        return NextResponse.json(
+          { error: "User not authenticated" },
+          { status: 401 }
+        );
+      }
+
+      userId = user.id;
+    }
 
     if (!Array.isArray(transactions) || transactions.length === 0) {
       return NextResponse.json(
@@ -51,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(
-      `📊 Processing ${transactions.length} Plaid transactions for user ${user.id}`
+      `📊 Processing ${transactions.length} Plaid transactions for user ${userId}`
     );
 
     // Initialize clean processor
@@ -79,7 +89,7 @@ export async function POST(request: NextRequest) {
         // Save to database
         const saved = await processor.saveTransaction(
           processedTransaction,
-          user.id
+          userId
         );
 
         if (saved) {

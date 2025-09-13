@@ -207,7 +207,7 @@ All data usage will comply with applicable data privacy laws, and user consent w
 
 NOTE: owner is "You" unless noted. "ChatGPT" assists with code snippets, CI configs, and review.
 
-### 1) Foundation (1 day)
+### 1. Foundation (1 day)
 
 - Task 1.1: Confirm dev environment and build scripts (node, pnpm/npm, eslint, tailwind). (You)
   - Verify `npm run dev` / `.venv` FastAPI if needed.
@@ -216,7 +216,7 @@ NOTE: owner is "You" unless noted. "ChatGPT" assists with code snippets, CI conf
 
 Acceptance: local dev builds; baseline page renders without errors.
 
-### 2) Data Model & Migrations (1–2 days)
+### 2. Data Model & Migrations (1–2 days)
 
 - Task 2.1: Design DB tables (Postgres): `institutions`, `accounts`, `balances`, `transactions`, `account_links`.
   - accounts: id (pk), user_id (fk), institution_id (fk), name, mask, type, currency, last_synced_at, active
@@ -228,7 +228,7 @@ Acceptance: local dev builds; baseline page renders without errors.
 
 Acceptance: Tables created locally or on Supabase; simple seed data available.
 
-### 3) Auth & Security (0.5–1 day)
+### 3. Auth & Security (0.5–1 day)
 
 - Task 3.1: Confirm auth hook and context (`useAuth`) returns user id and session. (You)
 - Task 3.2: Implement RLS policies for `accounts`, `balances`, `transactions` to allow row access only to owning `user_id`.
@@ -236,7 +236,7 @@ Acceptance: Tables created locally or on Supabase; simple seed data available.
 
 Acceptance: Authenticated user can fetch only their rows; unauthenticated requests are rejected.
 
-### 4) Backend APIs & Queries (1–2 days)
+### 4. Backend APIs & Queries (1–2 days)
 
 - Task 4.1: Implement supabase helper queries in `src/lib/supabase/` to list accounts and balances (e.g., `listAccountsQuery`, `getAccountDetailsQuery`). (You + ChatGPT)
 - Task 4.2: Add API routes if needed (Edge/Next API routes or FastAPI endpoints) to handle linking flows, webhook verification, and server-side aggregation calls.
@@ -244,7 +244,7 @@ Acceptance: Authenticated user can fetch only their rows; unauthenticated reques
 
 Acceptance: Endpoints return JSON matching the frontend contract and require authentication.
 
-### 5) Frontend — Accounts Landing Page (2–3 days)
+### 5. Frontend — Accounts Landing Page (2–3 days)
 
 - Task 5.1: Implement `AccountsGrid` and `AccountCard` components using existing UI primitives.
   - Card shows: account name, masked number, available/current balance, last activity date, small badge for account type, and quick actions (Manage / Details).
@@ -254,14 +254,14 @@ Acceptance: Endpoints return JSON matching the frontend contract and require aut
 
 Acceptance: Page lists accounts, shows metrics, is responsive, and handles no-data cases.
 
-### 6) Frontend — Account Details (1–2 days)
+### 6. Frontend — Account Details (1–2 days)
 
 - Task 6.1: Create `AccountDetails` page/modal with balances, recent transactions (paginated), and actions (export, link/unlink).
 - Task 6.2: Implement transactions list component with avatars/merchant, category chips, amount coloring, and click-to-view details.
 
 Acceptance: User can open an account and see recent transactions and balance history.
 
-### 7) Caching, Performance & UX polish (1 day)
+### 7. Caching, Performance & UX polish (1 day)
 
 - Task 7.1: Add client-side caching (SWR or React Query) for accounts and transactions with revalidation strategy.
 - Task 7.2: Add skeleton loaders and optimistic UI for quick actions (delete/unlink).
@@ -269,7 +269,7 @@ Acceptance: User can open an account and see recent transactions and balance his
 
 Acceptance: Fast perceived loading; offline-friendly revalidate flow.
 
-### 8) Testing & QA (1–2 days)
+### 8. Testing & QA (1–2 days)
 
 - Task 8.1: Unit tests for helper queries and small components.
 - Task 8.2: Integration smoke tests: render page with mocked supabase responses; verify UI states.
@@ -277,7 +277,7 @@ Acceptance: Fast perceived loading; offline-friendly revalidate flow.
 
 Acceptance: All tests pass locally; main flows manually verified.
 
-### 9) Plaid / MX Integration Prep (2 days planning + later implementation)
+### 9. Plaid / MX Integration Prep (2 days planning + later implementation)
 
 - Task 9.1: Design server-side contract for link token creation and public token exchange. Create placeholder server endpoints:
   - POST /api/plaid/create_link_token
@@ -289,7 +289,7 @@ Acceptance: All tests pass locally; main flows manually verified.
 
 Acceptance: Endpoints + DB placeholders exist and documented; secrets flow documented.
 
-### 10) Deployment & CI (0.5–1 day)
+### 10. Deployment & CI (0.5–1 day)
 
 - Task 10.1: Add or update CI to run linters and tests for the accounts feature.
 - Task 10.2: Smoke deploy to staging and verify API keys are not leaked.

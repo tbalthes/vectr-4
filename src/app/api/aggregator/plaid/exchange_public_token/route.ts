@@ -258,6 +258,7 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             access_token,
             count: 500, // Get more transactions on initial sync
+            user_id: session.user.id,
           }),
         }
       );

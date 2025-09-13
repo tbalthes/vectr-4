@@ -51,7 +51,7 @@
     {
       "label": "Start ngrok",
       "type": "shell",
-      "command": "ngrok http 3000",
+      "command": "ngrok http 3000 --domain=lutose-nonponderable-aidyn.ngrok-free.app",
       "isBackground": true,
       "problemMatcher": [],
       "group": "build",

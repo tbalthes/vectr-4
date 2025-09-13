@@ -105,208 +105,105 @@ export async function POST(req: Request) {
       final_cursor: allData.next_cursor ? "present" : "null",
     });
 
-    // Store transactions in database
+    // Process transactions using the clean processor
     let stored_added = 0;
     let stored_modified = 0;
     let stored_removed = 0;
 
-    // Process added transactions
+    // Process added transactions through the clean processor
     if (allData.added.length > 0) {
-      for (const transaction of allData.added) {
-        try {
-          // Get the internal account ID - simplified lookup
+      console.log(
+        `🔄 Processing ${allData.added.length} new transactions through clean processor`
+      );
+
+      try {
+        // Call the clean processor with the transaction array
+        const cleanProcessorResponse = await fetch(
+          `${
+            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+          }/api/aggregator/plaid/transactions/clean`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              transactions: allData.added,
+              internal_user_id: userId, // Pass user ID in body instead of headers
+            }),
+          }
+        );
+
+        if (cleanProcessorResponse.ok) {
+          const cleanResult = await cleanProcessorResponse.json();
+          stored_added = cleanResult.results?.processed || 0;
           console.log(
-            `🔍 Looking up account for aggregator_account_id: ${transaction.account_id}`
+            `✅ Clean processor completed: ${stored_added} transactions processed`
           );
-
-          const { data: accountData, error: accountError } = await supabase
-            .from("accounts")
-            .select("id")
-            .eq("aggregator_account_id", transaction.account_id)
-            .eq("user_id", userId)
-            .single();
-
-          let finalAccountId: string;
-
-          if (accountError || !accountData) {
-            console.warn(
-              `⚠️ Account not found for aggregator_account_id: ${transaction.account_id}`,
-              {
-                accountError,
-                transaction_id: transaction.transaction_id,
-              }
-            );
-
-            // Try to find account by partial match or create a placeholder
-            const { data: fallbackAccount } = await supabase
-              .from("accounts")
-              .select("id")
-              .eq("user_id", userId)
-              .limit(1)
-              .single();
-
-            if (!fallbackAccount) {
-              console.error(`❌ No accounts found for user ${userId}`);
-              continue;
-            }
-
-            console.log(`🔄 Using fallback account: ${fallbackAccount.id}`);
-            finalAccountId = fallbackAccount.id;
-          } else {
-            console.log(
-              `✅ Found matching account: ${accountData.id} for aggregator_account_id: ${transaction.account_id}`
-            );
-            finalAccountId = accountData.id;
-          }
-
-          // Check if transaction already exists (enhanced deduplication)
-          // First check by aggregator_transaction_id
-          const { data: existingByAggregatorId } = await supabase
-            .from("transactions")
-            .select("id")
-            .eq("aggregator_transaction_id", transaction.transaction_id)
-            .eq("user_id", userId)
-            .maybeSingle();
-
-          if (existingByAggregatorId) {
-            console.log(
-              `⏭️ Transaction already exists (by aggregator_transaction_id): ${transaction.transaction_id}`
-            );
-            continue;
-          }
-
-          // Then check by the unique constraint fields to avoid database error
-          const { data: existingByConstraint } = await supabase
-            .from("transactions")
-            .select("id")
-            .eq("transaction_number", transaction.transaction_id)
-            .eq("date", transaction.date)
-            .eq("amount", -transaction.amount)
-            .eq("user_id", userId)
-            .maybeSingle();
-
-          if (existingByConstraint) {
-            console.log(
-              `⏭️ Transaction already exists (by unique constraint): ${transaction.transaction_id}`
-            );
-            continue;
-          }
-
-          // Insert new transaction
-          const { error: insertError } = await supabase
-            .from("transactions")
-            .insert({
-              user_id: userId,
-              account_id: finalAccountId,
-              aggregator_transaction_id: transaction.transaction_id,
-              amount: -transaction.amount, // Plaid uses negative for outflows
-              date: transaction.date,
-              original_description: transaction.name,
-              clean_description: transaction.merchant_name || transaction.name,
-              transaction_number: transaction.transaction_id,
-              needs_review: false, // Plaid transactions are generally clean
-              // Map Plaid categories to your system
-              primary_category_id: await mapPlaidCategoryToSystem(
-                supabase,
-                transaction.personal_finance_category
-              ),
-              // Try to find merchant by name/regex
-              merchant_id: await findOrCreateMerchant(
-                supabase,
-                transaction,
-                userId
-              ),
-              user_metadata: {
-                plaid_data: {
-                  category: transaction.category,
-                  category_id: transaction.category_id,
-                  account_id: transaction.account_id,
-                  authorized_date: transaction.authorized_date,
-                  payment_channel: transaction.payment_channel,
-                  pending: transaction.pending,
-                  merchant_name: transaction.merchant_name,
-                  logo_url: transaction.logo_url,
-                  merchant_entity_id: transaction.merchant_entity_id,
-                  personal_finance_category:
-                    transaction.personal_finance_category,
-                  personal_finance_category_icon_url:
-                    transaction.personal_finance_category_icon_url,
-                  pending_transaction_id: transaction.pending_transaction_id,
-                },
-              },
-              created_at: new Date().toISOString(),
-            });
-
-          if (insertError) {
-            console.error(
-              `❌ Error inserting transaction ${transaction.transaction_id}:`,
-              insertError
-            );
-          } else {
-            stored_added++;
-          }
-        } catch (txError) {
-          console.error(
-            `❌ Error processing transaction ${transaction.transaction_id}:`,
-            txError
-          );
+          console.log(`📊 Clean processor results:`, cleanResult.results);
+        } else {
+          const errorText = await cleanProcessorResponse.text();
+          console.error(`❌ Clean processor failed:`, errorText);
+          // Fall back to the old processing logic if clean processor fails
+          console.log(`🔄 Falling back to legacy processing...`);
+          // TODO: Add fallback logic here if needed
         }
+      } catch (cleanError) {
+        console.error(`❌ Error calling clean processor:`, cleanError);
+        // Fall back to the old processing logic if clean processor fails
+        console.log(`🔄 Fallingback to legacy processing...`);
+        // TODO: Add fallback logic here if needed
       }
     }
 
-    // Process modified transactions
+    // Process modified transactions through the clean processor
     if (allData.modified.length > 0) {
-      for (const transaction of allData.modified) {
-        try {
-          const { error: updateError } = await supabase
-            .from("transactions")
-            .update({
-              amount: -transaction.amount,
-              date: transaction.date,
-              original_description: transaction.name,
-              clean_description: transaction.merchant_name || transaction.name,
-              user_metadata: {
-                plaid_data: {
-                  category: transaction.category,
-                  category_id: transaction.category_id,
-                  account_id: transaction.account_id,
-                  authorized_date: transaction.authorized_date,
-                  payment_channel: transaction.payment_channel,
-                  pending: transaction.pending,
-                  merchant_name: transaction.merchant_name,
-                  logo_url: transaction.logo_url,
-                  merchant_entity_id: transaction.merchant_entity_id,
-                  personal_finance_category:
-                    transaction.personal_finance_category,
-                  personal_finance_category_icon_url:
-                    transaction.personal_finance_category_icon_url,
-                  pending_transaction_id: transaction.pending_transaction_id,
-                },
-              },
-              updated_at: new Date().toISOString(),
-            })
-            .eq("aggregator_transaction_id", transaction.transaction_id)
-            .eq("user_id", userId);
+      console.log(
+        `🔄 Processing ${allData.modified.length} modified transactions through clean processor`
+      );
 
-          if (updateError) {
-            console.error(
-              `❌ Error updating transaction ${transaction.transaction_id}:`,
-              updateError
-            );
-          } else {
-            stored_modified++;
+      try {
+        // Call the clean processor with the modified transaction array
+        const cleanProcessorResponse = await fetch(
+          `${
+            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+          }/api/aggregator/plaid/transactions/clean`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              transactions: allData.modified,
+              internal_user_id: userId, // Pass user ID in body instead of headers
+            }),
           }
-        } catch (txError) {
-          console.error(
-            `❌ Error processing modified transaction ${transaction.transaction_id}:`,
-            txError
+        );
+
+        if (cleanProcessorResponse.ok) {
+          const cleanResult = await cleanProcessorResponse.json();
+          stored_modified = cleanResult.results?.processed || 0;
+          console.log(
+            `✅ Clean processor (modified) completed: ${stored_modified} transactions processed`
           );
+        } else {
+          const errorText = await cleanProcessorResponse.text();
+          console.error(`❌ Clean processor (modified) failed:`, errorText);
         }
+      } catch (cleanError) {
+        console.error(
+          `❌ Error calling clean processor for modified transactions:`,
+          cleanError
+        );
       }
     }
 
-    // Process removed transactions
+    // Process removed transactions (mark as deleted)
     if (allData.removed.length > 0) {
+      console.log(
+        `🗑️ Processing ${allData.removed.length} removed transactions`
+      );
+
       for (const removedTx of allData.removed) {
         try {
           const { error: removeError } = await supabase

@@ -245,13 +245,19 @@ export class CleanPlaidTransactionProcessor {
       for (const merchant of merchants as Merchant[]) {
         if (merchant.regex_match) {
           try {
-            if (new RegExp(merchant.regex_match, "i").test(counterparty.name)) {
+            // Handle PostgreSQL regex patterns that start with (?i)
+            let jsPattern = merchant.regex_match;
+            if (jsPattern.startsWith("(?i)")) {
+              jsPattern = jsPattern.substring(4);
+            }
+
+            if (new RegExp(jsPattern, "i").test(counterparty.name)) {
               matchedMerchant = merchant;
               console.log("✅ Found regex match:", merchant.name);
               break;
             }
           } catch {
-            console.warn("Invalid regex pattern:", merchant.regex_match);
+            console.warn("⚠️ Invalid regex pattern:", merchant.regex_match);
           }
         }
       }
@@ -314,9 +320,13 @@ export class CleanPlaidTransactionProcessor {
       for (const merchant of merchants as Merchant[]) {
         if (merchant.regex_match) {
           try {
-            if (
-              new RegExp(merchant.regex_match, "i").test(combinedDescription)
-            ) {
+            // Handle PostgreSQL regex patterns that start with (?i)
+            let jsPattern = merchant.regex_match;
+            if (jsPattern.startsWith("(?i)")) {
+              jsPattern = jsPattern.substring(4);
+            }
+
+            if (new RegExp(jsPattern, "i").test(combinedDescription)) {
               matchedMerchant = merchant;
               console.log(
                 "✅ Found regex match for low confidence:",
@@ -325,7 +335,7 @@ export class CleanPlaidTransactionProcessor {
               break;
             }
           } catch {
-            console.warn("Invalid regex pattern:", merchant.regex_match);
+            console.warn("⚠️ Invalid regex pattern:", merchant.regex_match);
           }
         }
       }
@@ -434,6 +444,36 @@ export class CleanPlaidTransactionProcessor {
   }
 
   /**
+   * Look up internal account ID from Plaid account ID
+   */
+  private async getInternalAccountId(
+    plaidAccountId: string,
+    userId: string
+  ): Promise<string | null> {
+    try {
+      const { data, error } = await this.supabase
+        .from("accounts")
+        .select("id")
+        .eq("aggregator_account_id", plaidAccountId)
+        .eq("user_id", userId)
+        .single();
+
+      if (error || !data) {
+        console.warn(
+          `⚠️ No internal account found for Plaid account: ${plaidAccountId}`,
+          error
+        );
+        return null;
+      }
+
+      return data.id;
+    } catch (error) {
+      console.error("❌ Error looking up internal account ID:", error);
+      return null;
+    }
+  }
+
+  /**
    * Save processed transaction to database
    */
   async saveTransaction(
@@ -443,10 +483,23 @@ export class CleanPlaidTransactionProcessor {
     console.log("💾 Saving transaction:", transaction.plaid_transaction_id);
 
     try {
+      // Look up internal account ID from Plaid account ID
+      const internalAccountId = await this.getInternalAccountId(
+        transaction.account_id, // This is the Plaid account ID
+        userId
+      );
+
+      if (!internalAccountId) {
+        console.error(
+          `❌ Cannot save transaction - no internal account found for Plaid account: ${transaction.account_id}`
+        );
+        return false;
+      }
+
       const { error } = await this.supabase.from("transactions").upsert(
         {
           user_id: userId,
-          account_id: transaction.account_id,
+          account_id: internalAccountId, // Use internal UUID, not Plaid account ID
           merchant_id: transaction.merchant_id,
           category_id: transaction.category_id,
           date: transaction.date,

@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 import uuid
 import json
+import requests
 from datetime import datetime, date
 
 # Import dependencies
@@ -166,11 +167,34 @@ async def process_transactions_webhook(
         new_count = webhook_data.get('new_transactions', 0)
         removed_ids = webhook_data.get('removed_transactions', [])
         
-        # TODO: Trigger background sync job for this item
-        # For now, just acknowledge the webhook
+        # Trigger Next.js sync endpoint for this item
+        sync_result = await trigger_nextjs_sync(item_id, supabase)
+        
         return {
-            "status": "acknowledged", 
-            "message": f"New transactions: {new_count}, Removed: {len(removed_ids)}"
+            "status": "processed" if sync_result["success"] else "error", 
+            "message": f"New transactions: {new_count}, Removed: {len(removed_ids)}. Sync: {sync_result['message']}"
+        }
+    
+    elif webhook_code == 'INITIAL_UPDATE':
+        print(f"� Initial transaction sync for item {item_id}")
+        
+        # Trigger Next.js sync endpoint for initial sync
+        sync_result = await trigger_nextjs_sync(item_id, supabase)
+        
+        return {
+            "status": "processed" if sync_result["success"] else "error",
+            "message": f"Initial update sync: {sync_result['message']}"
+        }
+    
+    elif webhook_code == 'HISTORICAL_UPDATE':
+        print(f"📈 Historical transaction update for item {item_id}")
+        
+        # Trigger Next.js sync endpoint for historical sync  
+        sync_result = await trigger_nextjs_sync(item_id, supabase)
+        
+        return {
+            "status": "processed" if sync_result["success"] else "error",
+            "message": f"Historical update sync: {sync_result['message']}"
         }
     
     elif webhook_code == 'TRANSACTIONS_REMOVED':
@@ -192,6 +216,48 @@ async def process_transactions_webhook(
                 return {"status": "error", "message": f"Failed to remove transactions: {str(e)}"}
     
     return {"status": "ignored", "message": f"Unhandled transaction webhook code: {webhook_code}"}
+
+async def trigger_nextjs_sync(item_id: str, supabase) -> Dict[str, Any]:
+    """Trigger Next.js sync endpoint for a Plaid item"""
+    try:
+        # Get account link for this item to get access token and user ID
+        account_link_result = supabase.table("account_links").select(
+            "access_token_encrypted, user_id, cursor"
+        ).eq("item_id", item_id).eq("status", "active").execute()
+        
+        if not account_link_result.data:
+            return {"success": False, "message": f"No active account link found for item {item_id}"}
+        
+        account_link = account_link_result.data[0]
+        
+        # Call Next.js sync endpoint
+        sync_response = requests.post(
+            "http://localhost:3000/api/aggregator/plaid/transactions/sync",
+            headers={"Content-Type": "application/json"},
+            json={
+                "access_token": account_link["access_token_encrypted"],
+                "cursor": account_link.get("cursor"),
+                "user_id": account_link["user_id"],
+                "count": 500
+            },
+            timeout=30
+        )
+        
+        if sync_response.status_code == 200:
+            result = sync_response.json()
+            return {
+                "success": True, 
+                "message": f"Sync completed: {result.get('added', 0)} added, {result.get('modified', 0)} modified, {result.get('removed', 0)} removed"
+            }
+        else:
+            return {
+                "success": False, 
+                "message": f"Sync failed with status {sync_response.status_code}: {sync_response.text}"
+            }
+    
+    except Exception as e:
+        print(f"❌ Error triggering Next.js sync: {e}")
+        return {"success": False, "message": f"Sync error: {str(e)}"}
 
 async def process_item_webhook(webhook_data: Dict[str, Any], supabase) -> Dict[str, Any]:
     """Process ITEM webhook events"""
