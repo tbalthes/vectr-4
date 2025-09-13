@@ -15,7 +15,7 @@ import {
   Sources,
   Suggestion,
   Task,
-  Action
+  Action,
 } from "@/components/ai";
 
 export default function ComponentLibraryDemo() {
@@ -24,9 +24,12 @@ export default function ComponentLibraryDemo() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-4">Shadcn AI Components Library</h1>
+        <h1 className="text-3xl font-bold mb-4">
+          Shadcn AI Components Library
+        </h1>
         <p className="text-lg text-muted-foreground">
-          Complete suite of AI-powered React components for conversational interfaces
+          Complete suite of AI-powered React components for conversational
+          interfaces
         </p>
       </div>
 
@@ -65,7 +68,7 @@ export default function ComponentLibraryDemo() {
           { id: "messages", label: "Messages", icon: MessageSquare },
           { id: "ai-features", label: "AI Features", icon: Zap },
           { id: "code", label: "Code", icon: Code },
-          { id: "actions", label: "Actions", icon: FileText }
+          { id: "actions", label: "Actions", icon: FileText },
         ].map((tab) => (
           <Button
             key={tab.id}
@@ -87,29 +90,50 @@ export default function ComponentLibraryDemo() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
-              Your complete Shadcn AI components library includes everything needed for modern
-              conversational AI interfaces, built on shadcn/ui principles.
+              Your complete Shadcn AI components library includes everything
+              needed for modern conversational AI interfaces, built on shadcn/ui
+              principles.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { name: "Message", desc: "Chat message containers with role-based styling" },
-                { name: "Response", desc: "Streaming markdown renderer with syntax highlighting" },
-                { name: "Conversation", desc: "Auto-scrolling chat container with controls" },
-                { name: "PromptInput", desc: "Rich textarea with toolbar and auto-resize" },
+                {
+                  name: "Message",
+                  desc: "Chat message containers with role-based styling",
+                },
+                {
+                  name: "Response",
+                  desc: "Streaming markdown renderer with syntax highlighting",
+                },
+                {
+                  name: "Conversation",
+                  desc: "Auto-scrolling chat container with controls",
+                },
+                {
+                  name: "PromptInput",
+                  desc: "Rich textarea with toolbar and auto-resize",
+                },
                 { name: "Tool", desc: "Collapsible tool execution displays" },
                 { name: "Reasoning", desc: "AI thought process visualization" },
                 { name: "Sources", desc: "Source citations and references" },
                 { name: "Suggestion", desc: "Quick prompt suggestions" },
-                { name: "Task", desc: "Task management with progress tracking" },
+                {
+                  name: "Task",
+                  desc: "Task management with progress tracking",
+                },
                 { name: "Actions", desc: "Interactive action buttons" },
                 { name: "Loader", desc: "Multiple loading animation types" },
               ].map((component) => (
-                <div key={component.name} className="flex items-start gap-3 p-3 border rounded">
+                <div
+                  key={component.name}
+                  className="flex items-start gap-3 p-3 border rounded"
+                >
                   <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0" />
                   <div>
                     <span className="font-medium">{component.name}</span>
-                    <p className="text-sm text-muted-foreground">{component.desc}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {component.desc}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -128,7 +152,9 @@ export default function ComponentLibraryDemo() {
               <h4 className="font-medium mb-3">User Message</h4>
               <Message from="user" timestamp="Now">
                 <MessageContent>
-                  <Response>Hello! Can you help me analyze my spending patterns?</Response>
+                  <Response>
+                    Hello! Can you help me analyze my spending patterns?
+                  </Response>
                 </MessageContent>
               </Message>
             </div>
@@ -174,7 +200,6 @@ What would you like me to focus on next? 💰`}</Response>
             <CardTitle>AI-Specific Components</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-
             {/* Tool Execution */}
             <div>
               <h4 className="font-medium mb-3">Tool Execution</h4>
@@ -200,30 +225,35 @@ What would you like me to focus on next? 💰`}</Response>
             <div>
               <h4 className="font-medium mb-3">AI Reasoning</h4>
               <Reasoning title="Analysis Process" defaultOpen>
-                Processing your transaction data by categorizing expenses and identifying spending patterns.
-                Applying statistical analysis to detect trends and anomalies in your financial behavior.
-                Calculating potential savings opportunities based on historical data and spending habits.
-                Generating actionable insights for budget optimization and financial goals.
+                Processing your transaction data by categorizing expenses and
+                identifying spending patterns. Applying statistical analysis to
+                detect trends and anomalies in your financial behavior.
+                Calculating potential savings opportunities based on historical
+                data and spending habits. Generating actionable insights for
+                budget optimization and financial goals.
               </Reasoning>
             </div>
 
             {/* Sources */}
             <div>
               <h4 className="font-medium mb-3">Source Citations</h4>
-              <Sources sources={[
-                {
-                  id: "1",
-                  title: "Transaction Data",
-                  description: "Real-time banking data from connected accounts",
-                  relevance: 0.95,
-                },
-                {
-                  id: "2",
-                  title: "Historical Trends",
-                  description: "12-month spending patterns and analysis",
-                  relevance: 0.88,
-                }
-              ]} />
+              <Sources
+                sources={[
+                  {
+                    id: "1",
+                    title: "Transaction Data",
+                    description:
+                      "Real-time banking data from connected accounts",
+                    relevance: 0.95,
+                  },
+                  {
+                    id: "2",
+                    title: "Historical Trends",
+                    description: "12-month spending patterns and analysis",
+                    relevance: 0.88,
+                  },
+                ]}
+              />
             </div>
 
             {/* Task Management */}
@@ -234,7 +264,8 @@ What would you like me to focus on next? 💰`}</Response>
                   task={{
                     id: "1",
                     title: "Analyze monthly spending",
-                    description: "Process and categorize transactions by date range",
+                    description:
+                      "Process and categorize transactions by date range",
                     status: "completed",
                   }}
                 />
@@ -242,7 +273,8 @@ What would you like me to focus on next? 💰`}</Response>
                   task={{
                     id: "2",
                     title: "Generate budget recommendations",
-                    description: "Suggest personalized savings and budgeting tips",
+                    description:
+                      "Suggest personalized savings and budgeting tips",
                     status: "in-progress",
                   }}
                 />
@@ -263,10 +295,26 @@ What would you like me to focus on next? 💰`}</Response>
               <h4 className="font-medium mb-3">Quick Suggestions</h4>
               <Suggestion
                 suggestions={[
-                  { id: "1", text: "Show me my spending trends", category: "analysis" },
-                  { id: "2", text: "Create a savings plan", category: "action" },
-                  { id: "3", text: "Analyze subscription costs", category: "question" },
-                  { id: "4", text: "Review my financial goals", category: "question" },
+                  {
+                    id: "1",
+                    text: "Show me my spending trends",
+                    category: "analysis",
+                  },
+                  {
+                    id: "2",
+                    text: "Create a savings plan",
+                    category: "action",
+                  },
+                  {
+                    id: "3",
+                    text: "Analyze subscription costs",
+                    category: "question",
+                  },
+                  {
+                    id: "4",
+                    text: "Review my financial goals",
+                    category: "question",
+                  },
                 ]}
                 onSelect={(suggestion) => console.log("Selected:", suggestion)}
                 showCategories={true}
@@ -279,9 +327,12 @@ What would you like me to focus on next? 💰`}</Response>
       <Card>
         <CardContent className="p-6">
           <div className="text-center">
-            <h3 className="text-xl font-semibold mb-2">🎉 Ready to Build Amazing AI Interfaces</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              🎉 Ready to Build Amazing AI Interfaces
+            </h3>
             <p className="text-muted-foreground">
-              All these components are already integrated into your `/private/vectr-ai` page and powered by Google Gemini AI!
+              All these components are already integrated into your
+              `/private/vectr-ai` page and powered by Google Gemini AI!
             </p>
           </div>
         </CardContent>
