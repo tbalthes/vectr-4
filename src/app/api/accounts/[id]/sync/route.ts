@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // POST /api/accounts/[id]/sync
 // Syncs a specific account (mock implementation for demo)
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
 
@@ -113,7 +113,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     const userId = user.user.id;
-    const accountId = params.id;
+    // Extract [id] param from the URL
+    const url = new URL(request.url);
+    // /api/accounts/[id]/sync → get the [id] segment
+    const segments = url.pathname.split('/').filter(Boolean);
+    const accountId = segments[segments.length - 2];
 
     // Verify the account belongs to the user
     const { data: account, error: accountError } = await supabase
