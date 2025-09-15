@@ -1,10 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { readFile } from "fs/promises";
-import { join } from "path";
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 
-interface Transaction {
-  [key: string]: string;
-}
+import { NextResponse } from 'next/server';
 
 interface NormalizedTransaction {
   transaction_number: string;
@@ -26,16 +23,16 @@ export async function POST() {
     // Read the CSV file
     const csvPath = join(
       process.cwd(),
-      "src",
-      "app",
-      "api",
-      "process-csv",
-      "Spending Breakdown - Arizona Federal CU (2).csv"
+      'src',
+      'app',
+      'api',
+      'process-csv',
+      'Spending Breakdown - Arizona Federal CU (2).csv',
     );
-    const csvContent = await readFile(csvPath, "utf-8");
+    const csvContent = await readFile(csvPath, 'utf-8');
 
     // Parse CSV lines
-    const lines = csvContent.split("\n").filter((line) => line.trim());
+    const lines = csvContent.split('\n').filter((line) => line.trim());
     const headers = parseCSVLine(lines[0]);
 
     // Process each transaction
@@ -43,11 +40,13 @@ export async function POST() {
 
     for (let i = 1; i < lines.length; i++) {
       const values = parseCSVLine(lines[i]);
-      if (values.length < headers.length) continue; // Skip incomplete rows
+      if (values.length < headers.length) {
+        continue;
+      } // Skip incomplete rows
 
       const transaction: Record<string, string> = {};
       headers.forEach((header, index) => {
-        transaction[header] = values[index] || "";
+        transaction[header] = values[index] || '';
       });
 
       // Normalize the transaction
@@ -58,14 +57,10 @@ export async function POST() {
     }
 
     // Extract original descriptions for cleaning (Pe field, not Vendor)
-    const originalDescriptions = transactions.map(
-      (t) => t.original_description
-    );
+    const originalDescriptions = transactions.map((t) => t.original_description);
 
     // Call Python backend to clean the original descriptions
-    const cleanedDescriptions = await cleanDescriptionsWithPython(
-      originalDescriptions
-    );
+    const cleanedDescriptions = await cleanDescriptionsWithPython(originalDescriptions);
 
     // Update transactions with cleaned descriptions while preserving original_description
     transactions.forEach((transaction, index) => {
@@ -83,33 +78,27 @@ export async function POST() {
     return new NextResponse(normalizedCSV, {
       status: 200,
       headers: {
-        "Content-Type": "text/csv",
-        "Content-Disposition":
-          'attachment; filename="normalized_transactions.csv"',
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="normalized_transactions.csv"',
       },
     });
   } catch (error) {
-    console.error("Error processing CSV:", error);
-    return NextResponse.json(
-      { error: "Failed to process CSV file" },
-      { status: 500 }
-    );
+    console.error('Error processing CSV:', error);
+    return NextResponse.json({ error: 'Failed to process CSV file' }, { status: 500 });
   }
 }
 
 function parseCSVLine(line: string): string[] {
   const result = [];
-  let current = "";
+  let current = '';
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-
+  for (const char of line) {
     if (char === '"') {
       inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
+    } else if (char === ',' && !inQuotes) {
       result.push(current.trim());
-      current = "";
+      current = '';
     } else {
       current += char;
     }
@@ -119,23 +108,21 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
-function normalizeTransaction(
-  transaction: Record<string, string>
-): NormalizedTransaction | null {
+function normalizeTransaction(transaction: Record<string, string>): NormalizedTransaction | null {
   // Skip header rows or invalid rows
-  if (!transaction.Date || transaction.Date === "Date") {
+  if (!transaction.Date || transaction.Date === 'Date') {
     return null;
   }
 
   // Extract basic information
   const date = normalizeDate(transaction.Date);
-  const description = transaction.Vendor || ""; // Use Vendor for clean description
-  const category = transaction.Category || "";
-  const originalDescription = transaction.Pe || ""; // Pe contains full raw transaction text
+  const description = transaction.Vendor || ''; // Use Vendor for clean description
+  const category = transaction.Category || '';
+  const originalDescription = transaction.Pe || ''; // Pe contains full raw transaction text
 
   // Debug logging for Amazon transactions
-  if (description.toLowerCase().includes("amazon")) {
-    console.log("Amazon transaction debug:", {
+  if (description.toLowerCase().includes('amazon')) {
+    console.log('Amazon transaction debug:', {
       vendor: transaction.Vendor,
       pe: transaction.Pe,
       originalDescription: originalDescription,
@@ -144,24 +131,22 @@ function normalizeTransaction(
 
   // Handle amounts - check both debit and credit columns
   let amount = 0;
-  let amountStr = "";
+  let amountStr = '';
 
-  if (
-    transaction["Amount Debit"] &&
-    transaction["Amount Debit"].trim() !== ""
-  ) {
-    amountStr = transaction["Amount Debit"].replace(/[$,]/g, "");
+  if (transaction['Amount Debit'] && transaction['Amount Debit'].trim() !== '') {
+    amountStr = transaction['Amount Debit'].replace(/[$,]/g, '');
     amount = parseFloat(amountStr) || 0;
     // Debit amounts should be negative if not already
-    if (amount > 0) amount = -amount;
-  } else if (
-    transaction["Amount Credit"] &&
-    transaction["Amount Credit"].trim() !== ""
-  ) {
-    amountStr = transaction["Amount Credit"].replace(/[$,]/g, "");
+    if (amount > 0) {
+      amount = -amount;
+    }
+  } else if (transaction['Amount Credit'] && transaction['Amount Credit'].trim() !== '') {
+    amountStr = transaction['Amount Credit'].replace(/[$,]/g, '');
     amount = parseFloat(amountStr) || 0;
     // Credit amounts should be positive
-    if (amount < 0) amount = -amount;
+    if (amount < 0) {
+      amount = -amount;
+    }
   }
 
   // Generate transaction number (simple incrementing or use row index)
@@ -173,11 +158,11 @@ function normalizeTransaction(
     description: description,
     amount: amount,
     category: category,
-    source: transaction["Transaction Source"] || "",
-    original_description: transaction.Pe || "", // Full raw transaction description
-    vendor: transaction.Vendor || "",
-    amount_debit: transaction["Amount Debit"] || "",
-    amount_credit: transaction["Amount Credit"] || "",
+    source: transaction['Transaction Source'] || '',
+    original_description: transaction.Pe || '', // Full raw transaction description
+    vendor: transaction.Vendor || '',
+    amount_debit: transaction['Amount Debit'] || '',
+    amount_credit: transaction['Amount Credit'] || '',
   };
 }
 
@@ -185,10 +170,10 @@ function normalizeDate(dateStr: string): string {
   // Handle various date formats
   try {
     // Assuming format like "6/13/2025"
-    const parts = dateStr.split("/");
+    const parts = dateStr.split('/');
     if (parts.length === 3) {
-      const month = parts[0].padStart(2, "0");
-      const day = parts[1].padStart(2, "0");
+      const month = parts[0].padStart(2, '0');
+      const day = parts[1].padStart(2, '0');
       const year = parts[2];
       return `${year}-${month}-${day}`;
     }
@@ -200,72 +185,63 @@ function normalizeDate(dateStr: string): string {
 
 function generateCSV(transactions: NormalizedTransaction[]): string {
   if (transactions.length === 0) {
-    return "No transactions to process";
+    return 'No transactions to process';
   }
 
   // CSV headers
   const headers = [
-    "transaction_number",
-    "date",
-    "description",
-    "clean_description",
-    "amount",
-    "category",
-    "source",
-    "original_description",
-    "vendor",
-    "amount_debit",
-    "amount_credit",
+    'transaction_number',
+    'date',
+    'description',
+    'clean_description',
+    'amount',
+    'category',
+    'source',
+    'original_description',
+    'vendor',
+    'amount_debit',
+    'amount_credit',
   ];
 
   // Generate CSV content
-  const csvLines = [headers.join(",")];
+  const csvLines = [headers.join(',')];
 
   transactions.forEach((transaction) => {
     const row = headers.map((header) => {
-      let value = transaction[header] || "";
+      let value = transaction[header] || '';
       // Escape quotes and wrap in quotes if contains comma
-      if (
-        typeof value === "string" &&
-        (value.includes(",") || value.includes('"'))
-      ) {
+      if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
         value = `"${value.replace(/"/g, '""')}"`;
       }
       return value;
     });
-    csvLines.push(row.join(","));
+    csvLines.push(row.join(','));
   });
 
-  return csvLines.join("\n");
+  return csvLines.join('\n');
 }
 
 async function cleanDescriptionsWithPython(descriptions: string[]) {
   try {
-    console.log("Sending descriptions to Python:", descriptions.slice(0, 5)); // Log first 5
+    console.log('Sending descriptions to Python:', descriptions.slice(0, 5)); // Log first 5
 
-    const response = await fetch(
-      "http://localhost:8000/normalize/descriptions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ descriptions }),
-      }
-    );
+    const response = await fetch('http://localhost:8000/normalize/descriptions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ descriptions }),
+    });
 
     if (!response.ok) {
       throw new Error(`Python backend error: ${response.status}`);
     }
 
     const result = await response.json();
-    console.log(
-      "Received from Python:",
-      result.cleaned_descriptions.slice(0, 5)
-    ); // Log first 5
+    console.log('Received from Python:', result.cleaned_descriptions.slice(0, 5)); // Log first 5
     return result.cleaned_descriptions;
   } catch (error) {
-    console.error("Error calling Python backend:", error);
+    console.error('Error calling Python backend:', error);
     // Fallback to original descriptions if Python backend fails
     return descriptions.map((desc) => ({
       original: desc,

@@ -2,6 +2,19 @@
 
 import { useState, useMemo } from "react";
 import {
+  Search,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
+
+import { TransactionRow } from "./TransactionRow";
+
+import {
   Table,
   TableBody,
   TableHead,
@@ -20,18 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Search,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
-import { TransactionRow } from "./TransactionRow";
-import { FormattedTransaction } from "@/types/transactions";
+import type { FormattedTransaction } from "@/types/transactions";
 
 interface AdvancedTransactionTableProps {
   transactions: FormattedTransaction[];
@@ -138,8 +140,8 @@ export function AdvancedTransactionTable({
           bValue = b.date;
       }
 
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      if (aValue < bValue) {return sortDirection === "asc" ? -1 : 1;}
+      if (aValue > bValue) {return sortDirection === "asc" ? 1 : -1;}
       return 0;
     });
 

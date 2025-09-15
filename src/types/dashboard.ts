@@ -1,28 +1,28 @@
 // Shared dashboard types for all dashboard-related components
 
-export type SpendingData = {
+export interface SpendingData {
   month: string;
   income: number;
   spending: number;
-};
+}
 
-export type CategoryData = {
+export interface CategoryData {
   name: string;
   value: number;
   color: string;
-};
+}
 
-export type RecentTransaction = {
+export interface RecentTransaction {
   id: string | number;
   type: "income" | "spending";
   description: string;
   category: string;
   date: string;
   amount: number;
-};
+}
 
-export type DashboardData = {
+export interface DashboardData {
   spendingData: SpendingData[];
   categoryData: CategoryData[];
   recentTransactions: RecentTransaction[];
-};
+}

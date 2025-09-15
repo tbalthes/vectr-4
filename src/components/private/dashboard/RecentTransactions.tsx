@@ -1,4 +1,6 @@
 import React from "react";
+import { ArrowUpRight, ArrowDownRight, MoreHorizontal } from "lucide-react";
+
 import {
   Card,
   CardHeader,
@@ -7,7 +9,6 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ArrowDownRight, MoreHorizontal } from "lucide-react";
 
 interface Transaction {
   id: number;

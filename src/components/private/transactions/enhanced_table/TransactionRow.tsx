@@ -1,17 +1,16 @@
-"use client";
+'use client';
 
-import React from "react";
-import { ChevronRight, Flag, StickyNote } from "lucide-react";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import CategoryIcon from "./CategoryIcon";
-import MerchantLogo from "./MerchantLogo";
-// Step 1: Import the new, flattened transaction type
-import { FormattedTransaction } from "@/types/transactions";
+import React from 'react';
+import { ChevronRight, Flag, StickyNote } from 'lucide-react';
+
+// Relative imports (local to this folder)
+import CategoryIcon from './CategoryIcon';
+import MerchantLogo from './MerchantLogo';
+
+// Absolute imports (internal shared components)
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import type { FormattedTransaction } from '@/types/transactions';
 
 interface TransactionRowProps {
   transaction: FormattedTransaction;
@@ -34,7 +33,7 @@ export function TransactionRow({
 }: TransactionRowProps) {
   // Helper function to format the transaction amount and determine its type
   const formatAmount = (
-    amount: number
+    amount: number,
   ): {
     amount: string;
     isCredit: boolean;
@@ -44,9 +43,9 @@ export function TransactionRow({
     const isCredit = amount > 0; // Positive amounts are credits (income)
     const isDebit = amount < 0; // Negative amounts are debits (expenses)
 
-    const formattedAmount = Math.abs(amount).toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
+    const formattedAmount = Math.abs(amount).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
     });
 
     return {
@@ -54,8 +53,8 @@ export function TransactionRow({
       isCredit,
       isDebit,
       className: isCredit
-        ? "text-chart-2 dark:text-chart-2 font-semibold" // Green for credits/income in both themes
-        : "text-foreground dark:text-foreground font-semibold", // Default text for debits/expenses
+        ? 'text-chart-2 dark:text-chart-2 font-semibold' // Green for credits/income in both themes
+        : 'text-foreground dark:text-foreground font-semibold', // Default text for debits/expenses
     };
   };
 
@@ -66,26 +65,22 @@ export function TransactionRow({
     const isToday = date.toDateString() === today.toDateString();
 
     return {
-      main: date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
+      main: date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
       }),
       year: date.getFullYear().toString(),
       isToday,
-      fullDate: date.toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        year: "numeric",
+      fullDate: date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
       }),
     };
   };
 
-  const {
-    amount,
-    isCredit,
-    className: amountClassName,
-  } = formatAmount(transaction.amount);
+  const { amount, isCredit, className: amountClassName } = formatAmount(transaction.amount);
   // dateFormatted reserved for future use
   void formatDate(transaction.date);
 
@@ -149,7 +144,7 @@ export function TransactionRow({
             <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground dark:bg-muted-foreground"></div>
           </div>
           <span className="text-xs text-foreground dark:text-foreground truncate">
-            {transaction.account || "Unknown Account"}
+            {transaction.account || 'Unknown Account'}
           </span>
         </div>
       </td>
@@ -158,14 +153,12 @@ export function TransactionRow({
       <td className="px-3 py-2 text-right bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
         <div className="flex items-center justify-end gap-3">
           {(!transaction.categoryName ||
-            transaction.categoryName === "Uncategorized" ||
-            transaction.categoryName === "") && (
+            transaction.categoryName === 'Uncategorized' ||
+            transaction.categoryName === '') && (
             <Flag className="w-4 h-4 text-yellow-500 dark:text-yellow-400 flex-shrink-0" />
           )}
-          <span
-            className={`text-sm font-medium ${amountClassName} dark:text-chart-2`}
-          >
-            {isCredit ? "+" : ""}
+          <span className={`text-sm font-medium ${amountClassName} dark:text-chart-2`}>
+            {isCredit ? '+' : ''}
             {amount}
           </span>
           <Button

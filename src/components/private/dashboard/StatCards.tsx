@@ -1,6 +1,4 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp,
   TrendingDown,
@@ -9,6 +7,9 @@ import {
   PiggyBank,
   ArrowUpRight,
 } from "lucide-react";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { dashboardData } from "@/data/dashboard-data";
 
 export function StatCards() {

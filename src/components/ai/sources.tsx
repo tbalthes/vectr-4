@@ -1,20 +1,11 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  BookOpen,
-  ChevronDown,
-  ChevronRight,
-  ExternalLink,
-} from "lucide-react";
-import { cn } from "@/lib/utils/utils";
+import * as React from 'react';
+import { BookOpen, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils/utils';
 
 export interface Source {
   id: string;
@@ -35,7 +26,7 @@ const Sources: React.FC<SourcesProps> = ({
   sources,
   className,
   defaultOpen = false,
-  title = "Sources",
+  title = 'Sources',
 }) => {
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
   const ChevronIcon = isOpen ? ChevronDown : ChevronRight;
@@ -45,7 +36,7 @@ const Sources: React.FC<SourcesProps> = ({
   }
 
   return (
-    <div className={cn("border rounded-lg overflow-hidden", className)}>
+    <div className={cn('border rounded-lg overflow-hidden', className)}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <button className="w-full flex items-center justify-between p-3 border-b hover:bg-muted/50 transition-colors">
@@ -69,12 +60,10 @@ const Sources: React.FC<SourcesProps> = ({
               <div
                 key={source.id || index}
                 className={cn(
-                  "flex items-start space-x-3 p-2 rounded-md",
-                  source.url
-                    ? "hover:bg-muted/50 cursor-pointer"
-                    : "cursor-default"
+                  'flex items-start space-x-3 p-2 rounded-md',
+                  source.url ? 'hover:bg-muted/50 cursor-pointer' : 'cursor-default',
                 )}
-                onClick={() => source.url && window.open(source.url, "_blank")}
+                onClick={() => source.url && window.open(source.url, '_blank')}
               >
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
                   {index + 1}
@@ -82,32 +71,23 @@ const Sources: React.FC<SourcesProps> = ({
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="font-medium text-sm truncate">
-                      {source.title}
-                    </span>
+                    <span className="font-medium text-sm truncate">{source.title}</span>
                     {source.url && (
                       <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                     )}
                     {source.relevance && source.relevance > 0.8 && (
-                      <Badge
-                        variant="outline"
-                        className="text-xs border-green-200 text-green-700"
-                      >
+                      <Badge variant="outline" className="text-xs border-green-200 text-green-700">
                         High relevance
                       </Badge>
                     )}
                   </div>
 
                   {source.description && (
-                    <p className="text-sm text-muted-foreground mb-1">
-                      {source.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground mb-1">{source.description}</p>
                   )}
 
                   {source.url && (
-                    <p className="text-xs text-blue-600 hover:underline truncate">
-                      {source.url}
-                    </p>
+                    <p className="text-xs text-blue-600 hover:underline truncate">{source.url}</p>
                   )}
                 </div>
               </div>

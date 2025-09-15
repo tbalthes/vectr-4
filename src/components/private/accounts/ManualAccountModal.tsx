@@ -1,23 +1,5 @@
-"use client";
-import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+'use client';
+import React, { useState } from 'react';
 import {
   AlertCircle,
   Plus,
@@ -26,8 +8,27 @@ import {
   TrendingUp,
   Landmark,
   Building,
-} from "lucide-react";
-import { accountToasts } from "@/lib/notifications/account-notifications";
+} from 'lucide-react';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { accountToasts } from '@/lib/notifications/account-notifications';
 
 interface ManualAccountModalProps {
   open: boolean;
@@ -38,7 +39,7 @@ interface ManualAccountModalProps {
 interface ManualAccountForm {
   institutionName: string;
   accountName: string;
-  accountType: "depository" | "credit" | "loan" | "investment" | "other";
+  accountType: 'depository' | 'credit' | 'loan' | 'investment' | 'other';
   accountSubtype: string;
   mask: string;
   currency: string;
@@ -53,13 +54,13 @@ export function ManualAccountModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [manualForm, setManualForm] = useState<ManualAccountForm>({
-    institutionName: "",
-    accountName: "",
-    accountType: "depository",
-    accountSubtype: "",
-    mask: "",
-    currency: "USD",
-    initialBalance: "",
+    institutionName: '',
+    accountName: '',
+    accountType: 'depository',
+    accountSubtype: '',
+    mask: '',
+    currency: 'USD',
+    initialBalance: '',
   });
 
   const handleManualSubmit = async (e: React.FormEvent) => {
@@ -69,11 +70,11 @@ export function ManualAccountModal({
 
     try {
       // Create institution
-      const institutionResponse = await fetch("/api/institutions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const institutionResponse = await fetch('/api/institutions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          provider: "manual",
+          provider: 'manual',
           name: manualForm.institutionName,
         }),
       });
@@ -86,13 +87,13 @@ export function ManualAccountModal({
       } else if (institutionResponse.ok) {
         institution = await institutionResponse.json();
       } else {
-        throw new Error("Failed to create institution");
+        throw new Error('Failed to create institution');
       }
 
       // Create account
-      const accountResponse = await fetch("/api/accounts/manual", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const accountResponse = await fetch('/api/accounts/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           institution_id: institution.id,
           name: manualForm.accountName,
@@ -104,33 +105,31 @@ export function ManualAccountModal({
         }),
       });
 
-      if (!accountResponse.ok) throw new Error("Failed to create account");
+      if (!accountResponse.ok) {
+        throw new Error('Failed to create account');
+      }
 
       // Clear any existing notifications and show success
       accountToasts.clearAll();
-      accountToasts.connected(
-        manualForm.accountName,
-        "Account added successfully!"
-      );
+      accountToasts.connected(manualForm.accountName, 'Account added successfully!');
 
       // Reset form
       setManualForm({
-        institutionName: "",
-        accountName: "",
-        accountType: "depository",
-        accountSubtype: "",
-        mask: "",
-        currency: "USD",
-        initialBalance: "",
+        institutionName: '',
+        accountName: '',
+        accountType: 'depository',
+        accountSubtype: '',
+        mask: '',
+        currency: 'USD',
+        initialBalance: '',
       });
 
       onOpenChange(false);
       onAccountConnected();
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to add account";
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add account';
       setError(errorMessage);
-      accountToasts.syncError("manual account", errorMessage, true);
+      accountToasts.syncError('manual account', errorMessage, true);
     } finally {
       setLoading(false);
     }
@@ -138,13 +137,13 @@ export function ManualAccountModal({
 
   const getAccountTypeIcon = (type: string) => {
     switch (type) {
-      case "depository":
+      case 'depository':
         return <PiggyBank className="h-5 w-5" />;
-      case "credit":
+      case 'credit':
         return <CreditCard className="h-5 w-5" />;
-      case "investment":
+      case 'investment':
         return <TrendingUp className="h-5 w-5" />;
-      case "loan":
+      case 'loan':
         return <Landmark className="h-5 w-5" />;
       default:
         return <Building className="h-5 w-5" />;
@@ -159,12 +158,10 @@ export function ManualAccountModal({
             <Plus className="h-5 w-5" />
             <span>Add Manual Account</span>
           </DialogTitle>
-          <DialogDescription>
-            Enter account details manually for tracking
-          </DialogDescription>
+          <DialogDescription>Enter account details manually for tracking</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleManualSubmit} className="space-y-4 py-4">
+        <form onSubmit={(e) => void handleManualSubmit(e)} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="institutionName">Bank/Institution Name</Label>
             <Input
@@ -186,9 +183,7 @@ export function ManualAccountModal({
             <Input
               id="accountName"
               value={manualForm.accountName}
-              onChange={(e) =>
-                setManualForm({ ...manualForm, accountName: e.target.value })
-              }
+              onChange={(e) => setManualForm({ ...manualForm, accountName: e.target.value })}
               placeholder="e.g., Main Checking, Savings"
               required
             />
@@ -209,31 +204,31 @@ export function ManualAccountModal({
                 <SelectContent>
                   <SelectItem value="depository">
                     <div className="flex items-center space-x-2">
-                      {getAccountTypeIcon("depository")}
+                      {getAccountTypeIcon('depository')}
                       <span>Depository</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="credit">
                     <div className="flex items-center space-x-2">
-                      {getAccountTypeIcon("credit")}
+                      {getAccountTypeIcon('credit')}
                       <span>Credit</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="investment">
                     <div className="flex items-center space-x-2">
-                      {getAccountTypeIcon("investment")}
+                      {getAccountTypeIcon('investment')}
                       <span>Investment</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="loan">
                     <div className="flex items-center space-x-2">
-                      {getAccountTypeIcon("loan")}
+                      {getAccountTypeIcon('loan')}
                       <span>Loan</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="other">
                     <div className="flex items-center space-x-2">
-                      {getAccountTypeIcon("other")}
+                      {getAccountTypeIcon('other')}
                       <span>Other</span>
                     </div>
                   </SelectItem>
@@ -263,9 +258,7 @@ export function ManualAccountModal({
               <Input
                 id="mask"
                 value={manualForm.mask}
-                onChange={(e) =>
-                  setManualForm({ ...manualForm, mask: e.target.value })
-                }
+                onChange={(e) => setManualForm({ ...manualForm, mask: e.target.value })}
                 placeholder="e.g., 1234"
                 maxLength={4}
               />
@@ -275,9 +268,7 @@ export function ManualAccountModal({
               <Label htmlFor="currency">Currency</Label>
               <Select
                 value={manualForm.currency}
-                onValueChange={(value) =>
-                  setManualForm({ ...manualForm, currency: value })
-                }
+                onValueChange={(value) => setManualForm({ ...manualForm, currency: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -299,9 +290,7 @@ export function ManualAccountModal({
               type="number"
               step="0.01"
               value={manualForm.initialBalance}
-              onChange={(e) =>
-                setManualForm({ ...manualForm, initialBalance: e.target.value })
-              }
+              onChange={(e) => setManualForm({ ...manualForm, initialBalance: e.target.value })}
               placeholder="0.00"
             />
           </div>
@@ -323,7 +312,7 @@ export function ManualAccountModal({
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? "Adding..." : "Add Account"}
+              {loading ? 'Adding...' : 'Add Account'}
             </Button>
           </div>
         </form>

@@ -1,19 +1,20 @@
-"use client";
+'use client';
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback } from 'react';
+
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { FormattedTransaction } from "@/types/transactions";
+} from '@/components/ui/select';
+import type { FormattedTransaction } from '@/types/transactions';
 
 // Replace corrupted file: implement a self-contained SearchFilterControls component that
 // owns search/filter/sort/pagination state and emits paginated results via onChange.
 
-type SearchFilterControlsProps = {
+interface SearchFilterControlsProps {
   transactions?: FormattedTransaction[];
   uniqueCategories?: string[];
   className?: string;
@@ -24,34 +25,35 @@ type SearchFilterControlsProps = {
     currentPage: number;
     itemsPerPage: number;
   }) => void;
-};
+}
 
 export default function SearchFilterControls({
   transactions = [],
   uniqueCategories = [],
-  className = "",
+  className = '',
   onChange,
 }: SearchFilterControlsProps) {
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [amountFilter, setAmountFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [amountFilter, setAmountFilter] = useState<string>('all');
   const [itemsPerPage, setItemsPerPage] = useState<number>(25);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  
+  const [_currentPage, setCurrentPage] = useState<number>(1);
+
   // keep as state in case we later expose setters; disable unused-vars lint for setters
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [sortField, setSortField] = useState<
-    "date" | "amount" | "description" | "categoryName"
-  >("date");
+  const [sortField, setSortField] = useState<'date' | 'amount' | 'description' | 'categoryName'>(
+    'date',
+  );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const categories = useMemo(() => {
-    if (uniqueCategories && uniqueCategories.length > 0)
+    if (uniqueCategories && uniqueCategories.length > 0) {
       return uniqueCategories;
-    const cats = Array.from(
-      new Set((transactions || []).map((t) => t.categoryName || ""))
-    ).filter(Boolean);
+    }
+    const cats = Array.from(new Set((transactions || []).map((t) => t.categoryName || ''))).filter(
+      Boolean,
+    );
     return cats.sort();
   }, [uniqueCategories, transactions]);
 
@@ -62,9 +64,9 @@ export default function SearchFilterControls({
         categoryFilter: string;
         statusFilter: string;
         amountFilter: string;
-        sortField: "date" | "amount" | "description" | "categoryName";
-        sortDirection: "asc" | "desc";
-      }>
+        sortField: 'date' | 'amount' | 'description' | 'categoryName';
+        sortDirection: 'asc' | 'desc';
+      }>,
     ) => {
       const cat = overrides?.categoryFilter ?? categoryFilter;
       const status = overrides?.statusFilter ?? statusFilter;
@@ -73,17 +75,17 @@ export default function SearchFilterControls({
       const sDir = overrides?.sortDirection ?? sortDirection;
 
       const filtered = (transactions || []).filter((transaction) => {
-        const categoryMatch = cat === "all" || transaction.categoryName === cat;
+        const categoryMatch = cat === 'all' || transaction.categoryName === cat;
 
         const statusMatch =
-          status === "all" ||
-          (status === "needs-review" && transaction.needsReview) ||
-          (status === "verified" && !transaction.needsReview);
+          status === 'all' ||
+          (status === 'needs-review' && transaction.needsReview) ||
+          (status === 'verified' && !transaction.needsReview);
 
         const amountMatch =
-          amount === "all" ||
-          (amount === "income" && transaction.amount > 0) ||
-          (amount === "expense" && transaction.amount < 0);
+          amount === 'all' ||
+          (amount === 'income' && transaction.amount > 0) ||
+          (amount === 'expense' && transaction.amount < 0);
 
         return categoryMatch && statusMatch && amountMatch;
       });
@@ -92,38 +94,35 @@ export default function SearchFilterControls({
         let aValue: Date | number | string = a.date as unknown as string;
         let bValue: Date | number | string = b.date as unknown as string;
         switch (sField) {
-          case "date":
+          case 'date':
             aValue = new Date(a.date);
             bValue = new Date(b.date);
             break;
-          case "amount":
+          case 'amount':
             aValue = Math.abs(a.amount);
             bValue = Math.abs(b.amount);
             break;
-          case "description":
-            aValue = (a.description || "").toLowerCase();
-            bValue = (b.description || "").toLowerCase();
+          case 'description':
+            aValue = (a.description || '').toLowerCase();
+            bValue = (b.description || '').toLowerCase();
             break;
-          case "categoryName":
-            aValue = (a.categoryName || "").toLowerCase();
-            bValue = (b.categoryName || "").toLowerCase();
+          case 'categoryName':
+            aValue = (a.categoryName || '').toLowerCase();
+            bValue = (b.categoryName || '').toLowerCase();
             break;
         }
-        if (aValue < bValue) return sDir === "asc" ? -1 : 1;
-        if (aValue > bValue) return sDir === "asc" ? 1 : -1;
+        if (aValue < bValue) {
+          return sDir === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sDir === 'asc' ? 1 : -1;
+        }
         return 0;
       });
 
       return filtered;
     },
-    [
-      transactions,
-      categoryFilter,
-      statusFilter,
-      amountFilter,
-      sortField,
-      sortDirection,
-    ]
+    [transactions, categoryFilter, statusFilter, amountFilter, sortField, sortDirection],
   );
 
   const filteredAndSorted = useMemo(() => filterAndSort(), [filterAndSort]);
@@ -132,20 +131,23 @@ export default function SearchFilterControls({
   // paginated list is produced and emitted on user interactions; keep slice available to handlers
 
   // Emit only on user interactions to avoid an update loop with the parent
-  const emitChange = useCallback((
-    filtered: FormattedTransaction[],
-    paginatedList: FormattedTransaction[],
-    curPage: number,
-    ipp: number
-  ) => {
-    onChange?.({
-      filtered,
-      paginated: paginatedList,
-      total: filtered.length,
-      currentPage: curPage,
-      itemsPerPage: ipp,
-    });
-  }, [onChange]);
+  const emitChange = useCallback(
+    (
+      filtered: FormattedTransaction[],
+      paginatedList: FormattedTransaction[],
+      curPage: number,
+      ipp: number,
+    ) => {
+      onChange?.({
+        filtered,
+        paginated: paginatedList,
+        total: filtered.length,
+        currentPage: curPage,
+        itemsPerPage: ipp,
+      });
+    },
+    [onChange],
+  );
 
   // Handlers that compute results synchronously and emit to parent
   const handleCategoryChange = (value: string) => {
@@ -185,12 +187,9 @@ export default function SearchFilterControls({
   };
 
   // Pagination handlers
-  const handlePageChange = (newPage: number) => {
+  const _handlePageChange = (newPage: number) => {
     const filtered = filteredAndSorted;
-    const pag = filtered.slice(
-      (newPage - 1) * itemsPerPage,
-      newPage * itemsPerPage
-    );
+    const pag = filtered.slice((newPage - 1) * itemsPerPage, newPage * itemsPerPage);
     setCurrentPage(newPage);
     emitChange(filtered, pag, newPage, itemsPerPage);
   };
@@ -242,9 +241,7 @@ export default function SearchFilterControls({
             {/* Items per page */}
             <Select
               value={itemsPerPage.toString()}
-              onValueChange={(value) =>
-                handleItemsPerPageChange(parseInt(value))
-              }
+              onValueChange={(value) => handleItemsPerPageChange(parseInt(value))}
             >
               <SelectTrigger className="bg-input border-input text-muted-foreground focus-visible:ring-ring shadow-sm min-w-[110px]">
                 <SelectValue />
@@ -257,7 +254,7 @@ export default function SearchFilterControls({
               </SelectContent>
             </Select>
           </div>
-          
+
           {/* Right: Pagination
           <div className="flex items-center gap-1 ml-auto">
             <button

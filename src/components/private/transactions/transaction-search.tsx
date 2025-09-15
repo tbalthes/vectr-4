@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+
 import { SearchInput } from "@/components/ui/search-input";
-import { FormattedTransaction } from "@/types/transactions";
+import type { FormattedTransaction } from "@/types/transactions";
 
 interface TransactionSearchProps {
   transactions: FormattedTransaction[];

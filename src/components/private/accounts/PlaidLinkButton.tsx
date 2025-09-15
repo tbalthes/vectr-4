@@ -1,21 +1,22 @@
-"use client";
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CreditCard, AlertCircle } from "lucide-react";
-import { accountToasts } from "@/lib/notifications/account-notifications";
+'use client';
+import React, { useState } from 'react';
+import { Loader2, CreditCard, AlertCircle } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { accountToasts } from '@/lib/notifications/account-notifications';
 
 interface PlaidLinkButtonProps {
   onAccountConnected?: () => void;
-  variant?: "default" | "outline" | "secondary";
-  size?: "default" | "sm" | "lg";
+  variant?: 'default' | 'outline' | 'secondary';
+  size?: 'default' | 'sm' | 'lg';
   className?: string;
 }
 
 export function PlaidLinkButton({
   onAccountConnected,
-  variant = "default",
-  size = "default",
+  variant = 'default',
+  size = 'default',
   className,
 }: PlaidLinkButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,38 +28,32 @@ export function PlaidLinkButton({
 
     try {
       // Create link token
-      const tokenResponse = await fetch(
-        "/api/aggregator/plaid/create_link_token",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const tokenResponse = await fetch('/api/aggregator/plaid/create_link_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
 
       if (!tokenResponse.ok) {
         const errorData = await tokenResponse.json();
-        throw new Error(errorData.error || "Failed to create link token");
+        throw new Error(errorData.error || 'Failed to create link token');
       }
 
       const { link_token } = await tokenResponse.json();
 
       // Store the link token and callback info in sessionStorage for the redirect
-      sessionStorage.setItem("plaid_link_token", link_token);
-      sessionStorage.setItem("plaid_link_redirect", window.location.href);
+      sessionStorage.setItem('plaid_link_token', link_token);
+      sessionStorage.setItem('plaid_link_redirect', window.location.href);
 
       if (onAccountConnected) {
-        sessionStorage.setItem("plaid_link_callback", "true");
+        sessionStorage.setItem('plaid_link_callback', 'true');
       }
 
       // Redirect to Plaid Link page
-      window.location.href = `/link-account?token=${encodeURIComponent(
-        link_token
-      )}`;
+      window.location.href = `/link-account?token=${encodeURIComponent(link_token)}`;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to start account linking";
+      const errorMessage = err instanceof Error ? err.message : 'Failed to start account linking';
       setError(errorMessage);
-      accountToasts.syncError("Plaid Link", errorMessage, true);
+      accountToasts.syncError('Plaid Link', errorMessage, true);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +62,7 @@ export function PlaidLinkButton({
   return (
     <>
       <Button
-        onClick={handlePlaidLink}
+        onClick={() => void handlePlaidLink()}
         disabled={isLoading}
         variant={variant}
         size={size}

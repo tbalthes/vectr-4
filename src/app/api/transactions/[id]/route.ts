@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 
 interface DetailedTransaction {
   id: string;
@@ -24,15 +25,11 @@ interface DetailedTransaction {
   custom_fields: Record<string, string | number | boolean>;
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Get the authenticated user from the client
     const requestCookies = await cookies();
     const supabase = createRouteHandlerClient({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cookies: () => requestCookies as any,
     });
 
@@ -42,33 +39,24 @@ export async function GET(
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return NextResponse.json(
-        { error: "User not authenticated" },
-        { status: 401 }
-      );
+      console.error('Authentication error:', userError);
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    const { id: transactionId } = (await params) as { id: string };
-    console.log(
-      "API: Fetching detailed transaction:",
-      transactionId,
-      "for user:",
-      user.id
-    );
+    const { id: transactionId } = params as { id: string };
+    console.log('API: Fetching detailed transaction:', transactionId, 'for user:', user.id);
 
     // Create a service role client to bypass RLS
     const serviceSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
     // Fetch detailed transaction data with category information
-    const { data: transactionData, error: transactionError } =
-      await serviceSupabase
-        .from("transactions")
-        .select(
-          `
+    const { data: transactionData, error: transactionError } = await serviceSupabase
+      .from('transactions')
+      .select(
+        `
         id,
         transaction_number,
         date,
@@ -93,18 +81,15 @@ export async function GET(
             parent_id
           )
         )
-      `
-        )
-        .eq("id", transactionId)
-        .eq("user_id", user.id)
-        .single();
+      `,
+      )
+      .eq('id', transactionId)
+      .eq('user_id', user.id)
+      .single();
 
     if (transactionError || !transactionData) {
-      console.error("Transaction fetch error:", transactionError);
-      return NextResponse.json(
-        { error: "Transaction not found" },
-        { status: 404 }
-      );
+      console.error('Transaction fetch error:', transactionError);
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
     }
 
     // Extract merchant and category data
@@ -128,9 +113,9 @@ export async function GET(
     if (transactionData.category_id) {
       try {
         const { data: directCat, error: directCatErr } = await serviceSupabase
-          .from("categories")
-          .select("category_id, name, plain_name, icon, parent_id")
-          .eq("category_id", transactionData.category_id)
+          .from('categories')
+          .select('category_id, name, plain_name, icon, parent_id')
+          .eq('category_id', transactionData.category_id)
           .limit(1)
           .maybeSingle();
 
@@ -144,8 +129,8 @@ export async function GET(
         }
       } catch (e) {
         console.warn(
-          "Failed to fetch direct category_id, falling back to transaction_categories",
-          e
+          'Failed to fetch direct category_id, falling back to transaction_categories',
+          e,
         );
       }
     }
@@ -154,22 +139,18 @@ export async function GET(
     if (!category) {
       try {
         const { data: txCat, error: txCatErr } = await serviceSupabase
-          .from("transaction_categories")
-          .select("category_id")
-          .eq("transaction_id", transactionId)
+          .from('transaction_categories')
+          .select('category_id')
+          .eq('transaction_id', transactionId)
           .limit(1)
           .maybeSingle();
 
-        if (
-          !txCatErr &&
-          txCat &&
-          (txCat as Record<string, unknown>).category_id
-        ) {
+        if (!txCatErr && txCat && (txCat as Record<string, unknown>).category_id) {
           const cid = String((txCat as Record<string, unknown>).category_id);
           const { data: catRow, error: catErr } = await serviceSupabase
-            .from("categories")
-            .select("category_id, name, plain_name, icon, parent_id")
-            .eq("category_id", cid)
+            .from('categories')
+            .select('category_id, name, plain_name, icon, parent_id')
+            .eq('category_id', cid)
             .limit(1)
             .maybeSingle();
 
@@ -184,8 +165,8 @@ export async function GET(
         }
       } catch (e) {
         console.warn(
-          "Failed to fetch transaction_categories mapping or category row, falling back to merchant categories",
-          e
+          'Failed to fetch transaction_categories mapping or category row, falling back to merchant categories',
+          e,
         );
       }
     }
@@ -203,9 +184,9 @@ export async function GET(
     // If category has a parent_id, fetch the parent category
     if (category?.parent_id) {
       const { data: parentCategory, error: parentError } = await serviceSupabase
-        .from("categories")
-        .select("name, plain_name")
-        .eq("category_id", category.parent_id)
+        .from('categories')
+        .select('name, plain_name')
+        .eq('category_id', category.parent_id)
         .single();
 
       if (!parentError && parentCategory) {
@@ -215,29 +196,21 @@ export async function GET(
 
     // Process custom fields from user_metadata
     const customFields: Record<string, string | number | boolean> = {};
-    if (
-      transactionData.user_metadata &&
-      typeof transactionData.user_metadata === "object"
-    ) {
+    if (transactionData.user_metadata && typeof transactionData.user_metadata === 'object') {
       Object.entries(transactionData.user_metadata).forEach(([key, value]) => {
         // Skip internal/system fields
         const isSystemField =
-          key.startsWith("_") ||
-          key.toLowerCase().includes("rowindex") ||
-          key.toLowerCase().includes("formattedamount") ||
-          key.toLowerCase().includes("index");
+          key.startsWith('_') ||
+          key.toLowerCase().includes('rowindex') ||
+          key.toLowerCase().includes('formattedamount') ||
+          key.toLowerCase().includes('index');
 
-        if (
-          !isSystemField &&
-          value !== null &&
-          value !== undefined &&
-          value !== ""
-        ) {
+        if (!isSystemField && value !== null && value !== undefined && value !== '') {
           // Only include values that match our expected types
           if (
-            typeof value === "string" ||
-            typeof value === "number" ||
-            typeof value === "boolean"
+            typeof value === 'string' ||
+            typeof value === 'number' ||
+            typeof value === 'boolean'
           ) {
             customFields[key] = value;
           }
@@ -256,41 +229,30 @@ export async function GET(
       user_metadata: transactionData.user_metadata,
       needs_review: transactionData.needs_review,
       transaction_note: transactionData.transaction_note,
-      merchant_name: merchant?.name || "Unknown",
+      merchant_name: merchant?.name || 'Unknown',
       merchant_logo_url: merchant?.logo_url || null,
-      merchant_id:
-        merchant?.merchant_id || (transactionData.merchant_id ?? null),
-      category_name: category?.name || "Uncategorized",
-      category_icon: category?.icon || "HelpCircle",
+      merchant_id: merchant?.merchant_id || (transactionData.merchant_id ?? null),
+      category_name: category?.name || 'Uncategorized',
+      category_icon: category?.icon || 'HelpCircle',
       category_id: category?.id ?? null,
       parent_category_name: parentCategoryName,
       custom_fields: customFields,
     };
 
-    console.log(
-      "API: Successfully fetched detailed transaction:",
-      transactionId
-    );
+    console.log('API: Successfully fetched detailed transaction:', transactionId);
 
     return NextResponse.json({ data: detailedTransaction });
   } catch (err) {
-    console.error("API route unexpected error:", err);
-    return NextResponse.json(
-      { error: "Unexpected server error" },
-      { status: 500 }
-    );
+    console.error('API route unexpected error:', err);
+    return NextResponse.json({ error: 'Unexpected server error' }, { status: 500 });
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Get the authenticated user from the client
     const requestCookies = await cookies();
     const supabase = createRouteHandlerClient({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cookies: () => requestCookies as any,
     });
 
@@ -300,49 +262,39 @@ export async function PUT(
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return NextResponse.json(
-        { error: "User not authenticated" },
-        { status: 401 }
-      );
+      console.error('Authentication error:', userError);
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    const { id: transactionId } = (await params) as { id: string };
+    const { id: transactionId } = params as { id: string };
     const updateData = await request.json();
 
     console.log(
-      "API: Updating transaction:",
+      'API: Updating transaction:',
       transactionId,
-      "for user:",
+      'for user:',
       user.id,
-      "with data:",
-      updateData
+      'with data:',
+      updateData,
     );
 
     // Create a service role client to bypass RLS
     const serviceSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
     // Fetch the existing transaction to ensure it belongs to the authenticated user
     const { data: existingTx, error: existingTxErr } = await serviceSupabase
-      .from("transactions")
-      .select("id, user_id")
-      .eq("id", transactionId)
+      .from('transactions')
+      .select('id, user_id')
+      .eq('id', transactionId)
       .limit(1)
       .maybeSingle();
 
     if (existingTxErr || !existingTx) {
-      console.error(
-        "Transaction not found or access denied for id:",
-        transactionId,
-        existingTxErr
-      );
-      return NextResponse.json(
-        { error: "Transaction not found" },
-        { status: 404 }
-      );
+      console.error('Transaction not found or access denied for id:', transactionId, existingTxErr);
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
     }
 
     // Prepare the update object with only allowed fields that actually exist on the
@@ -351,15 +303,15 @@ export async function PUT(
     // into merchant_id/category_id. Do NOT attempt to update non-existent
     // "merchant_name"/"category_name" columns directly.
     const allowedFields = [
-      "date",
-      "clean_description",
-      "original_description",
-      "amount",
-      "balance",
-      "transaction_note",
-      "needs_review",
-      "merchant_id",
-      "category_id",
+      'date',
+      'clean_description',
+      'original_description',
+      'amount',
+      'balance',
+      'transaction_note',
+      'needs_review',
+      'merchant_id',
+      'category_id',
     ];
 
     const updateObject: Record<string, string | number | boolean | null> = {};
@@ -373,31 +325,31 @@ export async function PUT(
 
     // If the client provided merchant_name, try to resolve it to merchant_id
     if (updateData.merchant_name !== undefined) {
-      const name = String(updateData.merchant_name || "").trim();
-      if (name === "") {
+      const name = String(updateData.merchant_name || '').trim();
+      if (name === '') {
         updateObject.merchant_id = null;
       } else {
         try {
           // Try exact match first, then case-insensitive match
           type IdRow = { merchant_id?: string | number | null } | null;
           const { data: merchantExact } = (await serviceSupabase
-            .from("merchants")
-            .select("merchant_id")
-            .eq("name", name)
+            .from('merchants')
+            .select('merchant_id')
+            .eq('name', name)
             .limit(1)
             .maybeSingle()) as { data: IdRow };
 
-          if (merchantExact && merchantExact.merchant_id) {
+          if (merchantExact?.merchant_id) {
             updateObject.merchant_id = merchantExact.merchant_id as string;
           } else {
             const { data: merchantLike } = (await serviceSupabase
-              .from("merchants")
-              .select("merchant_id")
-              .ilike("name", name)
+              .from('merchants')
+              .select('merchant_id')
+              .ilike('name', name)
               .limit(1)
               .maybeSingle()) as { data: IdRow };
 
-            if (merchantLike && merchantLike.merchant_id) {
+            if (merchantLike?.merchant_id) {
               updateObject.merchant_id = merchantLike.merchant_id as string;
             } else {
               // No matching merchant found; set null so transaction is uncoupled
@@ -405,10 +357,7 @@ export async function PUT(
             }
           }
         } catch (lookupErr) {
-          console.error(
-            "Error resolving merchant_name -> merchant_id:",
-            lookupErr
-          );
+          console.error('Error resolving merchant_name -> merchant_id:', lookupErr);
           updateObject.merchant_id = null;
         }
       }
@@ -419,13 +368,13 @@ export async function PUT(
 
     // If the client provided category_name, try to resolve it to category_id
     if (updateData.category_name !== undefined) {
-      const cname = String(updateData.category_name || "").trim();
+      const cname = String(updateData.category_name || '').trim();
       debugCategoryLookup = {
         raw: updateData.category_name,
         trimmed: cname,
         length: cname.length,
       };
-      if (cname === "") {
+      if (cname === '') {
         updateObject.category_id = null;
       } else {
         try {
@@ -433,85 +382,76 @@ export async function PUT(
           // Do NOT auto-create categories here; an explicit match is required.
           type IdRow = { category_id?: string | number | null } | null;
 
-          console.log(
-            "API: resolving category_name -> id for:",
-            JSON.stringify(cname)
-          );
+          console.log('API: resolving category_name -> id for:', JSON.stringify(cname));
 
           const { data: catExact, error: catExactErr } = (await serviceSupabase
-            .from("categories")
-            .select("category_id, name")
-            .eq("name", cname)
+            .from('categories')
+            .select('category_id, name')
+            .eq('name', cname)
             .limit(1)
             .maybeSingle()) as { data: IdRow; error?: unknown };
 
-          console.log("API: category exact lookup result:", {
+          console.log('API: category exact lookup result:', {
             catExact,
             catExactErr,
           });
           debugCategoryLookup ||= {};
-          (debugCategoryLookup as Record<string, unknown>).exact =
-            catExact ?? null;
+          debugCategoryLookup.exact = catExact ?? null;
 
-          if (catExact?.category_id != null) {
-            updateObject.category_id = String(catExact.category_id!);
+          if (catExact?.category_id !== null) {
+            updateObject.category_id = String(catExact?.category_id !== null);
           } else {
             // try ilike without wildcard first (case-insensitive exact)
             const { data: catLike, error: catLikeErr } = (await serviceSupabase
-              .from("categories")
-              .select("category_id, name")
-              .ilike("name", cname)
+              .from('categories')
+              .select('category_id, name')
+              .ilike('name', cname)
               .limit(1)
               .maybeSingle()) as { data: IdRow; error?: unknown };
 
-            console.log("API: category ilike lookup result (no wildcard):", {
+            console.log('API: category ilike lookup result (no wildcard):', {
               catLike,
               catLikeErr,
             });
-            (debugCategoryLookup as Record<string, unknown>).ilike =
-              catLike ?? null;
+            debugCategoryLookup.ilike = catLike ?? null;
 
-            if (catLike?.category_id != null) {
-              updateObject.category_id = String(catLike.category_id!);
+            if (catLike && catLike.category_id !== null && catLike.category_id !== undefined) {
+              updateObject.category_id = String(catLike.category_id);
             } else {
               // final attempt: wildcard ilike
-              const safe = cname.replace(/%/g, "").trim();
+              const safe = cname.replace(/%/g, '').trim();
               const pattern = `%${safe}%`;
-              const { data: catLikeWildcard, error: catLikeWildcardErr } =
-                (await serviceSupabase
-                  .from("categories")
-                  .select("category_id, name")
-                  .ilike("name", pattern)
-                  .limit(1)
-                  .maybeSingle()) as { data: IdRow; error?: unknown };
+              const { data: catLikeWildcard, error: catLikeWildcardErr } = (await serviceSupabase
+                .from('categories')
+                .select('category_id, name')
+                .ilike('name', pattern)
+                .limit(1)
+                .maybeSingle()) as { data: IdRow; error?: unknown };
 
-              console.log("API: category ilike lookup result (wildcard):", {
+              console.log('API: category ilike lookup result (wildcard):', {
                 catLikeWildcard,
                 catLikeWildcardErr,
                 pattern,
               });
-              (debugCategoryLookup as Record<string, unknown>).wildcard = {
+              debugCategoryLookup.wildcard = {
                 row: catLikeWildcard ?? null,
                 pattern,
               };
 
-              if (catLikeWildcard?.category_id != null) {
-                updateObject.category_id = String(catLikeWildcard.category_id!);
+              if (catLikeWildcard && catLikeWildcard.category_id !== null && catLikeWildcard.category_id !== undefined) {
+                updateObject.category_id = String(catLikeWildcard.category_id);
               } else {
                 // No match found; explicitly unset mapping (do not create new category)
                 console.log(
-                  "API: no category match found for name, will unset category mapping for transaction"
+                  'API: no category match found for name, will unset category mapping for transaction',
                 );
-                (debugCategoryLookup as Record<string, unknown>).matched = null;
+                debugCategoryLookup.matched = null;
                 updateObject.category_id = null;
               }
             }
           }
         } catch (lookupErr) {
-          console.error(
-            "Error resolving category_name -> category_id:",
-            lookupErr
-          );
+          console.error('Error resolving category_name -> category_id:', lookupErr);
           updateObject.category_id = null;
         }
       }
@@ -523,35 +463,34 @@ export async function PUT(
     //    persist the provided names into user_metadata.manual_* as a fallback.
 
     const scalarFields = [
-      "date",
-      "clean_description",
-      "original_description",
-      "amount",
-      "balance",
-      "transaction_note",
-      "needs_review",
+      'date',
+      'clean_description',
+      'original_description',
+      'amount',
+      'balance',
+      'transaction_note',
+      'needs_review',
     ];
 
     const baseUpdate: Record<string, unknown> = {};
     for (const k of scalarFields) {
-      if (updateObject[k] !== undefined) baseUpdate[k] = updateObject[k];
+      if (updateObject[k] !== undefined) {
+        baseUpdate[k] = updateObject[k];
+      }
     }
 
     // Apply base update
     const { data: baseUpdated, error: baseError } = await serviceSupabase
-      .from("transactions")
+      .from('transactions')
       .update(baseUpdate)
-      .eq("id", transactionId)
-      .eq("user_id", user.id)
+      .eq('id', transactionId)
+      .eq('user_id', user.id)
       .select()
       .maybeSingle();
 
     if (baseError) {
-      console.error("Transaction base update error:", baseError);
-      return NextResponse.json(
-        { error: "Failed to update transaction" },
-        { status: 400 }
-      );
+      console.error('Transaction base update error:', baseError);
+      return NextResponse.json({ error: 'Failed to update transaction' }, { status: 400 });
     }
 
     let updatedTransaction = baseUpdated;
@@ -560,16 +499,17 @@ export async function PUT(
     // attempt to update a transactions.category_id column because this schema
     // uses a join table `transaction_categories` to map transactions -> categories.
     const idUpdate: Record<string, unknown> = {};
-    if (updateObject.merchant_id !== undefined)
+    if (updateObject.merchant_id !== undefined) {
       idUpdate.merchant_id = updateObject.merchant_id;
+    }
 
     if (Object.keys(idUpdate).length > 0) {
       try {
         const { data: idUpdated, error: idErr } = await serviceSupabase
-          .from("transactions")
+          .from('transactions')
           .update(idUpdate)
-          .eq("id", transactionId)
-          .eq("user_id", user.id)
+          .eq('id', transactionId)
+          .eq('user_id', user.id)
           .select()
           .maybeSingle();
 
@@ -580,14 +520,14 @@ export async function PUT(
         updatedTransaction = idUpdated || updatedTransaction;
       } catch (idErr) {
         console.warn(
-          "Merchant ID update failed, falling back to merging names into user_metadata:",
-          idErr
+          'Merchant ID update failed, falling back to merging names into user_metadata:',
+          idErr,
         );
         try {
           const { data: existingRow } = await serviceSupabase
-            .from("transactions")
-            .select("user_metadata")
-            .eq("id", transactionId)
+            .from('transactions')
+            .select('user_metadata')
+            .eq('id', transactionId)
             .limit(1)
             .maybeSingle();
 
@@ -597,46 +537,34 @@ export async function PUT(
           let existingMetaRecord: Record<string, unknown> = {};
           if (existingRow) {
             const er = existingRow as MetaRow;
-            if (
-              er &&
-              er.user_metadata &&
-              typeof er.user_metadata === "object"
-            ) {
-              existingMetaRecord = er.user_metadata as Record<string, unknown>;
+            if (er?.user_metadata && typeof er.user_metadata === 'object') {
+              existingMetaRecord = er.user_metadata;
             }
           }
 
           const mergedMeta = {
             ...existingMetaRecord,
-            manual_merchant:
-              updateData.merchant_name ?? existingMetaRecord.manual_merchant,
-            manual_category:
-              updateData.category_name ?? existingMetaRecord.manual_category,
+            manual_merchant: updateData.merchant_name ?? existingMetaRecord.manual_merchant,
+            manual_category: updateData.category_name ?? existingMetaRecord.manual_category,
           };
 
           const { data: metaUpdated, error: metaErr } = await serviceSupabase
-            .from("transactions")
+            .from('transactions')
             .update({ user_metadata: mergedMeta })
-            .eq("id", transactionId)
-            .eq("user_id", user.id)
+            .eq('id', transactionId)
+            .eq('user_id', user.id)
             .select()
             .maybeSingle();
 
           if (metaErr) {
-            console.error("Failed to persist fallback user_metadata:", metaErr);
-            return NextResponse.json(
-              { error: "Failed to update transaction" },
-              { status: 400 }
-            );
+            console.error('Failed to persist fallback user_metadata:', metaErr);
+            return NextResponse.json({ error: 'Failed to update transaction' }, { status: 400 });
           }
 
           updatedTransaction = metaUpdated || updatedTransaction;
         } catch (metaEx) {
-          console.error("Error during metadata fallback:", metaEx);
-          return NextResponse.json(
-            { error: "Failed to update transaction" },
-            { status: 400 }
-          );
+          console.error('Error during metadata fallback:', metaEx);
+          return NextResponse.json({ error: 'Failed to update transaction' }, { status: 400 });
         }
       }
     }
@@ -644,125 +572,110 @@ export async function PUT(
     // Handle category mapping via the join table `transaction_categories` and primary_category_id.
     if (updateObject.category_id !== undefined) {
       try {
-        console.log("API: category_id to apply:", updateObject.category_id);
+        console.log('API: category_id to apply:', updateObject.category_id);
 
         if (updateObject.category_id !== null) {
           // First, remove existing mappings to avoid duplicates
           const { error: delErr } = await serviceSupabase
-            .from("transaction_categories")
+            .from('transaction_categories')
             .delete()
-            .eq("transaction_id", transactionId);
+            .eq('transaction_id', transactionId);
 
           if (delErr) {
-            console.error(
-              "API: error deleting existing transaction_categories rows:",
-              delErr
-            );
+            console.error('API: error deleting existing transaction_categories rows:', delErr);
             // Don't throw here, continue with the insert
           }
 
           // Use the RPC function to properly handle both join table and category_id
           const { data: rpcResult, error: rpcErr } = await serviceSupabase.rpc(
-            "add_transaction_category_v2",
+            'add_transaction_category_v2',
             {
               p_tx_id: transactionId,
               p_cat_id: updateObject.category_id,
               p_user_id: user.id,
-            }
+            },
           );
 
           if (rpcErr) {
-            console.error(
-              "API: error calling add_transaction_category_v2 RPC:",
-              rpcErr
-            );
+            console.error('API: error calling add_transaction_category_v2 RPC:', rpcErr);
             throw rpcErr;
           }
 
-          console.log("API: add_transaction_category_v2 result:", rpcResult);
+          console.log('API: add_transaction_category_v2 result:', rpcResult);
 
           // Update category_id directly instead of primary_category_id
           const { error: categoryErr } = await serviceSupabase
-            .from("transactions")
+            .from('transactions')
             .update({ category_id: updateObject.category_id })
-            .eq("id", transactionId)
-            .eq("user_id", user.id);
+            .eq('id', transactionId)
+            .eq('user_id', user.id);
 
           if (categoryErr) {
-            console.warn("API: warning updating category_id:", categoryErr);
+            console.warn('API: warning updating category_id:', categoryErr);
             // Don't throw here, the join table is the main thing
           }
         } else {
           // Remove existing mappings for this transaction if category_id is null
           const { error: delErr } = await serviceSupabase
-            .from("transaction_categories")
+            .from('transaction_categories')
             .delete()
-            .eq("transaction_id", transactionId);
+            .eq('transaction_id', transactionId);
 
           if (delErr) {
-            console.error(
-              "API: error deleting existing transaction_categories rows:",
-              delErr
-            );
+            console.error('API: error deleting existing transaction_categories rows:', delErr);
             throw delErr;
           }
 
           // Also clear primary_category_id when removing category
           const { error: clearErr } = await serviceSupabase
-            .from("transactions")
+            .from('transactions')
             .update({ primary_category_id: null })
-            .eq("id", transactionId)
-            .eq("user_id", user.id);
+            .eq('id', transactionId)
+            .eq('user_id', user.id);
 
           if (clearErr) {
-            console.error("API: error clearing primary_category_id:", clearErr);
+            console.error('API: error clearing primary_category_id:', clearErr);
             throw clearErr;
           }
         }
 
         // Re-fetch a fresh transactions row to reflect any changes
         const { data: refetched } = await serviceSupabase
-          .from("transactions")
-          .select("*")
-          .eq("id", transactionId)
-          .eq("user_id", user.id)
+          .from('transactions')
+          .select('*')
+          .eq('id', transactionId)
+          .eq('user_id', user.id)
           .maybeSingle();
 
         updatedTransaction = refetched || updatedTransaction;
         // Also fetch the mapping to include in the response for debugging/confirmation
         try {
           const { data: mappingRows, error: mappingErr } = await serviceSupabase
-            .from("transaction_categories")
-            .select("category_id, categories(category_id, name, icon)")
-            .eq("transaction_id", transactionId);
+            .from('transaction_categories')
+            .select('category_id, categories(category_id, name, icon)')
+            .eq('transaction_id', transactionId);
 
           if (!mappingErr) {
-            console.log(
-              "API: transaction_categories mapping rows after update:",
-              mappingRows
-            );
+            console.log('API: transaction_categories mapping rows after update:', mappingRows);
           } else {
             console.warn(
-              "API: failed to fetch transaction_categories mapping after update:",
-              mappingErr
+              'API: failed to fetch transaction_categories mapping after update:',
+              mappingErr,
             );
           }
         } catch (e) {
-          console.warn(
-            "API: exception fetching transaction_categories mapping after update:",
-            e
-          );
+          console.warn('API: exception fetching transaction_categories mapping after update:', e);
         }
       } catch (catErr) {
         console.warn(
-          "Category mapping update failed, falling back to merging names into user_metadata:",
-          catErr
+          'Category mapping update failed, falling back to merging names into user_metadata:',
+          catErr,
         );
         try {
           const { data: existingRow } = await serviceSupabase
-            .from("transactions")
-            .select("user_metadata")
-            .eq("id", transactionId)
+            .from('transactions')
+            .select('user_metadata')
+            .eq('id', transactionId)
             .limit(1)
             .maybeSingle();
 
@@ -772,99 +685,74 @@ export async function PUT(
           let existingMetaRecord: Record<string, unknown> = {};
           if (existingRow) {
             const er = existingRow as MetaRow;
-            if (
-              er &&
-              er.user_metadata &&
-              typeof er.user_metadata === "object"
-            ) {
-              existingMetaRecord = er.user_metadata as Record<string, unknown>;
+            if (er?.user_metadata && typeof er.user_metadata === 'object') {
+              existingMetaRecord = er.user_metadata;
             }
           }
 
           const mergedMeta = {
             ...existingMetaRecord,
-            manual_merchant:
-              updateData.merchant_name ?? existingMetaRecord.manual_merchant,
-            manual_category:
-              updateData.category_name ?? existingMetaRecord.manual_category,
+            manual_merchant: updateData.merchant_name ?? existingMetaRecord.manual_merchant,
+            manual_category: updateData.category_name ?? existingMetaRecord.manual_category,
           };
 
           const { data: metaUpdated, error: metaErr } = await serviceSupabase
-            .from("transactions")
+            .from('transactions')
             .update({ user_metadata: mergedMeta })
-            .eq("id", transactionId)
-            .eq("user_id", user.id)
+            .eq('id', transactionId)
+            .eq('user_id', user.id)
             .select()
             .maybeSingle();
 
           if (metaErr) {
-            console.error("Failed to persist fallback user_metadata:", metaErr);
-            return NextResponse.json(
-              { error: "Failed to update transaction" },
-              { status: 400 }
-            );
+            console.error('Failed to persist fallback user_metadata:', metaErr);
+            return NextResponse.json({ error: 'Failed to update transaction' }, { status: 400 });
           }
 
           updatedTransaction = metaUpdated || updatedTransaction;
         } catch (metaEx) {
-          console.error(
-            "Error during metadata fallback for category mapping:",
-            metaEx
-          );
-          return NextResponse.json(
-            { error: "Failed to update transaction" },
-            { status: 400 }
-          );
+          console.error('Error during metadata fallback for category mapping:', metaEx);
+          return NextResponse.json({ error: 'Failed to update transaction' }, { status: 400 });
         }
       }
     }
 
     if (!updatedTransaction) {
-      console.error("Transaction update error: no updated row returned");
-      return NextResponse.json(
-        { error: "Failed to update transaction" },
-        { status: 400 }
-      );
+      console.error('Transaction update error: no updated row returned');
+      return NextResponse.json({ error: 'Failed to update transaction' }, { status: 400 });
     }
 
-    console.log("API: Successfully updated transaction:", transactionId);
+    console.log('API: Successfully updated transaction:', transactionId);
 
     // For debugging, attempt to fetch any transaction_categories rows to return
     let mappingRows: unknown = null;
     try {
       const { data: mr } = await serviceSupabase
-        .from("transaction_categories")
-        .select("category_id, categories(category_id, name, icon)")
-        .eq("transaction_id", transactionId);
+        .from('transaction_categories')
+        .select('category_id, categories(category_id, name, icon)')
+        .eq('transaction_id', transactionId);
       mappingRows = mr;
     } catch (e) {
-      console.warn("API: failed to fetch mapping rows for response:", e);
+      console.warn('API: failed to fetch mapping rows for response:', e);
     }
 
     return NextResponse.json({
       data: updatedTransaction,
       mapping: mappingRows,
       debug: debugCategoryLookup,
-      message: "Transaction updated successfully",
+      message: 'Transaction updated successfully',
     });
   } catch (err) {
-    console.error("API route unexpected error:", err);
-    return NextResponse.json(
-      { error: "Unexpected server error" },
-      { status: 500 }
-    );
+    console.error('API route unexpected error:', err);
+    return NextResponse.json({ error: 'Unexpected server error' }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Get the authenticated user from the client
     const requestCookies = await cookies();
     const supabase = createRouteHandlerClient({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cookies: () => requestCookies as any,
     });
 
@@ -874,52 +762,38 @@ export async function DELETE(
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return NextResponse.json(
-        { error: "User not authenticated" },
-        { status: 401 }
-      );
+      console.error('Authentication error:', userError);
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
     const transactionId = params.id;
-    console.log(
-      "API: Deleting transaction:",
-      transactionId,
-      "for user:",
-      user.id
-    );
+    console.log('API: Deleting transaction:', transactionId, 'for user:', user.id);
 
     // Create a service role client to bypass RLS
     const serviceSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
     // Delete the transaction
     const { error: deleteError } = await serviceSupabase
-      .from("transactions")
+      .from('transactions')
       .delete()
-      .eq("id", transactionId)
-      .eq("user_id", user.id);
+      .eq('id', transactionId)
+      .eq('user_id', user.id);
 
     if (deleteError) {
-      console.error("Transaction delete error:", deleteError);
-      return NextResponse.json(
-        { error: "Failed to delete transaction" },
-        { status: 400 }
-      );
+      console.error('Transaction delete error:', deleteError);
+      return NextResponse.json({ error: 'Failed to delete transaction' }, { status: 400 });
     }
 
-    console.log("API: Successfully deleted transaction:", transactionId);
+    console.log('API: Successfully deleted transaction:', transactionId);
 
     return NextResponse.json({
-      message: "Transaction deleted successfully",
+      message: 'Transaction deleted successfully',
     });
   } catch (err) {
-    console.error("API route unexpected error:", err);
-    return NextResponse.json(
-      { error: "Unexpected server error" },
-      { status: 500 }
-    );
+    console.error('API route unexpected error:', err);
+    return NextResponse.json({ error: 'Unexpected server error' }, { status: 500 });
   }
 }

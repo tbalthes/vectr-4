@@ -1,27 +1,29 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search } from 'lucide-react';
+import type { IconName } from 'lucide-react/dynamic';
+import { DynamicIcon, iconNames } from 'lucide-react/dynamic';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search } from "lucide-react";
-import { DynamicIcon, iconNames, IconName } from "lucide-react/dynamic";
-import { cn } from "@/lib/utils/utils";
+} from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils/utils';
 
 interface Category {
   category_id: string;
@@ -48,21 +50,21 @@ interface CreateCategoryModalProps {
 
 // Mapping of parent category names to their codes
 const PARENT_CATEGORY_CODES: Record<string, string> = {
-  Entertainment: "ENTERTAINMENT",
-  "Food & Dining": "FOOD_DINING",
-  Transportation: "TRANSPORTATION",
-  Shopping: "SHOPPING",
-  "Home & Garden": "HOME_IMPROVEMENT",
-  "Bills & Utilities": "UTILITIES",
-  Healthcare: "HEALTHCARE",
-  "Financial Services": "BANK_FEES",
-  Travel: "TRAVEL",
-  Business: "BUSINESS",
-  Education: "EDUCATION",
-  "Personal Care": "PERSONAL_CARE",
-  "Gifts & Donations": "GIFTS_DONATIONS",
-  "Transfer In": "TRANSFER_IN",
-  "Transfer Out": "TRANSFER_OUT",
+  Entertainment: 'ENTERTAINMENT',
+  'Food & Dining': 'FOOD_DINING',
+  Transportation: 'TRANSPORTATION',
+  Shopping: 'SHOPPING',
+  'Home & Garden': 'HOME_IMPROVEMENT',
+  'Bills & Utilities': 'UTILITIES',
+  Healthcare: 'HEALTHCARE',
+  'Financial Services': 'BANK_FEES',
+  Travel: 'TRAVEL',
+  Business: 'BUSINESS',
+  Education: 'EDUCATION',
+  'Personal Care': 'PERSONAL_CARE',
+  'Gifts & Donations': 'GIFTS_DONATIONS',
+  'Transfer In': 'TRANSFER_IN',
+  'Transfer Out': 'TRANSFER_OUT',
   // Add more mappings as needed
 };
 
@@ -73,111 +75,67 @@ const getAllLucideIcons = (): IconName[] => {
 
 // Common icon categories for quick access - using basic icons that definitely exist
 const SUGGESTED_ICONS = {
-  "Most Popular": [
-    "home",
-    "heart",
-    "search",
-    "settings",
-    "user",
-    "mail",
-    "phone",
-    "calendar",
-    "camera",
-    "music",
-    "shopping-cart",
-    "car",
-    "coffee",
-    "gift",
-    "star",
-    "plus",
+  'Most Popular': [
+    'home',
+    'heart',
+    'search',
+    'settings',
+    'user',
+    'mail',
+    'phone',
+    'calendar',
+    'camera',
+    'music',
+    'shopping-cart',
+    'car',
+    'coffee',
+    'gift',
+    'star',
+    'plus',
   ],
-  "Money & Finance": [
-    "dollar-sign",
-    "credit-card",
-    "calculator",
-    "trending-up",
-    "trending-down",
-    "coins",
-    "receipt",
-    "banknote",
-    "wallet",
-    "briefcase",
-    "building",
+  'Money & Finance': [
+    'dollar-sign',
+    'credit-card',
+    'calculator',
+    'trending-up',
+    'trending-down',
+    'coins',
+    'receipt',
+    'banknote',
+    'wallet',
+    'briefcase',
+    'building',
   ],
   Transportation: [
-    "car",
-    "bus",
-    "train",
-    "plane",
-    "bike",
-    "fuel",
-    "map-pin",
-    "navigation",
-    "ship",
-    "truck",
-    "compass",
-    "map",
+    'car',
+    'bus',
+    'train',
+    'plane',
+    'bike',
+    'fuel',
+    'map-pin',
+    'navigation',
+    'ship',
+    'truck',
+    'compass',
+    'map',
   ],
-  "Food & Dining": [
-    "utensils",
-    "coffee",
-    "wine",
-    "apple",
-    "pizza",
-    "soup",
-    "cookie",
-    "cake",
-    "cherry",
+  'Food & Dining': [
+    'utensils',
+    'coffee',
+    'wine',
+    'apple',
+    'pizza',
+    'soup',
+    'cookie',
+    'cake',
+    'cherry',
   ],
-  Shopping: [
-    "shopping-cart",
-    "shopping-bag",
-    "store",
-    "package",
-    "gift",
-    "tag",
-    "shirt",
-  ],
-  "Home & Living": [
-    "home",
-    "bed",
-    "lightbulb",
-    "wifi",
-    "tv",
-    "sofa",
-    "wrench",
-    "key",
-    "lock",
-  ],
-  Health: [
-    "heart",
-    "activity",
-    "pill",
-    "shield",
-    "smile",
-    "brain",
-    "eye",
-    "zap",
-  ],
-  "Work & Education": [
-    "book-open",
-    "laptop",
-    "award",
-    "building",
-    "book",
-    "briefcase",
-    "monitor",
-  ],
-  Entertainment: [
-    "film",
-    "headphones",
-    "ticket",
-    "music",
-    "radio",
-    "play",
-    "pause",
-    "camera",
-  ],
+  Shopping: ['shopping-cart', 'shopping-bag', 'store', 'package', 'gift', 'tag', 'shirt'],
+  'Home & Living': ['home', 'bed', 'lightbulb', 'wifi', 'tv', 'sofa', 'wrench', 'key', 'lock'],
+  Health: ['heart', 'activity', 'pill', 'shield', 'smile', 'brain', 'eye', 'zap'],
+  'Work & Education': ['book-open', 'laptop', 'award', 'building', 'book', 'briefcase', 'monitor'],
+  Entertainment: ['film', 'headphones', 'ticket', 'music', 'radio', 'play', 'pause', 'camera'],
 };
 
 export default function CreateCategoryModal({
@@ -185,29 +143,33 @@ export default function CreateCategoryModal({
   onClose,
   onSuccess,
   userId,
-  initialName = "",
+  initialName = '',
 }: CreateCategoryModalProps) {
   const [name, setName] = useState(initialName);
-  const [description, setDescription] = useState("");
-  const [selectedIcon, setSelectedIcon] = useState("help-circle");
-  const [parentId, setParentId] = useState<string>("no-parent");
+  const [description, setDescription] = useState('');
+  const [selectedIcon, setSelectedIcon] = useState('help-circle');
+  const [parentId, setParentId] = useState<string>('no-parent');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [iconSearch, setIconSearch] = useState("");
+  const [iconSearch, setIconSearch] = useState('');
 
   // Load categories for parent selection
   const loadCategories = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (userId) params.append("user_id", userId);
+      if (userId) {
+        params.append('user_id', userId);
+      }
       const res = await fetch(`/api/categories/tree?${params}`);
-      if (!res.ok) throw new Error("Failed to load categories");
+      if (!res.ok) {
+        throw new Error('Failed to load categories');
+      }
       const data: CategoryTreeResponse = await res.json();
       setCategories(data.categories);
     } catch (error) {
-      console.error("Error loading categories:", error);
+      console.error('Error loading categories:', error);
     } finally {
       setLoading(false);
     }
@@ -215,46 +177,41 @@ export default function CreateCategoryModal({
 
   useEffect(() => {
     if (isOpen) {
-      loadCategories();
+      void loadCategories();
       setName(initialName);
     }
   }, [isOpen, initialName, loadCategories]);
 
   const handleCreate = async () => {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      return;
+    }
 
     setCreating(true);
     try {
       // Get the parent category info
       const selectedParent =
-        parentId === "no-parent"
-          ? null
-          : categories.find((cat) => cat.category_id === parentId);
+        parentId === 'no-parent' ? null : categories.find((cat) => cat.category_id === parentId);
 
       // Generate the category code
-      let categoryCode = name.trim().toUpperCase().replace(/\s+/g, "_");
+      let categoryCode = name.trim().toUpperCase().replace(/\s+/g, '_');
       if (selectedParent) {
         const parentCode =
           PARENT_CATEGORY_CODES[selectedParent.name] ||
-          selectedParent.name.toUpperCase().replace(/\s+/g, "_");
+          selectedParent.name.toUpperCase().replace(/\s+/g, '_');
         categoryCode = `${parentCode}_${categoryCode}`;
       }
 
       // Check for duplicate category codes
-      const existingCategories = categories.flatMap((cat) => [
-        cat,
-        ...cat.children,
-      ]);
+      const existingCategories = categories.flatMap((cat) => [cat, ...cat.children]);
       const isDuplicate = existingCategories.some(
         (cat) =>
           cat.name.toLowerCase() === name.trim().toLowerCase() &&
-          cat.parent_id === (parentId === "no-parent" ? null : parentId)
+          cat.parent_id === (parentId === 'no-parent' ? null : parentId),
       );
 
       if (isDuplicate) {
-        alert(
-          "A category with this name already exists in the selected parent group."
-        );
+        alert('A category with this name already exists in the selected parent group.');
         setCreating(false);
         return;
       }
@@ -265,30 +222,30 @@ export default function CreateCategoryModal({
         category: categoryCode,
         parent_category: selectedParent
           ? PARENT_CATEGORY_CODES[selectedParent.name] ||
-            selectedParent.name.toUpperCase().replace(/\s+/g, "_")
+            selectedParent.name.toUpperCase().replace(/\s+/g, '_')
           : null,
         icon: selectedIcon,
-        parent_id: parentId === "no-parent" ? null : parentId,
+        parent_id: parentId === 'no-parent' ? null : parentId,
         user_id: userId, // Pass user_id to ensure user-specific categories
       };
 
-      console.log("Creating category with payload:", payload); // Debug log
+      console.log('Creating category with payload:', payload); // Debug log
 
-      const response = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create category");
+        throw new Error('Failed to create category');
       }
 
       const newCategory = await response.json();
       onSuccess(newCategory);
       handleClose();
     } catch (error) {
-      console.error("Error creating category:", error);
+      console.error('Error creating category:', error);
       // You might want to show a toast notification here
     } finally {
       setCreating(false);
@@ -296,11 +253,11 @@ export default function CreateCategoryModal({
   };
 
   const handleClose = () => {
-    setName("");
-    setDescription("");
-    setSelectedIcon("help-circle");
-    setParentId("no-parent");
-    setIconSearch("");
+    setName('');
+    setDescription('');
+    setSelectedIcon('help-circle');
+    setParentId('no-parent');
+    setIconSearch('');
     onClose();
   };
 
@@ -308,14 +265,14 @@ export default function CreateCategoryModal({
   const topLevelCategories = categories.filter((cat) => !cat.parent_id);
 
   // Get icons to display - either search results or suggested icons
-  const getIconsToDisplay = (): { [key: string]: string[] } => {
+  const getIconsToDisplay = (): Record<string, string[]> => {
     const allIcons = getAllLucideIcons();
 
     if (iconSearch.trim()) {
       // Filter all icons based on search
       const searchLower = iconSearch.toLowerCase();
       const filteredIcons = allIcons.filter((iconName) =>
-        iconName.toLowerCase().includes(searchLower)
+        iconName.toLowerCase().includes(searchLower),
       );
 
       if (filteredIcons.length > 0) {
@@ -323,17 +280,17 @@ export default function CreateCategoryModal({
         const maxResults = 100;
         const results = filteredIcons.slice(0, maxResults);
         return {
-          "Search Results": results,
+          'Search Results': results,
         };
       } else {
-        return { "No Results": [] };
+        return { 'No Results': [] };
       }
     }
 
     // Show suggested categories when no search - convert to string arrays
-    const suggestedAsString: { [key: string]: string[] } = {};
+    const suggestedAsString: Record<string, string[]> = {};
     Object.entries(SUGGESTED_ICONS).forEach(([key, icons]) => {
-      suggestedAsString[key] = icons as string[];
+      suggestedAsString[key] = icons;
     });
     return suggestedAsString;
   };
@@ -399,10 +356,8 @@ export default function CreateCategoryModal({
             <Label>Icon & Name</Label>
             <div className="flex items-center gap-2 mt-1 p-2 border rounded">
               {renderIcon(selectedIcon)}
-              <span className="font-medium">{name || "Category Name"}</span>
-              <div className="ml-auto text-xs text-muted-foreground">
-                {selectedIcon}
-              </div>
+              <span className="font-medium">{name || 'Category Name'}</span>
+              <div className="ml-auto text-xs text-muted-foreground">{selectedIcon}</div>
             </div>
           </div>
 
@@ -424,18 +379,17 @@ export default function CreateCategoryModal({
             <ScrollArea className="h-36" type="always">
               <div className="space-y-4">
                 {Object.entries(iconsToDisplay).map(([category, icons]) => {
-                  if (icons.length === 0 && category === "No Results") {
+                  if (icons.length === 0 && category === 'No Results') {
                     return (
-                      <div
-                        key={category}
-                        className="text-center py-4 text-muted-foreground"
-                      >
+                      <div key={category} className="text-center py-4 text-muted-foreground">
                         No icons found matching &ldquo;{iconSearch}&rdquo;
                       </div>
                     );
                   }
 
-                  if (icons.length === 0) return null;
+                  if (icons.length === 0) {
+                    return null;
+                  }
 
                   return (
                     <div key={category}>
@@ -447,9 +401,8 @@ export default function CreateCategoryModal({
                             type="button"
                             onClick={() => setSelectedIcon(iconName)}
                             className={cn(
-                              "rounded hover:border border-primary transition-colors flex items-center justify-center aspect-square",
-                              selectedIcon === iconName &&
-                                "bg-primary text-primary-foreground"
+                              'rounded hover:border border-primary transition-colors flex items-center justify-center aspect-square',
+                              selectedIcon === iconName && 'bg-primary text-primary-foreground',
                             )}
                             title={iconName} // Tooltip showing icon name
                           >
@@ -494,11 +447,11 @@ export default function CreateCategoryModal({
             Cancel
           </Button>
           <Button
-            onClick={handleCreate}
+            onClick={() => void handleCreate()}
             disabled={!name.trim() || creating}
             className="bg-primary hover:bg-primary/90"
           >
-            {creating ? "Creating..." : "Save"}
+            {creating ? 'Creating...' : 'Save'}
           </Button>
         </DialogFooter>
       </DialogContent>

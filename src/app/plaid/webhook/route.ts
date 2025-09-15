@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
 // POST /plaid/webhook
 // Legacy webhook endpoint - redirects to new aggregator webhook

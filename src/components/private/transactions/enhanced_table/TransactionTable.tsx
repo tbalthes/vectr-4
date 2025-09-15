@@ -1,17 +1,13 @@
-"use client";
+'use client';
 
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import {
-  Table,
-  TableBody,
-  TableHeader,
-  TableRow,
-  TableHead,
-} from "@/components/ui/table";
-import { CardNp, CardNpContent } from "@/components/ui/card-zero-pad";
-import { TransactionRow } from "./TransactionRow";
-import { FormattedTransaction } from "@/types/transactions";
-import SearchFilterControls from "./SearchFilterControls";
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+
+import { TransactionRow } from './TransactionRow';
+import SearchFilterControls from './SearchFilterControls';
+
+import { Table, TableBody, TableHeader, TableRow, TableHead } from '@/components/ui/table';
+import { CardNp, CardNpContent } from '@/components/ui/card-zero-pad';
+import type { FormattedTransaction } from '@/types/transactions';
 
 interface TransactionTableProps {
   // Step 2: Update the props to expect FormattedTransaction[]
@@ -33,21 +29,19 @@ export function TransactionTable({
   onUpdateNote,
 }: TransactionTableProps) {
   // Infinite scroll state - optimized for better UX matching the screenshot
-  const [displayedTransactions, setDisplayedTransactions] = useState<
-    FormattedTransaction[]
-  >([]);
+  const [displayedTransactions, setDisplayedTransactions] = useState<FormattedTransaction[]>([]);
   const [filteredAndSortedTransactions, setFilteredAndSortedTransactions] =
     useState<FormattedTransaction[]>(transactions);
   const [total, setTotal] = useState<number>(transactions.length);
   const [loadedCount, setLoadedCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
+
   // Infinite scroll settings - adjusted to match screenshot visibility
   const INITIAL_LOAD = 20; // Show 20 transactions initially (matches screenshot)
   const LOAD_MORE_COUNT = 15; // Load 15 more when scrolling for smooth experience
-  
+
   // Refs for intersection observer
-  const lastTransactionElementRef = useRef<HTMLTableRowElement>(null);
+  const _lastTransactionElementRef = useRef<HTMLTableRowElement | null>(null);
   const observer = useRef<IntersectionObserver | null>(null);
 
   const uniqueCategories = useMemo(() => {
@@ -59,16 +53,20 @@ export function TransactionTable({
   // Intersection Observer callback for infinite scroll
   const lastTransactionRef = useCallback(
     (node: HTMLTableRowElement | null) => {
-      if (isLoading) return;
-      if (observer.current) observer.current.disconnect();
-      
+      if (isLoading) {
+        return;
+      }
+      if (observer.current) {
+        observer.current.disconnect();
+      }
+
       observer.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting && loadedCount < filteredAndSortedTransactions.length) {
             // Load more transactions when last row is visible
             const newCount = Math.min(
               loadedCount + LOAD_MORE_COUNT,
-              filteredAndSortedTransactions.length
+              filteredAndSortedTransactions.length,
             );
             setDisplayedTransactions(filteredAndSortedTransactions.slice(0, newCount));
             setLoadedCount(newCount);
@@ -77,23 +75,27 @@ export function TransactionTable({
         {
           threshold: 0.1,
           rootMargin: '50px',
-        }
+        },
       );
-      
-      if (node) observer.current.observe(node);
+
+      if (node) {
+        observer.current.observe(node);
+      }
     },
-    [isLoading, loadedCount, filteredAndSortedTransactions, LOAD_MORE_COUNT]
+    [isLoading, loadedCount, filteredAndSortedTransactions, LOAD_MORE_COUNT],
   );
 
   // Load more transactions for infinite scroll
-  const loadMoreTransactions = useCallback(() => {
-    if (isLoading || loadedCount >= filteredAndSortedTransactions.length) return;
-    
+  const _loadMoreTransactions = useCallback(() => {
+    if (isLoading || loadedCount >= filteredAndSortedTransactions.length) {
+      return;
+    }
+
     setIsLoading(true);
     setTimeout(() => {
       const newCount = Math.min(
         loadedCount + LOAD_MORE_COUNT,
-        filteredAndSortedTransactions.length
+        filteredAndSortedTransactions.length,
       );
       setDisplayedTransactions(filteredAndSortedTransactions.slice(0, newCount));
       setLoadedCount(newCount);
@@ -111,7 +113,7 @@ export function TransactionTable({
 
   // If the parent `transactions` prop changes, update our local state
   useEffect(() => {
-    console.log("TransactionTable: Received", transactions.length, "transactions");
+    console.log('TransactionTable: Received', transactions.length, 'transactions');
     setFilteredAndSortedTransactions(transactions);
     setTotal(transactions.length);
   }, [transactions]);
@@ -125,23 +127,17 @@ export function TransactionTable({
           transactions.map((t) => {
             const tx = t as unknown as Record<string, unknown>;
             return (
-              (typeof tx["categoryIcon"] === "string" &&
-                (tx["categoryIcon"] as string)) ||
-              (typeof tx["category_name"] === "string" &&
-                (tx["category_name"] as string)) ||
-              (typeof tx["categoryName"] === "string" &&
-                (tx["categoryName"] as string)) ||
+              (typeof tx.categoryIcon === 'string' && tx.categoryIcon) ||
+              (typeof tx.category_name === 'string' && tx.category_name) ||
+              (typeof tx.categoryName === 'string' && tx.categoryName) ||
               null
             );
-          })
-        )
+          }),
+        ),
       );
-      console.debug("TransactionTable: distinct categoryIcon values:", icons);
+      console.debug('TransactionTable: distinct categoryIcon values:', icons);
     } catch (e) {
-      console.debug(
-        "TransactionTable: error enumerating categoryIcon values",
-        e
-      );
+      console.debug('TransactionTable: error enumerating categoryIcon values', e);
     }
   }, [transactions]);
 
@@ -183,9 +179,7 @@ export function TransactionTable({
 
       {/* Table card (table only) */}
       <CardNp className="pt-1 bg-background/95 backdrop-blur-sm border border-border shadow-md shadow-black/10 dark:shadow-white/10 h-full flex flex-col rounded-lg overflow-hidden max-h-[calc(100vh-140px)] min-h-[calc(100vh-140px)]">
-        <CardNpContent
-          className="flex-1 flex flex-col overflow-auto"
-        >
+        <CardNpContent className="flex-1 flex flex-col overflow-auto">
           <Table className="min-w-full flex-1">
             <TableHeader className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm shadow-md shadow-black/10 dark:shadow-white/10 border-b-2 border-border">
               <TableRow className="hover:bg-muted/30 transition-colors">
@@ -213,10 +207,7 @@ export function TransactionTable({
               {displayedTransactions.map((transaction, index) => {
                 const isLast = index === displayedTransactions.length - 1;
                 return (
-                  <TableRow
-                    key={transaction.id}
-                    ref={isLast ? lastTransactionRef : undefined}
-                  >
+                  <TableRow key={transaction.id} ref={isLast ? lastTransactionRef : undefined}>
                     <TransactionRow
                       transaction={transaction}
                       onEdit={onEdit}

@@ -1,8 +1,8 @@
 // src/components/private/transactions/filters/AdvancedFilterPanel.tsx
-"use client";
+'use client';
 
-import React, { useState, useCallback, useEffect } from "react";
-import Image from "next/image";
+import React, { useState, useCallback, useEffect } from 'react';
+import Image from 'next/image';
 import {
   X,
   Filter,
@@ -12,14 +12,15 @@ import {
   DollarSign,
   Building2,
   Tag,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useMerchants } from "@/hooks/useMerchants";
-import { LucideIcon } from "@/components/ui/LucideIcon";
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useMerchants } from '@/hooks/useMerchants';
+import { LucideIcon } from '@/components/ui/LucideIcon';
 
 // Component for merchant logo with reliable fallback
 interface MerchantLogoProps {
@@ -55,8 +56,8 @@ function MerchantLogo({ merchant }: MerchantLogoProps) {
     <div className="w-5 h-5 flex-shrink-0 relative">
       <Image
         src={
-          merchant.logo_url!.startsWith("http:")
-            ? merchant.logo_url!.replace("http:", "https:")
+          merchant.logo_url!.startsWith('http:')
+            ? merchant.logo_url!.replace('http:', 'https:')
             : merchant.logo_url!
         }
         alt={merchant.name}
@@ -82,7 +83,7 @@ function MerchantLogo({ merchant }: MerchantLogoProps) {
 
 // Helper function to validate image URLs
 const isValidImageUrl = (url: string | null): boolean => {
-  if (!url || url.trim() === "" || url === "null" || url === "undefined") {
+  if (!url || url.trim() === '' || url === 'null' || url === 'undefined') {
     return false;
   }
   try {
@@ -111,7 +112,7 @@ export interface AdvancedFilterState {
   selectedGoals: string[];
   amountMin?: number;
   amountMax?: number;
-  amountType: "all" | "income" | "expense";
+  amountType: 'all' | 'income' | 'expense';
   dateRange: {
     from?: Date;
     to?: Date;
@@ -144,14 +145,7 @@ interface FilterSectionProps {
   count?: number;
 }
 
-function FilterSection({
-  title,
-  icon,
-  isExpanded,
-  onToggle,
-  children,
-  count,
-}: FilterSectionProps) {
+function FilterSection({ title, icon, isExpanded, onToggle, children, count }: FilterSectionProps) {
   return (
     <div className="border-b border-border last:border-b-0">
       <button
@@ -193,9 +187,7 @@ export function AdvancedFilterPanel({
   // State for tree categories
   const [treeCategories, setTreeCategories] = useState<TreeCategory[]>([]);
   const [loadingTreeCategories, setLoadingTreeCategories] = useState(true);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set()
-  );
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   // Load tree categories
   useEffect(() => {
@@ -206,29 +198,25 @@ export function AdvancedFilterPanel({
         // Build URL with userId parameter if available
         const params = new URLSearchParams();
         if (userId) {
-          params.append("user_id", userId);
+          params.append('user_id', userId);
         }
 
-        const url = `/api/categories/tree${
-          params.toString() ? `?${params.toString()}` : ""
-        }`;
-        console.log("Loading categories from:", url);
+        const url = `/api/categories/tree${params.toString() ? `?${params.toString()}` : ''}`;
+        console.log('Loading categories from:', url);
 
         const response = await fetch(url);
-        if (!response.ok) throw new Error("Failed to load categories tree");
+        if (!response.ok) {
+          throw new Error('Failed to load categories tree');
+        }
         const data = await response.json();
 
-        console.log(
-          "Loaded categories:",
-          data.categories?.length || 0,
-          "categories"
-        );
+        console.log('Loaded categories:', data.categories?.length || 0, 'categories');
         setTreeCategories(data.categories || []);
 
         // Start with all categories collapsed by default
         setExpandedCategories(new Set<string>());
       } catch (error) {
-        console.error("Error loading tree categories:", error);
+        console.error('Error loading tree categories:', error);
         setTreeCategories([]);
       } finally {
         setLoadingTreeCategories(false);
@@ -236,7 +224,7 @@ export function AdvancedFilterPanel({
     };
 
     if (isOpen) {
-      loadTreeCategories();
+      void loadTreeCategories();
     }
   }, [isOpen, userId]);
 
@@ -250,15 +238,12 @@ export function AdvancedFilterPanel({
     other: false,
   });
 
-  const toggleSection = useCallback(
-    (section: keyof typeof expandedSections) => {
-      setExpandedSections((prev) => ({
-        ...prev,
-        [section]: !prev[section],
-      }));
-    },
-    []
-  );
+  const toggleSection = useCallback((section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  }, []);
 
   // Helper function to get all children category names recursively
   const getAllChildrenNames = (category: TreeCategory): string[] => {
@@ -316,13 +301,13 @@ export function AdvancedFilterPanel({
     if (isSelected) {
       // If parent is selected, unselect parent and all children
       newSelected = filters.selectedCategories.filter(
-        (name) => name !== category.name && !childrenNames.includes(name)
+        (name) => name !== category.name && !childrenNames.includes(name),
       );
     } else {
       // If parent is not selected, select parent and all children
       newSelected = [
         ...filters.selectedCategories.filter(
-          (name) => name !== category.name && !childrenNames.includes(name)
+          (name) => name !== category.name && !childrenNames.includes(name),
         ),
         category.name,
         ...childrenNames,
@@ -333,9 +318,7 @@ export function AdvancedFilterPanel({
   };
 
   // Helper function to flatten tree categories
-  const flattenTreeCategories = (
-    categories: TreeCategory[]
-  ): TreeCategory[] => {
+  const flattenTreeCategories = (categories: TreeCategory[]): TreeCategory[] => {
     const flattened: TreeCategory[] = [];
     const traverse = (cats: TreeCategory[]) => {
       cats.forEach((cat) => {
@@ -350,25 +333,20 @@ export function AdvancedFilterPanel({
   };
 
   // Helper function to render category tree with collapsible functionality
-  const renderCategoryTree = (
-    categories: TreeCategory[],
-    depth = 0
-  ): React.ReactNode => {
+  const renderCategoryTree = (categories: TreeCategory[], depth = 0): React.ReactNode => {
     return categories.map((category) => {
       const hasChildren = category.children && category.children.length > 0;
       const isExpanded = expandedCategories.has(category.category_id);
       const isSelected = filters.selectedCategories.includes(category.name);
-      const someChildrenSelected =
-        hasChildren && areSomeChildrenSelected(category);
-      const allChildrenSelected =
-        hasChildren && areAllChildrenSelected(category);
+      const someChildrenSelected = hasChildren && areSomeChildrenSelected(category);
+      const allChildrenSelected = hasChildren && areAllChildrenSelected(category);
 
       // Determine checkbox state
       const checkboxState = isSelected
-        ? "checked"
+        ? 'checked'
         : someChildrenSelected && !allChildrenSelected
-        ? "indeterminate"
-        : "unchecked";
+          ? 'indeterminate'
+          : 'unchecked';
 
       return (
         <div key={category.category_id} className="space-y-0.5">
@@ -396,7 +374,7 @@ export function AdvancedFilterPanel({
             <div className="relative flex-shrink-0 w-4 h-4">
               <Checkbox
                 id={category.category_id}
-                checked={checkboxState === "checked"}
+                checked={checkboxState === 'checked'}
                 onCheckedChange={() => {
                   if (hasChildren) {
                     handleCategoryToggleWithChildren(category);
@@ -407,7 +385,7 @@ export function AdvancedFilterPanel({
                 className="w-4 h-4"
               />
               {/* Visual indicator for indeterminate state */}
-              {checkboxState === "indeterminate" && (
+              {checkboxState === 'indeterminate' && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-2 h-0.5 bg-primary rounded-sm" />
                 </div>
@@ -417,13 +395,8 @@ export function AdvancedFilterPanel({
               htmlFor={category.category_id}
               className="flex items-center gap-2 text-sm cursor-pointer flex-1"
             >
-              <LucideIcon
-                name={category.icon || "tag"}
-                className="h-4 w-4 text-[#6700EE]"
-              />
-              <span className={depth === 0 ? "font-medium" : ""}>
-                {category.name}
-              </span>
+              <LucideIcon name={category.icon || 'tag'} className="h-4 w-4 text-[#6700EE]" />
+              <span className={depth === 0 ? 'font-medium' : ''}>{category.name}</span>
             </label>
           </div>
 
@@ -431,13 +404,11 @@ export function AdvancedFilterPanel({
           {hasChildren && (
             <div
               className={`overflow-hidden transition-all duration-200 ease-in-out ${
-                isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
               }`}
             >
               {isExpanded && (
-                <div className="space-y-1">
-                  {renderCategoryTree(category.children, depth + 1)}
-                </div>
+                <div className="space-y-1">{renderCategoryTree(category.children, depth + 1)}</div>
               )}
             </div>
           )}
@@ -450,7 +421,7 @@ export function AdvancedFilterPanel({
     (updates: Partial<AdvancedFilterState>) => {
       onFiltersChange({ ...filters, ...updates });
     },
-    [filters, onFiltersChange]
+    [filters, onFiltersChange],
   );
 
   const handleCategoryToggle = useCallback(
@@ -461,7 +432,7 @@ export function AdvancedFilterPanel({
 
       updateFilters({ selectedCategories: newSelected });
     },
-    [filters.selectedCategories, updateFilters]
+    [filters.selectedCategories, updateFilters],
   );
 
   const handleMerchantToggle = useCallback(
@@ -472,36 +443,32 @@ export function AdvancedFilterPanel({
 
       updateFilters({ selectedMerchants: newSelected });
     },
-    [filters.selectedMerchants, updateFilters]
+    [filters.selectedMerchants, updateFilters],
   );
 
   const handleSelectAll = useCallback(
-    (section: "categories" | "merchants" | "accounts" | "tags" | "goals") => {
+    (section: 'categories' | 'merchants' | 'accounts' | 'tags' | 'goals') => {
       switch (section) {
-        case "categories":
-          const allCategoryIds = flattenTreeCategories(treeCategories).map(
-            (c) => c.name
-          );
+        case 'categories': {
+          const allCategoryIds = flattenTreeCategories(treeCategories).map((c) => c.name);
           updateFilters({
             selectedCategories:
-              filters.selectedCategories.length === allCategoryIds.length
-                ? []
-                : allCategoryIds,
+              filters.selectedCategories.length === allCategoryIds.length ? [] : allCategoryIds,
           });
           break;
-        case "merchants":
+        }
+        case 'merchants': {
           const allMerchantIds = merchants.map((m) => m.name);
           updateFilters({
             selectedMerchants:
-              filters.selectedMerchants.length === allMerchantIds.length
-                ? []
-                : allMerchantIds,
+              filters.selectedMerchants.length === allMerchantIds.length ? [] : allMerchantIds,
           });
           break;
+        }
         // Add other cases as needed
       }
     },
-    [filters, updateFilters, treeCategories, merchants]
+    [filters, updateFilters, treeCategories, merchants],
   );
 
   const getSelectedCount = useCallback(() => {
@@ -511,14 +478,14 @@ export function AdvancedFilterPanel({
       filters.selectedAccounts.length +
       filters.selectedTags.length +
       filters.selectedGoals.length +
-      (filters.amountMin !== undefined || filters.amountMax !== undefined
-        ? 1
-        : 0) +
+      (filters.amountMin !== undefined || filters.amountMax !== undefined ? 1 : 0) +
       Object.values(filters.otherFilters).filter(Boolean).length
     );
   }, [filters]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex">
@@ -542,14 +509,14 @@ export function AdvancedFilterPanel({
             </div>
             {filters.selectedCategories.length > 0 && (
               <div className="text-xs text-muted-foreground mt-1">
-                Categories: {filters.selectedCategories.slice(0, 3).join(", ")}
+                Categories: {filters.selectedCategories.slice(0, 3).join(', ')}
                 {filters.selectedCategories.length > 3 &&
                   ` +${filters.selectedCategories.length - 3} more`}
               </div>
             )}
             {filters.selectedMerchants.length > 0 && (
               <div className="text-xs text-muted-foreground mt-1">
-                Merchants: {filters.selectedMerchants.slice(0, 3).join(", ")}
+                Merchants: {filters.selectedMerchants.slice(0, 3).join(', ')}
                 {filters.selectedMerchants.length > 3 &&
                   ` +${filters.selectedMerchants.length - 3} more`}
               </div>
@@ -563,7 +530,7 @@ export function AdvancedFilterPanel({
               title="Categories"
               icon={<Tag className="h-4 w-4 text-muted-foreground" />}
               isExpanded={expandedSections.categories}
-              onToggle={() => toggleSection("categories")}
+              onToggle={() => toggleSection('categories')}
               count={filters.selectedCategories.length}
             >
               <div className="space-y-2">
@@ -571,13 +538,13 @@ export function AdvancedFilterPanel({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleSelectAll("categories")}
+                    onClick={() => handleSelectAll('categories')}
                     className="text-xs"
                   >
                     {filters.selectedCategories.length ===
                     flattenTreeCategories(treeCategories).length
-                      ? "Deselect All"
-                      : "Select All"}
+                      ? 'Deselect All'
+                      : 'Select All'}
                   </Button>
                   <Button
                     variant="ghost"
@@ -596,32 +563,22 @@ export function AdvancedFilterPanel({
 
                       // Toggle between expand all and collapse all
                       const allExpanded = Array.from(allParentIds).every((id) =>
-                        expandedCategories.has(id)
+                        expandedCategories.has(id),
                       );
-                      setExpandedCategories(
-                        allExpanded ? new Set() : allParentIds
-                      );
+                      setExpandedCategories(allExpanded ? new Set() : allParentIds);
                     }}
                     className="text-xs"
                   >
-                    {expandedCategories.size > 0
-                      ? "Collapse All"
-                      : "Expand All"}
+                    {expandedCategories.size > 0 ? 'Collapse All' : 'Expand All'}
                   </Button>
                 </div>
                 <div className="space-y-1 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                   {loadingTreeCategories ? (
-                    <div className="text-sm text-muted-foreground p-2">
-                      Loading categories...
-                    </div>
+                    <div className="text-sm text-muted-foreground p-2">Loading categories...</div>
                   ) : treeCategories.length === 0 ? (
-                    <div className="text-sm text-muted-foreground p-2">
-                      No categories found
-                    </div>
+                    <div className="text-sm text-muted-foreground p-2">No categories found</div>
                   ) : (
-                    <div className="space-y-1 pb-2">
-                      {renderCategoryTree(treeCategories)}
-                    </div>
+                    <div className="space-y-1 pb-2">{renderCategoryTree(treeCategories)}</div>
                   )}
                 </div>
               </div>
@@ -632,43 +589,32 @@ export function AdvancedFilterPanel({
               title="Merchants"
               icon={<Building2 className="h-4 w-4 text-muted-foreground" />}
               isExpanded={expandedSections.merchants}
-              onToggle={() => toggleSection("merchants")}
+              onToggle={() => toggleSection('merchants')}
               count={filters.selectedMerchants.length}
             >
               <div className="space-y-2">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleSelectAll("merchants")}
+                  onClick={() => handleSelectAll('merchants')}
                   className="text-xs"
                 >
                   {filters.selectedMerchants.length === merchants.length
-                    ? "Deselect All"
-                    : "Select All"}
+                    ? 'Deselect All'
+                    : 'Select All'}
                 </Button>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {merchantsLoading ? (
-                    <div className="text-sm text-muted-foreground">
-                      Loading merchants...
-                    </div>
+                    <div className="text-sm text-muted-foreground">Loading merchants...</div>
                   ) : merchants.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">
-                      No merchants found
-                    </div>
+                    <div className="text-sm text-muted-foreground">No merchants found</div>
                   ) : (
                     merchants.map((merchant) => (
-                      <div
-                        key={merchant.id}
-                        className="flex items-center space-x-2"
-                      >
+                      <div key={merchant.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={merchant.id}
-                          checked={filters.selectedMerchants.includes(
-                            merchant.name
-                          )}
-                          onCheckedChange={() =>
-                            handleMerchantToggle(merchant.name)
-                          }
+                          checked={filters.selectedMerchants.includes(merchant.name)}
+                          onCheckedChange={() => handleMerchantToggle(merchant.name)}
                         />
                         <label
                           htmlFor={merchant.id}
@@ -694,38 +640,25 @@ export function AdvancedFilterPanel({
               title="Amount"
               icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
               isExpanded={expandedSections.amount}
-              onToggle={() => toggleSection("amount")}
-              count={
-                filters.amountMin !== undefined ||
-                filters.amountMax !== undefined
-                  ? 1
-                  : 0
-              }
+              onToggle={() => toggleSection('amount')}
+              count={filters.amountMin !== undefined || filters.amountMax !== undefined ? 1 : 0}
             >
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs text-muted-foreground">
-                      Min Amount
-                    </label>
+                    <label className="text-xs text-muted-foreground">Min Amount</label>
                     <div className="relative">
-                      <span className="absolute left-3 top-3 text-sm text-muted-foreground">
-                        $
-                      </span>
+                      <span className="absolute left-3 top-3 text-sm text-muted-foreground">$</span>
                       <Input
                         type="number"
                         step="0.50"
                         min="0"
                         placeholder="0.00"
                         className="pl-7"
-                        value={
-                          filters.amountMin !== undefined
-                            ? filters.amountMin.toFixed(2)
-                            : ""
-                        }
+                        value={filters.amountMin !== undefined ? filters.amountMin.toFixed(2) : ''}
                         onChange={(e) => {
                           const value = e.target.value;
-                          if (value === "") {
+                          if (value === '') {
                             updateFilters({ amountMin: undefined });
                           } else {
                             const numValue = parseFloat(value);
@@ -738,27 +671,19 @@ export function AdvancedFilterPanel({
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground">
-                      Max Amount
-                    </label>
+                    <label className="text-xs text-muted-foreground">Max Amount</label>
                     <div className="relative">
-                      <span className="absolute left-3 top-3 text-sm text-muted-foreground">
-                        $
-                      </span>
+                      <span className="absolute left-3 top-3 text-sm text-muted-foreground">$</span>
                       <Input
                         type="number"
                         step="0.50"
                         min="0"
                         placeholder="0.00"
                         className="pl-7"
-                        value={
-                          filters.amountMax !== undefined
-                            ? filters.amountMax.toFixed(2)
-                            : ""
-                        }
+                        value={filters.amountMax !== undefined ? filters.amountMax.toFixed(2) : ''}
                         onChange={(e) => {
                           const value = e.target.value;
-                          if (value === "") {
+                          if (value === '') {
                             updateFilters({ amountMax: undefined });
                           } else {
                             const numValue = parseFloat(value);
@@ -774,16 +699,14 @@ export function AdvancedFilterPanel({
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">Type</label>
                   <div className="grid grid-cols-3 gap-1">
-                    {["all", "income", "expense"].map((type) => (
+                    {['all', 'income', 'expense'].map((type) => (
                       <Button
                         key={type}
-                        variant={
-                          filters.amountType === type ? "default" : "outline"
-                        }
+                        variant={filters.amountType === type ? 'default' : 'outline'}
                         size="sm"
                         onClick={() =>
                           updateFilters({
-                            amountType: type as "all" | "income" | "expense",
+                            amountType: type as 'all' | 'income' | 'expense',
                           })
                         }
                         className="text-xs"
@@ -801,25 +724,21 @@ export function AdvancedFilterPanel({
               title="Other"
               icon={<Filter className="h-4 w-4 text-muted-foreground" />}
               isExpanded={expandedSections.other}
-              onToggle={() => toggleSection("other")}
+              onToggle={() => toggleSection('other')}
               count={Object.values(filters.otherFilters).filter(Boolean).length}
             >
               <div className="space-y-2">
                 {Object.entries({
-                  needsReview: "Needs Review",
-                  hasAttachments: "Has Attachments",
-                  isRecurring: "Recurring",
-                  hasNotes: "Has Notes",
-                  uncategorized: "Uncategorized",
+                  needsReview: 'Needs Review',
+                  hasAttachments: 'Has Attachments',
+                  isRecurring: 'Recurring',
+                  hasNotes: 'Has Notes',
+                  uncategorized: 'Uncategorized',
                 }).map(([key, label]) => (
                   <div key={key} className="flex items-center space-x-2">
                     <Checkbox
                       id={key}
-                      checked={
-                        filters.otherFilters[
-                          key as keyof typeof filters.otherFilters
-                        ]
-                      }
+                      checked={filters.otherFilters[key as keyof typeof filters.otherFilters]}
                       onCheckedChange={(checked) =>
                         updateFilters({
                           otherFilters: {

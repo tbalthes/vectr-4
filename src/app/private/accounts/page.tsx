@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { LinkIcon } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/private/PageHeader";
 import { LuxuryAccountsGrid } from "@/components/private/accounts/LuxuryAccountsGrid";
@@ -15,7 +16,7 @@ export default function AccountsPage() {
 
   const handleAccountConnected = () => {
     setShowConnectModal(false);
-    refetch(false); // Don't show notifications - we already showed success for account creation
+    void refetch(false); // Don't show notifications - we already showed success for account creation
   };
 
   const handleRefresh = async () => {
@@ -50,7 +51,7 @@ export default function AccountsPage() {
           accounts={accounts}
           loading={loading}
           error={error}
-          onRefresh={handleRefresh}
+          onRefresh={() => { void handleRefresh(); }}
           onSyncAccount={syncAccount}
           onSyncAll={syncAllAccounts}
         />

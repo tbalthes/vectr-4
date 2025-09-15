@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { TrendingUp } from "lucide-react";
-import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
+import { TrendingUp } from 'lucide-react';
+import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
 
 import {
   Card,
@@ -10,29 +10,29 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
-  ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+  type ChartConfig,
+} from '@/components/ui/chart';
 
-export const description = "A line chart with step";
+export const description = 'A line chart with step';
 
 const chartData = [
-  { month: "January", category: 186 },
-  { month: "February", category: 305 },
-  { month: "March", category: 237 },
-  { month: "April", category: 73 },
-  { month: "May", category: 209 },
-  { month: "June", category: 214 },
+  { month: 'January', category: 186 },
+  { month: 'February', category: 305 },
+  { month: 'March', category: 237 },
+  { month: 'April', category: 73 },
+  { month: 'May', category: 209 },
+  { month: 'June', category: 214 },
 ];
 
 const chartConfig = {
   category: {
-    label: "category",
-    color: "var(--chart-1)",
+    label: 'category',
+    color: 'var(--chart-1)',
   },
 } satisfies ChartConfig;
 
@@ -61,10 +61,7 @@ export function CategorySpending() {
               tickMargin={8}
               tickFormatter={(value) => value.slice(0, 3)}
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Line
               dataKey="category"
               type="step"

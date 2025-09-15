@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Search, Plus, Building2, ChevronDown, X } from "lucide-react";
 import Image from "next/image";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -90,7 +91,7 @@ export function MerchantPicker({
   // Trigger search when query changes
   useEffect(() => {
     if (isOpen) {
-      fetchMerchants(searchQuery);
+      void fetchMerchants(searchQuery);
     }
   }, [isOpen, searchQuery, fetchMerchants]);
 

@@ -1,22 +1,25 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
-import { useAccounts, Account } from "@/hooks/useAccounts";
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
   arrayMove,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+import { useAccounts } from '@/hooks/useAccounts';
+import type { Account } from '@/hooks/useAccounts';
 
 // --- PERSISTENCE HELPERS ---
-type SavedOrder = {
+interface SavedOrder {
   groups: string[];
   accountsByGroup: Record<string, string[]>;
-};
+}
 
-const ORDER_STORAGE_KEY = "vectr.accounts.view.order.v1";
+const ORDER_STORAGE_KEY = 'vectr.accounts.view.order.v1';
 
 function saveOrderToStorage(data: GroupData[]) {
   try {
@@ -31,7 +34,7 @@ function saveOrderToStorage(data: GroupData[]) {
 
     localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(order));
   } catch (error) {
-    console.warn("Failed to save account order:", error);
+    console.warn('Failed to save account order:', error);
   }
 }
 
@@ -40,14 +43,16 @@ function loadOrderFromStorage(): SavedOrder | null {
     const stored = localStorage.getItem(ORDER_STORAGE_KEY);
     return stored ? JSON.parse(stored) : null;
   } catch (error) {
-    console.warn("Failed to load account order:", error);
+    console.warn('Failed to load account order:', error);
     return null;
   }
 }
 
 function applySavedOrder(data: GroupData[]): GroupData[] {
   const savedOrder = loadOrderFromStorage();
-  if (!savedOrder) return data;
+  if (!savedOrder) {
+    return data;
+  }
 
   // Create maps for quick lookup
   const groupMap = new Map(data.map((g) => [g.id, g]));
@@ -93,77 +98,73 @@ function applySavedOrder(data: GroupData[]): GroupData[] {
 }
 
 // Data processing & grouping logic (uses account data as-is)
-type TimeframeKey = "7D" | "30D" | "90D";
-type TimeframeData = {
+type TimeframeKey = '7D' | '30D' | '90D';
+interface TimeframeData {
   totalBalance: number;
   change: { amount: number; percent: string | number; positive: boolean };
   history: number[];
-};
-type GroupData = {
+}
+interface GroupData {
   id: string;
   category: string;
   icon: string;
   accounts: Account[];
   timeframes: Record<TimeframeKey, TimeframeData>;
-};
+}
 
 const groupAccountsByType = (accounts: Account[]): GroupData[] => {
   const categoryMap = {
-    depository: { category: "Cash & Liquid Assets", icon: "cash" },
-    investment: { category: "Investments", icon: "invest" },
-    credit: { category: "Credit Cards", icon: "credit" },
-    loan: { category: "Loans", icon: "loan" },
-    other: { category: "Other Assets", icon: "other" },
+    depository: { category: 'Cash & Liquid Assets', icon: 'cash' },
+    investment: { category: 'Investments', icon: 'invest' },
+    credit: { category: 'Credit Cards', icon: 'credit' },
+    loan: { category: 'Loans', icon: 'loan' },
+    other: { category: 'Other Assets', icon: 'other' },
   };
 
-  const grouped = accounts.reduce(
-    (acc: Record<string, GroupData>, account: Account) => {
-      const key = (account.type as string) || "other";
-      if (!acc[key]) {
-        const meta =
-          categoryMap[key as keyof typeof categoryMap] ?? categoryMap.other;
-        acc[key] = {
-          ...meta,
-          id: `group-${key}`,
-          accounts: [],
-          timeframes: {
-            "7D": {
-              totalBalance: 0,
-              change: { amount: 0, percent: 0, positive: true },
-              history: [],
-            },
-            "30D": {
-              totalBalance: 0,
-              change: { amount: 0, percent: 0, positive: true },
-              history: [],
-            },
-            "90D": {
-              totalBalance: 0,
-              change: { amount: 0, percent: 0, positive: true },
-              history: [],
-            },
+  const grouped = accounts.reduce((acc: Record<string, GroupData>, account: Account) => {
+    const key = account.type || 'other';
+    if (!acc[key]) {
+      const meta = categoryMap[key as keyof typeof categoryMap] ?? categoryMap.other;
+      acc[key] = {
+        ...meta,
+        id: `group-${key}`,
+        accounts: [],
+        timeframes: {
+          '7D': {
+            totalBalance: 0,
+            change: { amount: 0, percent: 0, positive: true },
+            history: [],
           },
-        };
-      }
-      acc[key].accounts.push(account);
-      return acc;
-    },
-    {}
-  );
+          '30D': {
+            totalBalance: 0,
+            change: { amount: 0, percent: 0, positive: true },
+            history: [],
+          },
+          '90D': {
+            totalBalance: 0,
+            change: { amount: 0, percent: 0, positive: true },
+            history: [],
+          },
+        },
+      };
+    }
+    acc[key].accounts.push(account);
+    return acc;
+  }, {});
 
   // Calculate total balances and generate mock history
   Object.values(grouped).forEach((group: GroupData) => {
     const total = group.accounts.reduce(
       (sum: number, acc: Account) => sum + (acc.balance_amount || 0),
-      0
+      0,
     );
     (Object.keys(group.timeframes) as TimeframeKey[]).forEach((tf) => {
       group.timeframes[tf].totalBalance = total;
       // Simple mock data generation for history
-      const days = parseInt(tf.replace("D", ""), 10);
+      const days = parseInt(tf.replace('D', ''), 10);
       group.timeframes[tf].history = Array.from(
         { length: days },
-        (_, i) => total * (1 + (Math.random() - 0.5) * 0.1 * (i / days))
+        (_, i) => total * (1 + (Math.random() - 0.5) * 0.1 * (i / days)),
       );
       const changeAmount = (Math.random() - 0.4) * total * 0.05;
       group.timeframes[tf].change = {
@@ -179,20 +180,32 @@ const groupAccountsByType = (accounts: Account[]): GroupData[] => {
 
 // Helpers
 const timeAgo = (dateString?: string | null) => {
-  if (!dateString) return null;
+  if (!dateString) {
+    return null;
+  }
   const date = new Date(dateString);
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   let interval = seconds / 31536000;
-  if (interval > 1) return Math.floor(interval) + " years ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' years ago';
+  }
   interval = seconds / 2592000;
-  if (interval > 1) return Math.floor(interval) + " months ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' months ago';
+  }
   interval = seconds / 86400;
-  if (interval > 1) return Math.floor(interval) + " days ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' days ago';
+  }
   interval = seconds / 3600;
-  if (interval > 1) return Math.floor(interval) + " hours ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' hours ago';
+  }
   interval = seconds / 60;
-  if (interval > 1) return Math.floor(interval) + " minutes ago";
-  return "Just now";
+  if (interval > 1) {
+    return Math.floor(interval) + ' minutes ago';
+  }
+  return 'Just now';
 };
 
 // Icons
@@ -289,31 +302,15 @@ const Icons = {
   ),
   loan: (p: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" {...p}>
-      <circle
-        cx="12"
-        cy="12"
-        r="9.25"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
+      <circle cx="12" cy="12" r="9.25" stroke="currentColor" strokeWidth="1.5" />
       <path
         d="M14.25 8.75L9.75 15.25"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
-      <path
-        d="M10.25 8.75H14.25"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M9.75 15.25H13.75"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M10.25 8.75H14.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M9.75 15.25H13.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
   grip: (p: React.SVGProps<SVGSVGElement>) => (
@@ -434,28 +431,25 @@ const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const width = 120;
   const height = 50;
-  const strokeColor = positive ? "#22c55e" : "#ef4444";
+  const strokeColor = positive ? '#22c55e' : '#ef4444';
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min === 0 ? 1 : max - min;
-  const yPoints = data.map(
-    (d) => height - ((d - min) / range) * (height - 10) - 5
-  );
+  const yPoints = data.map((d) => height - ((d - min) / range) * (height - 10) - 5);
   const xPoints = data.map((_, i) => (i / (data.length - 1)) * width);
-  const points = yPoints
-    .map((y, i) => `${xPoints[i].toFixed(2)},${y.toFixed(2)}`)
-    .join(" ");
+  const points = yPoints.map((y, i) => `${xPoints[i].toFixed(2)},${y.toFixed(2)}`).join(' ');
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const svg = svgRef.current;
-    if (!svg) return;
+    if (!svg) {
+      return;
+    }
     const rect = svg.getBoundingClientRect();
     const x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
     // Map DOM x back to viewBox x
     const vbX = (x / rect.width) * width;
     const closestIndex = xPoints.reduce(
-      (closest, curr, i) =>
-        Math.abs(curr - vbX) < Math.abs(xPoints[closest] - vbX) ? i : closest,
-      0
+      (closest, curr, i) => (Math.abs(curr - vbX) < Math.abs(xPoints[closest] - vbX) ? i : closest),
+      0,
     );
     setTooltip({
       x: xPoints[closestIndex],
@@ -465,10 +459,7 @@ const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
   };
   const gradientId = `spark-grad-${Math.random()}`;
   return (
-    <div
-      className="relative w-full h-full cursor-crosshair"
-      onMouseLeave={() => setTooltip(null)}
-    >
+    <div className="relative w-full h-full cursor-crosshair" onMouseLeave={() => setTooltip(null)}>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
@@ -483,17 +474,10 @@ const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
           </linearGradient>
         </defs>
         <path
-          d={`M${xPoints[0]},${height} L${points} L${
-            xPoints[xPoints.length - 1]
-          },${height} Z`}
+          d={`M${xPoints[0]},${height} L${points} L${xPoints[xPoints.length - 1]},${height} Z`}
           fill={`url(#${gradientId})`}
         />
-        <polyline
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth="2"
-          points={points}
-        />
+        <polyline fill="none" stroke={strokeColor} strokeWidth="2" points={points} />
         {tooltip && (
           <>
             <line
@@ -522,7 +506,7 @@ const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
           style={{
             left: tooltip.x,
             top: tooltip.y - 30,
-            transform: "translateX(-50%)",
+            transform: 'translateX(-50%)',
           }}
         >
           ${tooltip.value.toLocaleString()}
@@ -542,20 +526,17 @@ const AccountActionsMenu: React.FC<{
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !(menuRef.current as HTMLDivElement).contains(event.target as Node)
-      ) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
 
@@ -605,7 +586,7 @@ const InstitutionLogo: React.FC<{
   name?: string | null;
 }> = ({ url, name }) => {
   const [hasError, setHasError] = useState(false);
-  const fallbackInitial = name ? name.charAt(0).toUpperCase() : "?";
+  const fallbackInitial = name ? name.charAt(0).toUpperCase() : '?';
 
   if (!url || hasError) {
     return (
@@ -617,7 +598,7 @@ const InstitutionLogo: React.FC<{
   return (
     <Image
       src={url}
-      alt={`${name ?? "Institution"} logo`}
+      alt={`${name ?? 'Institution'} logo`}
       width={24}
       height={24}
       className="w-6 h-6 rounded-full object-contain"
@@ -632,13 +613,7 @@ const AccountLedgerRow: React.FC<{
   dndListeners?: React.HTMLAttributes<HTMLDivElement>;
   onViewAccount: (a: Account) => void;
   onDeleteAccount: (a: Account) => void;
-}> = ({
-  account,
-  dndAttributes,
-  dndListeners,
-  onViewAccount,
-  onDeleteAccount,
-}) => {
+}> = ({ account, dndAttributes, dndListeners, onViewAccount, onDeleteAccount }) => {
   const {
     name,
     mask,
@@ -670,29 +645,23 @@ const AccountLedgerRow: React.FC<{
       <div className="flex items-center">
         <div className="text-right mr-4">
           <p className="font-medium text-slate-900 text-base tracking-tight">
-            {balance_amount.toLocaleString("en-US", {
-              style: "currency",
-              currency: "USD",
+            {balance_amount.toLocaleString('en-US', {
+              style: 'currency',
+              currency: 'USD',
             })}
           </p>
-          {available !== null &&
-            available !== undefined &&
-            available !== balance_amount && (
-              <p className="text-xs text-slate-500" title="Available Balance">
-                {available.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                })}{" "}
-                avail.
-              </p>
-            )}
+          {available !== null && available !== undefined && available !== balance_amount && (
+            <p className="text-xs text-slate-500" title="Available Balance">
+              {available.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+              })}{' '}
+              avail.
+            </p>
+          )}
         </div>
         <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <AccountActionsMenu
-            account={account}
-            onView={onViewAccount}
-            onDelete={onDeleteAccount}
-          />
+          <AccountActionsMenu account={account} onView={onViewAccount} onDelete={onDeleteAccount} />
         </div>
       </div>
     </div>
@@ -704,19 +673,14 @@ const SortableAccountLedgerRow: React.FC<{
   onViewAccount: (a: Account) => void;
   onDeleteAccount: (a: Account) => void;
 }> = ({ account, onViewAccount, onDeleteAccount }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: `acc-${account.id}` });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: `acc-${account.id}`,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    backgroundColor: isDragging ? "#f1f5f9" : "transparent",
+    backgroundColor: isDragging ? '#f1f5f9' : 'transparent',
   };
 
   return (
@@ -738,22 +702,16 @@ const FinancialInsightCard: React.FC<{
   dndListeners?: React.HTMLAttributes<HTMLDivElement>;
   onViewAccount: (a: Account) => void;
   onDeleteAccount: (a: Account) => void;
-}> = ({
-  groupData,
-  dndAttributes,
-  dndListeners,
-  onViewAccount,
-  onDeleteAccount,
-}) => {
+}> = ({ groupData, dndAttributes, dndListeners, onViewAccount, onDeleteAccount }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [shimmerActive, setShimmerActive] = useState(false);
-  const [activeTimeframe, setActiveTimeframe] = useState<TimeframeKey>("30D");
+  const [activeTimeframe, setActiveTimeframe] = useState<TimeframeKey>('30D');
   const { category, icon, timeframes, accounts } = groupData;
   const { totalBalance, change, history } = timeframes[activeTimeframe];
   const IconComponent = Icons[icon as keyof typeof Icons] ?? Icons.other;
-  const formattedBalance = totalBalance.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
+  const formattedBalance = totalBalance.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
   });
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200/80 mb-6 group/card hover:scale-[1.01] hover:border-slate-300">
@@ -776,7 +734,7 @@ const FinancialInsightCard: React.FC<{
             </div>
             <p
               className={`mt-3 text-4xl font-extrabold tracking-tighter ${
-                shimmerActive ? "vectr-shift vectr-run" : ""
+                shimmerActive ? 'vectr-shift vectr-run' : ''
               }`}
               data-text={formattedBalance}
               onMouseEnter={() => setShimmerActive(true)}
@@ -786,14 +744,12 @@ const FinancialInsightCard: React.FC<{
             </p>
             <div className="flex items-center text-sm mt-1">
               <span
-                className={`${
-                  change.positive ? "text-green-600" : "text-red-600"
-                } font-semibold`}
+                className={`${change.positive ? 'text-green-600' : 'text-red-600'} font-semibold`}
               >
-                {change.positive ? "▲" : "▼"}{" "}
-                {Math.abs(change.amount).toLocaleString("en-US", {
-                  style: "currency",
-                })}{" "}
+                {change.positive ? '▲' : '▼'}{' '}
+                {Math.abs(change.amount).toLocaleString('en-US', {
+                  style: 'currency',
+                })}{' '}
                 ({change.percent}%)
               </span>
               <span className="text-slate-500 ml-2">in {activeTimeframe}</span>
@@ -806,7 +762,7 @@ const FinancialInsightCard: React.FC<{
             </div>
             <div className="w-32 flex justify-end">
               <div className="flex items-center space-x-1 bg-slate-200/70 p-1 rounded-full text-[10px] font-semibold">
-                {["7D", "30D", "90D"].map((tf) => (
+                {['7D', '30D', '90D'].map((tf) => (
                   <button
                     key={tf}
                     onClick={(e) => {
@@ -815,8 +771,8 @@ const FinancialInsightCard: React.FC<{
                     }}
                     className={`px-2 py-0.5 rounded-full transition-colors ${
                       activeTimeframe === tf
-                        ? "bg-white text-slate-800 shadow-sm"
-                        : "text-slate-600 hover:text-slate-800"
+                        ? 'bg-white text-slate-800 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-800'
                     }`}
                   >
                     {tf}
@@ -828,7 +784,7 @@ const FinancialInsightCard: React.FC<{
           <div className="pl-4">
             <Icons.chevron
               className={`w-6 h-6 text-slate-500 transition-transform duration-300 ${
-                isOpen ? "rotate-180" : ""
+                isOpen ? 'rotate-180' : ''
               }`}
             />
           </div>
@@ -836,7 +792,7 @@ const FinancialInsightCard: React.FC<{
       </div>
       <div
         className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isOpen ? "max-h-[1000px]" : "max-h-0"
+          isOpen ? 'max-h-[1000px]' : 'max-h-0'
         }`}
       >
         <SortableContext
@@ -864,14 +820,9 @@ const SortableFinancialInsightCard: React.FC<{
   onViewAccount: (a: Account) => void;
   onDeleteAccount: (a: Account) => void;
 }> = ({ groupData, onViewAccount, onDeleteAccount }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: groupData.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: groupData.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -897,7 +848,9 @@ export default function LuxuryAccountsView() {
   const { accounts, loading, error, refetch } = useAccounts();
 
   const groupedData = useMemo(() => {
-    if (!accounts) return [];
+    if (!accounts) {
+      return [];
+    }
     return groupAccountsByType(accounts);
   }, [accounts]);
 
@@ -911,13 +864,15 @@ export default function LuxuryAccountsView() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     const activeId = String(active.id);
     const overId = String(over.id);
 
     // Check if we are dragging a card
-    if (activeId.startsWith("group-") && overId.startsWith("group-")) {
+    if (activeId.startsWith('group-') && overId.startsWith('group-')) {
       if (activeId !== overId) {
         setOrderedGroupedData((items) => {
           const oldIndex = items.findIndex((item) => item.id === activeId);
@@ -933,25 +888,21 @@ export default function LuxuryAccountsView() {
     }
 
     // Check if we are dragging a row
-    if (activeId.startsWith("acc-") && overId.startsWith("acc-")) {
+    if (activeId.startsWith('acc-') && overId.startsWith('acc-')) {
       setOrderedGroupedData((prevData) => {
         const newData = [...prevData];
         const activeGroupIndex = newData.findIndex((group: GroupData) =>
-          group.accounts.some((acc: Account) => `acc-${acc.id}` === activeId)
+          group.accounts.some((acc: Account) => `acc-${acc.id}` === activeId),
         );
         const overGroupIndex = newData.findIndex((group: GroupData) =>
-          group.accounts.some((acc: Account) => `acc-${acc.id}` === overId)
+          group.accounts.some((acc: Account) => `acc-${acc.id}` === overId),
         );
 
         // Handle reordering within the same group
         if (activeGroupIndex === overGroupIndex) {
           const group = newData[activeGroupIndex];
-          const oldIndex = group.accounts.findIndex(
-            (acc: Account) => `acc-${acc.id}` === activeId
-          );
-          const newIndex = group.accounts.findIndex(
-            (acc: Account) => `acc-${acc.id}` === overId
-          );
+          const oldIndex = group.accounts.findIndex((acc: Account) => `acc-${acc.id}` === activeId);
+          const newIndex = group.accounts.findIndex((acc: Account) => `acc-${acc.id}` === overId);
           if (oldIndex !== newIndex) {
             group.accounts = arrayMove(group.accounts, oldIndex, newIndex);
           }
@@ -966,21 +917,21 @@ export default function LuxuryAccountsView() {
   };
 
   const handleViewAccount = (account: Account) => {
-    console.log("View account:", account);
+    console.log('View account:', account);
     // TODO: Implement view account modal or navigation
   };
 
   const handleDeleteAccount = async (account: Account) => {
     try {
       const res = await fetch(`/api/accounts/${account.id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
       if (!res.ok) {
-        console.error("Failed to delete account");
+        console.error('Failed to delete account');
       }
       await refetch();
     } catch (error) {
-      console.error("Failed to delete account:", error);
+      console.error('Failed to delete account:', error);
     }
   };
 
@@ -1025,10 +976,7 @@ export default function LuxuryAccountsView() {
       <style>{`@keyframes vectr-shimmer {0% { background-position: 200% center; } 100% { background-position: -200% center; }}.vectr-shift {position: relative;color: transparent;background-image: linear-gradient(to right, #171717 40%, #e5e5e5 50%, #171717 60%);background-size: 200% auto;-webkit-background-clip: text;background-clip: text;animation: vectr-shimmer 2.5s linear infinite;animation-play-state: paused;}.vectr-shift::before {content: attr(data-text);position: absolute;top: 0;left: 0;width: 100%;height: 100%;color: #171717;z-index: -1;}.group\\/card:hover .vectr-shift {animation-play-state: running;}`}</style>
       <div className="bg-slate-100 min-h-screen font-sans p-4 sm:p-8">
         <div className="max-w-3xl mx-auto">
-          <DndContext
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext
               items={orderedGroupedData.map((g) => g.id)}
               strategy={verticalListSortingStrategy}
@@ -1039,7 +987,7 @@ export default function LuxuryAccountsView() {
                     key={group.id}
                     groupData={group}
                     onViewAccount={handleViewAccount}
-                    onDeleteAccount={handleDeleteAccount}
+                    onDeleteAccount={(account) => void handleDeleteAccount(account)}
                   />
                 ))}
               </div>

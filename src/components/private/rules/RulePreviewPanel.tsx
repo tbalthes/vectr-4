@@ -1,13 +1,14 @@
 import React from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertCircle,
   CheckCircle,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
-import { RulePreviewResponse, TransactionMatch } from "@/types/rules";
+
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import type { RulePreviewResponse, TransactionMatch } from "@/types/rules";
 
 // Format currency utility
 const formatCurrency = (amount: number): string => {

@@ -1,4 +1,6 @@
 import React from "react";
+import { AlertTriangle, CheckCircle, TrendingUp } from "lucide-react";
+
 import {
   Card,
   CardHeader,
@@ -6,7 +8,6 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { AlertTriangle, CheckCircle, TrendingUp } from "lucide-react";
 
 export function BudgetInsights() {
   return (

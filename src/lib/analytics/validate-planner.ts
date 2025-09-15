@@ -1,7 +1,7 @@
-export type PlannerRequest = {
+export interface PlannerRequest {
   endpoint: string;
   params: Record<string, string | boolean>;
-};
+}
 
 // Allowed endpoints and their permitted params with expected types
 const ENDPOINT_SPECS: Record<string, Record<string, "string" | "boolean">> = {
@@ -18,30 +18,30 @@ const ENDPOINT_SPECS: Record<string, Record<string, "string" | "boolean">> = {
 };
 
 export function validatePlannerRequests(raw: unknown): PlannerRequest[] {
-  if (!raw || typeof raw !== "object") return [];
+  if (!raw || typeof raw !== "object") {return [];}
   const parsed = raw as Record<string, unknown>;
-  if (!Array.isArray(parsed.requests)) return [];
+  if (!Array.isArray(parsed.requests)) {return [];}
 
   const out: PlannerRequest[] = [];
   for (const r of parsed.requests) {
-    if (!r || typeof r !== "object") continue;
+    if (!r || typeof r !== "object") {continue;}
     const endpoint = String(r.endpoint || "").toLowerCase();
-    if (!ENDPOINT_SPECS[endpoint]) continue;
+    if (!ENDPOINT_SPECS[endpoint]) {continue;}
     const spec = ENDPOINT_SPECS[endpoint];
     const paramsIn = r.params && typeof r.params === "object" ? r.params : {};
     const paramsOut: Record<string, string | boolean> = {};
     for (const [k, v] of Object.entries(paramsIn)) {
-      if (!spec[k]) continue; // not allowed param
+      if (!spec[k]) {continue;} // not allowed param
       const expected = spec[k];
       if (expected === "boolean") {
-        if (typeof v === "boolean") paramsOut[k] = v;
+        if (typeof v === "boolean") {paramsOut[k] = v;}
         else if (typeof v === "string") {
           const low = v.toLowerCase();
-          if (low === "true" || low === "false") paramsOut[k] = low === "true";
+          if (low === "true" || low === "false") {paramsOut[k] = low === "true";}
         }
       } else if (expected === "string") {
-        if (typeof v === "string") paramsOut[k] = v;
-        else if (typeof v === "number") paramsOut[k] = String(v);
+        if (typeof v === "string") {paramsOut[k] = v;}
+        else if (typeof v === "number") {paramsOut[k] = String(v);}
       }
     }
     out.push({ endpoint, params: paramsOut });
@@ -53,8 +53,8 @@ export function validatePlannerRequests(raw: unknown): PlannerRequest[] {
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 6; // allow 6 planner calls per minute per user
 
-const rateStore: Map<string, { windowStart: number; count: number }> =
-  new Map();
+const rateStore =
+  new Map<string, { windowStart: number; count: number }>();
 
 export function checkPlannerQuota(key: string) {
   const now = Date.now();

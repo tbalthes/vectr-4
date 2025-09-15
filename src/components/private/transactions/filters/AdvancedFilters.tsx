@@ -14,6 +14,7 @@ import {
   ChevronUp,
   RotateCcw,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -112,23 +113,23 @@ export function AdvancedFilters({
 
   const getActiveFilterCount = useCallback(() => {
     let count = 0;
-    if (filters.searchTerm) count++;
+    if (filters.searchTerm) {count++;}
     if (
       filters.dateRange.from ||
       filters.dateRange.to ||
       filters.dateRange.preset
     )
-      count++;
+      {count++;}
     if (
       filters.amountRange.min !== undefined ||
       filters.amountRange.max !== undefined
     )
-      count++;
-    if (filters.categoryIds.length > 0) count++;
-    if (filters.merchantIds.length > 0) count++;
-    if (filters.status.length > 0) count++;
-    if (filters.needsReview !== undefined) count++;
-    if (filters.manualEdit !== undefined) count++;
+      {count++;}
+    if (filters.categoryIds.length > 0) {count++;}
+    if (filters.merchantIds.length > 0) {count++;}
+    if (filters.status.length > 0) {count++;}
+    if (filters.needsReview !== undefined) {count++;}
+    if (filters.manualEdit !== undefined) {count++;}
     return count;
   }, [filters]);
 

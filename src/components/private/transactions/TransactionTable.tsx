@@ -2,6 +2,14 @@
 
 import React from "react";
 import {
+  Edit,
+  Trash2,
+  ArrowUpRight,
+  ArrowDownRight,
+  StickyNote,
+} from "lucide-react";
+
+import {
   Card,
   CardHeader,
   CardTitle,
@@ -10,13 +18,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Edit,
-  Trash2,
-  ArrowUpRight,
-  ArrowDownRight,
-  StickyNote,
-} from "lucide-react";
 import {
   Tooltip,
   TooltipTrigger,
@@ -31,34 +32,34 @@ interface TransactionTableProps {
 
 // Helper that checks multiple possible note fields safely
 const hasTransactionNote = (t: FormattedTransaction) => {
-  if (t.note) return true;
+  if (t.note) {return true;}
   const u = t as unknown as Record<string, unknown>;
   if (
     Object.prototype.hasOwnProperty.call(u, "transaction_note") &&
-    typeof u["transaction_note"] === "string"
+    typeof u.transaction_note === "string"
   )
-    return true;
+    {return true;}
   if (
     Object.prototype.hasOwnProperty.call(u, "transactionNote") &&
-    typeof u["transactionNote"] === "string"
+    typeof u.transactionNote === "string"
   )
-    return true;
+    {return true;}
   return false;
 };
 
 const getTransactionNote = (t: FormattedTransaction): string | undefined => {
-  if (typeof t.note === "string" && t.note.length > 0) return t.note;
+  if (typeof t.note === "string" && t.note.length > 0) {return t.note;}
   const u = t as unknown as Record<string, unknown>;
   if (
     Object.prototype.hasOwnProperty.call(u, "transaction_note") &&
-    typeof u["transaction_note"] === "string"
+    typeof u.transaction_note === "string"
   )
-    return u["transaction_note"] as string;
+    {return u.transaction_note;}
   if (
     Object.prototype.hasOwnProperty.call(u, "transactionNote") &&
-    typeof u["transactionNote"] === "string"
+    typeof u.transactionNote === "string"
   )
-    return u["transactionNote"] as string;
+    {return u.transactionNote;}
   return undefined;
 };
 

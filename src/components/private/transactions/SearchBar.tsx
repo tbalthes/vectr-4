@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { Search, Filter } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,7 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
 
 interface SearchBarProps {
   searchTerm: string;

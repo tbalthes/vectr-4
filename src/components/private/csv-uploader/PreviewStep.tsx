@@ -1,20 +1,16 @@
-import React from "react";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
-import {
-  ChevronLeft,
-  Eye,
-  Download,
-  CheckCircle,
-  DollarSign,
-} from "lucide-react";
-import { type ColumnMapping } from "./csv-utils";
+import React from 'react';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { ChevronLeft, Eye, Download, CheckCircle, DollarSign } from 'lucide-react';
+
+import { type ColumnMapping } from './csv-utils';
+
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 
 interface PreviewStepProps {
-  data: Array<Record<string, string | number | undefined>>;
+  data: Record<string, string | number | undefined>[];
   mapping: ColumnMapping;
   user_id: string;
   account_id: string;
@@ -47,15 +43,19 @@ export function PreviewStep({
 
   const getCustomFieldValue = (
     record: Record<string, string | number | undefined>,
-    fieldName: string
+    fieldName: string,
   ) => {
-    return record[fieldName] || "—";
+    return record[fieldName] || '—';
   };
 
   const getAmountClass = (amount: number) => {
-    if (amount > 0) return "text-green-600 dark:text-green-500";
-    if (amount < 0) return "text-red-600 dark:text-red-500";
-    return "text-muted-foreground";
+    if (amount > 0) {
+      return 'text-green-600 dark:text-green-500';
+    }
+    if (amount < 0) {
+      return 'text-red-600 dark:text-red-500';
+    }
+    return 'text-muted-foreground';
   };
 
   const handleImport = async () => {
@@ -63,12 +63,7 @@ export function PreviewStep({
     setError(null);
     setSuccess(false);
 
-    console.log(
-      "Starting import with user_id:",
-      user_id,
-      "account_id:",
-      account_id
-    );
+    console.log('Starting import with user_id:', user_id, 'account_id:', account_id);
 
     try {
       // Prefer resolved effectiveUserId from component state. As a last resort try fetching.
@@ -78,7 +73,9 @@ export function PreviewStep({
           setResolvingUserId(true);
           const { data: userData } = await supabase.auth.getUser();
           const fetchedUser = userData?.user;
-          if (fetchedUser?.id) payloadUserId = fetchedUser.id;
+          if (fetchedUser?.id) {
+            payloadUserId = fetchedUser.id;
+          }
         } catch {
           // ignore and let validation handle it
         } finally {
@@ -88,8 +85,8 @@ export function PreviewStep({
 
       // If we still don't have a user id, abort early with a clear client-side error
       if (!payloadUserId) {
-        console.error("Import aborted: no authenticated user id available");
-        setError("You must be signed in to complete the import.");
+        console.error('Import aborted: no authenticated user id available');
+        setError('You must be signed in to complete the import.');
         setLoading(false);
         return;
       }
@@ -98,31 +95,19 @@ export function PreviewStep({
         user_id: payloadUserId,
         account_id,
         transactions: data.map((row) => {
-          const {
-            transactionNumber,
-            description,
-            date,
-            amount,
-            balance,
-            ...rest
-          } = row;
+          const { transactionNumber, description, date, amount, balance, ...rest } = row;
 
           // Filter out undefined values and format user_metadata
           const user_metadata: Record<string, string | number> = {};
           Object.entries(rest).forEach(([key, value]) => {
             // Skip system fields that shouldn't be in user_metadata
             const isSystemField =
-              key.startsWith("_") ||
-              key.toLowerCase().includes("rowindex") ||
-              key.toLowerCase().includes("formattedamount") ||
-              key.toLowerCase().includes("index");
+              key.startsWith('_') ||
+              key.toLowerCase().includes('rowindex') ||
+              key.toLowerCase().includes('formattedamount') ||
+              key.toLowerCase().includes('index');
 
-            if (
-              !isSystemField &&
-              value !== undefined &&
-              value !== null &&
-              value !== ""
-            ) {
+            if (!isSystemField && value !== undefined && value !== null && value !== '') {
               user_metadata[key] = value;
             }
           });
@@ -138,34 +123,31 @@ export function PreviewStep({
         }),
       };
 
-      console.log("Sending payload:", payload);
+      console.log('Sending payload:', payload);
 
-      const url = "/api/upload-transactions";
-      console.log("Making POST request to Next.js API route:", url);
+      const url = '/api/upload-transactions';
+      console.log('Making POST request to Next.js API route:', url);
 
       const res = await fetch(url, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify(payload),
       });
 
-      console.log("Response status:", res.status);
-      console.log(
-        "Response headers:",
-        Object.fromEntries(res.headers.entries())
-      );
+      console.log('Response status:', res.status);
+      console.log('Response headers:', Object.fromEntries(res.headers.entries()));
 
       if (!res.ok) {
         const err = await res.text();
-        console.error("API Error:", err);
+        console.error('API Error:', err);
         throw new Error(err || `HTTP ${res.status}`);
       }
 
       const result = await res.json();
-      console.log("API Response:", result);
+      console.log('API Response:', result);
 
       setSuccess(true);
       setTimeout(() => {
@@ -173,9 +155,9 @@ export function PreviewStep({
       }, 1000);
     } catch (e: unknown) {
       if (e instanceof Error) {
-        setError(e.message || "Upload failed");
+        setError(e.message || 'Upload failed');
       } else {
-        setError("Upload failed");
+        setError('Upload failed');
       }
     } finally {
       setLoading(false);
@@ -191,51 +173,40 @@ export function PreviewStep({
           Preview Import
         </h1>
         <p className="text-muted-foreground mt-2">
-          Review your mapped data before completing the import. Check that the
-          columns are correctly mapped and the data looks accurate.
+          Review your mapped data before completing the import. Check that the columns are correctly
+          mapped and the data looks accurate.
         </p>
       </div>
 
       {/* Import Summary */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">
-          Import Summary
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Overview of your data import
-        </p>
+        <h2 className="text-lg font-semibold text-foreground">Import Summary</h2>
+        <p className="text-sm text-muted-foreground">Overview of your data import</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-foreground">
-              Total Records
-            </h4>
-            <div className="text-2xl font-semibold text-foreground">
-              {data.length}
-            </div>
+            <h4 className="text-sm font-medium text-foreground">Total Records</h4>
+            <div className="text-2xl font-semibold text-foreground">{data.length}</div>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-foreground">
-              Amount Columns
-            </h4>
+            <h4 className="text-sm font-medium text-foreground">Amount Columns</h4>
             <div className="flex flex-wrap gap-1">
-              {mapping.amountColumns.map((column) => (
-                <Badge
-                  key={column}
-                  className="border-transparent bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
-                >
-                  <DollarSign className="w-3 h-3 mr-1" />
-                  {column}
-                </Badge>
-              ))}
+              {mapping.amountColumns?.length &&
+                mapping.amountColumns.map((column) => (
+                  <Badge
+                    key={column}
+                    className="border-transparent bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                  >
+                    <DollarSign className="w-3 h-3 mr-1" />
+                    {column}
+                  </Badge>
+                ))}
             </div>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-foreground">
-              Custom Fields
-            </h4>
+            <h4 className="text-sm font-medium text-foreground">Custom Fields</h4>
             <div className="text-sm text-muted-foreground">
               {Object.keys(mapping.customFields).length} custom fields mapped
             </div>
@@ -245,24 +216,20 @@ export function PreviewStep({
         <Separator className="bg-border" />
 
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-foreground">
-            Field Mappings
-          </h4>
+          <h4 className="text-sm font-medium text-foreground">Field Mappings</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-foreground">
             <div className="space-y-2">
               <div className="flex items-center gap-6">
                 <span>Transaction Number:</span>
-                <Badge variant="secondary">
-                  {mapping.transactionNumber ?? "—"}
-                </Badge>
+                <Badge variant="secondary">{mapping.transactionNumber ?? '—'}</Badge>
               </div>
               <div className="flex items-center gap-6">
                 <span>Description:</span>
-                <Badge variant="secondary">{mapping.description ?? "—"}</Badge>
+                <Badge variant="secondary">{mapping.description ?? '—'}</Badge>
               </div>
               <div className="flex items-center gap-6">
                 <span>Date:</span>
-                <Badge variant="secondary">{mapping.date ?? "—"}</Badge>
+                <Badge variant="secondary">{mapping.date ?? '—'}</Badge>
               </div>
             </div>
 
@@ -270,18 +237,16 @@ export function PreviewStep({
               <div className="flex items-center gap-6">
                 <span>Amount:</span>
                 <Badge variant="secondary">
-                  {mapping.amountColumns && mapping.amountColumns.length
-                    ? mapping.amountColumns.join(", ")
-                    : "—"}
+                  {mapping.amountColumns?.length ? mapping.amountColumns.join(', ') : '—'}
                 </Badge>
               </div>
               <div className="flex items-center gap-6">
                 <span>Custom 1:</span>
-                <Badge variant="secondary">{customFieldList[0] ?? "—"}</Badge>
+                <Badge variant="secondary">{customFieldList[0] ?? '—'}</Badge>
               </div>
               <div className="flex items-center gap-6">
                 <span>Custom 2:</span>
-                <Badge variant="secondary">{customFieldList[1] ?? "—"}</Badge>
+                <Badge variant="secondary">{customFieldList[1] ?? '—'}</Badge>
               </div>
             </div>
           </div>
@@ -298,8 +263,7 @@ export function PreviewStep({
         {data.length === 0 ? (
           <Alert className="border-border bg-muted/30 text-foreground">
             <AlertDescription className="text-sm">
-              No data records found. Please check your CSV file and column
-              mappings.
+              No data records found. Please check your CSV file and column mappings.
             </AlertDescription>
           </Alert>
         ) : (
@@ -323,20 +287,18 @@ export function PreviewStep({
                     <div className="w-24 flex-shrink-0 border-r border-border px-3 py-3 text-right text-xs font-medium text-muted-foreground">
                       Amount
                     </div>
-                    {Object.entries(mapping.customFields).map(
-                      ([fieldName, columnName], index) => (
-                        <div
-                          key={fieldName}
-                          className={`w-32 flex-shrink-0 px-3 py-3 text-left text-xs font-medium text-muted-foreground ${
-                            index < Object.keys(mapping.customFields).length - 1
-                              ? "border-r border-border"
-                              : ""
-                          }`}
-                        >
-                          {columnName}
-                        </div>
-                      )
-                    )}
+                    {Object.entries(mapping.customFields).map(([fieldName, columnName], index) => (
+                      <div
+                        key={fieldName}
+                        className={`w-32 flex-shrink-0 px-3 py-3 text-left text-xs font-medium text-muted-foreground ${
+                          index < Object.keys(mapping.customFields).length - 1
+                            ? 'border-r border-border'
+                            : ''
+                        }`}
+                      >
+                        {columnName}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -350,35 +312,34 @@ export function PreviewStep({
                     </div>
                     <div className="flex-1 flex min-w-0">
                       <div className="w-32 flex-shrink-0 border-r border-border px-3 py-2 text-left text-sm truncate">
-                        {record.transactionNumber || "—"}
+                        {record.transactionNumber || '—'}
                       </div>
                       <div className="w-48 flex-shrink-0 border-r border-border px-3 py-2 text-left text-sm truncate">
-                        {record.description || "—"}
+                        {record.description || '—'}
                       </div>
                       <div className="w-28 flex-shrink-0 border-r border-border px-3 py-2 text-left text-sm truncate">
-                        {record.date || "—"}
+                        {record.date || '—'}
                       </div>
                       <div
                         className={`w-24 flex-shrink-0 border-r border-border px-3 py-2 text-right text-sm font-mono ${getAmountClass(
-                          Number(record.amount ?? 0)
+                          Number(record.amount ?? 0),
                         )}`}
                       >
-                        {record.formattedAmount || "$0.00"}
+                        {record.formattedAmount || '$0.00'}
                       </div>
                       {Object.entries(mapping.customFields).map(
                         ([fieldName, columnName], fieldIndex) => (
                           <div
                             key={fieldName}
                             className={`w-32 flex-shrink-0 px-3 py-2 text-left text-sm truncate ${
-                              fieldIndex <
-                              Object.keys(mapping.customFields).length - 1
-                                ? "border-r border-border"
-                                : ""
+                              fieldIndex < Object.keys(mapping.customFields).length - 1
+                                ? 'border-r border-border'
+                                : ''
                             }`}
                           >
                             {getCustomFieldValue(record, columnName)}
                           </div>
-                        )
+                        ),
                       )}
                     </div>
                   </div>
@@ -404,9 +365,8 @@ export function PreviewStep({
         <Alert className="border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-900/20">
           <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
           <AlertDescription className="text-green-800 dark:text-green-300">
-            <strong>Ready to import!</strong> Your CSV data has been
-            successfully processed and mapped. Click &quot;Complete Import&quot;
-            to finish the process.
+            <strong>Ready to import!</strong> Your CSV data has been successfully processed and
+            mapped. Click &quot;Complete Import&quot; to finish the process.
           </AlertDescription>
         </Alert>
       )}
@@ -425,17 +385,14 @@ export function PreviewStep({
             </Button>
           )}
           <Button
-            onClick={handleImport}
-            disabled={
-              data.length === 0 ||
-              loading ||
-              resolvingUserId ||
-              !effectiveUserId
-            }
+            onClick={() => {
+              void handleImport();
+            }}
+            disabled={data.length === 0 || loading || resolvingUserId || !effectiveUserId}
             className="min-w-[140px] gap-2"
           >
             {loading ? (
-              "Uploading..."
+              'Uploading...'
             ) : (
               <>
                 <Download className="w-4 h-4 mr-2" />

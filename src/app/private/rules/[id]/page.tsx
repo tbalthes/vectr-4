@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
 import { useCategories } from "@/hooks/useCategories";
@@ -11,7 +12,7 @@ export default function EditRulePage() {
   const params = useParams();
   const ruleId = Array.isArray(params?.id)
     ? params?.id[0]
-    : (params?.id as string);
+    : params?.id ?? "";
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { loading: categoriesLoading } = useCategories(user?.id);
@@ -28,7 +29,7 @@ export default function EditRulePage() {
   const handleCancel = () => router.push("/private/rules");
 
   const handleSave = async (updates: any) => {
-    if (!ruleId) return;
+    if (!ruleId) {return;}
     try {
       await updateRule(ruleId, updates);
       router.push("/private/rules");
@@ -51,7 +52,7 @@ export default function EditRulePage() {
     <div className="max-w-6xl mx-auto">
       <MonarchStyleRuleBuilder
         rule={rule}
-        onSave={handleSave}
+        onSave={(updates) => { void handleSave(updates); }}
         onCancel={handleCancel}
         userId={user.id}
       />

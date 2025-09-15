@@ -1,6 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { Trash, Plus } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+
 import {
   Sheet,
   SheetContent,
@@ -10,9 +13,8 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+
 export interface ChatSessionItem {
   id: string;
   title: string;
@@ -51,7 +53,7 @@ export default function ChatSidebar({
   const [query, setQuery] = React.useState("");
 
   const filtered = React.useMemo(() => {
-    if (!query) return sessions;
+    if (!query) {return sessions;}
     const q = query.toLowerCase();
     return sessions.filter(
       (s) =>
@@ -68,7 +70,7 @@ export default function ChatSidebar({
     }
   };
 
-  const isOpen = controlled ? openProp! : open;
+  const isOpen = controlled ? openProp : open;
 
   return (
     <Sheet open={isOpen} onOpenChange={setOpenState}>
@@ -144,7 +146,7 @@ export default function ChatSidebar({
                 onClick={() => {
                   onSelect?.(s.id);
                   const shouldClose = closeOnSelect ?? true;
-                  if (shouldClose) setOpenState(false);
+                  if (shouldClose) {setOpenState(false);}
                 }}
               >
                 <div className="flex-1 min-w-0">

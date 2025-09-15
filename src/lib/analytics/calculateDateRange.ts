@@ -16,9 +16,9 @@ export type NamedRange = '7d' | '30d' | '90d' | '1M' | '3M' | '6M' | 'YTD' | '1Y
  * All calculations in UTC timezone for consistency
  */
 export function calculateDateRange(
-  range: NamedRange | string = '30d',
+  range: NamedRange = '30d',
   startOverride?: string | null,
-  endOverride?: string | null
+  endOverride?: string | null,
 ): DateRangeResult {
   // If explicit start/end dates provided, use those and ignore range
   if (startOverride && endOverride) {
@@ -105,7 +105,9 @@ export function calculateDateRange(
       return { startDate, endDate, granularity: 'month' };
 
     default:
-      throw new Error(`Invalid range: ${range}. Supported values: 7d, 30d, 90d, 1M, 3M, 6M, YTD, 1Y, all`);
+      throw new Error(
+        `Invalid range: ${range as string}. Supported values: 7d, 30d, 90d, 1M, 3M, 6M, YTD, 1Y, all`,
+      );
   }
 }
 
@@ -128,7 +130,7 @@ function getGranularityFromRange(daysDiff: number): 'day' | 'week' | 'month' {
 export function validateAnalyticsParams(
   range?: string | null,
   start?: string | null,
-  end?: string | null
+  end?: string | null,
 ): void {
   // If explicit dates provided, validate them
   if (start || end) {
@@ -153,7 +155,11 @@ export function validateAnalyticsParams(
  * Calculate expected number of buckets for a date range
  * Useful for validation and testing
  */
-export function calculateExpectedBuckets(startDate: Date, endDate: Date, granularity: 'day' | 'week' | 'month'): number {
+export function calculateExpectedBuckets(
+  startDate: Date,
+  endDate: Date,
+  granularity: 'day' | 'week' | 'month',
+): number {
   const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -163,10 +169,13 @@ export function calculateExpectedBuckets(startDate: Date, endDate: Date, granula
     case 'week':
       return Math.ceil(diffDays / 7) + 1;
     case 'month':
-      return Math.abs(
-        endDate.getMonth() - startDate.getMonth() +
-        (endDate.getFullYear() - startDate.getFullYear()) * 12
-      ) + 1;
+      return (
+        Math.abs(
+          endDate.getMonth() -
+            startDate.getMonth() +
+            (endDate.getFullYear() - startDate.getFullYear()) * 12,
+        ) + 1
+      );
     default:
       return diffDays + 1;
   }

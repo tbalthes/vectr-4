@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   X,
   Calendar as CalendarIcon,
@@ -11,6 +10,11 @@ import {
   Trash2,
   RotateCcw,
 } from "lucide-react";
+
+import CategoryIcon from "./CategoryIcon";
+import MerchantLogo from "./MerchantLogo";
+
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Drawer,
   DrawerClose,
@@ -29,8 +33,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils/utils";
-import CategoryIcon from "./CategoryIcon";
-import MerchantLogo from "./MerchantLogo";
 import { MerchantPicker } from "@/components/private/merchants/MerchantPicker";
 import CategorySingleSelectPopover from "@/components/private/categories/CategorySingleSelectPopover";
 
@@ -88,7 +90,7 @@ export function TransactionDetailsDrawer({
   const { user } = useAuth();
 
   const fetchTransactionDetails = useCallback(async () => {
-    if (!transactionId) return;
+    if (!transactionId) {return;}
 
     setIsLoading(true);
     setError(null);
@@ -468,7 +470,7 @@ export function TransactionDetailsDrawer({
                             : null
                         }
                         onMerchantSelect={(merchant) => {
-                          if (!editedTransaction) return;
+                          if (!editedTransaction) {return;}
 
                           if (merchant) {
                             const merged = {
@@ -540,7 +542,7 @@ export function TransactionDetailsDrawer({
                             icon?: string | null;
                           } | null
                         ) => {
-                          if (!editedTransaction) return;
+                          if (!editedTransaction) {return;}
                           if (categoryId) {
                             const merged = {
                               ...editedTransaction,

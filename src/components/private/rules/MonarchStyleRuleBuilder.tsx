@@ -1,37 +1,32 @@
 /**
  * MonarchStyle Rule Builder - Matches Monarch Money's interface
  */
-import React, { useState, useEffect } from "react";
-import { Plus, X, Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import React, { useState, useEffect } from 'react';
+import { Plus, X, Eye } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MerchantPicker } from "@/components/private/merchants/MerchantPicker";
-import CategorySingleSelectPopover from "@/components/private/categories/CategorySingleSelectPopover";
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MerchantPicker } from '@/components/private/merchants/MerchantPicker';
+import CategorySingleSelectPopover from '@/components/private/categories/CategorySingleSelectPopover';
 
 // (Removed unused local Merchant/MerchantCategory interfaces)
 
 // Interfaces
 interface MonarchRuleCondition {
   id: string;
-  type:
-    | "merchant"
-    | "amount"
-    | "category"
-    | "description"
-    | "accounts"
-    | "date";
+  type: 'merchant' | 'amount' | 'category' | 'description' | 'accounts' | 'date';
   operator: string;
   value: string;
   enabled: boolean;
@@ -40,13 +35,13 @@ interface MonarchRuleCondition {
 interface MonarchRuleAction {
   id: string;
   type:
-    | "rename_merchant"
-    | "update_category"
-    | "add_tags"
-    | "hide_transaction"
-    | "review_status"
-    | "link_to_goal"
-    | "split_transaction";
+    | 'rename_merchant'
+    | 'update_category'
+    | 'add_tags'
+    | 'hide_transaction'
+    | 'review_status'
+    | 'link_to_goal'
+    | 'split_transaction';
   value: string;
   enabled: boolean;
 }
@@ -57,15 +52,15 @@ interface RuleData {
   enabled: boolean;
   priority: number;
   conditions: {
-    operator: "AND" | "OR" | string;
-    groups: Array<{
-      operator: "AND" | "OR" | string;
-      conditions: Array<{
+    operator: 'AND' | 'OR';
+    groups: {
+      operator: 'AND' | 'OR';
+      conditions: {
         field: string;
         operator: string;
         value: string | number;
-      }>;
-    }>;
+      }[];
+    }[];
   };
   actions: {
     category_id?: string;
@@ -74,10 +69,10 @@ interface RuleData {
     hide_transaction?: boolean;
     needs_review?: boolean;
   };
+  run_on_past: boolean;
 }
 
 interface MonarchRuleBuilderProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rule?: Record<string, any> | null; // More flexible to handle existing rule types
   onSave: (rule: RuleData) => void;
   onCancel: () => void;
@@ -91,7 +86,7 @@ export function MonarchStyleRuleBuilder({
   userId,
 }: MonarchRuleBuilderProps) {
   // Basic rule info
-  const [ruleName, setRuleName] = useState(rule?.name || "");
+  const [ruleName, setRuleName] = useState(rule?.name || '');
   const [enabled, setEnabled] = useState(rule?.enabled ?? true);
 
   // Preview state
@@ -103,24 +98,22 @@ export function MonarchStyleRuleBuilder({
   const [conditions, setConditions] = useState<MonarchRuleCondition[]>(() => {
     if (rule?.conditions?.groups?.[0]?.conditions) {
       // Map database field names back to UI condition types
-      const mapFieldToConditionType = (
-        field: string
-      ): MonarchRuleCondition["type"] => {
+      const mapFieldToConditionType = (field: string): MonarchRuleCondition['type'] => {
         switch (field) {
-          case "merchant":
-            return "merchant";
-          case "description":
-            return "description";
-          case "amount":
-            return "amount";
-          case "category":
-            return "category";
-          case "accounts":
-            return "accounts";
-          case "date":
-            return "date";
+          case 'merchant':
+            return 'merchant';
+          case 'description':
+            return 'description';
+          case 'amount':
+            return 'amount';
+          case 'category':
+            return 'category';
+          case 'accounts':
+            return 'accounts';
+          case 'date':
+            return 'date';
           default:
-            return "description"; // fallback
+            return 'description'; // fallback
         }
       };
 
@@ -131,7 +124,7 @@ export function MonarchStyleRuleBuilder({
             operator: string;
             value: string | number;
           },
-          index: number
+          index: number,
         ) => {
           const conditionValue = String(condition.value);
 
@@ -142,23 +135,23 @@ export function MonarchStyleRuleBuilder({
             value: conditionValue, // Keep the original value, let the render function handle UUIDs
             enabled: true,
           };
-        }
+        },
       );
     }
     return [
       {
-        id: "1",
-        type: "description",
-        operator: "contains",
-        value: "",
+        id: '1',
+        type: 'description',
+        operator: 'contains',
+        value: '',
         enabled: true,
       },
     ];
   });
 
   // Group operator (AND/OR) between condition boxes
-  const [groupOperator, setGroupOperator] = useState<"AND" | "OR">(
-    rule?.conditions?.groups?.[0]?.operator === "OR" ? "OR" : "AND"
+  const [groupOperator, setGroupOperator] = useState<'AND' | 'OR'>(
+    rule?.conditions?.groups?.[0]?.operator === 'OR' ? 'OR' : 'AND',
   );
 
   // Actions
@@ -167,8 +160,8 @@ export function MonarchStyleRuleBuilder({
 
     if (rule?.actions?.category_id) {
       actionsList.push({
-        id: "1",
-        type: "update_category",
+        id: '1',
+        type: 'update_category',
         value: rule.actions.category_id,
         enabled: true,
       });
@@ -176,8 +169,8 @@ export function MonarchStyleRuleBuilder({
 
     if (rule?.actions?.rename_to) {
       actionsList.push({
-        id: "2",
-        type: "rename_merchant",
+        id: '2',
+        type: 'rename_merchant',
         value: rule.actions.rename_to,
         enabled: true,
       });
@@ -185,36 +178,36 @@ export function MonarchStyleRuleBuilder({
 
     if (rule?.actions?.add_tags?.length) {
       actionsList.push({
-        id: "3",
-        type: "add_tags",
-        value: rule.actions.add_tags.join(", "),
+        id: '3',
+        type: 'add_tags',
+        value: rule.actions.add_tags.join(', '),
         enabled: true,
       });
     }
 
     if (rule?.actions?.hide_transaction) {
       actionsList.push({
-        id: "4",
-        type: "hide_transaction",
-        value: "true",
+        id: '4',
+        type: 'hide_transaction',
+        value: 'true',
         enabled: true,
       });
     }
 
     if (rule?.actions?.needs_review) {
       actionsList.push({
-        id: "5",
-        type: "review_status",
-        value: "true",
+        id: '5',
+        type: 'review_status',
+        value: 'true',
         enabled: true,
       });
     }
 
     if (actionsList.length === 0) {
       actionsList.push({
-        id: "1",
-        type: "update_category",
-        value: "",
+        id: '1',
+        type: 'update_category',
+        value: '',
         enabled: true,
       });
     }
@@ -222,12 +215,12 @@ export function MonarchStyleRuleBuilder({
     return actionsList;
   });
 
-  const addCondition = (type: MonarchRuleCondition["type"]) => {
+  const addCondition = (type: MonarchRuleCondition['type']) => {
     const newCondition: MonarchRuleCondition = {
       id: Date.now().toString(),
       type,
       operator: getDefaultOperator(type),
-      value: "",
+      value: '',
       enabled: true,
     };
     setConditions([...conditions, newCondition]);
@@ -237,20 +230,15 @@ export function MonarchStyleRuleBuilder({
     setConditions(conditions.filter((c) => c.id !== id));
   };
 
-  const updateCondition = (
-    id: string,
-    updates: Partial<MonarchRuleCondition>
-  ) => {
-    setConditions(
-      conditions.map((c) => (c.id === id ? { ...c, ...updates } : c))
-    );
+  const updateCondition = (id: string, updates: Partial<MonarchRuleCondition>) => {
+    setConditions(conditions.map((c) => (c.id === id ? { ...c, ...updates } : c)));
   };
 
-  const addAction = (type: MonarchRuleAction["type"]) => {
+  const addAction = (type: MonarchRuleAction['type']) => {
     const newAction: MonarchRuleAction = {
       id: Date.now().toString(),
       type,
-      value: "",
+      value: '',
       enabled: true,
     };
     setActions([...actions, newAction]);
@@ -264,54 +252,54 @@ export function MonarchStyleRuleBuilder({
     setActions(actions.map((a) => (a.id === id ? { ...a, ...updates } : a)));
   };
 
-  const getDefaultOperator = (type: MonarchRuleCondition["type"]): string => {
+  const getDefaultOperator = (type: MonarchRuleCondition['type']): string => {
     switch (type) {
-      case "merchant":
-      case "description":
-        return "contains";
-      case "amount":
-        return "equals";
-      case "category":
-        return "equals";
-      case "accounts":
-        return "equals";
-      case "date":
-        return "after";
+      case 'merchant':
+      case 'description':
+        return 'contains';
+      case 'amount':
+        return 'equals';
+      case 'category':
+        return 'equals';
+      case 'accounts':
+        return 'equals';
+      case 'date':
+        return 'after';
       default:
-        return "contains";
+        return 'contains';
     }
   };
 
-  const getOperatorOptions = (type: MonarchRuleCondition["type"]) => {
+  const getOperatorOptions = (type: MonarchRuleCondition['type']) => {
     switch (type) {
-      case "merchant":
-      case "description":
+      case 'merchant':
+      case 'description':
         return [
-          { value: "contains", label: "contains" },
-          { value: "equals", label: "is exactly" },
-          { value: "starts_with", label: "starts with" },
-          { value: "ends_with", label: "ends with" },
-          { value: "not_contains", label: "does not contain" },
+          { value: 'contains', label: 'contains' },
+          { value: 'equals', label: 'is exactly' },
+          { value: 'starts_with', label: 'starts with' },
+          { value: 'ends_with', label: 'ends with' },
+          { value: 'not_contains', label: 'does not contain' },
         ];
-      case "amount":
+      case 'amount':
         return [
-          { value: "equals", label: "equals" },
-          { value: "greater_than", label: "greater than" },
-          { value: "less_than", label: "less than" },
-          { value: "between", label: "between" },
+          { value: 'equals', label: 'equals' },
+          { value: 'greater_than', label: 'greater than' },
+          { value: 'less_than', label: 'less than' },
+          { value: 'between', label: 'between' },
         ];
-      case "category":
-      case "accounts":
+      case 'category':
+      case 'accounts':
         return [
-          { value: "equals", label: "is" },
-          { value: "contains", label: "contains" },
+          { value: 'equals', label: 'is' },
+          { value: 'contains', label: 'contains' },
         ];
-      case "date":
+      case 'date':
         return [
-          { value: "after", label: "after" },
-          { value: "before", label: "before" },
-          { value: "on", label: "on" },
-          { value: "between", label: "between" },
+          { value: 'after', label: 'after' },
+          { value: 'before', label: 'before' },
+          { value: 'on', label: 'on' },
+          { value: 'between', label: 'between' },
         ];
       default:
         return [];
@@ -320,13 +308,11 @@ export function MonarchStyleRuleBuilder({
 
   const renderConditionValue = (condition: MonarchRuleCondition) => {
     switch (condition.type) {
-      case "merchant":
+      case 'merchant': {
         // Check if the value looks like a UUID (merchant ID)
         const isUUID =
           condition.value &&
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-            condition.value
-          );
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(condition.value);
 
         return (
           <div className="md:col-span-2 min-w-[18rem] md:min-w-[24rem]">
@@ -342,68 +328,60 @@ export function MonarchStyleRuleBuilder({
                   : null
               }
               onMerchantSelect={(merchant) =>
-                updateCondition(condition.id, { value: merchant?.name || "" })
+                updateCondition(condition.id, { value: merchant?.name || '' })
               }
-              placeholder={
-                isUUID
-                  ? "Merchant ID stored - please reselect"
-                  : "Select merchant..."
-              }
+              placeholder={isUUID ? 'Merchant ID stored - please reselect' : 'Select merchant...'}
               className="w-full"
             />
           </div>
         );
-      case "category":
+      }
+      case 'category': {
         // Check if the value looks like a UUID (category ID)
         const isCategoryUUID =
           condition.value &&
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-            condition.value
-          );
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(condition.value);
 
         return (
           <div className="md:col-span-2 min-w-[18rem] md:min-w-[24rem]">
             <CategorySingleSelectPopover
-              value={isCategoryUUID ? (condition.value as string) : null}
+              value={isCategoryUUID ? condition.value : null}
               userId={userId}
               onChange={(id, cat) => {
-                const categoryName = cat?.name || id || "";
+                const categoryName = cat?.name || id || '';
                 updateCondition(condition.id, { value: categoryName });
               }}
               placeholder={
                 condition.value && !isCategoryUUID
                   ? `Selected: ${condition.value}`
-                  : "Select category..."
+                  : 'Select category...'
               }
               className="w-full"
             />
           </div>
         );
-      case "amount":
+      }
+      case 'amount':
         return (
           <Input
             type="number"
             step="0.01"
             value={condition.value}
-            onChange={(e) =>
-              updateCondition(condition.id, { value: e.target.value })
-            }
+            onChange={(e) => updateCondition(condition.id, { value: e.target.value })}
             placeholder="0.00"
             className="w-full"
           />
         );
-      case "description":
+      case 'description':
         return (
           <Input
             value={condition.value}
-            onChange={(e) =>
-              updateCondition(condition.id, { value: e.target.value })
-            }
+            onChange={(e) => updateCondition(condition.id, { value: e.target.value })}
             placeholder="Enter text..."
             className="w-full"
           />
         );
-      case "accounts":
+      case 'accounts':
         return (
           <Select
             value={condition.value}
@@ -419,14 +397,12 @@ export function MonarchStyleRuleBuilder({
             </SelectContent>
           </Select>
         );
-      case "date":
+      case 'date':
         return (
           <Input
             type="date"
             value={condition.value}
-            onChange={(e) =>
-              updateCondition(condition.id, { value: e.target.value })
-            }
+            onChange={(e) => updateCondition(condition.id, { value: e.target.value })}
             className="w-full"
           />
         );
@@ -437,7 +413,7 @@ export function MonarchStyleRuleBuilder({
 
   const renderActionValue = (action: MonarchRuleAction) => {
     switch (action.type) {
-      case "rename_merchant":
+      case 'rename_merchant':
         return (
           <Input
             value={action.value}
@@ -446,17 +422,17 @@ export function MonarchStyleRuleBuilder({
             className="w-full"
           />
         );
-      case "update_category":
+      case 'update_category':
         return (
           <CategorySingleSelectPopover
             value={action.value || null}
             userId={userId}
-            onChange={(id) => updateAction(action.id, { value: id || "" })}
+            onChange={(id) => updateAction(action.id, { value: id || '' })}
             placeholder="Select category..."
             className="w-full"
           />
         );
-      case "review_status":
+      case 'review_status':
         return (
           <Select
             value={action.value}
@@ -471,7 +447,7 @@ export function MonarchStyleRuleBuilder({
             </SelectContent>
           </Select>
         );
-      case "add_tags":
+      case 'add_tags':
         return (
           <Input
             value={action.value}
@@ -486,29 +462,26 @@ export function MonarchStyleRuleBuilder({
   };
 
   const conditionTypes = [
-    { value: "merchant", label: "Merchant" },
-    { value: "amount", label: "Amount" },
-    { value: "category", label: "Category" },
-    { value: "description", label: "Description" },
-    { value: "accounts", label: "Accounts" },
-    { value: "date", label: "Date" },
+    { value: 'merchant', label: 'Merchant' },
+    { value: 'amount', label: 'Amount' },
+    { value: 'category', label: 'Category' },
+    { value: 'description', label: 'Description' },
+    { value: 'accounts', label: 'Accounts' },
+    { value: 'date', label: 'Date' },
   ];
 
   const actionTypes = [
-    { value: "rename_merchant", label: "Rename merchant" },
-    { value: "update_category", label: "Update category" },
-    { value: "add_tags", label: "Add tags" },
-    { value: "hide_transaction", label: "Hide transaction" },
-    { value: "review_status", label: "Review status" },
-    { value: "link_to_goal", label: "Link to goal" },
-    { value: "split_transaction", label: "Split transaction" },
+    { value: 'rename_merchant', label: 'Rename merchant' },
+    { value: 'update_category', label: 'Update category' },
+    { value: 'add_tags', label: 'Add tags' },
+    { value: 'hide_transaction', label: 'Hide transaction' },
+    { value: 'review_status', label: 'Review status' },
+    { value: 'link_to_goal', label: 'Link to goal' },
+    { value: 'split_transaction', label: 'Split transaction' },
   ];
 
   const handlePreview = async () => {
-    if (
-      !ruleName.trim() ||
-      conditions.filter((c) => c.enabled && c.value).length === 0
-    ) {
+    if (!ruleName.trim() || conditions.filter((c) => c.enabled && c.value).length === 0) {
       setPreviewCount(0);
       return;
     }
@@ -517,27 +490,27 @@ export function MonarchStyleRuleBuilder({
     try {
       const mapConditionTypeToField = (type: string): string => {
         switch (type) {
-          case "merchant":
-            return "merchant";
-          case "description":
-            return "description";
-          case "amount":
-            return "amount";
-          case "category":
-            return "category";
-          case "accounts":
-            return "accounts";
-          case "date":
-            return "date";
+          case 'merchant':
+            return 'merchant';
+          case 'description':
+            return 'description';
+          case 'amount':
+            return 'amount';
+          case 'category':
+            return 'category';
+          case 'accounts':
+            return 'accounts';
+          case 'date':
+            return 'date';
           default:
-            return "description";
+            return 'description';
         }
       };
 
       const previewData = {
         user_id: userId,
         conditions: {
-          operator: "AND",
+          operator: 'AND',
           groups: [
             {
               operator: groupOperator,
@@ -547,7 +520,7 @@ export function MonarchStyleRuleBuilder({
                   field: mapConditionTypeToField(c.type),
                   operator: c.operator,
                   value:
-                    c.type === "amount"
+                    c.type === 'amount'
                       ? ((): number | string => {
                           const num = parseFloat(String(c.value));
                           return isNaN(num) ? String(c.value) : num;
@@ -558,16 +531,14 @@ export function MonarchStyleRuleBuilder({
           ],
         },
         actions: {
-          category_id: actions.find(
-            (a) => a.type === "update_category" && a.enabled
-          )?.value,
+          category_id: actions.find((a) => a.type === 'update_category' && a.enabled)?.value,
         },
         limit: 100,
       };
 
-      const response = await fetch("/api/user-rules/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/user-rules/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(previewData),
       });
 
@@ -578,7 +549,7 @@ export function MonarchStyleRuleBuilder({
         setPreviewCount(0);
       }
     } catch (error) {
-      console.error("Preview error:", error);
+      console.error('Preview error:', error);
       setPreviewCount(0);
     } finally {
       setIsLoadingPreview(false);
@@ -588,7 +559,7 @@ export function MonarchStyleRuleBuilder({
   // Auto-preview when conditions change
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      handlePreview();
+      void handlePreview();
     }, 500); // Debounce
     return () => clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -598,20 +569,20 @@ export function MonarchStyleRuleBuilder({
     // Map UI condition types to actual database field names
     const mapConditionTypeToField = (type: string): string => {
       switch (type) {
-        case "merchant":
-          return "merchant"; // Backend supports "merchant" field
-        case "description":
-          return "description"; // Original transaction description
-        case "amount":
-          return "amount";
-        case "category":
-          return "category"; // Backend now supports "category" field
-        case "accounts":
-          return "accounts"; // Backend now supports "accounts" field
-        case "date":
-          return "date"; // Backend now supports "date" field
+        case 'merchant':
+          return 'merchant'; // Backend supports "merchant" field
+        case 'description':
+          return 'description'; // Original transaction description
+        case 'amount':
+          return 'amount';
+        case 'category':
+          return 'category'; // Backend now supports "category" field
+        case 'accounts':
+          return 'accounts'; // Backend now supports "accounts" field
+        case 'date':
+          return 'date'; // Backend now supports "date" field
         default:
-          return "description";
+          return 'description';
       }
     };
 
@@ -623,28 +594,25 @@ export function MonarchStyleRuleBuilder({
         const data = await response.json();
         if (data.rules && data.rules.length > 0) {
           const maxPriority = Math.max(
-            ...data.rules.map((r: { priority?: number }) => r.priority || 0)
+            ...data.rules.map((r: { priority?: number }) => r.priority || 0),
           );
           nextPriority = maxPriority + 10;
         }
       }
     } catch (error) {
-      console.warn(
-        "Could not fetch existing rules for priority calculation:",
-        error
-      );
+      console.warn('Could not fetch existing rules for priority calculation:', error);
       // Use random priority as fallback to avoid conflicts
       nextPriority = Math.floor(Math.random() * 1000000);
     }
 
     // Convert to the format expected by the backend
-    const ruleData = {
+    const ruleData: RuleData = {
       user_id: userId,
       name: ruleName,
       enabled,
       priority: nextPriority,
       conditions: {
-        operator: "AND",
+        operator: 'AND' as const,
         groups: [
           {
             operator: groupOperator,
@@ -654,7 +622,7 @@ export function MonarchStyleRuleBuilder({
                 field: mapConditionTypeToField(c.type),
                 operator: c.operator,
                 value:
-                  c.type === "amount"
+                  c.type === 'amount'
                     ? ((): number | string => {
                         const num = parseFloat(String(c.value));
                         return isNaN(num) ? String(c.value) : num;
@@ -665,25 +633,17 @@ export function MonarchStyleRuleBuilder({
         ],
       },
       actions: {
-        category_id: actions.find(
-          (a) => a.type === "update_category" && a.enabled
-        )?.value,
-        rename_to: actions.find(
-          (a) => a.type === "rename_merchant" && a.enabled
-        )?.value,
+        category_id: actions.find((a) => a.type === 'update_category' && a.enabled)?.value,
+        rename_to: actions.find((a) => a.type === 'rename_merchant' && a.enabled)?.value,
         add_tags: actions
-          .find((a) => a.type === "add_tags" && a.enabled)
-          ?.value?.split(",")
+          .find((a) => a.type === 'add_tags' && a.enabled)
+          ?.value?.split(',')
           .map((t: string) => t.trim()),
-        hide_transaction: actions.some(
-          (a) => a.type === "hide_transaction" && a.enabled
-        ),
+        hide_transaction: actions.some((a) => a.type === 'hide_transaction' && a.enabled),
         // Review status mapping -> needs_review boolean
         ...(() => {
-          const rv = actions.find(
-            (a) => a.type === "review_status" && a.enabled
-          )?.value;
-          return rv ? { needs_review: rv === "needs_review" } : {};
+          const rv = actions.find((a) => a.type === 'review_status' && a.enabled)?.value;
+          return rv ? { needs_review: rv === 'needs_review' } : {};
         })(),
       },
       run_on_past: runOnPast,
@@ -722,9 +682,7 @@ export function MonarchStyleRuleBuilder({
         {/* Left Column - Conditions */}
         <Card className="bg-card shadow-xl text-card-foreground">
           <CardHeader>
-            <CardTitle className="text-lg">
-              If transaction matches criteria...
-            </CardTitle>
+            <CardTitle className="text-lg">If transaction matches criteria...</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {conditions.map((condition, idx) => (
@@ -737,9 +695,7 @@ export function MonarchStyleRuleBuilder({
                     <div className="flex items-center space-x-2">
                       <Switch
                         checked={condition.enabled}
-                        onCheckedChange={(enabled) =>
-                          updateCondition(condition.id, { enabled })
-                        }
+                        onCheckedChange={(enabled) => updateCondition(condition.id, { enabled })}
                       />
                       {conditions.length > 1 && (
                         <Button
@@ -757,7 +713,7 @@ export function MonarchStyleRuleBuilder({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     <Select
                       value={condition.type}
-                      onValueChange={(value: MonarchRuleCondition["type"]) =>
+                      onValueChange={(value: MonarchRuleCondition['type']) =>
                         updateCondition(condition.id, {
                           type: value,
                           operator: getDefaultOperator(value),
@@ -778,9 +734,7 @@ export function MonarchStyleRuleBuilder({
 
                     <Select
                       value={condition.operator}
-                      onValueChange={(value) =>
-                        updateCondition(condition.id, { operator: value })
-                      }
+                      onValueChange={(value) => updateCondition(condition.id, { operator: value })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -804,26 +758,26 @@ export function MonarchStyleRuleBuilder({
                     <div className="inline-flex">
                       <Button
                         type="button"
-                        variant={groupOperator === "AND" ? "default" : "ghost"}
+                        variant={groupOperator === 'AND' ? 'default' : 'ghost'}
                         size="sm"
-                        onClick={() => setGroupOperator("AND")}
+                        onClick={() => setGroupOperator('AND')}
                         className={`${
-                          groupOperator === "AND"
-                            ? "border shadow-sm -translate-y-px text-white"
-                            : "text-muted-foreground"
+                          groupOperator === 'AND'
+                            ? 'border shadow-sm -translate-y-px text-white'
+                            : 'text-muted-foreground'
                         } px-1`}
                       >
                         AND
                       </Button>
                       <Button
                         type="button"
-                        variant={groupOperator === "OR" ? "default" : "ghost"}
+                        variant={groupOperator === 'OR' ? 'default' : 'ghost'}
                         size="sm"
-                        onClick={() => setGroupOperator("OR")}
+                        onClick={() => setGroupOperator('OR')}
                         className={`${
-                          groupOperator === "OR"
-                            ? "border shadow-sm -translate-y-px text-white"
-                            : "text-muted-foreground"
+                          groupOperator === 'OR'
+                            ? 'border shadow-sm -translate-y-px text-white'
+                            : 'text-muted-foreground'
                         } ml-1 px-2`}
                       >
                         OR
@@ -841,9 +795,7 @@ export function MonarchStyleRuleBuilder({
                   key={type.value}
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    addCondition(type.value as MonarchRuleCondition["type"])
-                  }
+                  onClick={() => addCondition(type.value as MonarchRuleCondition['type'])}
                   className="text-xs"
                 >
                   <Plus className="h-3 w-3 mr-1" />
@@ -857,9 +809,7 @@ export function MonarchStyleRuleBuilder({
         {/* Right Column - Actions */}
         <Card className="bg-card text-card-foreground shadow-xl">
           <CardHeader>
-            <CardTitle className="text-lg">
-              Then apply these updates...
-            </CardTitle>
+            <CardTitle className="text-lg">Then apply these updates...</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {actions.map((action) => (
@@ -869,14 +819,12 @@ export function MonarchStyleRuleBuilder({
               >
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary" className="capitalize">
-                    {action.type.replace("_", " ")}
+                    {action.type.replace('_', ' ')}
                   </Badge>
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={action.enabled}
-                      onCheckedChange={(enabled) =>
-                        updateAction(action.id, { enabled })
-                      }
+                      onCheckedChange={(enabled) => updateAction(action.id, { enabled })}
                     />
                     <Button
                       variant="ghost"
@@ -892,8 +840,8 @@ export function MonarchStyleRuleBuilder({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <Select
                     value={action.type}
-                    onValueChange={(value: MonarchRuleAction["type"]) =>
-                      updateAction(action.id, { type: value, value: "" })
+                    onValueChange={(value: MonarchRuleAction['type']) =>
+                      updateAction(action.id, { type: value, value: '' })
                     }
                   >
                     <SelectTrigger>
@@ -920,9 +868,7 @@ export function MonarchStyleRuleBuilder({
                   key={type.value}
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    addAction(type.value as MonarchRuleAction["type"])
-                  }
+                  onClick={() => addAction(type.value as MonarchRuleAction['type'])}
                   className="text-xs"
                 >
                   <Plus className="h-3 w-3 mr-1" />
@@ -941,15 +887,15 @@ export function MonarchStyleRuleBuilder({
             <Button
               variant="outline"
               size="sm"
-              onClick={handlePreview}
+              onClick={() => {
+                void handlePreview();
+              }}
               disabled={isLoadingPreview}
             >
               <Eye className="h-4 w-4 mr-2" />
               Preview changes
             </Button>
-            <span className="text-xs text-gray-500">
-              {isLoadingPreview ? "..." : previewCount}
-            </span>
+            <span className="text-xs text-gray-500">{isLoadingPreview ? '...' : previewCount}</span>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -968,7 +914,12 @@ export function MonarchStyleRuleBuilder({
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!ruleName.trim()}>
+          <Button
+            onClick={() => {
+              void handleSave();
+            }}
+            disabled={!ruleName.trim()}
+          >
             Save Rule
           </Button>
         </div>

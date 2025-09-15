@@ -1,13 +1,15 @@
 "use client";
 
 import React from "react";
-import PageHeader from "@/components/private/PageHeader";
-import { Button } from "@/components/ui/button";
 import { Plus, Download, Upload } from "lucide-react";
 import Link from "next/link";
+import { useSelectedLayoutSegments } from "next/navigation";
+
+import PageHeader from "@/components/private/PageHeader";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
-import { useSelectedLayoutSegments } from "next/navigation";
+
 
 export default function RulesLayout({
   children,
@@ -44,7 +46,7 @@ export default function RulesLayout({
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
     try {
       const text = await file.text();
       const importData = JSON.parse(text);
@@ -62,7 +64,12 @@ export default function RulesLayout({
         actions={
           showListActions && !authLoading && user ? (
             <div className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" onClick={handleExportRules}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  void handleExportRules();
+                }}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
@@ -77,7 +84,7 @@ export default function RulesLayout({
                   type="file"
                   accept=".json"
                   className="hidden"
-                  onChange={handleImportRules}
+                  onChange={(e) => { void handleImportRules(e); }}
                 />
               </label>
               <Button asChild>

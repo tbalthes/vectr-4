@@ -1,7 +1,7 @@
 // src/hooks/useMerchants.ts
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 export interface Merchant {
   id: string;
@@ -28,8 +28,8 @@ export function useMerchants() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/merchants/all", {
-          credentials: "include",
+        const response = await fetch('/api/merchants/all', {
+          credentials: 'include',
         });
 
         if (!response.ok) {
@@ -39,39 +39,37 @@ export function useMerchants() {
         const data = await response.json();
         setMerchants(data.data || []);
       } catch (err) {
-        console.error("Error fetching merchants:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch merchants"
-        );
+        console.error('Error fetching merchants:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch merchants');
         // Fallback to some default merchants
         setMerchants([
           {
-            id: "amazon",
-            name: "Amazon",
+            id: 'amazon',
+            name: 'Amazon',
             logo_url: null,
             transaction_count: 45,
           },
           {
-            id: "walmart",
-            name: "Walmart",
+            id: 'walmart',
+            name: 'Walmart',
             logo_url: null,
             transaction_count: 23,
           },
           {
-            id: "target",
-            name: "Target",
+            id: 'target',
+            name: 'Target',
             logo_url: null,
             transaction_count: 18,
           },
           {
-            id: "costco",
-            name: "Costco",
+            id: 'costco',
+            name: 'Costco',
             logo_url: null,
             transaction_count: 12,
           },
           {
-            id: "starbucks",
-            name: "Starbucks",
+            id: 'starbucks',
+            name: 'Starbucks',
             logo_url: null,
             transaction_count: 34,
           },
@@ -81,7 +79,7 @@ export function useMerchants() {
       }
     };
 
-    fetchMerchants();
+    void fetchMerchants();
   }, []);
 
   return { merchants, loading, error };

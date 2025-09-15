@@ -1,11 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Receipt,
@@ -18,10 +15,15 @@ import {
   LogOut,
   PanelRight,
   PanelRightClose,
-} from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { ThemeToggle } from "./ui/theme-toggle";
-import { GlobalSyncIndicator } from "./layout/GlobalSyncIndicator";
+} from 'lucide-react';
+
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { ThemeToggle } from './ui/theme-toggle';
+import { GlobalSyncIndicator } from './layout/GlobalSyncIndicator';
+
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Sidebar({
   open = true,
@@ -37,39 +39,39 @@ export function Sidebar({
   onToggleCollapse?: () => void;
 }) {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
 
   const navItems = [
     {
-      id: "dashboard",
-      label: "Dashboard",
+      id: 'dashboard',
+      label: 'Dashboard',
       icon: LayoutDashboard,
-      href: "/private/dashboard",
+      href: '/private/dashboard',
     },
     {
-      id: "transactions",
-      label: "Transactions",
+      id: 'transactions',
+      label: 'Transactions',
       icon: Receipt,
-      href: "/private/transactions",
+      href: '/private/transactions',
     },
     {
-      id: "budgets",
-      label: "Budgets",
+      id: 'budgets',
+      label: 'Budgets',
       icon: PiggyBank,
-      href: "/private/budgets",
+      href: '/private/budgets',
     },
     {
-      id: "accounts",
-      label: "Accounts",
+      id: 'accounts',
+      label: 'Accounts',
       icon: CreditCard,
-      href: "/private/accounts",
+      href: '/private/accounts',
     },
     {
-      id: "vectr-ai",
-      label: "Vectr AI",
+      id: 'vectr-ai',
+      label: 'Vectr AI',
       icon: Bot,
-      href: "/private/vectr-ai",
-      badge: "New",
+      href: '/private/vectr-ai',
+      badge: 'New',
     },
   ];
 
@@ -89,19 +91,17 @@ export function Sidebar({
         className={`
           h-screen bg-background border-r border-border flex flex-col transition-all duration-200
           fixed top-0 left-0 z-[101] md:static md:z-auto
-          ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
         style={{
-          width: collapsed
-            ? "var(--sidebar-collapsed-width)"
-            : "var(--sidebar-width)",
+          width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
         }}
       >
         {/* ...existing code... */}
         {/* Premium Logo and Toggle (rest of your header, if needed) */}
         <div
           className={`h-16 flex items-center px-3 border-b border-border ${
-            collapsed ? "justify-center" : "justify-between"
+            collapsed ? 'justify-center' : 'justify-between'
           }`}
         >
           {/* Header content: logo/text (left), toolbar (right) */}
@@ -120,20 +120,20 @@ export function Sidebar({
                 </div>
               </div>
               {/* Mini toolbar icons in top right, including collapse button */}
-              <div className="flex items-start mb-6">
-                <button className="p-[5px] hover:bg-secondary rounded-md border border-transparent transition-colors text-foreground ml-1"></button>
-                <ThemeToggle className="w-[14px] h-[14px]" />
-                <button className="p-[5px] hover:bg-secondary rounded-md border border-transparent transition-colors text-foreground ml-1">
-                  <Settings className="w-[14px] h-[14px]" />
+              <div className="flex items-center justify-between gap-1 mb-6">
+                <button className="hover:bg-secondary rounded-md border border-transparent transition-colors text-foreground ml-1"></button>
+                <ThemeToggle className="w-[16px] h-[16px]" />
+                <button className=" hover:bg-secondary rounded-md border border-transparent transition-colors text-foreground ml-1">
+                  <Settings className="w-[16px] h-[16px]" />
                 </button>
                 {/* Collapse/expand button as last icon */}
                 {collapsible && (
                   <button
                     onClick={onToggleCollapse}
-                    className="p-[5px] hover:bg-secondary rounded-md border border-transparent transition-colors text-foreground ml-1"
+                    className="hover:bg-secondary rounded-md border border-transparent transition-colors text-foreground ml-1"
                     aria-label="Collapse sidebar"
                   >
-                    <PanelRight className="w-[14px] h-[14px]" />
+                    <PanelRight className="w-[16px] h-[16px]" />
                   </button>
                 )}
               </div>
@@ -148,9 +148,7 @@ export function Sidebar({
               >
                 {/* Vectr icon by default, PanelRightClose on hover/focus */}
                 <span className="group-hover:hidden group-focus:hidden w-4 h-4 rounded flex items-center justify-center bg-gradient-to-br from-violet-600 via-violet-700 to-purple-600">
-                  <span className="text-white font-bold text-xs select-none">
-                    V
-                  </span>
+                  <span className="text-white font-bold text-xs select-none">V</span>
                 </span>
                 <PanelRightClose className="h-4 w-4 text-white hidden group-hover:block group-focus:block" />
               </button>
@@ -173,9 +171,9 @@ export function Sidebar({
                 href={item.href}
                 className={`flex items-center px-3 py-2 rounded-md transition-colors font-medium text-sm ${
                   isActive
-                    ? "bg-secondary dark:bg-primary text-foreground border border-border"
-                    : "text-foreground hover:bg-secondary hover:text-foreground border border-transparent"
-                } ${collapsed ? "justify-center" : ""}`}
+                    ? 'bg-secondary dark:bg-primary text-foreground border border-border'
+                    : 'text-foreground hover:bg-secondary hover:text-foreground border border-transparent'
+                } ${collapsed ? 'justify-center' : ''}`}
               >
                 <item.icon className="h-4 w-4" />
                 {!collapsed && (
@@ -194,65 +192,61 @@ export function Sidebar({
         </nav>
         <Separator />
         {/* Bottom Section */}
-        <div
-          className={`p-3 space-y-1 ${
-            collapsed ? "flex flex-col items-center" : ""
-          }`}
-        >
+        <div className={`p-3 space-y-1 ${collapsed ? 'flex flex-col items-center' : ''}`}>
           <Button
             variant="ghost"
             className={`h-8 px-3 text-xs text-foreground hover:text-foreground hover:bg-secondary ${
-              collapsed ? "w-auto justify-center" : "w-full justify-start"
+              collapsed ? 'w-auto justify-center' : 'w-full justify-start'
             }`}
           >
-            <Settings className={`h-3 w-3 ${collapsed ? "" : "mr-2"}`} />
-            {!collapsed && "Settings"}
+            <Settings className={`h-3 w-3 ${collapsed ? '' : 'mr-2'}`} />
+            {!collapsed && 'Settings'}
           </Button>
           <Button
             variant="ghost"
             className={`h-8 px-3 text-xs text-foreground hover:text-foreground hover:bg-secondary ${
               collapsed
-                ? "w-auto justify-center hover:bg-secondary "
-                : "w-full justify-start hover:bg-secondary "
+                ? 'w-auto justify-center hover:bg-secondary '
+                : 'w-full justify-start hover:bg-secondary '
             }`}
           >
-            <HelpCircle
-              className={`h-3 w-3 ${collapsed ? "hover:bg-secondary" : "mr-2"}`}
-            />
-            {!collapsed && "Help"}
+            <HelpCircle className={`h-3 w-3 ${collapsed ? 'hover:bg-secondary' : 'mr-2'}`} />
+            {!collapsed && 'Help'}
           </Button>
           <Button
             variant="ghost"
             className={`h-8 px-3 text-xs text-foreground hover:text-foreground hover:bg-red-500/85 ${
-              collapsed ? "w-auto justify-center " : " w-full justify-start "
+              collapsed ? 'w-auto justify-center ' : ' w-full justify-start '
             }`}
-            onClick={signOut}
+            onClick={() => void signOut()}
           >
-            <LogOut className={`h-3 w-3 ${collapsed ? "" : "mr-2"}`} />
-            {!collapsed && "Sign Out"}
+            <LogOut className={`h-3 w-3 ${collapsed ? '' : 'mr-2'}`} />
+            {!collapsed && 'Sign Out'}
           </Button>
         </div>
 
         <Separator />
 
         {/* User Profile */}
-        <div className={`p-3  ${collapsed ? "flex justify-center" : ""}`}>
+        <div className={`p-3  ${collapsed ? 'flex justify-center' : ''}`}>
           <div
             className={`flex items-center p-2 rounded-md hover:bg-secondary transition-colors cursor-pointer ${
-              collapsed ? "justify-center" : "space-x-2"
+              collapsed ? 'justify-center' : 'space-x-2'
             }`}
           >
-            <div className="w-6 h-6 bg-muted rounded-full flex items-center justify-center">
-              <User className="h-3 w-3 text-foreground" />
+            <div className="w-9 h-9 bg-muted rounded-full flex items-center justify-center">
+              <User className="h-6 w-6 text-foreground" />
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-foreground truncate">
-                  {user?.email || "Guest"}
+                <p className="text-small text-primary font-semibold truncate">
+                  {profile?.full_name
+                    ? `Welcome, ${profile.full_name.split(' ')[0]}!`
+                    : user?.user_metadata?.first_name
+                      ? `Welcome, ${user.user_metadata.first_name}!`
+                      : 'Welcome!'}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {user?.id || "Not logged in"}
-                </p>
+                <p className="text-xs font-medium text-foreground truncate">{user?.email}</p>
               </div>
             )}
           </div>

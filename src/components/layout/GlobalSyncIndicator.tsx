@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { useAccountSync } from "@/contexts/AccountSyncContext";
 import { RefreshCw, CheckCircle, AlertTriangle, Clock } from "lucide-react";
+
+import { useAccountSync } from "@/contexts/AccountSyncContext";
 import { cn } from "@/lib/utils/utils";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -98,7 +99,7 @@ export function GlobalSyncIndicator({
   };
 
   const statusInfo = getStatusInfo();
-  if (!statusInfo) return null;
+  if (!statusInfo) {return null;}
 
   const StatusIcon = statusInfo.icon;
 

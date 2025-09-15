@@ -1,20 +1,15 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -25,18 +20,18 @@ export default function AuthForm() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
 
     const { error } = await signIn(email, password);
 
     if (error) {
       toast.error(
-        "Failed to sign in: " +
-          ((error as unknown as { message?: string })?.message ?? String(error))
+        'Failed to sign in: ' +
+          ((error as unknown as { message?: string })?.message || 'Unknown error'),
       );
     } else {
-      toast.success("Welcome back!");
+      toast.success('Welcome back!');
     }
 
     setIsLoading(false);
@@ -47,19 +42,19 @@ export default function AuthForm() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const name = formData.get("name") as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const name = formData.get('name') as string;
 
     const { error } = await signUp(email, password, name);
 
     if (error) {
       toast.error(
-        "Failed to sign up: " +
-          ((error as unknown as { message?: string })?.message ?? String(error))
+        'Failed to sign up: ' +
+          ((error as unknown as { message?: string })?.message || 'Unknown error'),
       );
     } else {
-      toast.success("Account created successfully!");
+      toast.success('Account created successfully!');
     }
 
     setIsLoading(false);
@@ -83,7 +78,7 @@ export default function AuthForm() {
             </TabsList>
 
             <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
+              <form onSubmit={(e) => void handleSignIn(e)} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -96,30 +91,19 @@ export default function AuthForm() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                  />
+                  <Input id="password" name="password" type="password" required />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isLoading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </form>
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
+              <form onSubmit={(e) => void handleSignUp(e)} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="John Doe"
-                    required
-                  />
+                  <Input id="name" name="name" type="text" placeholder="John Doe" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -133,15 +117,10 @@ export default function AuthForm() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                  />
+                  <Input id="password" name="password" type="password" required />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Creating account..." : "Sign Up"}
+                  {isLoading ? 'Creating account...' : 'Sign Up'}
                 </Button>
               </form>
             </TabsContent>

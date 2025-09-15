@@ -1,12 +1,4 @@
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
 import {
   LineChart,
@@ -18,11 +10,20 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-type SpendingData = {
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+interface SpendingData {
   month: string;
   income: number;
   spending: number;
-};
+}
 
 interface IncomeVsSpendingProps {
   data: SpendingData[];

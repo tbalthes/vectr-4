@@ -1,7 +1,9 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Plus, Building2, Banknote } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Plus, Building2, Banknote } from 'lucide-react';
+import { toast } from 'sonner';
+
 import {
   Dialog,
   DialogContent,
@@ -9,29 +11,30 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import type {
   Institution,
   CreateInstitutionRequest,
   CreateManualAccountRequest,
+} from '@/types/institutions';
+import {
   ACCOUNT_TYPES,
   DEPOSITORY_SUBTYPES,
   CREDIT_SUBTYPES,
   LOAN_SUBTYPES,
   INVESTMENT_SUBTYPES,
-} from "@/types/institutions";
-import { toast } from "sonner";
+} from '@/types/institutions';
 
 interface AddManualAccountModalProps {
   open: boolean;
@@ -44,27 +47,27 @@ export function AddManualAccountModal({
   onOpenChange,
   onAccountCreated,
 }: AddManualAccountModalProps) {
-  const [step, setStep] = useState<"account" | "institution">("account");
+  const [step, setStep] = useState<'account' | 'institution'>('account');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Account form state
   const [accountForm, setAccountForm] = useState({
-    name: "",
-    type: "",
-    subtype: "",
-    mask: "",
-    currency: "USD",
-    initial_balance: "",
-    institution_id: "",
+    name: '',
+    type: '',
+    subtype: '',
+    mask: '',
+    currency: 'USD',
+    initial_balance: '',
+    institution_id: '',
   });
 
   // Institution form state
   const [institutionForm, setInstitutionForm] = useState({
-    name: "",
-    logo_url: "",
-    url: "",
-    primary_color: "",
+    name: '',
+    logo_url: '',
+    url: '',
+    primary_color: '',
   });
 
   // Available institutions
@@ -74,20 +77,20 @@ export function AddManualAccountModal({
   // Load institutions when modal opens
   useEffect(() => {
     if (open && institutions.length === 0) {
-      loadInstitutions();
+      void loadInstitutions();
     }
   }, [open, institutions.length]);
 
   const loadInstitutions = async () => {
     setInstitutionsLoading(true);
     try {
-      const response = await fetch("/api/institutions");
+      const response = await fetch('/api/institutions');
       if (response.ok) {
         const data = await response.json();
         setInstitutions(data.institutions || []);
       }
     } catch (err) {
-      console.error("Failed to load institutions:", err);
+      console.error('Failed to load institutions:', err);
     } finally {
       setInstitutionsLoading(false);
     }
@@ -95,13 +98,13 @@ export function AddManualAccountModal({
 
   const getSubtypeOptions = () => {
     switch (accountForm.type) {
-      case "depository":
+      case 'depository':
         return DEPOSITORY_SUBTYPES;
-      case "credit":
+      case 'credit':
         return CREDIT_SUBTYPES;
-      case "loan":
+      case 'loan':
         return LOAN_SUBTYPES;
-      case "investment":
+      case 'investment':
         return INVESTMENT_SUBTYPES;
       default:
         return [];
@@ -110,7 +113,7 @@ export function AddManualAccountModal({
 
   const handleCreateInstitution = async () => {
     if (!institutionForm.name.trim()) {
-      setError("Institution name is required");
+      setError('Institution name is required');
       return;
     }
 
@@ -120,21 +123,21 @@ export function AddManualAccountModal({
     try {
       const institutionData: CreateInstitutionRequest = {
         name: institutionForm.name.trim(),
-        provider: "manual",
+        provider: 'manual',
         logo_url: institutionForm.logo_url || undefined,
         url: institutionForm.url || undefined,
         primary_color: institutionForm.primary_color || undefined,
       };
 
-      const response = await fetch("/api/institutions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/institutions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(institutionData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create institution");
+        throw new Error(errorData.error || 'Failed to create institution');
       }
 
       const data = await response.json();
@@ -149,19 +152,16 @@ export function AddManualAccountModal({
 
       // Reset institution form and go back to account step
       setInstitutionForm({
-        name: "",
-        logo_url: "",
-        url: "",
-        primary_color: "",
+        name: '',
+        logo_url: '',
+        url: '',
+        primary_color: '',
       });
-      setStep("account");
+      setStep('account');
 
-      toast.success(
-        `Institution "${newInstitution.name}" created successfully`
-      );
+      toast.success(`Institution "${newInstitution.name}" created successfully`);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to create institution";
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create institution';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -170,12 +170,12 @@ export function AddManualAccountModal({
 
   const handleCreateAccount = async () => {
     if (!accountForm.name.trim()) {
-      setError("Account name is required");
+      setError('Account name is required');
       return;
     }
 
     if (!accountForm.type) {
-      setError("Account type is required");
+      setError('Account type is required');
       return;
     }
 
@@ -185,12 +185,7 @@ export function AddManualAccountModal({
     try {
       const accountData: CreateManualAccountRequest = {
         name: accountForm.name.trim(),
-        type: accountForm.type as
-          | "depository"
-          | "credit"
-          | "loan"
-          | "investment"
-          | "other",
+        type: accountForm.type as 'depository' | 'credit' | 'loan' | 'investment' | 'other',
         subtype: accountForm.subtype || undefined,
         mask: accountForm.mask || undefined,
         currency: accountForm.currency,
@@ -200,15 +195,15 @@ export function AddManualAccountModal({
           : undefined,
       };
 
-      const response = await fetch("/api/accounts/manual", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/accounts/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(accountData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create account");
+        throw new Error(errorData.error || 'Failed to create account');
       }
 
       const data = await response.json();
@@ -221,8 +216,7 @@ export function AddManualAccountModal({
       onOpenChange(false);
       onAccountCreated();
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to create account";
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create account';
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -231,16 +225,16 @@ export function AddManualAccountModal({
 
   const resetForm = () => {
     setAccountForm({
-      name: "",
-      type: "",
-      subtype: "",
-      mask: "",
-      currency: "USD",
-      initial_balance: "",
-      institution_id: "",
+      name: '',
+      type: '',
+      subtype: '',
+      mask: '',
+      currency: 'USD',
+      initial_balance: '',
+      institution_id: '',
     });
-    setInstitutionForm({ name: "", logo_url: "", url: "", primary_color: "" });
-    setStep("account");
+    setInstitutionForm({ name: '', logo_url: '', url: '', primary_color: '' });
+    setStep('account');
     setError(null);
   };
 
@@ -256,7 +250,7 @@ export function AddManualAccountModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            {step === "account" ? (
+            {step === 'account' ? (
               <>
                 <Banknote className="h-5 w-5" />
                 <span>Add Manual Account</span>
@@ -269,9 +263,9 @@ export function AddManualAccountModal({
             )}
           </DialogTitle>
           <DialogDescription>
-            {step === "account"
+            {step === 'account'
               ? "Add an account that you'll manage manually (not connected via Plaid)."
-              : "Create a new institution to associate with your account."}
+              : 'Create a new institution to associate with your account.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -281,7 +275,7 @@ export function AddManualAccountModal({
           </Alert>
         )}
 
-        {step === "account" ? (
+        {step === 'account' ? (
           <div className="space-y-4">
             {/* Institution Selection */}
             <div className="space-y-2">
@@ -299,11 +293,7 @@ export function AddManualAccountModal({
                 >
                   <SelectTrigger className="flex-1">
                     <SelectValue
-                      placeholder={
-                        institutionsLoading
-                          ? "Loading..."
-                          : "Select institution"
-                      }
+                      placeholder={institutionsLoading ? 'Loading...' : 'Select institution'}
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -319,7 +309,7 @@ export function AddManualAccountModal({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setStep("institution")}
+                  onClick={() => setStep('institution')}
                   disabled={loading}
                 >
                   <Plus className="h-4 w-4" />
@@ -334,9 +324,7 @@ export function AddManualAccountModal({
                 id="name"
                 placeholder="e.g. Main Checking, Savings, Credit Card"
                 value={accountForm.name}
-                onChange={(e) =>
-                  setAccountForm((prev) => ({ ...prev, name: e.target.value }))
-                }
+                onChange={(e) => setAccountForm((prev) => ({ ...prev, name: e.target.value }))}
                 disabled={loading}
               />
             </div>
@@ -350,7 +338,7 @@ export function AddManualAccountModal({
                   setAccountForm((prev) => ({
                     ...prev,
                     type: value,
-                    subtype: "",
+                    subtype: '',
                   }))
                 }
                 disabled={loading}
@@ -363,9 +351,7 @@ export function AddManualAccountModal({
                     <SelectItem key={type.value} value={type.value}>
                       <div>
                         <div className="font-medium">{type.label}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {type.description}
-                        </div>
+                        <div className="text-xs text-muted-foreground">{type.description}</div>
                       </div>
                     </SelectItem>
                   ))}
@@ -379,9 +365,7 @@ export function AddManualAccountModal({
                 <Label htmlFor="subtype">Account Subtype</Label>
                 <Select
                   value={accountForm.subtype}
-                  onValueChange={(value) =>
-                    setAccountForm((prev) => ({ ...prev, subtype: value }))
-                  }
+                  onValueChange={(value) => setAccountForm((prev) => ({ ...prev, subtype: value }))}
                   disabled={loading}
                 >
                   <SelectTrigger>
@@ -409,7 +393,7 @@ export function AddManualAccountModal({
                 onChange={(e) =>
                   setAccountForm((prev) => ({
                     ...prev,
-                    mask: e.target.value.replace(/\D/g, ""),
+                    mask: e.target.value.replace(/\D/g, ''),
                   }))
                 }
                 disabled={loading}
@@ -530,30 +514,22 @@ export function AddManualAccountModal({
         )}
 
         <DialogFooter>
-          {step === "account" ? (
+          {step === 'account' ? (
             <>
-              <Button
-                variant="outline"
-                onClick={handleClose}
-                disabled={loading}
-              >
+              <Button variant="outline" onClick={handleClose} disabled={loading}>
                 Cancel
               </Button>
-              <Button onClick={handleCreateAccount} disabled={loading}>
-                {loading ? "Creating..." : "Create Account"}
+              <Button onClick={() => void handleCreateAccount()} disabled={loading}>
+                {loading ? 'Creating...' : 'Create Account'}
               </Button>
             </>
           ) : (
             <>
-              <Button
-                variant="outline"
-                onClick={() => setStep("account")}
-                disabled={loading}
-              >
+              <Button variant="outline" onClick={() => setStep('account')} disabled={loading}>
                 Back
               </Button>
-              <Button onClick={handleCreateInstitution} disabled={loading}>
-                {loading ? "Creating..." : "Create Institution"}
+              <Button onClick={() => void handleCreateInstitution()} disabled={loading}>
+                {loading ? 'Creating...' : 'Create Institution'}
               </Button>
             </>
           )}

@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
-import { FormattedTransaction } from "@/types/transactions";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 
-export const dynamic = "force-dynamic";
+import type { FormattedTransaction } from '@/types/transactions';
+
+export const dynamic = 'force-dynamic';
 
 // Type for raw Supabase response
 interface RawSupabaseTransaction {
@@ -47,13 +49,9 @@ interface RawSupabaseTransaction {
 }
 
 // Transform raw Supabase data to FormattedTransaction
-function transformToFormattedTransaction(
-  raw: RawSupabaseTransaction
-): FormattedTransaction {
+function transformToFormattedTransaction(raw: RawSupabaseTransaction): FormattedTransaction {
   // Handle the fact that merchants is an array from Supabase join
-  const merchant = Array.isArray(raw.merchants)
-    ? raw.merchants[0]
-    : raw.merchants;
+  const merchant = Array.isArray(raw.merchants) ? raw.merchants[0] : raw.merchants;
   const merchantCategory = Array.isArray(merchant?.categories)
     ? merchant?.categories[0]
     : merchant?.categories;
@@ -63,10 +61,7 @@ function transformToFormattedTransaction(
   // `categories` property (PostgREST join style) or a flattened array where
   // each entry directly has `name` and `icon`. Handle both shapes.
   let userCategory: { name?: string; icon?: string | null } | undefined;
-  if (
-    Array.isArray(raw.transaction_categories) &&
-    raw.transaction_categories.length > 0
-  ) {
+  if (Array.isArray(raw.transaction_categories) && raw.transaction_categories.length > 0) {
     const first = raw.transaction_categories[0];
     if (first?.categories) {
       userCategory = first.categories;
@@ -79,9 +74,8 @@ function transformToFormattedTransaction(
   // fallback (e.g., when join-table updates failed), prefer that value.
   try {
     const meta = raw.user_metadata as Record<string, unknown> | null;
-    const manual =
-      meta && typeof meta === "object" ? meta["manual_category"] : undefined;
-    if (!userCategory && manual && typeof manual === "string") {
+    const manual = meta && typeof meta === 'object' ? meta.manual_category : undefined;
+    if (!userCategory && manual && typeof manual === 'string') {
       userCategory = { name: manual, icon: null };
     }
   } catch (err) {
@@ -93,11 +87,9 @@ function transformToFormattedTransaction(
   const category = userCategory || merchantCategory;
 
   // Format account name - include mask if available
-  const accountName = raw.accounts?.name || "Unknown Account";
+  const accountName = raw.accounts?.name || 'Unknown Account';
   const accountMask = raw.accounts?.mask;
-  const formattedAccountName = accountMask
-    ? `${accountName} (...${accountMask})`
-    : accountName;
+  const formattedAccountName = accountMask ? `${accountName} (...${accountMask})` : accountName;
 
   return {
     id: raw.id,
@@ -109,15 +101,15 @@ function transformToFormattedTransaction(
     balance: raw.balance,
     userMetadata: raw.user_metadata,
     needsReview: raw.needs_review,
-    merchantName: merchant?.name || "Unknown",
+    merchantName: merchant?.name || 'Unknown',
     merchantLogoUrl: merchant?.logo_url || null,
-    categoryName: category?.name || "Uncategorized",
-    categoryIcon: category?.icon || "HelpCircle",
+    categoryName: category?.name || 'Uncategorized',
+    categoryIcon: category?.icon || 'HelpCircle',
     // Add required fields for compatibility
-    type: raw.amount > 0 ? "income" : "expense",
-    category: category?.name || "Uncategorized",
+    type: raw.amount > 0 ? 'income' : 'expense',
+    category: category?.name || 'Uncategorized',
     account: formattedAccountName, // Now uses actual account data!
-    status: raw.needs_review ? "pending" : "completed",
+    status: raw.needs_review ? 'pending' : 'completed',
     note: raw.transaction_note || undefined,
   };
 }
@@ -127,7 +119,6 @@ export async function GET(request: NextRequest) {
     // Get the authenticated user from the client
     const requestCookies = await cookies();
     const supabase = createRouteHandlerClient({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cookies: () => requestCookies as any,
     });
 
@@ -137,45 +128,40 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return NextResponse.json(
-        { error: "User not authenticated" },
-        { status: 401 }
-      );
+      console.error('Authentication error:', userError);
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    console.log("API: Authenticated user ID:", user.id);
+    console.log('API: Authenticated user ID:', user.id);
 
     // Create a service role client to bypass RLS
     const serviceSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
     // --- Pagination, Filtering, Sorting (WBS 1.1, 1.2) ---
     const url = new URL(request.url);
-    const pageParam = Number(url.searchParams.get("page") || "1");
-    const limitParam = Number(url.searchParams.get("limit") || "25");
-    const q = url.searchParams.get("q")?.trim() || "";
-    const sortBy = url.searchParams.get("sortBy") || "date";
+    const pageParam = Number(url.searchParams.get('page') || '1');
+    const limitParam = Number(url.searchParams.get('limit') || '25');
+    const q = url.searchParams.get('q')?.trim() || '';
+    const sortBy = url.searchParams.get('sortBy') || 'date';
     const sortOrder =
-      (url.searchParams.get("sortOrder") || "desc").toLowerCase() === "asc"
-        ? "asc"
-        : "desc";
+      (url.searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'asc' : 'desc';
 
     // New filter parameters
-    const dateFrom = url.searchParams.get("dateFrom");
-    const dateTo = url.searchParams.get("dateTo");
-    const category = url.searchParams.get("category");
-    const merchants = url.searchParams.get("merchants");
-    const amountMin = url.searchParams.get("amountMin");
-    const amountMax = url.searchParams.get("amountMax");
-    const amountType = url.searchParams.get("amountType"); // "income" | "expense"
-    const needsReview = url.searchParams.get("needsReview");
-    const uncategorized = url.searchParams.get("uncategorized");
+    const dateFrom = url.searchParams.get('dateFrom');
+    const dateTo = url.searchParams.get('dateTo');
+    const category = url.searchParams.get('category');
+    const merchants = url.searchParams.get('merchants');
+    const amountMin = url.searchParams.get('amountMin');
+    const amountMax = url.searchParams.get('amountMax');
+    const amountType = url.searchParams.get('amountType'); // "income" | "expense"
+    const needsReview = url.searchParams.get('needsReview');
+    const uncategorized = url.searchParams.get('uncategorized');
 
     // Debug logging
-    console.log("🔍 API Filter Debug:", {
+    console.log('🔍 API Filter Debug:', {
       category,
       merchants,
       amountType,
@@ -186,7 +172,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Debug logging
-    console.log("API received filter parameters:", {
+    console.log('API received filter parameters:', {
       dateFrom,
       dateTo,
       category,
@@ -199,49 +185,46 @@ export async function GET(request: NextRequest) {
       q,
     });
 
-    const allowedSortFields = ["date", "amount", "transaction_number"];
-    const sortField = allowedSortFields.includes(sortBy) ? sortBy : "date";
+    const allowedSortFields = ['date', 'amount', 'transaction_number'];
+    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'date';
 
     const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
-    const pageSize =
-      Number.isFinite(limitParam) && limitParam > 0 ? limitParam : 25;
+    const pageSize = Number.isFinite(limitParam) && limitParam > 0 ? limitParam : 25;
 
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
     // Helper function to apply filters to a query
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const applyFilters = (query: any) => {
       // Text search
       if (q) {
-        query = query.or(
-          `clean_description.ilike.%${q}%,original_description.ilike.%${q}%`
-        );
+        query = query.or(`clean_description.ilike.%${q}%,original_description.ilike.%${q}%`);
       }
 
       // Date range filters
       if (dateFrom) {
-        query = query.gte("date", dateFrom);
+        query = query.gte('date', dateFrom);
       }
       if (dateTo) {
-        query = query.lte("date", dateTo);
+        query = query.lte('date', dateTo);
       }
 
       // Amount filters - simplified approach
-      if (amountType === "income") {
-        query = query.gt("amount", 0);
-      } else if (amountType === "expense") {
-        query = query.lt("amount", 0);
+      if (amountType === 'income') {
+        query = query.gt('amount', 0);
+      } else if (amountType === 'expense') {
+        query = query.lt('amount', 0);
       }
 
       // Skip database-level amount range filtering since we'll do post-processing
       // This avoids complex OR queries that can cause parsing errors
 
       // Status filters
-      if (needsReview === "true") {
-        query = query.eq("needs_review", true);
-      } else if (needsReview === "false") {
-        query = query.eq("needs_review", false);
+      if (needsReview === 'true') {
+        query = query.eq('needs_review', true);
+      } else if (needsReview === 'false') {
+        query = query.eq('needs_review', false);
       }
 
       // Uncategorized filter will be handled in post-processing
@@ -252,25 +235,25 @@ export async function GET(request: NextRequest) {
     };
 
     // For category filtering with direct join approach
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const applyCategoryFilter = (query: any, useInnerJoin: boolean = false) => {
-      if (!category || category === "all") {
+
+    const applyCategoryFilter = (query: any, useInnerJoin = false) => {
+      if (!category || category === 'all') {
         return query;
       }
 
       console.log(
-        "🔍 Applying category filter for:",
+        '🔍 Applying category filter for:',
         category,
-        useInnerJoin ? "(inner join)" : "(regular join)"
+        useInnerJoin ? '(inner join)' : '(regular join)',
       );
 
       // Handle comma-separated categories for multiple selection
       const categoryList = category
-        .split(",")
+        .split(',')
         .map((c) => c.trim())
         .filter(Boolean);
-      const hasUncategorized = categoryList.includes("Uncategorized");
-      const namedCategories = categoryList.filter((c) => c !== "Uncategorized");
+      const hasUncategorized = categoryList.includes('Uncategorized');
+      const namedCategories = categoryList.filter((c) => c !== 'Uncategorized');
 
       if (hasUncategorized && namedCategories.length > 0) {
         // Mixed case will be handled by separate queries - don't apply filter here
@@ -278,13 +261,13 @@ export async function GET(request: NextRequest) {
         return query;
       } else if (hasUncategorized) {
         // Only uncategorized
-        return query.is("merchant_id", null);
+        return query.is('merchant_id', null);
       } else if (namedCategories.length > 0) {
         // Only named categories - use direct join
         if (namedCategories.length === 1) {
-          return query.eq("merchants.categories.name", namedCategories[0]);
+          return query.eq('merchants.categories.name', namedCategories[0]);
         } else {
-          return query.in("merchants.categories.name", namedCategories);
+          return query.in('merchants.categories.name', namedCategories);
         }
       }
 
@@ -292,20 +275,20 @@ export async function GET(request: NextRequest) {
     };
 
     // For merchant filtering, we need a special approach since it involves joined data
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const applyMerchantFilter = (query: any, useInnerJoin: boolean = false) => {
-      if (!merchants || !merchants.trim()) {
+
+    const applyMerchantFilter = (query: any, useInnerJoin = false) => {
+      if (!merchants?.trim()) {
         return query;
       }
 
       console.log(
-        "🏪 Applying merchant filter for:",
+        '🏪 Applying merchant filter for:',
         merchants,
-        useInnerJoin ? "(inner join)" : "(regular join)"
+        useInnerJoin ? '(inner join)' : '(regular join)',
       );
 
       const merchantList = merchants
-        .split(",")
+        .split(',')
         .map((m) => m.trim())
         .filter(Boolean);
       if (merchantList.length === 0) {
@@ -315,9 +298,9 @@ export async function GET(request: NextRequest) {
       // For merchant filtering, always use the filtering logic
       // The inner join structure should be handled in the main query building
       if (merchantList.length === 1) {
-        return query.eq("merchants.name", merchantList[0]);
+        return query.eq('merchants.name', merchantList[0]);
       } else {
-        return query.in("merchants.name", merchantList);
+        return query.in('merchants.name', merchantList);
       }
     };
 
@@ -326,14 +309,15 @@ export async function GET(request: NextRequest) {
 
     // Determine if we need inner joins for count query
     const needsCategoryInnerJoin =
-      category && category !== "all" && !category.includes("Uncategorized");
+      category && category !== 'all' && !category.includes('Uncategorized');
+    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
     const needsMerchantInnerJoin = merchants && merchants.trim();
-    const needsUncategorizedFiltering = uncategorized === "true";
+    const needsUncategorizedFiltering = uncategorized === 'true';
 
     if (needsUncategorizedFiltering) {
       // Uncategorized filtering requires special handling with LEFT JOIN
       countQuery = serviceSupabase
-        .from("transactions")
+        .from('transactions')
         .select(
           `
           id,
@@ -341,13 +325,13 @@ export async function GET(request: NextRequest) {
             transaction_id
           )
         `,
-          { count: "exact", head: false }
+          { count: 'exact', head: false },
         )
-        .eq("user_id", user.id)
-        .is("transaction_categories.transaction_id", null);
+        .eq('user_id', user.id)
+        .is('transaction_categories.transaction_id', null);
     } else if (needsCategoryInnerJoin || needsMerchantInnerJoin) {
       // Need inner joins for proper filtering
-      let selectClause = "id";
+      let selectClause = 'id';
 
       if (needsCategoryInnerJoin && needsMerchantInnerJoin) {
         // Both category and merchant filtering
@@ -381,21 +365,21 @@ export async function GET(request: NextRequest) {
       }
 
       countQuery = serviceSupabase
-        .from("transactions")
-        .select(selectClause, { count: "exact", head: false })
-        .eq("user_id", user.id);
-    } else if (category && category !== "all") {
+        .from('transactions')
+        .select(selectClause, { count: 'exact', head: false })
+        .eq('user_id', user.id);
+    } else if (category && category !== 'all') {
       // Category filtering but with uncategorized (use regular structure)
       countQuery = serviceSupabase
-        .from("transactions")
-        .select("id", { count: "exact", head: false })
-        .eq("user_id", user.id);
+        .from('transactions')
+        .select('id', { count: 'exact', head: false })
+        .eq('user_id', user.id);
     } else {
       // No special filtering - use regular structure
       countQuery = serviceSupabase
-        .from("transactions")
-        .select("id", { count: "exact", head: false })
-        .eq("user_id", user.id);
+        .from('transactions')
+        .select('id', { count: 'exact', head: false })
+        .eq('user_id', user.id);
     }
 
     countQuery = applyFilters(countQuery);
@@ -410,7 +394,7 @@ export async function GET(request: NextRequest) {
     if (needsUncategorizedFiltering) {
       // Uncategorized filtering - use LEFT JOIN to find transactions without categories
       query = serviceSupabase
-        .from("transactions")
+        .from('transactions')
         .select(
           `
           id,
@@ -444,11 +428,11 @@ export async function GET(request: NextRequest) {
               icon
             )
           )
-        `
+        `,
         )
-        .eq("user_id", user.id)
-        .is("transaction_categories.transaction_id", null)
-        .order(sortField, { ascending: sortOrder === "asc" })
+        .eq('user_id', user.id)
+        .is('transaction_categories.transaction_id', null)
+        .order(sortField, { ascending: sortOrder === 'asc' })
         .range(from, to);
     } else if (needsCategoryInnerJoin || needsMerchantInnerJoin) {
       // Need inner joins for proper filtering
@@ -541,14 +525,11 @@ export async function GET(request: NextRequest) {
         `;
       }
 
-      query = serviceSupabase
-        .from("transactions")
-        .select(selectClause)
-        .eq("user_id", user.id);
+      query = serviceSupabase.from('transactions').select(selectClause).eq('user_id', user.id);
     } else {
       // Use regular joins (for uncategorized filtering or no special filtering)
       query = serviceSupabase
-        .from("transactions")
+        .from('transactions')
         .select(
           `
           id,
@@ -581,9 +562,9 @@ export async function GET(request: NextRequest) {
               icon
             )
           )
-        `
+        `,
         )
-        .eq("user_id", user.id);
+        .eq('user_id', user.id);
     }
 
     if (needsUncategorizedFiltering) {
@@ -596,16 +577,17 @@ export async function GET(request: NextRequest) {
       query = applyFilters(query);
       query = applyCategoryFilter(query);
       query = applyMerchantFilter(query);
-      query = query.order(sortField, { ascending: sortOrder === "asc" });
+      query = query.order(sortField, { ascending: sortOrder === 'asc' });
       query = query.range(from, to);
     }
     const { data, error, status } = await query;
 
     // Debug logging for filtered data
-    if ((category && category !== "all") || (merchants && merchants.trim())) {
-      console.log("🔍 Filtered Data Sample:", {
-        category: category || "none",
-        merchants: merchants || "none",
+    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+    if ((category && category !== 'all') || (merchants && merchants.trim())) {
+      console.log('🔍 Filtered Data Sample:', {
+        category: category || 'none',
+        merchants: merchants || 'none',
         totalFound: data?.length,
         firstTransaction: data?.[0]
           ? {
@@ -618,17 +600,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (error || countError) {
-      console.error("Supabase Error:", {
+      console.error('Supabase Error:', {
         message: error?.message || countError?.message,
         details: error?.details || countError?.details,
         hint: error?.hint || countError?.hint,
         code: error?.code || countError?.code,
         status: status,
       });
-      return NextResponse.json(
-        { error: "Could not fetch transaction data" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Could not fetch transaction data' }, { status: 500 });
     }
 
     const meta = {
@@ -641,7 +620,7 @@ export async function GET(request: NextRequest) {
     console.log(
       `API: Fetched ${data?.length || 0} transactions for user ${
         user.id
-      } (page ${page}, pageSize ${pageSize}, totalItems ${meta.totalItems})`
+      } (page ${page}, pageSize ${pageSize}, totalItems ${meta.totalItems})`,
     );
 
     // Transform the raw Supabase data to FormattedTransaction format
@@ -656,37 +635,32 @@ export async function GET(request: NextRequest) {
       const minAmount = amountMin ? parseFloat(amountMin) : undefined;
       const maxAmount = amountMax ? parseFloat(amountMax) : undefined;
 
-      formattedData = formattedData.filter(
-        (transaction: FormattedTransaction) => {
-          const absAmount = Math.abs(transaction.amount);
+      formattedData = formattedData.filter((transaction: FormattedTransaction) => {
+        const absAmount = Math.abs(transaction.amount);
 
-          // Check minimum amount (absolute value)
-          if (minAmount !== undefined && absAmount < minAmount) {
-            return false;
-          }
-
-          // Check maximum amount (absolute value)
-          if (maxAmount !== undefined && absAmount > maxAmount) {
-            return false;
-          }
-
-          return true;
+        // Check minimum amount (absolute value)
+        if (minAmount !== undefined && absAmount < minAmount) {
+          return false;
         }
-      );
+
+        // Check maximum amount (absolute value)
+        if (maxAmount !== undefined && absAmount > maxAmount) {
+          return false;
+        }
+
+        return true;
+      });
 
       console.log(
         `💰 Amount filtering: ${data?.length || 0} -> ${
           formattedData.length
-        } transactions (range: $${minAmount || "0"}-$${maxAmount || "∞"})`
+        } transactions (range: $${minAmount || '0'}-$${maxAmount || '∞'})`,
       );
     }
 
     return NextResponse.json({ data: formattedData, meta });
   } catch (err) {
-    console.error("API route unexpected error:", err);
-    return NextResponse.json(
-      { error: "Unexpected server error" },
-      { status: 500 }
-    );
+    console.error('API route unexpected error:', err);
+    return NextResponse.json({ error: 'Unexpected server error' }, { status: 500 });
   }
 }

@@ -1,14 +1,5 @@
-"use client";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+'use client';
+import { useState } from 'react';
 import {
   BarChart3,
   Shield,
@@ -28,129 +19,131 @@ import {
   Building,
   Database,
   Star,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function HomePage() {
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [pricingPeriod, setPricingPeriod] = useState<"monthly" | "annual">(
-    "monthly"
-  );
+  const [pricingPeriod, setPricingPeriod] = useState<'monthly' | 'annual'>('monthly');
 
   const features = [
     {
-      title: "AI-Powered Budgeting",
-      description: "Smart categorization and predictive spending analysis",
+      title: 'AI-Powered Budgeting',
+      description: 'Smart categorization and predictive spending analysis',
       icon: BarChart3,
     },
     {
-      title: "Goal Tracking",
-      description: "Set and track financial goals with AI-powered insights",
+      title: 'Goal Tracking',
+      description: 'Set and track financial goals with AI-powered insights',
       icon: PiggyBank,
     },
     {
-      title: "Bank-Level Security",
-      description: "256-bit encryption and biometric authentication",
+      title: 'Bank-Level Security',
+      description: '256-bit encryption and biometric authentication',
       icon: Shield,
     },
     {
-      title: "Smart Insights",
-      description: "Get personalized financial advice and recommendations",
+      title: 'Smart Insights',
+      description: 'Get personalized financial advice and recommendations',
       icon: Brain,
     },
     {
-      title: "Expense Tracking",
-      description: "Automatically track and categorize expenses",
+      title: 'Expense Tracking',
+      description: 'Automatically track and categorize expenses',
       icon: CreditCard,
     },
     {
-      title: "Investment Tracking",
-      description: "Monitor your portfolio and track performance",
+      title: 'Investment Tracking',
+      description: 'Monitor your portfolio and track performance',
       icon: Target,
     },
   ];
 
   const testimonials = [
     {
-      name: "Sarah Chen",
-      role: "Marketing Director",
-      company: "TechCorp",
+      name: 'Sarah Chen',
+      role: 'Marketing Director',
+      company: 'TechCorp',
       content:
-        "Vectr has completely transformed how I manage my finances. The AI insights helped me save $5,000 in just 3 months!",
-      avatar: "/avatars/sarah.jpg",
+        'Vectr has completely transformed how I manage my finances. The AI insights helped me save $5,000 in just 3 months!',
+      avatar: '/avatars/sarah.jpg',
       rating: 5,
     },
     {
-      name: "Marcus Johnson",
-      role: "Small Business Owner",
-      company: "Local Coffee Shop",
+      name: 'Marcus Johnson',
+      role: 'Small Business Owner',
+      company: 'Local Coffee Shop',
       content:
-        "As a business owner, keeping track of both personal and business finances was overwhelming. Vectr makes it seamless.",
-      avatar: "/avatars/marcus.jpg",
+        'As a business owner, keeping track of both personal and business finances was overwhelming. Vectr makes it seamless.',
+      avatar: '/avatars/marcus.jpg',
       rating: 5,
     },
     {
-      name: "Emily Rodriguez",
-      role: "Software Engineer",
-      company: "StartupXYZ",
+      name: 'Emily Rodriguez',
+      role: 'Software Engineer',
+      company: 'StartupXYZ',
       content:
-        "The AI-powered budgeting is incredible. It is like having a financial advisor in my pocket 24/7.",
-      avatar: "/avatars/emily.jpg",
+        'The AI-powered budgeting is incredible. It is like having a financial advisor in my pocket 24/7.',
+      avatar: '/avatars/emily.jpg',
       rating: 5,
     },
   ];
 
   const pricingTiers = [
     {
-      name: "Starter",
+      name: 'Starter',
       price: { monthly: 0, annual: 0 },
-      description: "Perfect for getting started",
+      description: 'Perfect for getting started',
       features: [
-        "Basic budgeting",
-        "Expense tracking",
-        "Goal setting",
-        "Mobile app access",
-        "Email support",
+        'Basic budgeting',
+        'Expense tracking',
+        'Goal setting',
+        'Mobile app access',
+        'Email support',
       ],
       popular: false,
     },
     {
-      name: "Pro",
+      name: 'Pro',
       price: { monthly: 9.99, annual: 99.99 },
-      description: "For serious budgeters",
+      description: 'For serious budgeters',
       features: [
-        "Everything in Starter",
-        "AI-powered insights",
-        "Investment tracking",
-        "Advanced analytics",
-        "Priority support",
-        "Unlimited goals",
+        'Everything in Starter',
+        'AI-powered insights',
+        'Investment tracking',
+        'Advanced analytics',
+        'Priority support',
+        'Unlimited goals',
       ],
       popular: true,
     },
     {
-      name: "Business",
+      name: 'Business',
       price: { monthly: 19.99, annual: 199.99 },
-      description: "For teams and businesses",
+      description: 'For teams and businesses',
       features: [
-        "Everything in Pro",
-        "Team collaboration",
-        "Business analytics",
-        "Custom integrations",
-        "Dedicated support",
-        "Advanced security",
+        'Everything in Pro',
+        'Team collaboration',
+        'Business analytics',
+        'Custom integrations',
+        'Dedicated support',
+        'Advanced security',
       ],
       popular: false,
     },
   ];
 
   const securityFeatures = [
-    { name: "SOC 2 Type II", icon: Shield },
-    { name: "256-bit Encryption", icon: Lock },
-    { name: "FDIC Insured", icon: Building },
-    { name: "PCI DSS", icon: Database },
+    { name: 'SOC 2 Type II', icon: Shield },
+    { name: '256-bit Encryption', icon: Lock },
+    { name: 'FDIC Insured', icon: Building },
+    { name: 'PCI DSS', icon: Database },
   ];
 
   return (
@@ -190,9 +183,7 @@ export default function HomePage() {
                 >
                   <span>Features</span>
                   <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      featuresOpen ? "rotate-180" : ""
-                    }`}
+                    className={`w-4 h-4 transition-transform ${featuresOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
 
@@ -208,7 +199,7 @@ export default function HomePage() {
                         {features.map((feature) => (
                           <a
                             key={feature.title}
-                            href="#"
+                            href="#features"
                             className="flex items-center space-x-2 p-2 hover:bg-muted rounded-md transition-colors"
                           >
                             <feature.icon className="w-4 h-4" />
@@ -258,11 +249,7 @@ export default function HomePage() {
               aria-label="Toggle mobile menu"
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -272,27 +259,18 @@ export default function HomePage() {
           {mobileMenuOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
+              animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="md:hidden border-t border-border"
             >
               <div className="px-6 py-4 space-y-4">
-                <a
-                  href="#features"
-                  className="block text-muted-foreground hover:text-foreground"
-                >
+                <a href="#features" className="block text-muted-foreground hover:text-foreground">
                   Features
                 </a>
-                <a
-                  href="#pricing"
-                  className="block text-muted-foreground hover:text-foreground"
-                >
+                <a href="#pricing" className="block text-muted-foreground hover:text-foreground">
                   Pricing
                 </a>
-                <a
-                  href="#security"
-                  className="block text-muted-foreground hover:text-foreground"
-                >
+                <a href="#security" className="block text-muted-foreground hover:text-foreground">
                   Security
                 </a>
                 <a
@@ -340,14 +318,14 @@ export default function HomePage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.7, delay: 0.2 }}
                 >
-                  Take Control of Your{" "}
+                  Take Control of Your{' '}
                   <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-extrabold drop-shadow-md">
                     Financial Future
                   </span>
                 </motion.h1>
                 <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  Join 100,000+ users who have saved millions with Vectr&apos;s
-                  AI-powered budgeting, goal tracking, and financial insights.
+                  Join 100,000+ users who have saved millions with Vectr&apos;s AI-powered
+                  budgeting, goal tracking, and financial insights.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button size="lg" className="group" asChild>
@@ -377,7 +355,7 @@ export default function HomePage() {
                       width={900}
                       height={400}
                       className="rounded-xl border mb-2 object-cover"
-                      style={{ background: "#f3f4f6" }}
+                      style={{ background: '#f3f4f6' }}
                     />
                     <span className="text-lg font-semibold text-gray-800">
                       Vectr Dashboard Preview
@@ -397,8 +375,8 @@ export default function HomePage() {
                 Everything You Need to Master Your Money
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Powerful features designed to help you save more, spend smarter,
-                and achieve your financial goals faster.
+                Powerful features designed to help you save more, spend smarter, and achieve your
+                financial goals faster.
               </p>
             </div>
 
@@ -430,27 +408,19 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <div className="grid md:grid-cols-4 gap-8 text-center">
               <div>
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                  $2.4M+
-                </div>
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">$2.4M+</div>
                 <div className="text-muted-foreground">Total Saved</div>
               </div>
               <div>
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                  100K+
-                </div>
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">100K+</div>
                 <div className="text-muted-foreground">Active Users</div>
               </div>
               <div>
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                  4.9/5
-                </div>
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">4.9/5</div>
                 <div className="text-muted-foreground">User Rating</div>
               </div>
               <div>
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                  99.9%
-                </div>
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">99.9%</div>
                 <div className="text-muted-foreground">Uptime</div>
               </div>
             </div>
@@ -461,12 +431,10 @@ export default function HomePage() {
         <section id="security" className="py-24 px-6 sm:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Bank-Level Security & Privacy
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Bank-Level Security & Privacy</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Your financial data is protected with the same security
-                standards used by major banks.
+                Your financial data is protected with the same security standards used by major
+                banks.
               </p>
             </div>
 
@@ -489,12 +457,9 @@ export default function HomePage() {
         <section id="testimonials" className="py-24 px-6 sm:px-8 bg-muted/50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Loved by 100,000+ Users
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Loved by 100,000+ Users</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Real stories from real people who have transformed their
-                finances with Vectr.
+                Real stories from real people who have transformed their finances with Vectr.
               </p>
             </div>
 
@@ -513,9 +478,7 @@ export default function HomePage() {
                           <Users className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg">
-                            {testimonial.name}
-                          </CardTitle>
+                          <CardTitle className="text-lg">{testimonial.name}</CardTitle>
                           <CardDescription>
                             {testimonial.role} at {testimonial.company}
                           </CardDescription>
@@ -525,15 +488,10 @@ export default function HomePage() {
                     <CardContent>
                       <div className="flex mb-2">
                         {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className="w-4 h-4 fill-primary text-primary"
-                          />
+                          <Star key={i} className="w-4 h-4 fill-primary text-primary" />
                         ))}
                       </div>
-                      <p className="text-muted-foreground">
-                        &quot;{testimonial.content}&quot;
-                      </p>
+                      <p className="text-muted-foreground">&quot;{testimonial.content}&quot;</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -546,33 +504,30 @@ export default function HomePage() {
         <section id="pricing" className="py-24 px-6 sm:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Simple, Transparent Pricing
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Choose the plan that is right for you. Start free, upgrade
-                anytime.
+                Choose the plan that is right for you. Start free, upgrade anytime.
               </p>
             </div>
 
             <div className="flex justify-center mb-8">
               <div className="bg-muted p-1 rounded-lg">
                 <button
-                  onClick={() => setPricingPeriod("monthly")}
+                  onClick={() => setPricingPeriod('monthly')}
                   className={`px-4 py-2 rounded-md transition-colors ${
-                    pricingPeriod === "monthly"
-                      ? "bg-background text-foreground"
-                      : "text-muted-foreground"
+                    pricingPeriod === 'monthly'
+                      ? 'bg-background text-foreground'
+                      : 'text-muted-foreground'
                   }`}
                 >
                   Monthly
                 </button>
                 <button
-                  onClick={() => setPricingPeriod("annual")}
+                  onClick={() => setPricingPeriod('annual')}
                   className={`px-4 py-2 rounded-md transition-colors ${
-                    pricingPeriod === "annual"
-                      ? "bg-background text-foreground"
-                      : "text-muted-foreground"
+                    pricingPeriod === 'annual'
+                      ? 'bg-background text-foreground'
+                      : 'text-muted-foreground'
                   }`}
                 >
                   Annual (Save 17%)
@@ -584,9 +539,7 @@ export default function HomePage() {
               {pricingTiers.map((tier) => (
                 <Card
                   key={tier.name}
-                  className={`relative ${
-                    tier.popular ? "border-primary shadow-lg scale-105" : ""
-                  }`}
+                  className={`relative ${tier.popular ? 'border-primary shadow-lg scale-105' : ''}`}
                 >
                   {tier.popular && (
                     <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -597,12 +550,8 @@ export default function HomePage() {
                     <CardTitle className="text-2xl">{tier.name}</CardTitle>
                     <CardDescription>{tier.description}</CardDescription>
                     <div className="mt-4">
-                      <span className="text-3xl font-bold">
-                        ${tier.price[pricingPeriod]}
-                      </span>
-                      <span className="text-muted-foreground">
-                        /{pricingPeriod}
-                      </span>
+                      <span className="text-3xl font-bold">${tier.price[pricingPeriod]}</span>
+                      <span className="text-muted-foreground">/{pricingPeriod}</span>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -616,7 +565,7 @@ export default function HomePage() {
                     </ul>
                     <Button
                       className="w-full mt-6"
-                      variant={tier.popular ? "default" : "outline"}
+                      variant={tier.popular ? 'default' : 'outline'}
                       asChild
                     >
                       <a href="/public/register">Get Started</a>
@@ -632,9 +581,7 @@ export default function HomePage() {
         <section className="py-24 px-6 sm:px-8 bg-muted/30">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Frequently Asked Questions
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
               <p className="text-xl text-muted-foreground">
                 Everything you need to know about Vectr
               </p>
@@ -643,34 +590,34 @@ export default function HomePage() {
             <div className="space-y-6">
               {[
                 {
-                  question: "Is my financial data secure?",
+                  question: 'Is my financial data secure?',
                   answer:
-                    "Absolutely. We use bank-level 256-bit encryption, SOC 2 Type II compliance, and never store your banking credentials. Your data is protected with the same security standards used by major financial institutions.",
+                    'Absolutely. We use bank-level 256-bit encryption, SOC 2 Type II compliance, and never store your banking credentials. Your data is protected with the same security standards used by major financial institutions.',
                 },
                 {
-                  question: "How does the AI budgeting work?",
+                  question: 'How does the AI budgeting work?',
                   answer:
-                    "Our AI analyzes your spending patterns, income, and financial goals to create personalized budgets. It learns from your behavior and provides smart insights to help you save more money automatically.",
+                    'Our AI analyzes your spending patterns, income, and financial goals to create personalized budgets. It learns from your behavior and provides smart insights to help you save more money automatically.',
                 },
                 {
-                  question: "Can I connect all my bank accounts?",
+                  question: 'Can I connect all my bank accounts?',
                   answer:
-                    "Yes! Vectr supports connections to over 12,000 financial institutions including banks, credit cards, investment accounts, and even digital wallets like PayPal and Venmo.",
+                    'Yes! Vectr supports connections to over 12,000 financial institutions including banks, credit cards, investment accounts, and even digital wallets like PayPal and Venmo.',
                 },
                 {
-                  question: "What happens after the free trial?",
+                  question: 'What happens after the free trial?',
                   answer:
-                    "You can continue using our free plan with basic features, or upgrade to Pro for $9.99/month to unlock AI insights, advanced analytics, and priority support. No hidden fees, cancel anytime.",
+                    'You can continue using our free plan with basic features, or upgrade to Pro for $9.99/month to unlock AI insights, advanced analytics, and priority support. No hidden fees, cancel anytime.',
                 },
                 {
-                  question: "Is there a mobile app?",
+                  question: 'Is there a mobile app?',
                   answer:
-                    "Yes! Vectr is available on both iOS and Android with full feature parity. You can manage your finances on-the-go with biometric authentication and offline access.",
+                    'Yes! Vectr is available on both iOS and Android with full feature parity. You can manage your finances on-the-go with biometric authentication and offline access.',
                 },
                 {
-                  question: "How much can I realistically save?",
+                  question: 'How much can I realistically save?',
                   answer:
-                    "On average, our users save $347 in their first month and $2,400+ in their first year. The AI identifies spending patterns and suggests specific actions tailored to your financial situation.",
+                    'On average, our users save $347 in their first month and $2,400+ in their first year. The AI identifies spending patterns and suggests specific actions tailored to your financial situation.',
                 },
               ].map((faq, index) => (
                 <motion.div
@@ -680,9 +627,7 @@ export default function HomePage() {
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
                   <Card className="p-6">
-                    <h3 className="text-lg font-semibold mb-2">
-                      {faq.question}
-                    </h3>
+                    <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>
                     <p className="text-muted-foreground">{faq.answer}</p>
                   </Card>
                 </motion.div>
@@ -699,12 +644,10 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Start Saving Money Today
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Start Saving Money Today</h2>
               <p className="text-xl opacity-90 mb-8">
-                Join 100,000+ users who have saved over $2.4 million with
-                Vectr&apos;s AI-powered budgeting
+                Join 100,000+ users who have saved over $2.4 million with Vectr&apos;s AI-powered
+                budgeting
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -762,26 +705,17 @@ export default function HomePage() {
               <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a
-                    href="#features"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
+                  <a href="#features" className="text-muted-foreground hover:text-foreground">
                     Features
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#pricing"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
+                  <a href="#pricing" className="text-muted-foreground hover:text-foreground">
                     Pricing
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#security"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
+                  <a href="#security" className="text-muted-foreground hover:text-foreground">
                     Security
                   </a>
                 </li>
@@ -791,28 +725,13 @@ export default function HomePage() {
               <h3 className="font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    About
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">About</button>
                 </li>
                 <li>
-                  <a
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Blog
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">Blog</button>
                 </li>
                 <li>
-                  <a
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Careers
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">Careers</button>
                 </li>
               </ul>
             </div>
@@ -820,28 +739,15 @@ export default function HomePage() {
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
+                  <button className="text-muted-foreground hover:text-foreground">
                     Help Center
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Contact
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">Contact</button>
                 </li>
                 <li>
-                  <a
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Status
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">Status</button>
                 </li>
               </ul>
             </div>

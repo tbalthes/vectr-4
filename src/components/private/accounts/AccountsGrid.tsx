@@ -1,38 +1,24 @@
-"use client";
+'use client';
 
-import React, { useState, useMemo } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  AlertCircle,
-  RefreshCw,
-  Eye,
-  EyeOff,
-  MoreHorizontal,
-  Building2,
-} from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { AlertCircle, RefreshCw, Eye, EyeOff, MoreHorizontal, Building2 } from 'lucide-react';
+import Image from 'next/image';
+import { toast } from 'sonner';
+
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import Image from "next/image";
-import { DndContext, closestCenter } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { arrayMove } from "@dnd-kit/sortable";
-import LuxuryAccountCard from "./LuxuryAccountCard";
-import { Account } from "@/hooks/useAccounts";
-import { accountToasts } from "@/lib/notifications/account-notifications";
-import { toast } from "sonner";
-import { useAccountSync } from "@/contexts/AccountSyncContext";
+} from '@/components/ui/dropdown-menu';
+import type { Account } from '@/hooks/useAccounts';
+import { accountToasts } from '@/lib/notifications/account-notifications';
+import { useAccountSync } from '@/contexts/AccountSyncContext';
 
 interface AccountsGridProps {
   accounts: Account[];
@@ -66,40 +52,40 @@ function AccountCard({
   const [isSyncing, setIsSyncing] = React.useState(false);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: account.currency || "USD",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: account.currency || 'USD',
     }).format(amount);
   };
 
   const getAccountTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
-      case "checking":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "savings":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case "credit":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      case "investment":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+      case 'checking':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'savings':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'credit':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'investment':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
   const isNegative = account.balance_amount < 0;
-  const displayBalance = balanceVisible
-    ? formatCurrency(account.balance_amount || 0)
-    : "••••••";
+  const displayBalance = balanceVisible ? formatCurrency(account.balance_amount || 0) : '••••••';
 
   const handleSync = async () => {
-    if (!onSync || isSyncing || isBeingSynced) return;
+    if (!onSync || isSyncing || isBeingSynced) {
+      return;
+    }
 
     setIsSyncing(true);
     try {
       await onSync(account.id, account.name);
     } catch (error) {
-      console.error("Sync failed:", error);
+      console.error('Sync failed:', error);
     } finally {
       setIsSyncing(false);
     }
@@ -107,18 +93,20 @@ function AccountCard({
 
   const handleRename = () => {
     // Simulate account rename
-    const newName = prompt("Enter new account name:", account.name);
+    const newName = prompt('Enter new account name:', account.name);
     if (newName && newName !== account.name) {
       accountToasts.renamed(account.name, newName);
     }
   };
 
   const handleDisconnect = async () => {
-    if (!onDisconnect) return;
+    if (!onDisconnect) {
+      return;
+    }
     if (confirm(`Are you sure you want to disconnect ${account.name}?`)) {
       try {
         const res = await fetch(`/api/accounts/${account.id}`, {
-          method: "DELETE",
+          method: 'DELETE',
         });
         if (res.ok) {
           accountToasts.disconnected(account.name);
@@ -128,7 +116,7 @@ function AccountCard({
           toast.error(`Failed to disconnect: ${data.error || res.statusText}`);
         }
       } catch {
-        toast.error("Network error disconnecting account");
+        toast.error('Network error disconnecting account');
       }
     }
   };
@@ -142,16 +130,13 @@ function AccountCard({
               {account.institution_logo_url ? (
                 <Image
                   src={account.institution_logo_url}
-                  alt={`${account.institution_name || "Bank"} logo`}
+                  alt={`${account.institution_name || 'Bank'} logo`}
                   width={16}
                   height={16}
                   className="object-contain"
                   onError={() => {
                     // Show fallback icon if logo fails to load
-                    console.log(
-                      "Institution logo failed to load:",
-                      account.institution_logo_url
-                    );
+                    console.log('Institution logo failed to load:', account.institution_logo_url);
                   }}
                 />
               ) : (
@@ -159,11 +144,9 @@ function AccountCard({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <CardTitle className="text-lg font-semibold truncate">
-                {account.name}
-              </CardTitle>
+              <CardTitle className="text-lg font-semibold truncate">{account.name}</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {account.institution_name || account.provider || "Unknown Bank"}
+                {account.institution_name || account.provider || 'Unknown Bank'}
                 {account.mask && ` •••• ${account.mask}`}
               </p>
             </div>
@@ -175,11 +158,7 @@ function AccountCard({
               onClick={() => setBalanceVisible(!balanceVisible)}
               className="h-8 w-8 p-0"
             >
-              {balanceVisible ? (
-                <Eye className="h-4 w-4" />
-              ) : (
-                <EyeOff className="h-4 w-4" />
-              )}
+              {balanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -189,73 +168,52 @@ function AccountCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={handleSync}
+                  onClick={() => void handleSync()}
                   disabled={isSyncing || isBeingSynced}
                 >
                   <RefreshCw
-                    className={`mr-2 h-4 w-4 ${
-                      isSyncing || isBeingSynced ? "animate-spin" : ""
-                    }`}
+                    className={`mr-2 h-4 w-4 ${isSyncing || isBeingSynced ? 'animate-spin' : ''}`}
                   />
-                  {isSyncing || isBeingSynced ? "Syncing..." : "Sync Account"}
+                  {isSyncing || isBeingSynced ? 'Syncing...' : 'Sync Account'}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleRename}>
-                  Rename Account
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleRename}>Rename Account</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleDisconnect}
-                  className="text-red-600"
-                >
+                <DropdownMenuItem onClick={() => void handleDisconnect()} className="text-red-600">
                   Disconnect Account
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
-        <Badge className={getAccountTypeColor(account.type)}>
-          {account.type}
-        </Badge>
+        <Badge className={getAccountTypeColor(account.type)}>{account.type}</Badge>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
           <div>
             <p className="text-sm text-muted-foreground">Current Balance</p>
-            <p
-              className={`text-2xl font-bold ${
-                isNegative ? "text-red-600" : "text-green-600"
-              }`}
-            >
+            <p className={`text-2xl font-bold ${isNegative ? 'text-red-600' : 'text-green-600'}`}>
               {displayBalance}
             </p>
           </div>
 
-          {account.available !== undefined &&
-            account.available !== account.balance_amount && (
-              <div>
-                <p className="text-sm text-muted-foreground">Available</p>
-                <p className="text-lg font-semibold">
-                  {balanceVisible
-                    ? formatCurrency(account.available)
-                    : "••••••"}
-                </p>
-              </div>
-            )}
+          {account.available !== undefined && account.available !== account.balance_amount && (
+            <div>
+              <p className="text-sm text-muted-foreground">Available</p>
+              <p className="text-lg font-semibold">
+                {balanceVisible ? formatCurrency(account.available) : '••••••'}
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center justify-between pt-2">
             {account.provider && (
-              <Badge
-                variant="outline"
-                className="text-xs"
-                key={`${account.id}-provider`}
-              >
+              <Badge variant="outline" className="text-xs" key={`${account.id}-provider`}>
                 {account.provider}
               </Badge>
             )}
             {account.last_synced_at && (
               <p className="text-xs text-muted-foreground">
-                Last sync:{" "}
-                {new Date(account.last_synced_at).toLocaleDateString()}
+                Last sync: {new Date(account.last_synced_at).toLocaleDateString()}
               </p>
             )}
           </div>
@@ -328,22 +286,26 @@ export function AccountsGrid({
   const { isAccountSyncing, isBulkSyncing } = useAccountSync();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
-  const handleRefresh = async () => {
-    if (isRefreshing) return;
+  const handleRefresh = () => {
+    if (isRefreshing) {
+      return;
+    }
     setIsRefreshing(true);
     try {
-      await onRefresh();
+      onRefresh();
     } finally {
       setIsRefreshing(false);
     }
   };
 
   const handleSyncAll = async () => {
-    if (!onSyncAll || isBulkSyncing()) return;
+    if (!onSyncAll || isBulkSyncing()) {
+      return;
+    }
     try {
       await onSyncAll();
     } catch (error) {
-      console.error("Bulk sync failed:", error);
+      console.error('Bulk sync failed:', error);
     }
   };
 
@@ -356,15 +318,8 @@ export function AccountsGrid({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Your Accounts</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-            />
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -372,15 +327,11 @@ export function AccountsGrid({
           <div className="text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
             <div>
-              <h3 className="text-lg font-semibold text-red-600">
-                Error loading accounts
-              </h3>
+              <h3 className="text-lg font-semibold text-red-600">Error loading accounts</h3>
               <p className="text-muted-foreground">{error}</p>
             </div>
             <Button onClick={handleRefresh} disabled={isRefreshing}>
-              <RefreshCw
-                className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-              />
+              <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Try Again
             </Button>
           </div>
@@ -394,15 +345,8 @@ export function AccountsGrid({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Your Accounts</h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-            />
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -416,9 +360,7 @@ export function AccountsGrid({
               </p>
             </div>
             <Button onClick={handleRefresh} disabled={isRefreshing}>
-              <RefreshCw
-                className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-              />
+              <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
@@ -433,29 +375,18 @@ export function AccountsGrid({
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Your Accounts</h2>
         <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-            />
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           {accounts.length > 1 && onSyncAll && (
             <Button
               variant="outline"
               size="sm"
-              onClick={handleSyncAll}
+              onClick={() => void handleSyncAll()}
               disabled={isBulkSyncing()}
             >
-              <RefreshCw
-                className={`mr-2 h-4 w-4 ${
-                  isBulkSyncing() ? "animate-spin" : ""
-                }`}
-              />
+              <RefreshCw className={`mr-2 h-4 w-4 ${isBulkSyncing() ? 'animate-spin' : ''}`} />
               Sync All
             </Button>
           )}

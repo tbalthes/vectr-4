@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Image from "next/image";
+
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -111,9 +112,9 @@ export function LoginForm({
         "Login successful, refreshing and redirecting to /private/dashboard"
       );
 
-      // Refresh server components to pick up the new session cookie, then navigate.
-      router.refresh();
-      router.push("/private/dashboard");
+  // Refresh server components to pick up the new session cookie, then navigate.
+  void router.refresh();
+  void router.push("/private/dashboard");
     } catch (error: unknown) {
       let message = "An unexpected error occurred.";
       if (error instanceof Error) {
@@ -130,7 +131,7 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0 bg-card border-border shadow-sm hover:shadow-md transition-all duration-300">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form onSubmit={handleSubmit} className="p-6 md:p-8">
+          <form onSubmit={(e) => void handleSubmit(e)} className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               {/* Header */}
               <div className="flex flex-col items-center text-center">
@@ -177,12 +178,15 @@ export function LoginForm({
                 )}
 
                 <div className="text-right">
-                  <a
-                    href="#"
+                  <button
+                    type="button"
+                    onClick={() => void (async () => {
+                      // In a real app, navigate to forgot password route
+                    })()}
                     className="text-primary hover:text-primary/80 transition-colors duration-200 text-xs font-medium"
                   >
                     Forgot password?
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -250,12 +254,15 @@ export function LoginForm({
       <div className="text-muted-foreground text-center text-xs">
         <div className="text-balance">
           Your data is protected with bank-level security.{" "}
-          <a
-            href="#"
+          <button
+            type="button"
+            onClick={() => {
+              // Replace with modal or navigation in a real app
+            }}
             className="text-foreground underline underline-offset-4 hover:text-primary"
           >
             Learn more
-          </a>
+          </button>
           .
         </div>
       </div>

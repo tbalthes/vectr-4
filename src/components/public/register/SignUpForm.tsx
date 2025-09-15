@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import type { AuthError } from "@supabase/supabase-js";
+
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +10,6 @@ import { FormField } from "@/components/public/register/FormField";
 import { SocialLoginButtons } from "@/components/public/register/SocialLoginButtons";
 import { supabase } from "@/lib/supabase/supabase";
 
-import { AuthError } from "@supabase/supabase-js";
 
 interface SignupFormData {
   fullName: string;
@@ -104,7 +105,7 @@ export function SignupForm({
       }
 
       console.log("Signup successful, redirecting to /private/dashboard");
-      router.push("/private/dashboard");
+  void router.push("/private/dashboard");
     } catch (error) {
       console.error("Signup failed:", (error as AuthError).message);
       setErrors({ general: (error as AuthError).message });
@@ -117,7 +118,7 @@ export function SignupForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0 bg-card border border-border max-w-2xl mx-auto rounded-xl shadow-lg shadow-black/10 dark:shadow-white/10">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form onSubmit={handleSubmit} className="p-6 md:p-8">
+          <form onSubmit={(e) => void handleSubmit(e)} className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               {/* Header */}
               <div className="flex flex-col items-center text-center">
@@ -261,19 +262,25 @@ export function SignupForm({
       <div className="text-muted-foreground text-center font-sans text-xs font-normal">
         <div className="text-balance">
           By creating an account, you agree to our{" "}
-          <a
-            href="#"
+          <button
+            type="button"
+            onClick={() => void (async () => {
+              // Show terms modal or navigate in real app
+            })()}
             className="text-foreground underline underline-offset-4 hover:text-primary transition-colors duration-200"
           >
             Terms of Service
-          </a>{" "}
+          </button>{" "}
           and{" "}
-          <a
-            href="#"
+          <button
+            type="button"
+            onClick={() => void (async () => {
+              // Show privacy modal or navigate in real app
+            })()}
             className="text-foreground underline underline-offset-4 hover:text-primary transition-colors duration-200"
           >
             Privacy Policy
-          </a>
+          </button>
           .
         </div>
       </div>

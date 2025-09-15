@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { TrendingUp } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, Cell, LabelList } from "recharts";
+import { TrendingUp } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, Cell, LabelList } from 'recharts';
 
 import {
   Card,
@@ -10,28 +10,28 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
-  ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+  type ChartConfig,
+} from '@/components/ui/chart';
 
-export const description = "A bar chart with negative values";
+export const description = 'A bar chart with negative values';
 
 const chartData = [
-  { month: "January", networth: 186000 },
-  { month: "February", networth: 205000 },
-  { month: "March", networth: -207000 },
-  { month: "April", networth: 173000 },
-  { month: "May", networth: -209000 },
-  { month: "June", networth: 214000 },
+  { month: 'January', networth: 186000 },
+  { month: 'February', networth: 205000 },
+  { month: 'March', networth: -207000 },
+  { month: 'April', networth: 173000 },
+  { month: 'May', networth: -209000 },
+  { month: 'June', networth: 214000 },
 ];
 
 const chartConfig = {
   networth: {
-    label: "networth",
+    label: 'networth',
   },
 } satisfies ChartConfig;
 
@@ -55,7 +55,7 @@ export function NetWorthOverTime() {
               {chartData.map((item) => (
                 <Cell
                   key={item.month}
-                  fill={item.networth > 0 ? "var(--chart-1)" : "var(--chart-2)"}
+                  fill={item.networth > 0 ? 'var(--chart-1)' : 'var(--chart-2)'}
                 />
               ))}
             </Bar>

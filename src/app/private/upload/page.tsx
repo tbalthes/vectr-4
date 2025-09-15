@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { ArrowLeft, Download } from "lucide-react";
+import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import { FileUploadStep } from "@/components/private/csv-uploader/FileUploadStep";
 import { HeaderDetectionStep } from "@/components/private/csv-uploader/HeaderDetectionStep";
@@ -8,7 +11,6 @@ import { ColumnMappingStep } from "@/components/private/csv-uploader/ColumnMappi
 import { DataPreviewStep } from "@/components/private/csv-uploader/DataPreviewStep";
 import { PreviewStep } from "@/components/private/csv-uploader/PreviewStep";
 import PageHeader from "@/components/private/PageHeader";
-import { ArrowLeft, Download } from "lucide-react";
 import {
   detectHeaderRow,
   getColumnSuggestions,
@@ -17,7 +19,6 @@ import {
   type ColumnMapping,
   type HeaderDetectionResult,
 } from "@/components/private/csv-uploader/csv-utils";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function UploadPage() {
@@ -85,7 +86,7 @@ export default function UploadPage() {
 
   // Keep local copy of authenticated user id to avoid transient null during navigation
   React.useEffect(() => {
-    if (user?.id) setAuthUserId(user.id);
+    if (user?.id) {setAuthUserId(user.id);}
   }, [user?.id]);
 
   const handlePreviewComplete = () => {
@@ -98,9 +99,9 @@ export default function UploadPage() {
   };
 
   const transformDataForPreview = (
-    limitRows: boolean = true
-  ): Array<Record<string, string | number | undefined>> => {
-    if (!csvData.length || !mapping.description || !mapping.date) return [];
+    limitRows = true
+  ): Record<string, string | number | undefined>[] => {
+    if (!csvData.length || !mapping.description || !mapping.date) {return [];}
 
     const dataRows = csvData.slice(selectedHeaderRow + 1);
     const headers = csvData[selectedHeaderRow] || [];
@@ -135,7 +136,7 @@ export default function UploadPage() {
       }
 
       // Calculate amount from amount columns
-      const amounts: { [column: string]: string } = {};
+      const amounts: Record<string, string> = {};
       mapping.amountColumns.forEach((columnName) => {
         const colIndex = headers.indexOf(columnName);
         if (colIndex >= 0) {

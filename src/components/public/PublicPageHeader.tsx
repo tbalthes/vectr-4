@@ -1,16 +1,16 @@
 "use client";
-import React from "react";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart3, ChevronDown, Menu, X } from "lucide-react";
 
-type Feature = {
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Button } from "@/components/ui/button";
+
+interface Feature {
   title: string;
   description: string;
   icon: React.ElementType;
-};
+}
 
 interface PublicPageHeaderProps {
   features: Feature[];
@@ -64,14 +64,17 @@ export default function PublicPageHeader({ features }: PublicPageHeaderProps) {
                   >
                     <div className="p-2">
                       {features.map((feature) => (
-                        <a
+                        <button
                           key={feature.title}
-                          href="#"
-                          className="flex items-center space-x-2 p-2 hover:bg-muted rounded-md transition-colors"
+                          type="button"
+                          onClick={() => {
+                            /* Intentionally navigational in real app */
+                          }}
+                          className="w-full text-left flex items-center space-x-2 p-2 hover:bg-muted rounded-md transition-colors"
                         >
                           <feature.icon className="w-4 h-4" />
                           <span className="text-sm">{feature.title}</span>
-                        </a>
+                        </button>
                       ))}
                     </div>
                   </motion.div>

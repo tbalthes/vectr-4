@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { TrendingUp } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { TrendingUp } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 
 import {
   Card,
@@ -10,37 +10,37 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
-  ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+  type ChartConfig,
+} from '@/components/ui/chart';
 
-export const description = "A stacked area chart with expand stacking";
+export const description = 'A stacked area chart with expand stacking';
 
 const chartData = [
-  { month: "January", fastfood: 186, groceries: 80, snacks: 45 },
-  { month: "February", fastfood: 305, groceries: 200, snacks: 100 },
-  { month: "March", fastfood: 237, groceries: 120, snacks: 150 },
-  { month: "April", fastfood: 73, groceries: 190, snacks: 50 },
-  { month: "May", fastfood: 209, groceries: 130, snacks: 100 },
-  { month: "June", fastfood: 214, groceries: 140, snacks: 160 },
+  { month: 'January', fastfood: 186, groceries: 80, snacks: 45 },
+  { month: 'February', fastfood: 305, groceries: 200, snacks: 100 },
+  { month: 'March', fastfood: 237, groceries: 120, snacks: 150 },
+  { month: 'April', fastfood: 73, groceries: 190, snacks: 50 },
+  { month: 'May', fastfood: 209, groceries: 130, snacks: 100 },
+  { month: 'June', fastfood: 214, groceries: 140, snacks: 160 },
 ];
 
 const chartConfig = {
   fastfood: {
-    label: "Fast Food",
-    color: "var(--chart-1)",
+    label: 'Fast Food',
+    color: 'var(--chart-1)',
   },
   groceries: {
-    label: "Groceries",
-    color: "var(--chart-2)",
+    label: 'Groceries',
+    color: 'var(--chart-2)',
   },
   snacks: {
-    label: "Snacks",
-    color: "var(--chart-3)",
+    label: 'Snacks',
+    color: 'var(--chart-3)',
   },
 } satisfies ChartConfig;
 
@@ -73,10 +73,7 @@ export function BudgetCompositionChart() {
               tickMargin={8}
               tickFormatter={(value) => value.slice(0, 3)}
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
-            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
             <Area
               dataKey="snacks"
               type="natural"

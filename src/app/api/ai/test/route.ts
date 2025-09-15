@@ -1,4 +1,4 @@
-export async function GET() {
+export function GET() {
   const API_KEY = process.env.GEMINI_API_KEY;
   const NODE_ENV = process.env.NODE_ENV;
 

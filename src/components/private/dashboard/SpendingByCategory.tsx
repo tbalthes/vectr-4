@@ -1,4 +1,6 @@
 "use client";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+
 import {
   Card,
   CardHeader,
@@ -6,7 +8,6 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 
 interface Category {
   name: string;
@@ -19,6 +20,28 @@ interface SpendingByCategoryProps {
 }
 
 export function SpendingByCategory({ categories }: SpendingByCategoryProps) {
+  // Utility function for formatting currency values in tooltips
+  const formatCurrency = (value: any) => {
+    if (typeof value !== 'number' || isNaN(value)) {
+      return ['$0.00', 'Amount'];
+    }
+    return [`$${value.toFixed(2)}`, 'Amount'];
+  };
+  // Simple currency formatter for display values
+  const formatValue = (value: number) => {
+    if (typeof value !== 'number' || isNaN(value)) {return '$0.00';}
+    return `$${value.toFixed(2)}`;
+  };
+
+
+  // Consistent styling for tooltip content
+  const tooltipStyles = {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  };
+
   return (
     <Card className="card-clean">
       <CardHeader className="pb-4">
@@ -44,13 +67,8 @@ export function SpendingByCategory({ categories }: SpendingByCategoryProps) {
               ))}
             </Pie>
             <Tooltip
-              formatter={(value) => [`$${value}`, "Amount"]}
-              contentStyle={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-              }}
+              formatter={formatCurrency}
+              contentStyle={tooltipStyles}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -68,7 +86,7 @@ export function SpendingByCategory({ categories }: SpendingByCategoryProps) {
                 <span className="text-foreground-muted">{category.name}</span>
               </div>
               <span className="font-medium text-foreground">
-                ${category.value}
+                {formatValue(category.value)}
               </span>
             </div>
           ))}

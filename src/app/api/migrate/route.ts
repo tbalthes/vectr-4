@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET() {
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
     // First, try to create the tables
@@ -34,25 +34,23 @@ export async function GET() {
     `;
 
     // Use raw SQL execution
-    const { data: sessionsResult, error: sessionsError } = await supabase.rpc(
-      "exec_sql",
-      { query: createSessionsQuery }
-    );
+    const { data: sessionsResult, error: sessionsError } = await supabase.rpc('exec_sql', {
+      query: createSessionsQuery,
+    });
 
-    const { data: messagesResult, error: messagesError } = await supabase.rpc(
-      "exec_sql",
-      { query: createMessagesQuery }
-    );
+    const { data: messagesResult, error: messagesError } = await supabase.rpc('exec_sql', {
+      query: createMessagesQuery,
+    });
 
     // Test if we can query the tables
-    const { data: sessions, error: sessionQueryError } = await supabase
-      .from("chat_sessions")
-      .select("*")
+    const { data: _sessions, error: sessionQueryError } = await supabase
+      .from('chat_sessions')
+      .select('*')
       .limit(1);
 
-    const { data: messages, error: messageQueryError } = await supabase
-      .from("chat_messages")
-      .select("*")
+    const { data: _messages, error: messageQueryError } = await supabase
+      .from('chat_messages')
+      .select('*')
       .limit(1);
 
     return NextResponse.json({
@@ -72,13 +70,13 @@ export async function GET() {
       messagesResult,
     });
   } catch (error) {
-    console.error("Migration error:", error);
+    console.error('Migration error:', error);
     return NextResponse.json(
       {
-        error: "Migration failed",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Migration failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

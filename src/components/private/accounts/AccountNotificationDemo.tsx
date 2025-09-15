@@ -1,10 +1,11 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { accountToasts } from "@/lib/notifications/account-notifications";
+import React, { useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { accountToasts } from '@/lib/notifications/account-notifications';
 
 /**
  * Demo component showcasing the account notification system
@@ -12,12 +13,8 @@ import { accountToasts } from "@/lib/notifications/account-notifications";
  */
 export function AccountNotificationDemo() {
   const [isRunning, setIsRunning] = useState(false);
-  const [demoAccount] = useState("Chase Checking");
-  const [demoAccounts] = useState([
-    "Chase Checking",
-    "Wells Fargo Savings",
-    "Citi Credit Card",
-  ]);
+  const [demoAccount] = useState('Chase Checking');
+  const [demoAccounts] = useState(['Chase Checking', 'Wells Fargo Savings', 'Citi Credit Card']);
 
   // Mock API calls - simulate network delays and possible failures
   const mockSyncAccount = async (): Promise<{
@@ -37,7 +34,7 @@ export function AccountNotificationDemo() {
     } else {
       return {
         success: false,
-        error: "Connection timeout",
+        error: 'Connection timeout',
       };
     }
   };
@@ -55,7 +52,7 @@ export function AccountNotificationDemo() {
     } else {
       return {
         success: false,
-        error: "Invalid credentials",
+        error: 'Invalid credentials',
       };
     }
   };
@@ -69,8 +66,8 @@ export function AccountNotificationDemo() {
       accountName: demoAccount,
       step: 1,
       totalSteps: 3,
-      currentOperation: "Fetching transactions",
-      estimatedTime: "2-3 minutes",
+      currentOperation: 'Fetching transactions',
+      estimatedTime: '2-3 minutes',
     });
 
     // Simulate progress updates
@@ -79,8 +76,8 @@ export function AccountNotificationDemo() {
         accountName: demoAccount,
         step: 2,
         totalSteps: 3,
-        currentOperation: "Processing transactions",
-        estimatedTime: "1-2 minutes",
+        currentOperation: 'Processing transactions',
+        estimatedTime: '1-2 minutes',
       });
     }, 1500);
 
@@ -91,104 +88,96 @@ export function AccountNotificationDemo() {
       if (result.success) {
         accountToasts.syncComplete(demoAccount, result.newTransactions);
       } else {
-        accountToasts.syncError(
-          demoAccount,
-          result.error || "Unknown error",
-          true
-        );
+        accountToasts.syncError(demoAccount, result.error || 'Unknown error', true);
       }
     } catch {
       accountToasts.clear(progressToastId);
-      accountToasts.syncError(demoAccount, "Network error", true);
+      accountToasts.syncError(demoAccount, 'Network error', true);
     }
 
     setIsRunning(false);
   };
 
-  const handleBulkSync = async () => {
+  const handleBulkSync = () => {
     setIsRunning(true);
 
     // Show warning first
-    accountToasts.connectionWarning(demoAccounts.length, "5-8 minutes");
+    accountToasts.connectionWarning(demoAccounts.length, '5-8 minutes');
 
     // Wait a bit then start bulk sync
-    setTimeout(async () => {
-      const results: Array<{
-        account: string;
-        success: boolean;
-        newTransactions?: number;
-        error?: string;
-      }> = [];
-      let completedCount = 0;
+    setTimeout(
+      () =>
+        void (async () => {
+          const results: {
+            account: string;
+            success: boolean;
+            newTransactions?: number;
+            error?: string;
+          }[] = [];
+          let completedCount = 0;
 
-      // Start bulk sync progress
-      accountToasts.bulkSyncProgress({
-        totalAccounts: demoAccounts.length,
-        completedAccounts: 0,
-        currentAccount: demoAccounts[0],
-        estimatedTime: "5-8 minutes",
-      });
-
-      // Process each account
-      for (const account of demoAccounts) {
-        try {
+          // Start bulk sync progress
           accountToasts.bulkSyncProgress({
             totalAccounts: demoAccounts.length,
-            completedAccounts: completedCount,
-            currentAccount: account,
-            estimatedTime: `${Math.max(1, 8 - completedCount * 2)} minutes`,
+            completedAccounts: 0,
+            currentAccount: demoAccounts[0],
+            estimatedTime: '5-8 minutes',
           });
 
-          const result = await mockSyncAccount();
-          completedCount++;
+          // Process each account
+          for (const account of demoAccounts) {
+            try {
+              accountToasts.bulkSyncProgress({
+                totalAccounts: demoAccounts.length,
+                completedAccounts: completedCount,
+                currentAccount: account,
+                estimatedTime: `${Math.max(1, 8 - completedCount * 2)} minutes`,
+              });
 
-          results.push({
-            account,
-            success: result.success,
-            newTransactions: result.newTransactions,
-            error: result.error,
-          });
+              const result = await mockSyncAccount();
+              completedCount++;
 
-          // Update progress
-          accountToasts.bulkSyncProgress({
-            totalAccounts: demoAccounts.length,
-            completedAccounts: completedCount,
-            failedAccounts: results
-              .filter((r) => !r.success)
-              .map((r) => r.account),
-          });
+              results.push({
+                account,
+                success: result.success,
+                newTransactions: result.newTransactions,
+                error: result.error,
+              });
 
-          // Show retry suggestion for failed accounts
-          if (!result.success) {
-            accountToasts.retrySuggestion(account, 1);
+              // Update progress
+              accountToasts.bulkSyncProgress({
+                totalAccounts: demoAccounts.length,
+                completedAccounts: completedCount,
+                failedAccounts: results.filter((r) => !r.success).map((r) => r.account),
+              });
+
+              // Show retry suggestion for failed accounts
+              if (!result.success) {
+                accountToasts.retrySuggestion(account, 1);
+              }
+            } catch {
+              completedCount++;
+              results.push({
+                account,
+                success: false,
+                error: 'Network error',
+              });
+            }
           }
-        } catch {
-          completedCount++;
-          results.push({
-            account,
-            success: false,
-            error: "Network error",
-          });
-        }
-      }
 
-      // Show completion
-      const totalTransactions = results
-        .filter((r) => r.success)
-        .reduce((sum, r) => sum + (r.newTransactions || 0), 0);
+          // Show completion
+          const totalTransactions = results
+            .filter((r) => r.success)
+            .reduce((sum, r) => sum + (r.newTransactions || 0), 0);
 
-      const failedAccounts = results
-        .filter((r) => !r.success)
-        .map((r) => r.account);
+          const failedAccounts = results.filter((r) => !r.success).map((r) => r.account);
 
-      accountToasts.bulkSyncComplete(
-        demoAccounts.length,
-        totalTransactions,
-        failedAccounts
-      );
+          accountToasts.bulkSyncComplete(demoAccounts.length, totalTransactions, failedAccounts);
 
-      setIsRunning(false);
-    }, 2000);
+          setIsRunning(false);
+        })(),
+      2000,
+    );
   };
 
   const handleConnectAccount = async () => {
@@ -198,20 +187,17 @@ export function AccountNotificationDemo() {
       const result = await mockConnectAccount();
 
       if (result.success) {
-        accountToasts.connected("New Bank Account", "Starting initial sync...");
+        accountToasts.connected('New Bank Account', 'Starting initial sync...');
 
         // Simulate initial sync after connection
         setTimeout(() => {
-          accountToasts.syncComplete("New Bank Account", 45);
+          accountToasts.syncComplete('New Bank Account', 45);
         }, 3000);
       } else {
-        accountToasts.syncError(
-          "New Bank Account",
-          result.error || "Connection failed"
-        );
+        accountToasts.syncError('New Bank Account', result.error || 'Connection failed');
       }
     } catch {
-      accountToasts.syncError("New Bank Account", "Network error");
+      accountToasts.syncError('New Bank Account', 'Network error');
     }
 
     setIsRunning(false);
@@ -222,18 +208,16 @@ export function AccountNotificationDemo() {
   };
 
   const handleRenameAccount = () => {
-    const newName = "Chase Primary Checking";
+    const newName = 'Chase Primary Checking';
     accountToasts.renamed(demoAccount, newName);
   };
 
   const handleBackgroundProcess = () => {
-    accountToasts.backgroundProcess(
-      "Categorizing transactions in background..."
-    );
+    accountToasts.backgroundProcess('Categorizing transactions in background...');
 
     // Simulate background completion
     setTimeout(() => {
-      accountToasts.bulkSuccess(150, "categorization");
+      accountToasts.bulkSuccess(150, 'categorization');
     }, 4000);
   };
 
@@ -248,57 +232,36 @@ export function AccountNotificationDemo() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            This demo showcases the comprehensive notification system for
-            account operations. Click the buttons below to see different types
-            of notifications in action.
+            This demo showcases the comprehensive notification system for account operations. Click
+            the buttons below to see different types of notifications in action.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            <Button
-              onClick={handleSingleSync}
-              disabled={isRunning}
-              variant="default"
-            >
+            <Button onClick={() => void handleSingleSync()} disabled={isRunning} variant="default">
               🔄 Single Account Sync
             </Button>
 
-            <Button
-              onClick={handleBulkSync}
-              disabled={isRunning}
-              variant="default"
-            >
+            <Button onClick={() => void handleBulkSync()} disabled={isRunning} variant="default">
               🔄 Bulk Account Sync
             </Button>
 
             <Button
-              onClick={handleConnectAccount}
+              onClick={() => void handleConnectAccount()}
               disabled={isRunning}
               variant="outline"
             >
               🔗 Connect Account
             </Button>
 
-            <Button
-              onClick={handleDisconnectAccount}
-              disabled={isRunning}
-              variant="outline"
-            >
+            <Button onClick={handleDisconnectAccount} disabled={isRunning} variant="outline">
               🔌 Disconnect Account
             </Button>
 
-            <Button
-              onClick={handleRenameAccount}
-              disabled={isRunning}
-              variant="outline"
-            >
+            <Button onClick={handleRenameAccount} disabled={isRunning} variant="outline">
               ✏️ Rename Account
             </Button>
 
-            <Button
-              onClick={handleBackgroundProcess}
-              disabled={isRunning}
-              variant="secondary"
-            >
+            <Button onClick={handleBackgroundProcess} disabled={isRunning} variant="secondary">
               ⚙️ Background Process
             </Button>
           </div>

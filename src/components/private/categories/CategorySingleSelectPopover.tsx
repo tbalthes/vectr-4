@@ -1,24 +1,15 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import {
-  ChevronDown,
-  ChevronRight,
-  Search,
-  Check,
-  X,
-  Plus,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils/utils";
-import CategoryIcon from "@/components/private/transactions/enhanced_table/CategoryIcon";
-import CreateCategoryModal from "./CreateCategoryModal";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ChevronDown, ChevronRight, Search, Check, X, Plus } from 'lucide-react';
+
+import CreateCategoryModal from './CreateCategoryModal';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils/utils';
+import CategoryIcon from '@/components/private/transactions/enhanced_table/CategoryIcon';
 
 interface Category {
   category_id: string; // Updated to match backend response
@@ -74,25 +65,29 @@ function CategoryNode({
     : true;
 
   const hasMatchingDescendants = useMemo(() => {
-    if (!searchQuery) return false;
+    if (!searchQuery) {
+      return false;
+    }
     const checkDescendants = (cats: Category[]): boolean =>
       cats.some(
         (cat) =>
           cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          checkDescendants(cat.children)
+          checkDescendants(cat.children),
       );
     return checkDescendants(category.children);
   }, [category.children, searchQuery]);
 
   const shouldShow = !searchQuery || matchesSearch || hasMatchingDescendants;
-  if (!shouldShow) return null;
+  if (!shouldShow) {
+    return null;
+  }
 
   return (
     <div className="select-none">
       <div
         className={cn(
-          "flex items-center gap-2 py-2 px-2 hover:bg-muted/50 cursor-pointer rounded-sm transition-colors duration-150",
-          isSelected && "bg-primary/10 border-l-2 border-l-primary"
+          'flex items-center gap-2 py-2 px-2 hover:bg-muted/50 cursor-pointer rounded-sm transition-colors duration-150',
+          isSelected && 'bg-primary/10 border-l-2 border-l-primary',
         )}
         style={{ marginLeft: `${Math.max(0, category.depth) * 16}px` }}
         onClick={() => onSelect(category.category_id)}
@@ -130,24 +125,22 @@ function CategoryNode({
         <CategoryIcon
           iconName={category.icon}
           className="w-4 h-4 flex-shrink-0"
-          style={{ color: "#6700EE" }}
+          style={{ color: '#6700EE' }}
         />
 
         {/* Category Name */}
         <span
           className={cn(
-            "flex-1 text-sm font-medium truncate",
-            isSelected ? "text-primary" : "text-foreground",
-            matchesSearch &&
-              searchQuery &&
-              "bg-yellow-100 dark:bg-yellow-900/30 px-1 rounded"
+            'flex-1 text-sm font-medium truncate',
+            isSelected ? 'text-primary' : 'text-foreground',
+            matchesSearch && searchQuery && 'bg-yellow-100 dark:bg-yellow-900/30 px-1 rounded',
           )}
         >
           {category.name}
         </span>
 
         {/* Count */}
-        {showCounts && typeof category.transaction_count === "number" && (
+        {showCounts && typeof category.transaction_count === 'number' && (
           <span className="text-xs text-muted-foreground flex-shrink-0">
             {category.transaction_count}
           </span>
@@ -157,7 +150,7 @@ function CategoryNode({
       {hasChildren && (
         <div
           className={`overflow-hidden transition-all duration-200 ease-in-out ${
-            isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+            isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           {isExpanded && (
@@ -186,7 +179,7 @@ export default function CategorySingleSelectPopover({
   value = null,
   onChange,
   userId,
-  placeholder = "Select a category...",
+  placeholder = 'Select a category...',
   className,
   disabled = false,
   showTransactionCounts = false,
@@ -195,7 +188,7 @@ export default function CategorySingleSelectPopover({
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -204,19 +197,24 @@ export default function CategorySingleSelectPopover({
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (userId) params.append("user_id", userId);
-      if (showTransactionCounts) params.append("include_counts", "true");
+      if (userId) {
+        params.append('user_id', userId);
+      }
+      if (showTransactionCounts) {
+        params.append('include_counts', 'true');
+      }
       const url = `/api/categories/tree?${params}`;
       const res = await fetch(url);
-      if (!res.ok)
+      if (!res.ok) {
         throw new Error(`Failed to load categories: ${res.statusText}`);
+      }
       const data: CategoryTreeResponse = await res.json();
       setCategories(data.categories);
       // Start with all categories collapsed for better UX
       // const firstLevelIds = data.categories.map((cat) => cat.category_id);
       // setExpandedIds(new Set(firstLevelIds)); // Keep collapsed for better performance and UX
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load categories");
+      setError(e instanceof Error ? e.message : 'Failed to load categories');
       console.error(e);
     } finally {
       setLoading(false);
@@ -224,30 +222,34 @@ export default function CategorySingleSelectPopover({
   }, [userId, showTransactionCounts]);
 
   useEffect(() => {
-    loadCategories();
+    void loadCategories();
   }, [loadCategories]);
 
   // Ensure parents of selected value are expanded
   useEffect(() => {
-    if (!value || categories.length === 0) return;
+    if (!value || categories.length === 0) {
+      return;
+    }
     const newExpanded = new Set<string>();
-    const findPath = (
-      id: string,
-      cats: Category[],
-      path: string[] = []
-    ): string[] | null => {
+    const findPath = (id: string, cats: Category[], path: string[] = []): string[] | null => {
       for (const cat of cats) {
         const currentPath = [...path, cat.category_id];
-        if (cat.category_id === id) return currentPath.slice(0, -1);
+        if (cat.category_id === id) {
+          return currentPath.slice(0, -1);
+        }
         if (cat.children.length) {
           const found = findPath(id, cat.children, currentPath);
-          if (found) return found;
+          if (found) {
+            return found;
+          }
         }
       }
       return null;
     };
     const path = findPath(value, categories);
-    if (path) path.forEach((pid) => newExpanded.add(pid));
+    if (path) {
+      path.forEach((pid) => newExpanded.add(pid));
+    }
     setExpandedIds((prev) => new Set([...prev, ...newExpanded]));
   }, [value, categories]);
 
@@ -255,19 +257,25 @@ export default function CategorySingleSelectPopover({
     (id: string): Category | null => {
       const search = (cats: Category[]): Category | null => {
         for (const cat of cats) {
-          if (cat.category_id === id) return cat;
+          if (cat.category_id === id) {
+            return cat;
+          }
           const found = search(cat.children);
-          if (found) return found;
+          if (found) {
+            return found;
+          }
         }
         return null;
       };
       return search(categories);
     },
-    [categories]
+    [categories],
   );
 
   const selectedName = useMemo(() => {
-    if (!value) return placeholder;
+    if (!value) {
+      return placeholder;
+    }
     const cat = getCategoryById(value);
     return cat ? cat.name : placeholder;
   }, [value, getCategoryById, placeholder]);
@@ -280,8 +288,11 @@ export default function CategorySingleSelectPopover({
 
   const onExpand = (id: string) => {
     const next = new Set(expandedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
     setExpandedIds(next);
   };
 
@@ -295,11 +306,11 @@ export default function CategorySingleSelectPopover({
   };
 
   const handleCategoryCreated = (newCategory: Category) => {
-    console.log("New category created:", newCategory);
+    console.log('New category created:', newCategory);
     // Reload categories to include the new one
-    loadCategories();
+    void loadCategories();
     // Optionally select the new category
-    console.log("Setting selected category to:", newCategory.category_id);
+    console.log('Setting selected category to:', newCategory.category_id);
     onChange(newCategory.category_id, newCategory);
     // Close the create modal
     setShowCreateModal(false);
@@ -312,9 +323,9 @@ export default function CategorySingleSelectPopover({
           <Button
             variant="outline"
             className={cn(
-              "w-full justify-between font-normal",
-              !value && "text-gray-500",
-              className
+              'w-full justify-between font-normal',
+              !value && 'text-gray-500',
+              className,
             )}
             disabled={disabled}
           >
@@ -322,9 +333,9 @@ export default function CategorySingleSelectPopover({
               {/* Show icon if possible */}
               {value && (
                 <CategoryIcon
-                  iconName={getCategoryById(value || "")?.icon}
+                  iconName={getCategoryById(value || '')?.icon}
                   className="w-4 h-4 flex-shrink-0"
-                  style={{ color: "#6700EE" }}
+                  style={{ color: '#6700EE' }}
                 />
               )}
               {selectedName}
@@ -365,29 +376,17 @@ export default function CategorySingleSelectPopover({
                 target.scrollTop += scrollAmount;
               }}
               style={{
-                scrollBehavior: "smooth",
-                scrollbarWidth: "thin",
-                scrollbarColor: "hsl(var(--muted)) transparent",
+                scrollBehavior: 'smooth',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'hsl(var(--muted)) transparent',
               }}
             >
-              <div
-                className="px-2 py-2 space-y-0.5"
-                tabIndex={0}
-                style={{ outline: "none" }}
-              >
-                {loading && (
-                  <div className="text-center py-8">Loading categories...</div>
-                )}
+              <div className="px-2 py-2 space-y-0.5" tabIndex={0} style={{ outline: 'none' }}>
+                {loading && <div className="text-center py-8">Loading categories...</div>}
                 {error && (
                   <div className="text-center py-8">
-                    <div className="text-red-500 mb-2">
-                      Error loading categories
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={loadCategories}
-                    >
+                    <div className="text-red-500 mb-2">Error loading categories</div>
+                    <Button variant="outline" size="sm" onClick={() => void loadCategories()}>
                       Try Again
                     </Button>
                   </div>

@@ -1,11 +1,19 @@
 from dotenv import load_dotenv
-load_dotenv(dotenv_path=".env")  # This loads variables from .env into os.environ
+from pathlib import Path
+
+# Ensure environment variables load from project root when running from python/ cwd
+_THIS_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _THIS_DIR.parent.parent  # vectr-4/
+# Load .env.local first (can override), then .env
+load_dotenv(_PROJECT_ROOT / ".env.local")
+load_dotenv(_PROJECT_ROOT / ".env")
+\
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import categorize, transactions, user_rules, merchants, retroactive_rules, categories
 from .routers import data_status
-from .routers import transaction_upload, csv_processor, normalize, plaid_transactions, plaid_compatible_processor
+from .routers import transaction_upload, csv_processor, normalize, plaid_transactions, plaid_compatible_processor, plaid_api
 
 app = FastAPI()
 
@@ -34,3 +42,19 @@ app.include_router(csv_processor.router)
 app.include_router(normalize.router)
 app.include_router(plaid_transactions.router)  # Unified transaction processor
 app.include_router(plaid_compatible_processor.router)  # Plaid processor compatible with existing frontend
+
+app.include_router(plaid_api.router)  # Plaid webhooks and integration endpoints
+
+# --- GLOBAL EXCEPTION HANDLER ---
+from fastapi.responses import JSONResponse
+from fastapi.requests import Request
+import traceback
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    print("GLOBAL EXCEPTION:", exc)
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+    )

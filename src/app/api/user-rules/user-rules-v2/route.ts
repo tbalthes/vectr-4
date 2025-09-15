@@ -1,2 +1,2 @@
-export const GET = async () => new Response(null, { status: 204 });
-export const POST = async () => new Response(null, { status: 204 });
+export const GET = () => new Response(null, { status: 204 });
+export const POST = () => new Response(null, { status: 204 });

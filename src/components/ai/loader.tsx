@@ -1,45 +1,43 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Loader2, Sparkles, Zap, RotateCcw } from "lucide-react";
-import { cn } from "@/lib/utils/utils";
+import * as React from 'react';
+import { Loader2, Sparkles } from 'lucide-react';
+
+import { cn } from '@/lib/utils/utils';
 
 export interface LoaderProps {
-  type?: "spinner" | "dots" | "pulse" | "typing";
-  size?: "sm" | "md" | "lg";
+  type?: 'spinner' | 'dots' | 'pulse' | 'typing';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
   message?: string;
   showMessage?: boolean;
 }
 
-const LoaderSpinner: React.FC<Pick<LoaderProps, "size" | "className">> = ({
-  size = "md",
+const LoaderSpinner: React.FC<Pick<LoaderProps, 'size' | 'className'>> = ({
+  size = 'md',
   className,
 }) => {
   const sizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-6 w-6",
-    lg: "h-8 w-8",
+    sm: 'h-4 w-4',
+    md: 'h-6 w-6',
+    lg: 'h-8 w-8',
   };
 
-  return (
-    <Loader2 className={cn("animate-spin", sizeClasses[size], className)} />
-  );
+  return <Loader2 className={cn('animate-spin', sizeClasses[size], className)} />;
 };
 
-const LoaderDots: React.FC<Pick<LoaderProps, "size" | "className">> = ({
-  size = "md",
+const LoaderDots: React.FC<Pick<LoaderProps, 'size' | 'className'>> = ({
+  size = 'md',
   className,
 }) => {
-  const dotSize =
-    size === "sm" ? "w-1 h-1" : size === "lg" ? "w-2 h-2" : "w-1.5 h-1.5";
+  const dotSize = size === 'sm' ? 'w-1 h-1' : size === 'lg' ? 'w-2 h-2' : 'w-1.5 h-1.5';
 
   return (
-    <div className={cn("flex space-x-1 items-center", className)}>
+    <div className={cn('flex space-x-1 items-center', className)}>
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className={cn("bg-current rounded-full animate-bounce", dotSize)}
+          className={cn('bg-current rounded-full animate-bounce', dotSize)}
           style={{ animationDelay: `${i * 0.2}s` }}
         />
       ))}
@@ -47,58 +45,54 @@ const LoaderDots: React.FC<Pick<LoaderProps, "size" | "className">> = ({
   );
 };
 
-const LoaderPulse: React.FC<Pick<LoaderProps, "size" | "className">> = ({
-  size = "md",
+const LoaderPulse: React.FC<Pick<LoaderProps, 'size' | 'className'>> = ({
+  size = 'md',
   className,
 }) => {
   const sizeClasses = {
-    sm: "w-2 h-2",
-    md: "w-4 h-4",
-    lg: "w-6 h-6",
+    sm: 'w-2 h-2',
+    md: 'w-4 h-4',
+    lg: 'w-6 h-6',
   };
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn('relative', className)}>
       <div
         className={cn(
-          "absolute inset-0 rounded-full bg-current opacity-20 animate-ping",
-          sizeClasses[size]
+          'absolute inset-0 rounded-full bg-current opacity-20 animate-ping',
+          sizeClasses[size],
         )}
       />
       <div
         className={cn(
-          "relative rounded-full bg-current",
+          'relative rounded-full bg-current',
           sizeClasses[size],
-          size === "sm" ? "w-1 h-1" : size === "lg" ? "w-4 h-4" : "w-2 h-2"
+          size === 'sm' ? 'w-1 h-1' : size === 'lg' ? 'w-4 h-4' : 'w-2 h-2',
         )}
       />
     </div>
   );
 };
 
-const LoaderTyping: React.FC<Pick<LoaderProps, "size" | "className">> = ({
-  size = "md",
+const LoaderTyping: React.FC<Pick<LoaderProps, 'size' | 'className'>> = ({
+  size = 'md',
   className,
 }) => {
   return (
-    <div className={cn("flex items-center space-x-2", className)}>
-      <Sparkles
-        className={cn(
-          size === "sm" ? "h-3 w-3" : size === "lg" ? "h-5 w-5" : "h-4 w-4"
-        )}
-      />
+    <div className={cn('flex items-center space-x-2', className)}>
+      <Sparkles className={cn(size === 'sm' ? 'h-3 w-3' : size === 'lg' ? 'h-5 w-5' : 'h-4 w-4')} />
       <span className="text-sm text-muted-foreground">AI is thinking...</span>
       <div className="flex space-x-0.5">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
             className={cn(
-              "bg-current rounded-full animate-ping",
-              size === "sm" ? "w-0.5 h-0.5" : "w-1 h-1"
+              'bg-current rounded-full animate-ping',
+              size === 'sm' ? 'w-0.5 h-0.5' : 'w-1 h-1',
             )}
             style={{
               animationDelay: `${i * 0.15}s`,
-              animationDuration: "1s",
+              animationDuration: '1s',
             }}
           />
         ))}
@@ -108,19 +102,19 @@ const LoaderTyping: React.FC<Pick<LoaderProps, "size" | "className">> = ({
 };
 
 const Loader: React.FC<LoaderProps> = ({
-  type = "spinner",
-  size = "md",
+  type = 'spinner',
+  size = 'md',
   className,
   message,
   showMessage = false,
 }) => {
   const renderLoader = () => {
     switch (type) {
-      case "dots":
+      case 'dots':
         return <LoaderDots size={size} className={className} />;
-      case "pulse":
+      case 'pulse':
         return <LoaderPulse size={size} className={className} />;
-      case "typing":
+      case 'typing':
         return <LoaderTyping size={size} className={className} />;
       default:
         return <LoaderSpinner size={size} className={className} />;

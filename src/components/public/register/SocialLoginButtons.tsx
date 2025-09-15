@@ -1,8 +1,9 @@
 'use client';
 
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+
 import { Button } from "@/components/ui/button";
 // Step 1: Import the correct, cookie-aware client hook
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 // Optional: Import specific icons if you have them as components
 // import { GoogleIcon, GithubIcon, MetaIcon } from '@/components/ui/icons';
 
@@ -39,7 +40,7 @@ export function SocialLoginButtons() {
         variant="outline"
         type="button"
         className="w-full border-border text-foreground hover:bg-accent/10 bg-card"
-        onClick={() => handleOAuthSignIn("google")}
+  onClick={() => { void handleOAuthSignIn("google"); }}
         aria-label="Sign up with Google"
       >
         {/* Placeholder for Google Icon */}
@@ -62,7 +63,7 @@ export function SocialLoginButtons() {
         variant="outline"
         type="button"
         className="w-full border-border text-foreground hover:bg-accent/10 bg-card"
-        onClick={() => handleOAuthSignIn("github")}
+  onClick={() => { void handleOAuthSignIn("github"); }}
         aria-label="Sign up with GitHub"
       >
         {/* Placeholder for GitHub Icon */}
@@ -85,7 +86,7 @@ export function SocialLoginButtons() {
         variant="outline"
         type="button"
         className="w-full border-border text-foreground hover:bg-accent/10 bg-card"
-        onClick={() => handleOAuthSignIn("facebook")}
+  onClick={() => { void handleOAuthSignIn("facebook"); }}
         aria-label="Sign up with Facebook"
         disabled // Disabled as it's not part of the handleOAuthSignIn function yet
       >
@@ -105,4 +106,4 @@ export function SocialLoginButtons() {
       </Button>
     </div>
   );
-      }
+}

@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       let accumulated = "";
       for await (const chunk of result.stream) {
         const t = chunk.text();
-        if (t) accumulated += t;
+        if (t) {accumulated += t;}
       }
 
       const title = (accumulated || "New Chat")

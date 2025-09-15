@@ -1,4 +1,6 @@
 import React from "react";
+import { Edit, Trash2 } from "lucide-react";
+
 import {
   Card,
   CardHeader,
@@ -9,8 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
-import { Budget } from "@/types/budgets";
+import type { Budget } from "@/types/budgets";
 
 interface BudgetCardProps {
   budget: Budget;

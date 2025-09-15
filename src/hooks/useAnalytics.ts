@@ -1,15 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from 'react';
 
-export type RangeKey =
-  | "7d"
-  | "30d"
-  | "90d"
-  | "1M"
-  | "3M"
-  | "6M"
-  | "YTD"
-  | "1Y"
-  | "all";
+export type RangeKey = '7d' | '30d' | '90d' | '1M' | '3M' | '6M' | 'YTD' | '1Y' | 'all';
 export interface AggregateRow {
   bucket: string;
   income: number;
@@ -21,11 +12,7 @@ export interface AnalyticsResponse {
   metadata: Record<string, unknown>;
 }
 
-export function useAnalytics(
-  range: RangeKey = "30d",
-  start?: string,
-  end?: string
-) {
+export function useAnalytics(range: RangeKey = '30d', start?: string, end?: string) {
   const [data, setData] = useState<AggregateRow[] | null>(null);
   const [meta, setMeta] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -36,18 +23,26 @@ export function useAnalytics(
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (!start || !end) params.set("range", range);
-      if (start) params.set("start", start);
-      if (end) params.set("end", end);
+      if (!start || !end) {
+        params.set('range', range);
+      }
+      if (start) {
+        params.set('start', start);
+      }
+      if (end) {
+        params.set('end', end);
+      }
       const url = `/api/analytics/aggregator?${params.toString()}`;
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) {
+        throw new Error(`Fetch failed: ${res.status}`);
+      }
       const body: AnalyticsResponse = await res.json();
       setData(body.data);
       setMeta(body.metadata);
-      if (process.env.NODE_ENV === "development") {
+      if (process.env.NODE_ENV === 'development') {
         // shallow preview to avoid huge logs
-        console.debug("[useAnalytics] fetched", {
+        console.debug('[useAnalytics] fetched', {
           range,
           start,
           end,
@@ -66,7 +61,7 @@ export function useAnalytics(
   }, [range, start, end]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
   return { data, meta, loading, error, refetch: fetchData } as const;

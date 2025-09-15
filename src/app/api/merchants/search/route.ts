@@ -5,7 +5,8 @@
  */
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { NextResponse, NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const CACHE_HEADERS = {
   "Cache-Control": "s-maxage=60, stale-while-revalidate=120", // 1 min cache for search results
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
   try {
     const requestCookies = await cookies();
     const supabase = createRouteHandlerClient({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       cookies: () => requestCookies as any,
     });
 
@@ -253,7 +254,7 @@ function rankSearchResults(
     .sort((a, b) => b.searchScore - a.searchScore)
     .map((scoredMerchant): TransformedMerchant => {
       // Remove score from final result
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       const { searchScore: _, ...merchant } = scoredMerchant;
       return merchant;
     });

@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { Plus } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -20,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
 
 interface AddBudgetModalProps {
   open: boolean;

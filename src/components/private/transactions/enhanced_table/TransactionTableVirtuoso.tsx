@@ -1,11 +1,14 @@
-"use client";
+'use client';
 
-import React from "react";
-import { CardNp, CardNpContent } from "@/components/ui/card-zero-pad";
-import { TableVirtuoso } from "react-virtuoso";
-import { FormattedTransaction } from "@/types/transactions";
-import { TransactionItem, DateHeader } from "@/hooks/useInfiniteTransactions";
-import { TransactionRow } from "./TransactionRow";
+import React from 'react';
+import { TableVirtuoso } from 'react-virtuoso';
+
+import { TransactionRow } from './TransactionRow';
+
+// CardNp and CardNpContent imports are not used in this component. Kept commented for future layout.
+// import { CardNp, CardNpContent } from "@/components/ui/card-zero-pad";
+import type { FormattedTransaction } from '@/types/transactions';
+import type { TransactionItem, DateHeader } from '@/hooks/useInfiniteTransactions';
 
 interface TransactionTableVirtuosoProps {
   transactions: TransactionItem[];
@@ -27,9 +30,9 @@ const isDateHeader = (item: TransactionItem): item is DateHeader => {
 // Date Header Component - returns cells for Virtuoso
 const DateHeaderRow = ({ dateHeader }: { dateHeader: DateHeader }) => {
   const formatAmount = (amount: number) => {
-    return Math.abs(amount).toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
+    return Math.abs(amount).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
     });
   };
 
@@ -63,21 +66,23 @@ export function TransactionTableVirtuoso({
   isLoadingMore,
   onOpenDetails,
 }: TransactionTableVirtuosoProps) {
-  console.log("TransactionTableVirtuoso render:", {
+  console.log('TransactionTableVirtuoso render:', {
     transactionsCount: transactions.length,
     hasTransactions: transactions.length > 0,
-    firstItem: transactions[0] ? {
-      id: isDateHeader(transactions[0]) ? transactions[0].id : transactions[0].id,
-      type: isDateHeader(transactions[0]) ? 'date-header' : 'transaction'
-    } : null,
+    firstItem: transactions[0]
+      ? {
+          id: isDateHeader(transactions[0]) ? transactions[0].id : transactions[0].id,
+          type: isDateHeader(transactions[0]) ? 'date-header' : 'transaction',
+        }
+      : null,
     isLoadingMore,
     isReachingEnd,
     loadMore: !!loadMore,
-    transactionsArray: transactions
+    transactionsArray: transactions,
   });
 
   // Debug: Log when Virtuoso is being rendered
-  console.log("Virtuoso: Rendering with", transactions.length, "transactions");
+  console.log('Virtuoso: Rendering with', transactions.length, 'transactions');
 
   return (
     <div className={`h-full ${className}`}>
@@ -143,11 +148,8 @@ export function TransactionTableVirtuoso({
             return <DateHeaderRow key={item.id} dateHeader={item} />;
           }
 
-          const transaction = item as FormattedTransaction;
-          console.log(
-            `Rendering transaction ${index}:`,
-            transaction.description
-          );
+          const transaction = item;
+          console.log(`Rendering transaction ${index}:`, transaction.description);
           return (
             <TransactionRow
               key={transaction.id}
@@ -161,7 +163,7 @@ export function TransactionTableVirtuoso({
           );
         }}
         endReached={() => {
-          console.log("Virtuoso endReached called:", {
+          console.log('Virtuoso endReached called:', {
             hasLoadMore: !!loadMore,
             isReachingEnd,
             isLoadingMore,
@@ -169,14 +171,14 @@ export function TransactionTableVirtuoso({
           });
 
           if (loadMore && !isReachingEnd && !isLoadingMore) {
-            console.log("Virtuoso: Loading more transactions...");
+            console.log('Virtuoso: Loading more transactions...');
             // Add 400ms delay before loading more transactions
             setTimeout(() => {
-              console.log("Virtuoso: Calling loadMore after delay");
+              console.log('Virtuoso: Calling loadMore after delay');
               loadMore();
             }, 400);
           } else {
-            console.log("Virtuoso: Not loading more - conditions not met");
+            console.log('Virtuoso: Not loading more - conditions not met');
           }
         }}
         increaseViewportBy={200}
@@ -185,9 +187,7 @@ export function TransactionTableVirtuoso({
       />
 
       {transactions.length === 0 && !isLoadingMore && (
-        <div className="flex justify-center py-8 text-muted-foreground">
-          No transactions found
-        </div>
+        <div className="flex justify-center py-8 text-muted-foreground">No transactions found</div>
       )}
 
       {isLoadingMore && (

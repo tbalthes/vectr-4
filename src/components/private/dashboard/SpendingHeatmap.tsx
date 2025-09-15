@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+
 import SpendingCalendarHeatmap from "@/components/ui/DailySpendingHeatmap";
 import {
   Card,
@@ -41,19 +42,19 @@ export default function SpendingHeatmap({
   const { data, loading, error } = useAnalytics(range, start, end);
 
   // Map API rows to calendar [date, value]
-  const calendarData: Array<[string, number]> = useMemo(() => {
-    if (!data) return [];
+  const calendarData: [string, number][] = useMemo(() => {
+    if (!data) {return [];}
     return data.map((r: AggregateRow) => [r.bucket, Number(r.spending || 0)]);
   }, [data]);
 
   // Compute a safe calendar range from data (min..max date strings)
   const yearOrRange = useMemo(() => {
-    if (!data || data.length === 0) return undefined;
+    if (!data || data.length === 0) {return undefined;}
     let min = data[0].bucket;
     let max = data[0].bucket;
     for (const r of data) {
-      if (r.bucket < min) min = r.bucket;
-      if (r.bucket > max) max = r.bucket;
+      if (r.bucket < min) {min = r.bucket;}
+      if (r.bucket > max) {max = r.bucket;}
     }
     return [min, max] as [string, string];
   }, [data]);

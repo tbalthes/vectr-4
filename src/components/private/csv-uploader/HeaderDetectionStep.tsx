@@ -1,10 +1,12 @@
 import React from "react";
+import { ChevronLeft, ChevronRight, FileText, CheckCircle } from "lucide-react";
+
+import { type HeaderDetectionResult } from "./csv-utils";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, ChevronRight, FileText, CheckCircle } from "lucide-react";
-import { type HeaderDetectionResult } from "./csv-utils";
 
 interface HeaderDetectionStepProps {
   rows: string[][];
@@ -28,15 +30,15 @@ export function HeaderDetectionStep({
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 15) return "bg-green-100 text-green-800 border-green-300";
+    if (confidence >= 15) {return "bg-green-100 text-green-800 border-green-300";}
     if (confidence >= 5)
-      return "bg-yellow-100 text-yellow-800 border-yellow-300";
+      {return "bg-yellow-100 text-yellow-800 border-yellow-300";}
     return "bg-red-100 text-red-800 border-red-300";
   };
 
   const getConfidenceLabel = (confidence: number) => {
-    if (confidence >= 15) return "High Confidence";
-    if (confidence >= 5) return "Medium Confidence";
+    if (confidence >= 15) {return "High Confidence";}
+    if (confidence >= 5) {return "Medium Confidence";}
     return "Low Confidence";
   };
 

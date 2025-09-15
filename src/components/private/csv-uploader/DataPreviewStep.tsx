@@ -1,7 +1,4 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,10 +6,15 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
+
 import { type ColumnMapping, formatCurrency } from "./csv-utils";
 
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 interface DataPreviewStepProps {
-  data: Array<Record<string, string | number | undefined>>;
+  data: Record<string, string | number | undefined>[];
   mapping: ColumnMapping;
   onContinue: () => void;
   onBack: () => void;

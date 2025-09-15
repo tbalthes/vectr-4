@@ -1,0 +1,15 @@
+node_modules
+dist
+build
+coverage
+.next
+.turbo
+public/
+python/__pycache__/
+python/**/*.pyc
+*.log
+*.tsbuildinfo
+project_tree.txt
+sql/
+docs/
+*.db

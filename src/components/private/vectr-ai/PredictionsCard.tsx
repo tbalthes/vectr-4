@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { Calendar, Bot } from "lucide-react";
+
 import {
   Card,
   CardHeader,
@@ -8,7 +10,6 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { Calendar, Bot } from "lucide-react";
 
 export default function PredictionsCard() {
   return (

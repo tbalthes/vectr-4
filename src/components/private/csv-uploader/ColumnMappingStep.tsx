@@ -1,4 +1,14 @@
 import React, { useState } from "react";
+import {
+  ChevronLeft,
+  Settings,
+  AlertCircle,
+  CheckCircle,
+  X,
+} from "lucide-react";
+
+import { type ColumnMapping, hasBalanceColumn } from "./csv-utils";
+
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
@@ -10,14 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  ChevronLeft,
-  Settings,
-  AlertCircle,
-  CheckCircle,
-  X,
-} from "lucide-react";
-import { type ColumnMapping, hasBalanceColumn } from "./csv-utils";
 import { useAccounts } from "@/hooks/useAccounts";
 import AccountSelectorDropdown from "@/components/AccountSelectorDropdown";
 
@@ -66,7 +68,7 @@ export function ColumnMappingStep({
 
   // Validate if a header is a valid amount column
   const isValidAmountColumn = (header: string): boolean => {
-    if (!header) return false;
+    if (!header) {return false;}
 
     const lowerHeader = header.toLowerCase();
     const hasAmountKeyword =
@@ -74,10 +76,10 @@ export function ColumnMappingStep({
       lowerHeader.includes("credit") ||
       lowerHeader.includes("debit");
 
-    if (!hasAmountKeyword) return false;
+    if (!hasAmountKeyword) {return false;}
 
     const colIndex = headers.indexOf(header);
-    if (colIndex === -1 || !rawRows.length) return true;
+    if (colIndex === -1 || !rawRows.length) {return true;}
 
     const sampleRows = rawRows.slice(
       selectedHeaderRow + 1,
@@ -87,7 +89,7 @@ export function ColumnMappingStep({
       .map((row) => (row[colIndex] || "").toString().trim())
       .filter(Boolean);
 
-    if (sampleValues.length === 0) return true;
+    if (sampleValues.length === 0) {return true;}
 
     const numericCount = sampleValues.filter((value) => {
       const cleanValue = value.replace(/[$,\s]/g, "");
@@ -120,7 +122,7 @@ export function ColumnMappingStep({
       customFields: customFields.reduce((acc, field, index) => {
         acc[`custom_${index + 1}`] = field;
         return acc;
-      }, {} as { [key: string]: string }),
+      }, {} as Record<string, string>),
     };
 
     // Only call onMappingChange if something actually changed
@@ -150,7 +152,7 @@ export function ColumnMappingStep({
     setTimeout(updateMapping, 0);
   };
 
-  const getAvailableHeaders = (currentValue: string = "") => {
+  const getAvailableHeaders = (currentValue = "") => {
     const used = [
       transactionNumber,
       description,
@@ -193,7 +195,7 @@ export function ColumnMappingStep({
         customFields: customFields.reduce((acc, field, index) => {
           acc[`custom_${index + 1}`] = field;
           return acc;
-        }, {} as { [key: string]: string }),
+        }, {} as Record<string, string>),
       });
     }, 0);
   };
@@ -219,7 +221,7 @@ export function ColumnMappingStep({
         customFields: newCustomFields.reduce((acc, field, index) => {
           acc[`custom_${index + 1}`] = field;
           return acc;
-        }, {} as { [key: string]: string }),
+        }, {} as Record<string, string>),
       });
     }, 0);
   };
@@ -237,7 +239,7 @@ export function ColumnMappingStep({
         customFields: newCustomFields.reduce((acc, field, index) => {
           acc[`custom_${index + 1}`] = field;
           return acc;
-        }, {} as { [key: string]: string }),
+        }, {} as Record<string, string>),
       });
     }, 0);
   };

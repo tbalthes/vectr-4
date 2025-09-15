@@ -1,165 +1,149 @@
-"use client";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+'use client';
+import { useState } from 'react';
 import {
   BarChart3,
-  TrendingUp,
   Shield,
   Users,
-  Timer,
-  Globe,
-  BookOpen,
-  Calculator,
   ArrowRight,
-  Eye,
   Check,
   Play,
   Sparkles,
   ChevronDown,
   X,
   Menu,
-  Monitor,
-  Smartphone,
   PiggyBank,
   Brain,
   CreditCard,
   Target,
-  Activity,
   Lock,
   Building,
   Database,
   Star,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export function HomePage() {
   const [featuresOpen, setFeaturesOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [pricingPeriod, setPricingPeriod] = useState<"monthly" | "annual">(
-    "monthly"
-  );
+  const [pricingPeriod, setPricingPeriod] = useState<'monthly' | 'annual'>('monthly');
 
   const features = [
     {
-      title: "AI-Powered Budgeting",
-      description: "Smart categorization and predictive spending analysis",
+      title: 'AI-Powered Budgeting',
+      description: 'Smart categorization and predictive spending analysis',
       icon: BarChart3,
     },
     {
-      title: "Goal Tracking",
-      description: "Set and track financial goals with AI-powered insights",
+      title: 'Goal Tracking',
+      description: 'Set and track financial goals with AI-powered insights',
       icon: PiggyBank,
     },
     {
-      title: "Bank-Level Security",
-      description: "256-bit encryption and biometric authentication",
+      title: 'Bank-Level Security',
+      description: '256-bit encryption and biometric authentication',
       icon: Shield,
     },
     {
-      title: "Smart Insights",
-      description: "Get personalized financial advice and recommendations",
+      title: 'Smart Insights',
+      description: 'Get personalized financial advice and recommendations',
       icon: Brain,
     },
     {
-      title: "Expense Tracking",
-      description: "Automatically track and categorize expenses",
+      title: 'Expense Tracking',
+      description: 'Automatically track and categorize expenses',
       icon: CreditCard,
     },
     {
-      title: "Investment Tracking",
-      description: "Monitor your portfolio and track performance",
+      title: 'Investment Tracking',
+      description: 'Monitor your portfolio and track performance',
       icon: Target,
     },
   ];
 
   const testimonials = [
     {
-      name: "Sarah Chen",
-      role: "Marketing Director",
-      company: "TechCorp",
+      name: 'Sarah Chen',
+      role: 'Marketing Director',
+      company: 'TechCorp',
       content:
-        "Vectr has completely transformed how I manage my finances. The AI insights helped me save $5,000 in just 3 months!",
-      avatar: "/avatars/sarah.jpg",
+        'Vectr has completely transformed how I manage my finances. The AI insights helped me save $5,000 in just 3 months!',
+      avatar: '/avatars/sarah.jpg',
       rating: 5,
     },
     {
-      name: "Marcus Johnson",
-      role: "Small Business Owner",
-      company: "Local Coffee Shop",
+      name: 'Marcus Johnson',
+      role: 'Small Business Owner',
+      company: 'Local Coffee Shop',
       content:
-        "As a business owner, keeping track of both personal and business finances was overwhelming. Vectr makes it seamless.",
-      avatar: "/avatars/marcus.jpg",
+        'As a business owner, keeping track of both personal and business finances was overwhelming. Vectr makes it seamless.',
+      avatar: '/avatars/marcus.jpg',
       rating: 5,
     },
     {
-      name: "Emily Rodriguez",
-      role: "Software Engineer",
-      company: "StartupXYZ",
+      name: 'Emily Rodriguez',
+      role: 'Software Engineer',
+      company: 'StartupXYZ',
       content:
-        "The AI-powered budgeting is incredible. It is like having a financial advisor in my pocket 24/7.",
-      avatar: "/avatars/emily.jpg",
+        'The AI-powered budgeting is incredible. It is like having a financial advisor in my pocket 24/7.',
+      avatar: '/avatars/emily.jpg',
       rating: 5,
     },
   ];
 
   const pricingTiers = [
     {
-      name: "Starter",
+      name: 'Starter',
       price: { monthly: 0, annual: 0 },
-      description: "Perfect for getting started",
+      description: 'Perfect for getting started',
       features: [
-        "Basic budgeting",
-        "Expense tracking",
-        "Goal setting",
-        "Mobile app access",
-        "Email support",
+        'Basic budgeting',
+        'Expense tracking',
+        'Goal setting',
+        'Mobile app access',
+        'Email support',
       ],
       popular: false,
     },
     {
-      name: "Pro",
+      name: 'Pro',
       price: { monthly: 9.99, annual: 99.99 },
-      description: "For serious budgeters",
+      description: 'For serious budgeters',
       features: [
-        "Everything in Starter",
-        "AI-powered insights",
-        "Investment tracking",
-        "Advanced analytics",
-        "Priority support",
-        "Unlimited goals",
+        'Everything in Starter',
+        'AI-powered insights',
+        'Investment tracking',
+        'Advanced analytics',
+        'Priority support',
+        'Unlimited goals',
       ],
       popular: true,
     },
     {
-      name: "Business",
+      name: 'Business',
       price: { monthly: 19.99, annual: 199.99 },
-      description: "For teams and businesses",
+      description: 'For teams and businesses',
       features: [
-        "Everything in Pro",
-        "Team collaboration",
-        "Business analytics",
-        "Custom integrations",
-        "Dedicated support",
-        "Advanced security",
+        'Everything in Pro',
+        'Team collaboration',
+        'Business analytics',
+        'Custom integrations',
+        'Dedicated support',
+        'Advanced security',
       ],
       popular: false,
     },
   ];
 
   const securityFeatures = [
-    { name: "SOC 2 Type II", icon: Shield },
-    { name: "256-bit Encryption", icon: Lock },
-    { name: "FDIC Insured", icon: Building },
-    { name: "PCI DSS", icon: Database },
+    { name: 'SOC 2 Type II', icon: Shield },
+    { name: '256-bit Encryption', icon: Lock },
+    { name: 'FDIC Insured', icon: Building },
+    { name: 'PCI DSS', icon: Database },
   ];
 
   return (
@@ -173,7 +157,7 @@ export function HomePage() {
       </a>
 
       {/* Navigation */}
-      <nav className="relative border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
+      <nav className="border-b border-border bg-background/80 backdrop-blur-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 sm:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
@@ -198,9 +182,11 @@ export function HomePage() {
                   aria-controls="features-dropdown"
                 >
                   <span>Features</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${featuresOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${featuresOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
-                
+
                 <AnimatePresence>
                   {featuresOpen && (
                     <motion.div
@@ -213,7 +199,7 @@ export function HomePage() {
                         {features.map((feature) => (
                           <a
                             key={feature.title}
-                            href="#"
+                            href="#features"
                             className="flex items-center space-x-2 p-2 hover:bg-muted rounded-md transition-colors"
                           >
                             <feature.icon className="w-4 h-4" />
@@ -226,13 +212,22 @@ export function HomePage() {
                 </AnimatePresence>
               </div>
 
-              <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href="#pricing"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Pricing
               </a>
-              <a href="#security" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href="#security"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Security
               </a>
-              <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href="#testimonials"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Testimonials
               </a>
             </div>
@@ -255,11 +250,7 @@ export function HomePage() {
               aria-label="Toggle mobile menu"
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -283,7 +274,10 @@ export function HomePage() {
                 <a href="#security" className="block text-muted-foreground hover:text-foreground">
                   Security
                 </a>
-                <a href="#testimonials" className="block text-muted-foreground hover:text-foreground">
+                <a
+                  href="#testimonials"
+                  className="block text-muted-foreground hover:text-foreground"
+                >
                   Testimonials
                 </a>
                 <div className="space-y-2 pt-4 border-t border-border">
@@ -320,14 +314,14 @@ export function HomePage() {
                   AI-Powered Finance Management
                 </Badge>
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-                  Take Control of Your{" "}
+                  Take Control of Your{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-foreground">
                     Financial Future
                   </span>
                 </h1>
                 <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  Join 100,000+ users who have saved millions with Vectr&apos;s AI-powered budgeting,
-                  goal tracking, and financial insights.
+                  Join 100,000+ users who have saved millions with Vectr&apos;s AI-powered
+                  budgeting, goal tracking, and financial insights.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button size="lg" className="group" asChild>
@@ -375,7 +369,8 @@ export function HomePage() {
                 Everything You Need to Master Your Money
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Powerful features designed to help you save more, spend smarter, and achieve your financial goals faster.
+                Powerful features designed to help you save more, spend smarter, and achieve your
+                financial goals faster.
               </p>
             </div>
 
@@ -430,11 +425,10 @@ export function HomePage() {
         <section id="security" className="py-24 px-6 sm:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Bank-Level Security & Privacy
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Bank-Level Security & Privacy</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Your financial data is protected with the same security standards used by major banks.
+                Your financial data is protected with the same security standards used by major
+                banks.
               </p>
             </div>
 
@@ -457,9 +451,7 @@ export function HomePage() {
         <section id="testimonials" className="py-24 px-6 sm:px-8 bg-muted/50">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Loved by 100,000+ Users
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Loved by 100,000+ Users</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Real stories from real people who have transformed their finances with Vectr.
               </p>
@@ -506,9 +498,7 @@ export function HomePage() {
         <section id="pricing" className="py-24 px-6 sm:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Simple, Transparent Pricing
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Choose the plan that is right for you. Start free, upgrade anytime.
               </p>
@@ -517,21 +507,21 @@ export function HomePage() {
             <div className="flex justify-center mb-8">
               <div className="bg-muted p-1 rounded-lg">
                 <button
-                  onClick={() => setPricingPeriod("monthly")}
+                  onClick={() => setPricingPeriod('monthly')}
                   className={`px-4 py-2 rounded-md transition-colors ${
-                    pricingPeriod === "monthly"
-                      ? "bg-background text-foreground"
-                      : "text-muted-foreground"
+                    pricingPeriod === 'monthly'
+                      ? 'bg-background text-foreground'
+                      : 'text-muted-foreground'
                   }`}
                 >
                   Monthly
                 </button>
                 <button
-                  onClick={() => setPricingPeriod("annual")}
+                  onClick={() => setPricingPeriod('annual')}
                   className={`px-4 py-2 rounded-md transition-colors ${
-                    pricingPeriod === "annual"
-                      ? "bg-background text-foreground"
-                      : "text-muted-foreground"
+                    pricingPeriod === 'annual'
+                      ? 'bg-background text-foreground'
+                      : 'text-muted-foreground'
                   }`}
                 >
                   Annual (Save 17%)
@@ -543,9 +533,7 @@ export function HomePage() {
               {pricingTiers.map((tier) => (
                 <Card
                   key={tier.name}
-                  className={`relative ${
-                    tier.popular ? "border-primary shadow-lg scale-105" : ""
-                  }`}
+                  className={`relative ${tier.popular ? 'border-primary shadow-lg scale-105' : ''}`}
                 >
                   {tier.popular && (
                     <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -556,9 +544,7 @@ export function HomePage() {
                     <CardTitle className="text-2xl">{tier.name}</CardTitle>
                     <CardDescription>{tier.description}</CardDescription>
                     <div className="mt-4">
-                      <span className="text-3xl font-bold">
-                        ${tier.price[pricingPeriod]}
-                      </span>
+                      <span className="text-3xl font-bold">${tier.price[pricingPeriod]}</span>
                       <span className="text-muted-foreground">/{pricingPeriod}</span>
                     </div>
                   </CardHeader>
@@ -573,7 +559,7 @@ export function HomePage() {
                     </ul>
                     <Button
                       className="w-full mt-6"
-                      variant={tier.popular ? "default" : "outline"}
+                      variant={tier.popular ? 'default' : 'outline'}
                       asChild
                     >
                       <a href="/signup">Get Started</a>
@@ -594,12 +580,7 @@ export function HomePage() {
             <p className="text-xl opacity-90 mb-8">
               Join thousands of users who are already saving more and spending smarter.
             </p>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="group"
-              asChild
-            >
+            <Button size="lg" variant="secondary" className="group" asChild>
               <a href="/signup">
                 Start Your Free Trial
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -648,19 +629,13 @@ export function HomePage() {
               <h3 className="font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="#" className="text-muted-foreground hover:text-foreground">
-                    About
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">About</button>
                 </li>
                 <li>
-                  <a href="#" className="text-muted-foreground hover:text-foreground">
-                    Blog
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">Blog</button>
                 </li>
                 <li>
-                  <a href="#" className="text-muted-foreground hover:text-foreground">
-                    Careers
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">Careers</button>
                 </li>
               </ul>
             </div>
@@ -668,19 +643,15 @@ export function HomePage() {
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="#" className="text-muted-foreground hover:text-foreground">
+                  <button className="text-muted-foreground hover:text-foreground">
                     Help Center
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a href="#" className="text-muted-foreground hover:text-foreground">
-                    Contact
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">Contact</button>
                 </li>
                 <li>
-                  <a href="#" className="text-muted-foreground hover:text-foreground">
-                    Status
-                  </a>
+                  <button className="text-muted-foreground hover:text-foreground">Status</button>
                 </li>
               </ul>
             </div>

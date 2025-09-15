@@ -1,27 +1,25 @@
-"use client";
+'use client';
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import Image from "next/image";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { AlertCircle, RefreshCw, GripVertical } from "lucide-react";
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import Image from 'next/image';
+import { AlertCircle, RefreshCw, GripVertical } from 'lucide-react';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { arrayMove } from "@dnd-kit/sortable";
-import { Account } from "@/hooks/useAccounts";
-import { accountToasts } from "@/lib/notifications/account-notifications";
-import { toast } from "sonner";
-import { useAccountSync } from "@/contexts/AccountSyncContext";
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { toast } from 'sonner';
+
+import type { Account } from '@/hooks/useAccounts';
+import { accountToasts } from '@/lib/notifications/account-notifications';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAccountSync } from '@/contexts/AccountSyncContext';
 
 interface AccountsGridProps {
   accounts: Account[];
@@ -66,46 +64,42 @@ interface GroupData {
   accounts: TransformedAccount[];
   timeframes: {
     [key: string]: GroupTimeframe;
-    "7D": GroupTimeframe;
-    "30D": GroupTimeframe;
-    "90D": GroupTimeframe;
+    '7D': GroupTimeframe;
+    '30D': GroupTimeframe;
+    '90D': GroupTimeframe;
   };
 }
 
 type IconProps = React.SVGProps<SVGSVGElement>;
 
 // --- PERSISTENCE HELPERS ---
-type SavedOrder = {
+interface SavedOrder {
   groups: string[]; // group ids
   accountsByGroup: Record<string, string[]>; // groupId -> [accountId]
-};
+}
 
 // Get user-specific storage key
 function getUserStorageKey(): string {
   // Try to get user ID from various sources
-  let userId = "default";
+  let userId = 'default';
 
   try {
     // Try to get from localStorage (Supabase session)
     const storedSessions = Object.keys(localStorage).filter(
-      (key) => key.includes("auth-token") && key.startsWith("sb-")
+      (key) => key.includes('auth-token') && key.startsWith('sb-'),
     );
 
     if (storedSessions.length > 0) {
       const sessionData = localStorage.getItem(storedSessions[0]);
       if (sessionData) {
         const parsed = JSON.parse(sessionData);
-        if (
-          Array.isArray(parsed) &&
-          parsed.length >= 3 &&
-          parsed[2]?.user?.id
-        ) {
+        if (Array.isArray(parsed) && parsed.length >= 3 && parsed[2]?.user?.id) {
           userId = parsed[2].user.id;
         }
       }
     }
   } catch (error) {
-    console.warn("Failed to get user ID for storage:", error);
+    console.warn('Failed to get user ID for storage:', error);
   }
 
   return `vectr.accounts.order.${userId}.v1`;
@@ -122,24 +116,28 @@ function saveOrderToStorage(data: GroupData[]) {
     };
     localStorage.setItem(getUserStorageKey(), JSON.stringify(payload));
   } catch (error) {
-    console.warn("Failed to save account order:", error);
+    console.warn('Failed to save account order:', error);
   }
 }
 
 function loadOrderFromStorage(): SavedOrder | null {
   try {
     const raw = localStorage.getItem(getUserStorageKey());
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     return JSON.parse(raw) as SavedOrder;
   } catch (error) {
-    console.warn("Failed to load account order:", error);
+    console.warn('Failed to load account order:', error);
     return null;
   }
 }
 
 function applySavedOrder(data: GroupData[]): GroupData[] {
   const saved = loadOrderFromStorage();
-  if (!saved) return data;
+  if (!saved) {
+    return data;
+  }
 
   // Reorder groups
   const groupMap = new Map<string, GroupData>(data.map((g) => [g.id, g]));
@@ -152,15 +150,17 @@ function applySavedOrder(data: GroupData[]): GroupData[] {
     }
   }
   // Append any new groups not in saved
-  for (const g of groupMap.values()) orderedGroups.push(g);
+  for (const g of groupMap.values()) {
+    orderedGroups.push(g);
+  }
 
   // Reorder accounts within each group
   const result = orderedGroups.map((g) => {
     const savedAcc = saved.accountsByGroup[g.id];
-    if (!savedAcc) return g;
-    const accMap = new Map<string, TransformedAccount>(
-      g.accounts.map((a) => [a.id, a])
-    );
+    if (!savedAcc) {
+      return g;
+    }
+    const accMap = new Map<string, TransformedAccount>(g.accounts.map((a) => [a.id, a]));
     const ordered: TransformedAccount[] = [];
     for (const aid of savedAcc) {
       const a = accMap.get(aid);
@@ -170,7 +170,9 @@ function applySavedOrder(data: GroupData[]): GroupData[] {
       }
     }
     // Append any new accounts not in saved
-    for (const a of accMap.values()) ordered.push(a);
+    for (const a of accMap.values()) {
+      ordered.push(a);
+    }
     return { ...g, accounts: ordered };
   });
 
@@ -179,20 +181,32 @@ function applySavedOrder(data: GroupData[]): GroupData[] {
 
 // --- HELPERS ---
 const timeAgo = (dateString?: string) => {
-  if (!dateString) return null;
+  if (!dateString) {
+    return null;
+  }
   const date = new Date(dateString);
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
   let interval = seconds / 31536000;
-  if (interval > 1) return Math.floor(interval) + " years ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' years ago';
+  }
   interval = seconds / 2592000;
-  if (interval > 1) return Math.floor(interval) + " months ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' months ago';
+  }
   interval = seconds / 86400;
-  if (interval > 1) return Math.floor(interval) + " days ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' days ago';
+  }
   interval = seconds / 3600;
-  if (interval > 1) return Math.floor(interval) + " hours ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' hours ago';
+  }
   interval = seconds / 60;
-  if (interval > 1) return Math.floor(interval) + " minutes ago";
-  return "Just now";
+  if (interval > 1) {
+    return Math.floor(interval) + ' minutes ago';
+  }
+  return 'Just now';
 };
 
 // --- ICONS ---
@@ -261,13 +275,7 @@ const Icons = {
   ),
   loan: (props: IconProps) => (
     <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <circle
-        cx="12"
-        cy="12"
-        r="9.25"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
+      <circle cx="12" cy="12" r="9.25" stroke="currentColor" strokeWidth="1.5" />
       <path
         d="M14.25 8.75L9.75 15.25"
         stroke="currentColor"
@@ -370,7 +378,7 @@ const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const width = 120;
   const height = 50;
-  const strokeColor = positive ? "#22c55e" : "#ef4444";
+  const strokeColor = positive ? '#22c55e' : '#ef4444';
 
   if (!data || data.length === 0) {
     return <div className="w-full h-full bg-gray-100 rounded" />;
@@ -379,26 +387,22 @@ const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min === 0 ? 1 : max - min;
-  const yPoints = data.map(
-    (d) => height - ((d - min) / range) * (height - 10) - 5
-  );
+  const yPoints = data.map((d) => height - ((d - min) / range) * (height - 10) - 5);
   const xPoints = data.map((_, i) => (i / (data.length - 1)) * width);
-  const points = yPoints
-    .map((y, i) => `${xPoints[i].toFixed(2)},${y.toFixed(2)}`)
-    .join(" ");
+  const points = yPoints.map((y, i) => `${xPoints[i].toFixed(2)},${y.toFixed(2)}`).join(' ');
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const svg = svgRef.current;
-    if (!svg) return;
+    if (!svg) {
+      return;
+    }
     const pt = svg.createSVGPoint();
     pt.x = e.clientX;
     const svgP = pt.matrixTransform(svg.getScreenCTM()?.inverse());
     const closestIndex = xPoints.reduce(
       (closest, curr, i) =>
-        Math.abs(curr - svgP.x) < Math.abs(xPoints[closest] - svgP.x)
-          ? i
-          : closest,
-      0
+        Math.abs(curr - svgP.x) < Math.abs(xPoints[closest] - svgP.x) ? i : closest,
+      0,
     );
     setTooltip({
       x: xPoints[closestIndex],
@@ -410,10 +414,7 @@ const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
   const gradientId = `spark-grad-${Math.random()}`;
 
   return (
-    <div
-      className="relative w-full h-full cursor-crosshair"
-      onMouseLeave={() => setTooltip(null)}
-    >
+    <div className="relative w-full h-full cursor-crosshair" onMouseLeave={() => setTooltip(null)}>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
@@ -428,17 +429,10 @@ const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
           </linearGradient>
         </defs>
         <path
-          d={`M${xPoints[0]},${height} L${points} L${
-            xPoints[xPoints.length - 1]
-          },${height} Z`}
+          d={`M${xPoints[0]},${height} L${points} L${xPoints[xPoints.length - 1]},${height} Z`}
           fill={`url(#${gradientId})`}
         />
-        <polyline
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth="2"
-          points={points}
-        />
+        <polyline fill="none" stroke={strokeColor} strokeWidth="2" points={points} />
         {tooltip && (
           <>
             <line
@@ -467,7 +461,7 @@ const InteractiveSparkline: React.FC<SparklineProps> = ({ data, positive }) => {
           style={{
             left: tooltip.x,
             top: tooltip.y - 30,
-            transform: "translateX(-50%)",
+            transform: 'translateX(-50%)',
           }}
         >
           ${tooltip.value.toLocaleString()}
@@ -484,11 +478,7 @@ interface AccountActionsMenuProps {
   onDelete: (account: TransformedAccount) => void;
 }
 
-const AccountActionsMenu: React.FC<AccountActionsMenuProps> = ({
-  account,
-  onView,
-  onDelete,
-}) => {
+const AccountActionsMenu: React.FC<AccountActionsMenuProps> = ({ account, onView, onDelete }) => {
   const [open, setOpen] = useState(false);
 
   const handleView = () => {
@@ -546,7 +536,7 @@ interface InstitutionLogoProps {
 
 const InstitutionLogo: React.FC<InstitutionLogoProps> = ({ url, name }) => {
   const [hasError, setHasError] = useState(false);
-  const fallbackInitial = name ? name.charAt(0).toUpperCase() : "?";
+  const fallbackInitial = name ? name.charAt(0).toUpperCase() : '?';
 
   if (!url || hasError) {
     return (
@@ -570,33 +560,32 @@ const InstitutionLogo: React.FC<InstitutionLogoProps> = ({ url, name }) => {
 // --- DATA PROCESSING ---
 const groupAccountsByType = (accounts: Account[]): GroupData[] => {
   const categoryMap = {
-    depository: { category: "Cash & Liquid Assets", icon: "cash" },
-    investment: { category: "Investments", icon: "invest" },
-    credit: { category: "Credit Cards", icon: "credit" },
-    loan: { category: "Loans", icon: "loan" },
-    other: { category: "Other Assets", icon: "other" },
+    depository: { category: 'Cash & Liquid Assets', icon: 'cash' },
+    investment: { category: 'Investments', icon: 'invest' },
+    credit: { category: 'Credit Cards', icon: 'credit' },
+    loan: { category: 'Loans', icon: 'loan' },
+    other: { category: 'Other Assets', icon: 'other' },
   };
 
   const grouped = accounts.reduce((acc: Record<string, GroupData>, account) => {
-    const groupKey = account.type || "other";
+    const groupKey = account.type || 'other';
     if (!acc[groupKey]) {
       acc[groupKey] = {
-        ...(categoryMap[groupKey as keyof typeof categoryMap] ||
-          categoryMap.other),
+        ...(categoryMap[groupKey as keyof typeof categoryMap] || categoryMap.other),
         id: `group-${groupKey}`,
         accounts: [],
         timeframes: {
-          "7D": {
+          '7D': {
             totalBalance: 0,
             change: { amount: 0, percent: 0, positive: true },
             history: [],
           },
-          "30D": {
+          '30D': {
             totalBalance: 0,
             change: { amount: 0, percent: 0, positive: true },
             history: [],
           },
-          "90D": {
+          '90D': {
             totalBalance: 0,
             change: { amount: 0, percent: 0, positive: true },
             history: [],
@@ -609,10 +598,10 @@ const groupAccountsByType = (accounts: Account[]): GroupData[] => {
     const transformedAccount = {
       id: account.id,
       name: account.name,
-      mask: account.mask || "****",
-      type: account.type || "other",
+      mask: account.mask || '****',
+      type: account.type || 'other',
       subtype: account.subtype,
-      institution_name: account.institution_name || "Unknown Bank",
+      institution_name: account.institution_name || 'Unknown Bank',
       institution_logo_url: account.institution_logo_url,
       balance_amount: account.balance_amount || 0,
       available: account.available,
@@ -627,24 +616,20 @@ const groupAccountsByType = (accounts: Account[]): GroupData[] => {
   Object.values(grouped).forEach((group: GroupData) => {
     const total = group.accounts.reduce(
       (sum: number, acc: TransformedAccount) => sum + acc.balance_amount,
-      0
+      0,
     );
     Object.keys(group.timeframes).forEach((tf) => {
       group.timeframes[tf].totalBalance = total;
       // Simple mock data generation for history
-      const days = parseInt(tf.replace("D", ""));
+      const days = parseInt(tf.replace('D', ''));
       group.timeframes[tf].history = Array.from(
         { length: Math.max(1, days) },
-        (_, i) =>
-          total * (1 + (Math.random() - 0.5) * 0.1 * (i / Math.max(1, days)))
+        (_, i) => total * (1 + (Math.random() - 0.5) * 0.1 * (i / Math.max(1, days))),
       );
       const changeAmount = (Math.random() - 0.4) * total * 0.05;
       group.timeframes[tf].change = {
         amount: changeAmount,
-        percent:
-          total !== 0
-            ? parseFloat(((changeAmount / total) * 100).toFixed(2))
-            : 0,
+        percent: total !== 0 ? parseFloat(((changeAmount / total) * 100).toFixed(2)) : 0,
         positive: changeAmount >= 0,
       };
     });
@@ -699,9 +684,7 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
 
         {/* Account Details */}
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-slate-900 dark:text-slate-100 truncate text-sm">
-            {name}
-          </p>
+          <p className="font-medium text-slate-900 dark:text-slate-100 truncate text-sm">{name}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
             <span className="hidden sm:inline">{institution_name} •••• </span>
             <span className="sm:hidden">•••• </span>
@@ -716,22 +699,20 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
         <div className="text-right">
           <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
             $
-            {Math.abs(balance_amount).toLocaleString("en-US", {
+            {Math.abs(balance_amount).toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
           </p>
-          {available !== null &&
-            available !== undefined &&
-            available !== balance_amount && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 hidden lg:block">
-                Available: $
-                {available.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-            )}
+          {available !== null && available !== undefined && available !== balance_amount && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 hidden lg:block">
+              Available: $
+              {available.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+          )}
         </div>
 
         {/* Last Synced - Hidden on mobile */}
@@ -741,11 +722,7 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
 
         {/* Actions Menu */}
         <div className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-          <AccountActionsMenu
-            account={account}
-            onView={onViewAccount}
-            onDelete={onDeleteAccount}
-          />
+          <AccountActionsMenu account={account} onView={onViewAccount} onDelete={onDeleteAccount} />
         </div>
       </div>
     </div>
@@ -764,19 +741,14 @@ const SortableAccountLedgerRow: React.FC<SortableAccountLedgerRowProps> = ({
   onViewAccount,
   onDeleteAccount,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: `acc-${account.id}` });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: `acc-${account.id}`,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    backgroundColor: isDragging ? "#f1f5f9" : "transparent",
+    backgroundColor: isDragging ? '#f1f5f9' : 'transparent',
   };
 
   return (
@@ -809,14 +781,14 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
   onDeleteAccount,
 }) => {
   const [isOpen, setIsOpen] = useState(true);
-  const [activeTimeframe, setActiveTimeframe] = useState("30D");
+  const [activeTimeframe, setActiveTimeframe] = useState('30D');
   const { category, icon, timeframes, accounts } = groupData;
   const { totalBalance, change, history } = timeframes[activeTimeframe];
   const IconComponent = Icons[icon as keyof typeof Icons];
 
-  const formattedBalance = totalBalance.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
+  const formattedBalance = totalBalance.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
   });
 
   const [shimmerActive, setShimmerActive] = useState(false);
@@ -848,7 +820,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
           color: #171717;
           z-index: -1;
         }
-        .group\/card:hover .vectr-shift { animation-play-state: running; }
+        .group/card:hover .vectr-shift { animation-play-state: running; }
         .vectr-run { animation: vectr-shimmer 1.6s linear 1; }
       `}</style>
 
@@ -873,7 +845,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
               {category}
             </h3>
             <p className="text-slate-500 dark:text-slate-400 text-xs">
-              {accounts.length} account{accounts.length !== 1 ? "s" : ""}
+              {accounts.length} account{accounts.length !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
@@ -883,9 +855,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
           className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           <Icons.chevron
-            className={`w-4 h-4 text-slate-400 transition-transform ${
-              !isOpen ? "-rotate-90" : ""
-            }`}
+            className={`w-4 h-4 text-slate-400 transition-transform ${!isOpen ? '-rotate-90' : ''}`}
           />
         </button>
       </div>
@@ -899,7 +869,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
           <div>
             <p
               className={`text-2xl font-extrabold tracking-wide text-slate-900 dark:text-slate-200 ${
-                shimmerActive ? "vectr-shift vectr-run" : ""
+                shimmerActive ? 'vectr-shift vectr-run' : ''
               }`}
               data-text={formattedBalance}
               onMouseEnter={() => setShimmerActive(true)}
@@ -910,10 +880,10 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
             <div className="flex items-center mt-0.5">
               <span
                 className={`text-xs font-medium ${
-                  change.positive ? "text-green-600" : "text-red-500"
+                  change.positive ? 'text-green-600' : 'text-red-500'
                 }`}
               >
-                {change.positive ? "▲" : "▼"} {Math.abs(change.percent)}%
+                {change.positive ? '▲' : '▼'} {Math.abs(change.percent)}%
               </span>
               <span className="text-slate-400 dark:text-slate-500 text-xs ml-2">
                 in {activeTimeframe}
@@ -932,8 +902,8 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
                     onClick={() => setActiveTimeframe(tf)}
                     className={`px-1.5 py-0.5 rounded-full transition-colors ${
                       activeTimeframe === tf
-                        ? "bg-slate-900 text-white shadow"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white"
+                        ? 'bg-slate-900 text-white shadow'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white'
                     }`}
                   >
                     {tf}
@@ -948,7 +918,7 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
       {/* Accounts List */}
       <div
         className={`transition-all duration-300 ease-in-out ${
-          isOpen ? "max-h-none opacity-100" : "max-h-0 opacity-0"
+          isOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'
         } overflow-hidden`}
       >
         <SortableContext
@@ -978,17 +948,14 @@ interface SortableFinancialInsightCardProps {
   onDeleteAccount: (account: TransformedAccount) => void;
 }
 
-const SortableFinancialInsightCard: React.FC<
-  SortableFinancialInsightCardProps
-> = ({ groupData, onViewAccount, onDeleteAccount }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: groupData.id });
+const SortableFinancialInsightCard: React.FC<SortableFinancialInsightCardProps> = ({
+  groupData,
+  onViewAccount,
+  onDeleteAccount,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: groupData.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -1037,15 +1004,20 @@ export function LuxuryAccountsGrid({
     setSortedGroupedData(applySavedOrder(fresh));
   }, [accounts]);
 
+  const handleDragStart = (_event: DragStartEvent) => {
+    // No-op: activeId state removed as it was unused
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) return;
-
+    if (!over) {
+      return;
+    }
     const activeId = String(active.id);
     const overId = String(over.id);
 
     // Check if we are dragging a group card
-    if (activeId.startsWith("group-") && overId.startsWith("group-")) {
+    if (activeId.startsWith('group-') && overId.startsWith('group-')) {
       if (activeId !== overId) {
         setSortedGroupedData((items: GroupData[]) => {
           const oldIndex = items.findIndex((item) => item.id === activeId);
@@ -1058,22 +1030,20 @@ export function LuxuryAccountsGrid({
     }
 
     // Check if we are dragging an account row
-    else if (activeId.startsWith("acc-") && overId.startsWith("acc-")) {
+    else if (activeId.startsWith('acc-') && overId.startsWith('acc-')) {
       setSortedGroupedData((prevData: GroupData[]) => {
         const newData = [...prevData];
 
         // Extract account IDs from prefixed strings
-        const activeAccountId = activeId.replace("acc-", "");
-        const overAccountId = overId.replace("acc-", "");
+        const activeAccountId = activeId.replace('acc-', '');
+        const overAccountId = overId.replace('acc-', '');
 
         // Find the group and index for both accounts
         const findAccountPosition = (
-          accountId: string
+          accountId: string,
         ): { groupIndex: number; accountIndex: number } | null => {
           for (let gi = 0; gi < newData.length; gi++) {
-            const accountIndex = newData[gi].accounts.findIndex(
-              (acc) => acc.id === accountId
-            );
+            const accountIndex = newData[gi].accounts.findIndex((acc) => acc.id === accountId);
             if (accountIndex !== -1) {
               return { groupIndex: gi, accountIndex };
             }
@@ -1085,11 +1055,7 @@ export function LuxuryAccountsGrid({
         const overPos = findAccountPosition(overAccountId);
 
         // Only reorder if both accounts are in the same group
-        if (
-          activePos &&
-          overPos &&
-          activePos.groupIndex === overPos.groupIndex
-        ) {
+        if (activePos && overPos && activePos.groupIndex === overPos.groupIndex) {
           const group = newData[activePos.groupIndex];
           const oldIndex = activePos.accountIndex;
           const newIndex = overPos.accountIndex;
@@ -1106,7 +1072,7 @@ export function LuxuryAccountsGrid({
   };
 
   const handleViewAccount = (account: TransformedAccount) => {
-    console.log("View account:", account);
+    console.log('View account:', account);
     toast.info(`Viewing details for ${account.name}`);
   };
 
@@ -1119,9 +1085,9 @@ export function LuxuryAccountsGrid({
 
       // Actually delete the account from the backend
       const response = await fetch(`/api/accounts/${account.id}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
 
@@ -1141,47 +1107,44 @@ export function LuxuryAccountsGrid({
       }
 
       toast.success(`Account ${account.name} has been removed`);
-      console.log("Account deleted successfully:", account.id);
+      console.log('Account deleted successfully:', account.id);
 
-      // Trigger a refresh to sync with backend state
-      if (onRefresh) {
-        await onRefresh();
-      }
+      // No need to refresh since we've already optimistically updated the local state
+      // and the backend operation was successful. This prevents the jarring loading skeleton.
     } catch (error) {
-      console.error("Error deleting account:", error);
+      console.error('Error deleting account:', error);
       // Revert the local state if delete fails
       setAccounts(initialAccounts);
 
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to delete account";
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete account';
       toast.error(errorMessage);
     }
   };
 
-  const handleRefresh = async () => {
-    if (isRefreshing) return;
+  const handleRefresh = () => {
+    if (isRefreshing) {
+      return;
+    }
     setIsRefreshing(true);
     try {
-      await onRefresh();
+      onRefresh();
     } finally {
       setIsRefreshing(false);
     }
   };
 
   const handleSyncAll = async () => {
-    if (isBulkSyncing() || !onSyncAll) return;
+    if (isBulkSyncing() || !onSyncAll) {
+      return;
+    }
     try {
       const result = await onSyncAll();
       if (result) {
-        accountToasts.bulkSyncComplete(
-          result.successful,
-          result.failed,
-          result.failedAccounts
-        );
+        accountToasts.bulkSyncComplete(result.successful, result.failed, result.failedAccounts);
       }
     } catch (error) {
-      console.error("Error syncing all accounts:", error);
-      toast.error("Failed to sync accounts");
+      console.error('Error syncing all accounts:', error);
+      toast.error('Failed to sync accounts');
     }
   };
 
@@ -1238,7 +1201,11 @@ export function LuxuryAccountsGrid({
   }
 
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="space-y-4 sm:space-y-5">
         {/* Action buttons */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1249,23 +1216,17 @@ export function LuxuryAccountsGrid({
               disabled={isRefreshing}
               className="flex items-center px-3 py-2 text-sm border rounded-md hover:bg-gray-50 disabled:opacity-50"
             >
-              <RefreshCw
-                className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-              />
+              <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
               <span className="sm:hidden">Sync</span>
             </button>
             {accounts.length > 1 && onSyncAll && (
               <button
-                onClick={handleSyncAll}
+                onClick={() => void handleSyncAll()}
                 disabled={isBulkSyncing()}
                 className="flex items-center px-3 py-2 text-sm border rounded-md hover:bg-gray-50 disabled:opacity-50"
               >
-                <RefreshCw
-                  className={`mr-2 h-4 w-4 ${
-                    isBulkSyncing() ? "animate-spin" : ""
-                  }`}
-                />
+                <RefreshCw className={`mr-2 h-4 w-4 ${isBulkSyncing() ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Sync All</span>
                 <span className="sm:hidden">All</span>
               </button>
@@ -1284,7 +1245,7 @@ export function LuxuryAccountsGrid({
                 key={group.id}
                 groupData={group}
                 onViewAccount={handleViewAccount}
-                onDeleteAccount={handleDeleteAccount}
+                onDeleteAccount={(account) => void handleDeleteAccount(account)}
               />
             ))}
           </div>

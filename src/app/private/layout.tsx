@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { AccountSyncProvider } from "@/contexts/AccountSyncContext";
 import { Sidebar } from "@/components/Sidebar";

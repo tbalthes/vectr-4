@@ -1,20 +1,21 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { ChevronDown, ChevronRight, Search, Check, X } from "lucide-react";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ChevronDown, ChevronRight, Search, Check, X } from 'lucide-react';
+
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils/utils";
-import CategoryIcon from "@/components/private/transactions/enhanced_table/CategoryIcon";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils/utils';
+import CategoryIcon from '@/components/private/transactions/enhanced_table/CategoryIcon';
 
 interface Category {
   category_id: string; // Updated to match backend response
@@ -74,13 +75,15 @@ function CategoryNode({
 
   // Check if any descendants match the search
   const hasMatchingDescendants = useMemo(() => {
-    if (!searchQuery) return false;
+    if (!searchQuery) {
+      return false;
+    }
 
     const checkDescendants = (cats: Category[]): boolean => {
       return cats.some(
         (cat) =>
           cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          checkDescendants(cat.children)
+          checkDescendants(cat.children),
       );
     };
 
@@ -90,14 +93,16 @@ function CategoryNode({
   // Show node if it matches search or has matching descendants
   const shouldShow = !searchQuery || matchesSearch || hasMatchingDescendants;
 
-  if (!shouldShow) return null;
+  if (!shouldShow) {
+    return null;
+  }
 
   return (
     <div className="select-none">
       <div
         className={cn(
-          "flex items-center gap-2 py-2 px-3 hover:border cursor-pointer rounded-md transition-colors",
-          isSelected && "bg-blue-50 border-l-2 border-l-blue-500"
+          'flex items-center gap-2 py-2 px-3 hover:border cursor-pointer rounded-md transition-colors',
+          isSelected && 'bg-blue-50 border-l-2 border-l-blue-500',
         )}
         style={{ paddingLeft: `${12 + Math.max(0, category.depth) * 20}px` }}
         onClick={() => onToggle(category.category_id)}
@@ -124,11 +129,9 @@ function CategoryNode({
         {/* Selection Indicator */}
         <div
           className={cn(
-            "flex-shrink-0 w-4 h-4 border-2 rounded flex items-center justify-center",
-            isSelected
-              ? "bg-blue-500 border-blue-500"
-              : "border-gray-300 hover:border-gray-400",
-            !multiSelect && "rounded-full"
+            'flex-shrink-0 w-4 h-4 border-2 rounded flex items-center justify-center',
+            isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-300 hover:border-gray-400',
+            !multiSelect && 'rounded-full',
           )}
         >
           {isSelected && <Check className="h-3 w-3 text-white" />}
@@ -138,15 +141,15 @@ function CategoryNode({
         <CategoryIcon
           iconName={category.icon}
           className="w-4 h-4 flex-shrink-0"
-          style={{ color: "#6700EE" }}
+          style={{ color: '#6700EE' }}
         />
 
         {/* Category Name */}
         <span
           className={cn(
-            "flex-1 text-xs font-light",
-            isSelected ? "text-blue-700" : "dark:text-gray-200",
-            matchesSearch && searchQuery && "px-1 rounded"
+            'flex-1 text-xs font-light',
+            isSelected ? 'text-blue-700' : 'dark:text-gray-200',
+            matchesSearch && searchQuery && 'px-1 rounded',
           )}
         >
           {category.name}
@@ -187,7 +190,7 @@ export function CategoryTreePicker({
   onCategoriesChange,
   userId,
   multiSelect = false,
-  placeholder = "Select categories...",
+  placeholder = 'Select categories...',
   className,
   disabled = false,
   showTransactionCounts = false,
@@ -196,7 +199,7 @@ export function CategoryTreePicker({
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   // Load categories on mount and when userId changes
@@ -206,11 +209,15 @@ export function CategoryTreePicker({
 
     try {
       const params = new URLSearchParams();
-      if (userId) params.append("user_id", userId);
-      if (showTransactionCounts) params.append("include_counts", "true");
+      if (userId) {
+        params.append('user_id', userId);
+      }
+      if (showTransactionCounts) {
+        params.append('include_counts', 'true');
+      }
 
       // Add cache busting parameter to force fresh data
-      params.append("_t", Date.now().toString());
+      params.append('_t', Date.now().toString());
 
       const response = await fetch(`/api/categories/tree?${params}`);
       if (!response.ok) {
@@ -218,20 +225,16 @@ export function CategoryTreePicker({
       }
 
       const data: CategoryTreeResponse = await response.json();
+      console.log('🐛 DEBUG: Loaded categories tree:', data.categories.length, 'root categories');
       console.log(
-        "🐛 DEBUG: Loaded categories tree:",
-        data.categories.length,
-        "root categories"
-      );
-      console.log(
-        "🐛 DEBUG: General categories:",
+        '🐛 DEBUG: General categories:',
         data.categories
-          .filter((c) => c.name.includes("General"))
+          .filter((c) => c.name.includes('General'))
           .map((c) => ({
             name: c.name,
             childrenCount: c.children.length,
             children: c.children.map((ch) => ch.name),
-          }))
+          })),
       );
 
       setCategories(data.categories);
@@ -240,17 +243,15 @@ export function CategoryTreePicker({
       const firstLevelIds = data.categories.map((cat) => cat.category_id);
       setExpandedIds(new Set(firstLevelIds));
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load categories"
-      );
-      console.error("Error loading categories:", err);
+      setError(err instanceof Error ? err.message : 'Failed to load categories');
+      console.error('Error loading categories:', err);
     } finally {
       setLoading(false);
     }
   }, [userId, showTransactionCounts]);
 
   useEffect(() => {
-    loadCategories();
+    void loadCategories();
   }, [loadCategories]);
 
   // Auto-expand parents of selected categories
@@ -261,7 +262,7 @@ export function CategoryTreePicker({
       const findParentPath = (
         targetId: string,
         currentCats: Category[],
-        path: string[] = []
+        path: string[] = [],
       ): string[] | null => {
         for (const cat of currentCats) {
           const currentPath = [...path, cat.category_id];
@@ -270,7 +271,9 @@ export function CategoryTreePicker({
           }
           if (cat.children.length > 0) {
             const found = findParentPath(targetId, cat.children, currentPath);
-            if (found) return found;
+            if (found) {
+              return found;
+            }
           }
         }
         return null;
@@ -296,21 +299,27 @@ export function CategoryTreePicker({
       const result: Category[] = [];
       const findCategory = (id: string, cats: Category[]): Category | null => {
         for (const cat of cats) {
-          if (cat.category_id === id) return cat;
+          if (cat.category_id === id) {
+            return cat;
+          }
           const found = findCategory(id, cat.children);
-          if (found) return found;
+          if (found) {
+            return found;
+          }
         }
         return null;
       };
 
       categoryIds.forEach((id) => {
         const category = findCategory(id, categories);
-        if (category) result.push(category);
+        if (category) {
+          result.push(category);
+        }
       });
 
       return result;
     },
-    [categories]
+    [categories],
   );
 
   const handleCategoryToggle = (categoryId: string) => {
@@ -328,21 +337,21 @@ export function CategoryTreePicker({
   };
 
   const handleExpand = (categoryId: string) => {
-    console.log("🐛 DEBUG: handleExpand called with:", categoryId);
-    console.log("🐛 DEBUG: Current expandedIds:", Array.from(expandedIds));
+    console.log('🐛 DEBUG: handleExpand called with:', categoryId);
+    console.log('🐛 DEBUG: Current expandedIds:', Array.from(expandedIds));
 
     const category = findCategoryById(categoryId);
-    console.log("🐛 DEBUG: Found category for expand:", category?.name);
+    console.log('🐛 DEBUG: Found category for expand:', category?.name);
 
     const newExpandedIds = new Set(expandedIds);
     if (newExpandedIds.has(categoryId)) {
-      console.log("🐛 DEBUG: Collapsing category:", categoryId);
+      console.log('🐛 DEBUG: Collapsing category:', categoryId);
       newExpandedIds.delete(categoryId);
     } else {
-      console.log("🐛 DEBUG: Expanding category:", categoryId);
+      console.log('🐛 DEBUG: Expanding category:', categoryId);
       newExpandedIds.add(categoryId);
     }
-    console.log("🐛 DEBUG: New expandedIds:", Array.from(newExpandedIds));
+    console.log('🐛 DEBUG: New expandedIds:', Array.from(newExpandedIds));
     setExpandedIds(newExpandedIds);
   };
 
@@ -350,9 +359,13 @@ export function CategoryTreePicker({
   const findCategoryById = (id: string): Category | null => {
     const searchInCategories = (cats: Category[]): Category | null => {
       for (const cat of cats) {
-        if (cat.category_id === id) return cat;
+        if (cat.category_id === id) {
+          return cat;
+        }
         const found = searchInCategories(cat.children);
-        if (found) return found;
+        if (found) {
+          return found;
+        }
       }
       return null;
     };
@@ -366,9 +379,13 @@ export function CategoryTreePicker({
   const getSelectedCategoryNames = () => {
     const findCategoryName = (id: string, cats: Category[]): string | null => {
       for (const cat of cats) {
-        if (cat.category_id === id) return cat.name;
+        if (cat.category_id === id) {
+          return cat.name;
+        }
         const found = findCategoryName(id, cat.children);
-        if (found) return found;
+        if (found) {
+          return found;
+        }
       }
       return null;
     };
@@ -379,8 +396,7 @@ export function CategoryTreePicker({
   };
 
   const selectedNames = getSelectedCategoryNames();
-  const displayText =
-    selectedNames.length > 0 ? selectedNames.join(", ") : placeholder;
+  const displayText = selectedNames.length > 0 ? selectedNames.join(', ') : placeholder;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -388,9 +404,9 @@ export function CategoryTreePicker({
         <Button
           variant="outline"
           className={cn(
-            "w-full justify-between font-normal",
-            selectedNames.length === 0 && "text-gray-500",
-            className
+            'w-full justify-between font-normal',
+            selectedNames.length === 0 && 'text-gray-500',
+            className,
           )}
           disabled={disabled}
         >
@@ -402,7 +418,7 @@ export function CategoryTreePicker({
       <DialogContent className="max-w-md max-h-[600px] p-0">
         <DialogHeader className="p-6 pb-4">
           <DialogTitle className="flex items-center justify-between">
-            {multiSelect ? "Select Categories" : "Select Category"}
+            {multiSelect ? 'Select Categories' : 'Select Category'}
             {selectedNames.length > 0 && (
               <Button
                 variant="ghost"
@@ -432,9 +448,7 @@ export function CategoryTreePicker({
         {/* Selected Categories Summary */}
         {multiSelect && selectedNames.length > 0 && (
           <div className="px-6 pb-4">
-            <div className="text-sm text-gray-600 mb-2">
-              Selected ({selectedNames.length}):
-            </div>
+            <div className="text-sm text-gray-600 mb-2">Selected ({selectedNames.length}):</div>
             <div className="flex flex-wrap gap-1">
               {selectedNames.map((name, index) => (
                 <Badge key={index} variant="secondary" className="text-xs">
@@ -447,27 +461,19 @@ export function CategoryTreePicker({
 
         <ScrollArea className="flex-1 max-h-80">
           <div className="px-6 pb-6">
-            {loading && (
-              <div className="text-center py-8 text-gray-500">
-                Loading categories...
-              </div>
-            )}
+            {loading && <div className="text-center py-8 text-gray-500">Loading categories...</div>}
 
             {error && (
               <div className="text-center py-8">
-                <div className="text-red-500 mb-2">
-                  Error loading categories
-                </div>
-                <Button variant="outline" size="sm" onClick={loadCategories}>
+                <div className="text-red-500 mb-2">Error loading categories</div>
+                <Button variant="outline" size="sm" onClick={() => void loadCategories()}>
                   Try Again
                 </Button>
               </div>
             )}
 
             {!loading && !error && categories.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No categories found
-              </div>
+              <div className="text-center py-8 text-gray-500">No categories found</div>
             )}
 
             {!loading && !error && categories.length > 0 && (

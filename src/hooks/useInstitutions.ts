@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 export interface Institution {
   id: string;
@@ -25,7 +25,7 @@ export function useInstitutions() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch("/api/institutions");
+      const response = await fetch('/api/institutions');
       if (!response.ok) {
         throw new Error(`Failed to fetch institutions: ${response.statusText}`);
       }
@@ -33,23 +33,23 @@ export function useInstitutions() {
       const data = await response.json();
       setInstitutions(data.institutions || []);
     } catch (err) {
-      console.error("Error fetching institutions:", err);
-      setError(err instanceof Error ? err : new Error("Unknown error"));
+      console.error('Error fetching institutions:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchInstitutions();
+    void fetchInstitutions();
   }, []);
 
   const createInstitution = async (institutionData: Partial<Institution>) => {
     try {
-      const response = await fetch("/api/institutions", {
-        method: "POST",
+      const response = await fetch('/api/institutions', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(institutionData),
       });
@@ -62,7 +62,7 @@ export function useInstitutions() {
       setInstitutions((prev) => [...prev, newInstitution]);
       return newInstitution;
     } catch (err) {
-      console.error("Error creating institution:", err);
+      console.error('Error creating institution:', err);
       throw err;
     }
   };

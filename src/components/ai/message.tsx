@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { Bot, User } from "lucide-react";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 
 export interface MessageProps {

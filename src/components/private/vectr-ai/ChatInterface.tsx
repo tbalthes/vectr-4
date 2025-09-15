@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { MessageSquare, Send } from "lucide-react";
+
 import {
   Card,
   CardHeader,
@@ -10,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Send } from "lucide-react";
 import type { ChatMessage } from "@/types/vectrai";
 
 interface ChatInterfaceProps {

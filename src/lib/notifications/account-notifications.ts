@@ -244,7 +244,7 @@ export class AccountNotifications {
   static syncError(
     accountName: string,
     errorMessage: string,
-    canRetry: boolean = true
+    canRetry = true
   ): void {
     const toastId = `sync-${accountName}`;
     const existingId = this.activeToasts.get(toastId);
@@ -347,8 +347,8 @@ export class AccountNotifications {
         this.activeToasts.delete(key);
       }
     });
-    if (this.syncToastId === toastId) this.syncToastId = null;
-    if (this.bulkSyncToastId === toastId) this.bulkSyncToastId = null;
+    if (this.syncToastId === toastId) {this.syncToastId = null;}
+    if (this.bulkSyncToastId === toastId) {this.bulkSyncToastId = null;}
   }
 }
 

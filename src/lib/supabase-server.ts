@@ -1,5 +1,5 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 // Temporary wrapper to suppress Next.js 15 cookie warnings
 export function createSupabaseServerClient() {
@@ -8,13 +8,11 @@ export function createSupabaseServerClient() {
   console.error = (...args: unknown[]) => {
     // Only suppress specific cookie-related errors
     const message =
-      typeof args[0] === "object" && args[0] !== null && "toString" in args[0]
+      typeof args[0] === 'object' && args[0] !== null && 'toString' in args[0]
         ? (args[0] as { toString: () => string }).toString()
-        : String(args[0] ?? "");
-    if (
-      message.includes("cookies().get") ||
-      message.includes("should be awaited")
-    ) {
+        : // eslint-disable-next-line @typescript-eslint/no-base-to-string
+          String(args[0] ?? '');
+    if (message.includes('cookies().get') || message.includes('should be awaited')) {
       return; // Suppress this error
     }
     originalError.apply(console, args);

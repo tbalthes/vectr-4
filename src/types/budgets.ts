@@ -1,4 +1,4 @@
-export type Budget = {
+export interface Budget {
   id: number;
   category: string;
   budgetAmount: number;
@@ -7,4 +7,4 @@ export type Budget = {
   color: string;
   status: string;
   daysLeft: number;
-};
+}

@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { Lightbulb } from "lucide-react";
+
 import {
   Card,
   CardHeader,
@@ -10,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import type { AIInsight } from "@/types/vectrai";
 

@@ -14,12 +14,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent,
+  ChartTooltipContent, type ChartConfig
 } from "@/components/ui/chart";
 import {
   Select,
@@ -144,7 +143,7 @@ export default function IncomeSpendingOverTime() {
   // compute visible domain for Y axis based on active series
   const yDomain = React.useMemo(() => {
     const keys = Object.keys(activeSeries).filter((k) => activeSeries[k]);
-    if (!keys.length) return [0, 1];
+    if (!keys.length) {return [0, 1];}
 
     let min = Infinity;
     let max = -Infinity;
@@ -153,13 +152,13 @@ export default function IncomeSpendingOverTime() {
       for (const k of keys) {
         const v = Number((row as Record<string, unknown>)[k] ?? 0);
         if (Number.isFinite(v)) {
-          if (v < min) min = v;
-          if (v > max) max = v;
+          if (v < min) {min = v;}
+          if (v > max) {max = v;}
         }
       }
     }
 
-    if (min === Infinity || max === -Infinity) return [0, 1];
+    if (min === Infinity || max === -Infinity) {return [0, 1];}
 
     // add small padding
     const padding = Math.max((max - min) * 0.08, 1);
@@ -181,8 +180,8 @@ export default function IncomeSpendingOverTime() {
 
   function formatYAxisTick(value: number) {
     const abs = Math.abs(value);
-    if (abs >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (abs >= 1000) return `$${(value / 1000).toFixed(1)}k`;
+    if (abs >= 1000000) {return `$${(value / 1000000).toFixed(1)}M`;}
+    if (abs >= 1000) {return `$${(value / 1000).toFixed(1)}k`;}
     return `$${value.toLocaleString()}`;
   }
 

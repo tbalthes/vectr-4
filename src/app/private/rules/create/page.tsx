@@ -1,39 +1,39 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
+import { useRouter } from 'next/navigation';
+
 // no header/action buttons here; layout provides header
-import { MonarchStyleRuleBuilder } from "@/components/private/rules/MonarchStyleRuleBuilder";
-import { useCategories } from "@/hooks/useCategories";
-import { useRouter } from "next/navigation";
-import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
-import { useAuth } from "@/contexts/AuthContext";
+import { MonarchStyleRuleBuilder } from '@/components/private/rules/MonarchStyleRuleBuilder';
+import { useCategories } from '@/hooks/useCategories';
+import { useEnhancedUserRules } from '@/hooks/useEnhancedUserRules';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CreateRulePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { loading: categoriesLoading } = useCategories(user?.id);
   const { createRule } = useEnhancedUserRules({
-    userId: user?.id || "",
+    userId: user?.id || '',
     autoFetch: false,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSaveRule = async (ruleData: any) => {
     if (!user?.id) {
-      console.error("No authenticated user");
+      console.error('No authenticated user');
       return;
     }
 
     try {
       await createRule({ ...ruleData, user_id: user.id });
-      router.push("/private/rules");
+      router.push('/private/rules');
     } catch (error) {
-      console.error("Failed to create rule:", error);
+      console.error('Failed to create rule:', error);
     }
   };
 
   const handleCancel = () => {
-    router.push("/private/rules");
+    router.push('/private/rules');
   };
 
   if (authLoading) {
@@ -47,9 +47,7 @@ export default function CreateRulePage() {
   if (!user) {
     return (
       <div className="text-center py-8">
-        <div className="text-center text-red-600">
-          Please log in to create rules
-        </div>
+        <div className="text-center text-red-600">Please log in to create rules</div>
       </div>
     );
   }
@@ -66,7 +64,9 @@ export default function CreateRulePage() {
     <div className="max-w-6xl mx-auto">
       <MonarchStyleRuleBuilder
         rule={null}
-        onSave={handleSaveRule}
+        onSave={(ruleData) => {
+          void handleSaveRule(ruleData);
+        }}
         onCancel={handleCancel}
         userId={user.id}
       />

@@ -1,12 +1,13 @@
-"use client";
+'use client';
 // suggestion UI temporarily disabled for debugging
 // import type { SuggestionItem } from "@/components/ai/suggestion";
 // suggestion UI temporarily disabled for debugging
 
-import React, { useState, useRef, useEffect, useContext } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Bot, Sparkles } from "lucide-react";
-import PageHeader from "@/components/private/PageHeader";
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { Bot, Sparkles } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+import PageHeader from '@/components/private/PageHeader';
 // CardNp intentionally omitted; kept UI minimal for now
 import {
   Message,
@@ -17,18 +18,19 @@ import {
   PromptInput,
   // Reasoning and Sources intentionally omitted in this page
   Loader,
-} from "@/components/ai";
-import ChatSidebar from "@/components/ai/chat-sidebar";
-import { ChatProvider, ChatContext, ChatSession } from "@/contexts/ChatContext";
+} from '@/components/ai';
+import ChatSidebar from '@/components/ai/chat-sidebar';
+import type { ChatSession, ChatContextValue } from '@/contexts/ChatContext';
+import { ChatProvider, ChatContext } from '@/contexts/ChatContext';
 import {
   updateSessionTitle as updateSessionTitleQuery,
   listSessions as listSessionsQuery,
-} from "@/lib/supabase/chat-queries";
-import { useAuth } from "@/contexts/AuthContext";
+} from '@/lib/supabase/chat-queries';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatMessage {
   id: number;
-  type: "ai" | "user";
+  type: 'ai' | 'user';
   message: string;
   timestamp: string;
   isStreaming?: boolean;
@@ -44,10 +46,10 @@ interface ChatMessage {
 function VectrAIPage() {
   // State and refs
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatMessage, setChatMessage] = useState("");
+  const [chatMessage, setChatMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  const [dbStatus, setDbStatus] = useState<string>(""); // Debug state for database status
+  const [dbStatus, setDbStatus] = useState<string>(''); // Debug state for database status
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -64,7 +66,9 @@ function VectrAIPage() {
   const sendMessage = async (message: string) => {
     const trimmed = message.trim();
     // ignore empty or currently-streaming
-    if (!trimmed || isStreaming) return;
+    if (!trimmed || isStreaming) {
+      return;
+    }
 
     // ignore rapid duplicate sends of the same text within 2s
     const now = Date.now();
@@ -73,7 +77,7 @@ function VectrAIPage() {
       lastSentRef.current.text === trimmed &&
       now - lastSentRef.current.ts < 2000
     ) {
-      console.log("Ignoring duplicate rapid send:", trimmed);
+      console.log('Ignoring duplicate rapid send:', trimmed);
       return;
     }
     // mark as sent
@@ -85,16 +89,16 @@ function VectrAIPage() {
     const userMessageId = Date.now();
     const userMessage: ChatMessage = {
       id: userMessageId,
-      type: "user",
+      type: 'user',
       message: message.trim(),
       timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
+        hour: '2-digit',
+        minute: '2-digit',
       }),
     };
 
     setChatMessages((prev) => [...prev, userMessage]);
-    setChatMessage("");
+    setChatMessage('');
     setIsStreaming(true);
 
     // Step 2: Wait a moment, then add AI "thinking" placeholder
@@ -103,9 +107,9 @@ function VectrAIPage() {
     const aiMessageId = userMessageId + 1000;
     const aiThinkingMessage: ChatMessage = {
       id: aiMessageId,
-      type: "ai",
-      message: "",
-      timestamp: "",
+      type: 'ai',
+      message: '',
+      timestamp: '',
       isThinking: true,
       isStreaming: false,
     };
@@ -119,12 +123,12 @@ function VectrAIPage() {
     abortControllerRef.current = new AbortController();
 
     try {
-      const response = await fetch("/api/ai/chat", {
-        method: "POST",
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        credentials: "include",
+        credentials: 'include',
         body: JSON.stringify({
           message: message.trim(),
           history: chatMessages.slice(-10), // Send last 10 messages for context
@@ -137,44 +141,39 @@ function VectrAIPage() {
         // Try to surface backend error details
         try {
           const errJson = await response.json();
-          throw new Error(errJson?.error || errJson?.details || "Server error");
+          throw new Error(errJson?.error || errJson?.details || 'Server error');
         } catch {
-          throw new Error("Server error");
+          throw new Error('Server error');
         }
       }
 
       // Handle streaming response
       const reader = response.body!.getReader();
-      let accumulatedMessage = "";
+      let accumulatedMessage = '';
 
       while (true) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          break;
+        }
 
         const chunk = new TextDecoder().decode(value);
-        const lines = chunk.split("\n").filter(Boolean);
+        const lines = chunk.split('\n').filter(Boolean);
 
         for (const line of lines) {
           try {
             const parsed = JSON.parse(line);
             // Server may emit a debug line describing planner requests/fetchSummary
             if (parsed.debug) {
-              console.log("Planner debug:", parsed.debug);
+              console.log('Planner debug:', parsed.debug);
               try {
                 const rq: number = parsed.debug.requestsCount ?? 0;
-                const fetchSummaryArr = (parsed.debug.fetchSummary ||
-                  []) as Array<{ status?: string }>;
-                const ok = fetchSummaryArr.filter(
-                  (f) => f.status === "ok"
-                ).length;
-                const failed = fetchSummaryArr.filter(
-                  (f) => f.status === "failed"
-                ).length;
-                const skipped = fetchSummaryArr.filter(
-                  (f) => f.status === "skipped"
-                ).length;
+                const fetchSummaryArr = (parsed.debug.fetchSummary || []) as { status?: string }[];
+                const ok = fetchSummaryArr.filter((f) => f.status === 'ok').length;
+                const failed = fetchSummaryArr.filter((f) => f.status === 'failed').length;
+                const skipped = fetchSummaryArr.filter((f) => f.status === 'skipped').length;
                 setDbStatus(
-                  `Analytics: requests=${rq}, ok=${ok}, failed=${failed}, skipped=${skipped}`
+                  `Analytics: requests=${rq}, ok=${ok}, failed=${failed}, skipped=${skipped}`,
                 );
               } catch {
                 // ignore
@@ -195,8 +194,8 @@ function VectrAIPage() {
                         isThinking: false,
                         isStreaming: true,
                       }
-                    : msg
-                )
+                    : msg,
+                ),
               );
             } else if (parsed.done) {
               // Streaming is complete
@@ -218,25 +217,25 @@ function VectrAIPage() {
               ...msg,
               message: accumulatedMessage,
               timestamp: new Date().toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
+                hour: '2-digit',
+                minute: '2-digit',
               }),
               isStreaming: false,
               isThinking: false,
             };
           }
           return msg;
-        })
+        }),
       );
 
       // Return the final AI message content for database saving
       return accumulatedMessage;
     } catch (error: unknown) {
-      if (error instanceof Error && error.name === "AbortError") {
+      if (error instanceof Error && error.name === 'AbortError') {
         // Request was cancelled, remove the placeholder message
         setChatMessages((prev) => prev.filter((msg) => msg.id !== aiMessageId));
       } else {
-        console.error("Error sending message:", error);
+        console.error('Error sending message:', error);
         // Show backend error message if available
         const errorMsg =
           error instanceof Error
@@ -249,14 +248,14 @@ function VectrAIPage() {
                   ...msg,
                   message: errorMsg,
                   timestamp: new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
+                    hour: '2-digit',
+                    minute: '2-digit',
                   }),
                   isStreaming: false,
                   isThinking: false,
                 }
-              : msg
-          )
+              : msg,
+          ),
         );
       }
       return undefined; // Return undefined on error
@@ -329,9 +328,7 @@ function VectrAIWithContext({
   sidebarOpen: boolean;
   setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const chatCtx = useContext(ChatContext) as unknown as
-    | import("@/contexts/ChatContext").ChatContextValue
-    | null;
+  const chatCtx = useContext(ChatContext) as unknown as ChatContextValue | null;
   const auth = useAuth();
   const inFlightTitleRef = useRef<Record<string, boolean>>({});
   const sessionsLoadedRef = useRef(false);
@@ -339,7 +336,7 @@ function VectrAIWithContext({
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages, messagesEndRef]);
 
@@ -347,16 +344,16 @@ function VectrAIWithContext({
   useEffect(() => {
     const userId = auth?.user?.id;
     if (userId && chatCtx?.fetchSessions && !sessionsLoadedRef.current) {
-      console.log("Loading sessions for the first time for userId:", userId);
+      console.log('Loading sessions for the first time for userId:', userId);
       sessionsLoadedRef.current = true;
-      chatCtx.fetchSessions();
+      void chatCtx.fetchSessions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth?.user?.id]);
 
   const handleCreateSession = async () => {
     try {
-      await chatCtx?.createNewSession("New Chat");
+      await chatCtx?.createNewSession('New Chat');
     } catch (err) {
       console.error(err);
     }
@@ -372,16 +369,13 @@ function VectrAIWithContext({
       (m: { type: string; content: string; timestamp?: string }, idx: number) =>
         ({
           id: idx + 1 + Date.now(),
-          type: (m.type === "user" ? "user" : "ai") as "user" | "ai",
+          type: m.type === 'user' ? 'user' : 'ai',
           message: m.content,
-          timestamp: new Date(m.timestamp ?? Date.now()).toLocaleTimeString(
-            [],
-            {
-              hour: "2-digit",
-              minute: "2-digit",
-            }
-          ),
-        } as ChatMessage)
+          timestamp: new Date(m.timestamp ?? Date.now()).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        }) as ChatMessage,
     );
     setChatMessages(mapped);
   };
@@ -394,31 +388,27 @@ function VectrAIWithContext({
     try {
       const userId = auth?.user?.id;
       if (userId && !currentSessionId) {
-        setDbStatus("Creating new session...");
-        const s = await chatCtx?.createNewSession("New Chat");
+        setDbStatus('Creating new session...');
+        const s = await chatCtx?.createNewSession('New Chat');
         await chatCtx?.fetchSessions();
-        if (s && s.id) {
+        if (s?.id) {
           await chatCtx?.openSession(s.id);
           currentSessionId = s.id;
-          setDbStatus("Session created successfully");
+          setDbStatus('Session created successfully');
         }
       }
       // save user's message
       if (currentSessionId) {
-        setDbStatus("Saving user message...");
+        setDbStatus('Saving user message...');
         await chatCtx?.addMessage(currentSessionId, {
-          type: "user",
+          type: 'user',
           content: text,
         });
-        setDbStatus("User message saved");
+        setDbStatus('User message saved');
       }
     } catch (err) {
-      console.error("Error creating session or saving user message:", err);
-      setDbStatus(
-        `Database error: ${
-          err instanceof Error ? err.message : "Unknown error"
-        }`
-      );
+      console.error('Error creating session or saving user message:', err);
+      setDbStatus(`Database error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
 
     // Call existing sendMessage which handles streaming UI and get AI response
@@ -427,91 +417,81 @@ function VectrAIWithContext({
     // Save the AI response if we got one
     if (aiResponse && currentSessionId) {
       try {
-        setDbStatus("Saving AI response...");
+        setDbStatus('Saving AI response...');
         await chatCtx?.addMessage(currentSessionId, {
-          type: "ai",
+          type: 'ai',
           content: aiResponse,
         });
-        setDbStatus("AI response saved");
+        setDbStatus('AI response saved');
 
         // Refresh sessions to ensure we have the latest state
         await chatCtx?.fetchSessions();
 
         // Generate title only if this is the first exchange and current title is default
-        console.log("Current sessions after refresh:", chatCtx?.sessions);
-        let currentSession = chatCtx?.sessions?.find(
-          (s: ChatSession) => s.id === currentSessionId
-        );
+        console.log('Current sessions after refresh:', chatCtx?.sessions);
+        let currentSession = chatCtx?.sessions?.find((s: ChatSession) => s.id === currentSessionId);
         // If context sessions are empty or not found, fetch directly from DB to avoid staleness
         if (!currentSession) {
           try {
-            const directList = await listSessionsQuery(auth?.user?.id || "");
-            console.log("Directly fetched sessions:", directList);
+            const directList = await listSessionsQuery(auth?.user?.id || '');
+            console.log('Directly fetched sessions:', directList);
             currentSession = (directList || []).find(
-              (s: ChatSession) => s.id === currentSessionId
+              (s: ChatSession) => s.id === currentSessionId,
             ) as ChatSession | undefined;
           } catch (e) {
-            console.error("Error fetching sessions directly:", e);
+            console.error('Error fetching sessions directly:', e);
           }
         }
-        console.log("Found currentSession:", currentSession);
+        console.log('Found currentSession:', currentSession);
 
-        if (currentSession?.title === "New Chat") {
+        if (currentSession?.title === 'New Chat') {
           try {
             // avoid concurrent title generation
             if (inFlightTitleRef.current[currentSessionId]) {
-              setDbStatus("Title generation already in progress");
+              setDbStatus('Title generation already in progress');
             } else {
               inFlightTitleRef.current[currentSessionId] = true;
-              setDbStatus("Generating title...");
-              console.log("Calling title API with message:", text);
-              const res = await fetch("/api/ai/title", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
+              setDbStatus('Generating title...');
+              console.log('Calling title API with message:', text);
+              const res = await fetch('/api/ai/title', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ message: text }),
               });
-              console.log("Title API response status:", res.status);
+              console.log('Title API response status:', res.status);
               const json = await res.json();
-              console.log("Title API response:", json);
+              console.log('Title API response:', json);
 
               if (json?.title && currentSessionId) {
-                console.log("Updating session title to:", json.title);
+                console.log('Updating session title to:', json.title);
                 await updateSessionTitleQuery(currentSessionId, json.title);
                 // refresh session list to show new title
                 await chatCtx?.fetchSessions();
-                setDbStatus("Title updated successfully");
+                setDbStatus('Title updated successfully');
               } else {
-                setDbStatus("No title returned from API");
+                setDbStatus('No title returned from API');
               }
               inFlightTitleRef.current[currentSessionId] = false;
             }
           } catch (err) {
-            console.error("Error generating/updating session title:", err);
-            setDbStatus(
-              `Title error: ${
-                err instanceof Error ? err.message : "Unknown error"
-              }`
-            );
+            console.error('Error generating/updating session title:', err);
+            setDbStatus(`Title error: ${err instanceof Error ? err.message : 'Unknown error'}`);
           }
         } else {
-          setDbStatus("Session title already exists, skipping generation");
+          setDbStatus('Session title already exists, skipping generation');
         }
       } catch (err) {
-        console.error("Error saving AI message:", err);
-        setDbStatus(
-          `AI save error: ${
-            err instanceof Error ? err.message : "Unknown error"
-          }`
-        );
+        console.error('Error saving AI message:', err);
+        setDbStatus(`AI save error: ${err instanceof Error ? err.message : 'Unknown error'}`);
       }
     } else {
-      setDbStatus("No AI response received to save");
+      setDbStatus('No AI response received to save');
       console.log(
-        "No AI response received. currentSessionId:",
+        'No AI response received. currentSessionId:',
         currentSessionId,
-        "aiResponse:",
-        aiResponse
+        'aiResponse:',
+        aiResponse,
       );
     }
   };
@@ -525,17 +505,19 @@ function VectrAIWithContext({
           <div className="flex items-center gap-2">
             <ChatSidebar
               sessions={chatCtx?.sessions}
-              onCreate={handleCreateSession}
-              onDelete={handleDeleteSession}
-              onSelect={async (id) => {
-                setLoadingSessionId(id);
-                // keep sidebar open while loading
-                setSidebarOpen(true);
-                await handleSelectSession(id);
-                // messages should now be loaded; close sidebar
-                setLoadingSessionId(null);
-                setSidebarOpen(false);
-              }}
+              onCreate={() => void handleCreateSession()}
+              onDelete={(id) => void handleDeleteSession(id)}
+              onSelect={(id) =>
+                void (async () => {
+                  setLoadingSessionId(id);
+                  // keep sidebar open while loading
+                  setSidebarOpen(true);
+                  await handleSelectSession(id);
+                  // messages should now be loaded; close sidebar
+                  setLoadingSessionId(null);
+                  setSidebarOpen(false);
+                })()
+              }
               open={sidebarOpen}
               onOpenChange={setSidebarOpen}
               closeOnSelect={false}
@@ -548,10 +530,7 @@ function VectrAIWithContext({
               <Sparkles size={8} className="mr-1" />
               Gemini Pro
             </Badge>
-            <Badge
-              variant="outline"
-              className="bg-green-50 text-green-700 border-green-200"
-            >
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
               <Bot size={8} className="mr-1" />
               Online
             </Badge>
@@ -575,9 +554,8 @@ function VectrAIWithContext({
               <div className="text-center space-y-4">
                 <h2 className="text-3xl font-bold">Welcome to Vectr AI</h2>
                 <p className="text-lg text-gray-600 max-w-2xl">
-                  Your intelligent financial assistant is ready to help you
-                  analyze spending, create budgets, and make smarter financial
-                  decisions. Powered by Google Gemini AI.
+                  Your intelligent financial assistant is ready to help you analyze spending, create
+                  budgets, and make smarter financial decisions. Powered by Google Gemini AI.
                 </p>
               </div>
             </div>
@@ -591,7 +569,7 @@ function VectrAIWithContext({
                 {chatMessages.map((message) => (
                   <Message
                     key={message.id}
-                    from={message.type === "user" ? "user" : "assistant"}
+                    from={message.type === 'user' ? 'user' : 'assistant'}
                     timestamp={message.timestamp}
                   >
                     <MessageContent>
@@ -620,7 +598,7 @@ function VectrAIWithContext({
             <PromptInput
               value={chatMessage}
               onChange={setChatMessage}
-              onSubmit={handleSend}
+              onSubmit={(text) => void handleSend(text)}
               disabled={isStreaming}
               placeholder="Ask me anything about your finances..."
               toolbar={false}

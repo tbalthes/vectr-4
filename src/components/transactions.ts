@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
-import { TransactionFromApi } from "@/types/transactions";
+
+import type { TransactionFromApi } from "@/types/transactions";
 
 // This assumes you have your Supabase URL and Key in environment variables
 // NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { supabase } from "@/lib/supabase/chat-queries";
 
 export async function GET() {

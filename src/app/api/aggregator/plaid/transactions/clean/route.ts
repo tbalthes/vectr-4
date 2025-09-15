@@ -1,12 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import {
-  CleanPlaidTransactionProcessor,
-  type PlaidTransaction,
-} from "../clean-processor";
+import crypto from 'crypto';
 
-export const dynamic = "force-dynamic";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+
+import { CleanPlaidTransactionProcessor, type PlaidTransaction } from '../clean-processor';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * Clean Plaid Transaction Processing Route
@@ -17,7 +18,7 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
-    console.log("🔄 Starting clean Plaid transaction processing");
+    console.log('🔄 Starting clean Plaid transaction processing');
 
     // Parse request body first to check for internal call indicator
     const body = await request.json();
@@ -26,14 +27,41 @@ export async function POST(request: NextRequest) {
     let userId: string;
 
     if (internal_user_id) {
-      // Internal service call - use the provided user ID directly
+      // Debug: log headers to diagnose missing Authorization
+      console.log('[clean] Incoming headers:');
+      for (const [k, v] of request.headers) {
+        console.log('[clean] header', k, v);
+      }
+
+      // Require service role key for internal calls
+      const authHeader = request.headers.get('authorization') || '';
+      const expected = `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ''}`;
+
+      // Accept service_role_key in body as fallback when headers are stripped
+      const fallbackServiceKey = body?.service_role_key || '';
+      const providedValue = authHeader ? authHeader : `Bearer ${fallbackServiceKey}`;
+
+      // Log whether we have a service role key configured (don't print the key)
+      console.log('[clean] Service role key present:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+      console.log('[clean] Authorization header present:', !!authHeader);
+      console.log('[clean] service_role_key provided in body:', !!fallbackServiceKey);
+
+      const a = Buffer.from(providedValue);
+      const b = Buffer.from(expected);
+      if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+        console.error('[clean] Unauthorized internal call', {
+          authHeaderPresent: !!authHeader,
+          bodyKeyPresent: !!fallbackServiceKey,
+        });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
       userId = internal_user_id;
-      console.log("🔧 Internal service call for user:", userId);
+      console.log('🔧 Internal service call for user:', userId);
     } else {
       // Regular cookie-based authentication
       const requestCookies = await cookies();
       const supabase = createRouteHandlerClient({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         cookies: () => requestCookies as any,
       });
 
@@ -43,26 +71,18 @@ export async function POST(request: NextRequest) {
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        console.error("❌ Authentication error:", userError);
-        return NextResponse.json(
-          { error: "User not authenticated" },
-          { status: 401 }
-        );
+        console.error('❌ Authentication error:', userError);
+        return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
       }
 
       userId = user.id;
     }
 
     if (!Array.isArray(transactions) || transactions.length === 0) {
-      return NextResponse.json(
-        { error: "Invalid or empty transactions array" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid or empty transactions array' }, { status: 400 });
     }
 
-    console.log(
-      `📊 Processing ${transactions.length} Plaid transactions for user ${userId}`
-    );
+    console.log(`📊 Processing ${transactions.length} Plaid transactions for user ${userId}`);
 
     // Initialize clean processor
     const processor = new CleanPlaidTransactionProcessor();
@@ -77,20 +97,13 @@ export async function POST(request: NextRequest) {
     // Process each transaction
     for (const plaidTransaction of transactions as PlaidTransaction[]) {
       try {
-        console.log(
-          `🔄 Processing transaction: ${plaidTransaction.transaction_id}`
-        );
+        console.log(`🔄 Processing transaction: ${plaidTransaction.transaction_id}`);
 
         // Process with clean 1:1 mapping
-        const processedTransaction = await processor.processTransaction(
-          plaidTransaction
-        );
+        const processedTransaction = await processor.processTransaction(plaidTransaction);
 
         // Save to database
-        const saved = await processor.saveTransaction(
-          processedTransaction,
-          userId
-        );
+        const saved = await processor.saveTransaction(processedTransaction, userId);
 
         if (saved) {
           results.processed++;
@@ -103,25 +116,18 @@ export async function POST(request: NextRequest) {
             results.categories_mapped++;
           }
 
-          console.log(
-            `✅ Successfully processed: ${plaidTransaction.transaction_id}`
-          );
+          console.log(`✅ Successfully processed: ${plaidTransaction.transaction_id}`);
         } else {
           results.errors++;
-          console.error(
-            `❌ Failed to save: ${plaidTransaction.transaction_id}`
-          );
+          console.error(`❌ Failed to save: ${plaidTransaction.transaction_id}`);
         }
       } catch (error) {
         results.errors++;
-        console.error(
-          `❌ Error processing transaction ${plaidTransaction.transaction_id}:`,
-          error
-        );
+        console.error(`❌ Error processing transaction ${plaidTransaction.transaction_id}:`, error);
       }
     }
 
-    console.log("📈 Processing complete:", results);
+    console.log('📈 Processing complete:', results);
 
     return NextResponse.json({
       success: true,
@@ -129,13 +135,13 @@ export async function POST(request: NextRequest) {
       results,
     });
   } catch (error) {
-    console.error("❌ Error in clean transaction processing:", error);
+    console.error('❌ Error in clean transaction processing:', error);
     return NextResponse.json(
       {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -143,18 +149,18 @@ export async function POST(request: NextRequest) {
 /**
  * Health check endpoint for the clean processor
  */
-export async function GET() {
+export function GET() {
   return NextResponse.json({
-    status: "healthy",
-    processor: "clean-plaid-transaction-processor",
-    version: "1.0.0",
-    description: "Clean 1:1 mapping from Plaid transactions to database schema",
+    status: 'healthy',
+    processor: 'clean-plaid-transaction-processor',
+    version: '1.0.0',
+    description: 'Clean 1:1 mapping from Plaid transactions to database schema',
     features: [
-      "VERY_HIGH confidence merchant regex matching",
-      "LOW confidence combined description parsing",
-      "Automatic merchant creation with Plaid data",
-      "Direct category mapping from Plaid detailed categories",
-      "Preserves CSV processing compatibility",
+      'VERY_HIGH confidence merchant regex matching',
+      'LOW confidence combined description parsing',
+      'Automatic merchant creation with Plaid data',
+      'Direct category mapping from Plaid detailed categories',
+      'Preserves CSV processing compatibility',
     ],
   });
 }

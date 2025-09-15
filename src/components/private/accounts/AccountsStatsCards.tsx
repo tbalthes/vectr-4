@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
+import { Wallet, TrendingUp, TrendingDown, CreditCard } from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wallet, TrendingUp, TrendingDown, CreditCard } from "lucide-react";
 
 interface Account {
   id: string;

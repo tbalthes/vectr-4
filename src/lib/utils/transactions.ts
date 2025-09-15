@@ -1,6 +1,7 @@
 // Remove the createClient import from the top-level
-import { SupabaseClient } from "@supabase/supabase-js"; // Import the type
-import { TransactionFromApi } from "@/types/transactions";
+import type { SupabaseClient } from "@supabase/supabase-js"; // Import the type
+
+import type { TransactionFromApi } from "@/types/transactions";
 
 // The function now accepts any valid Supabase client
 export async function getTransactionsWithDetails(

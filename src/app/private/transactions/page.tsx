@@ -1,26 +1,20 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import TransactionTableVirtuoso from "@/components/private/transactions/enhanced_table/TransactionTableVirtuoso";
-import { TransactionDetailsDrawer } from "@/components/private/transactions/enhanced_table/TransactionDetailsDrawer";
-import { Button } from "@/components/ui/button";
-import { Plus, Filter } from "lucide-react";
-import { FormattedTransaction } from "@/types/transactions";
-import {
-  DateRangePicker,
-  DateRange,
-} from "@/components/private/transactions/filters/DateRangePicker";
-import {
-  AdvancedFilterPanel,
-  AdvancedFilterState,
-} from "@/components/private/transactions/filters/AdvancedFilterPanel";
-import {
-  useInfiniteTransactions,
-  type TransactionItem,
-} from "@/hooks/useInfiniteTransactions";
-import PageHeader from "@/components/private/PageHeader";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Plus, Filter } from 'lucide-react';
+
+import { useAuth } from '@/contexts/AuthContext';
+import TransactionTableVirtuoso from '@/components/private/transactions/enhanced_table/TransactionTableVirtuoso';
+import { TransactionDetailsDrawer } from '@/components/private/transactions/enhanced_table/TransactionDetailsDrawer';
+import { Button } from '@/components/ui/button';
+import type { FormattedTransaction } from '@/types/transactions';
+import type { DateRange } from '@/components/private/transactions/filters/DateRangePicker';
+import { DateRangePicker } from '@/components/private/transactions/filters/DateRangePicker';
+import type { AdvancedFilterState } from '@/components/private/transactions/filters/AdvancedFilterPanel';
+import { AdvancedFilterPanel } from '@/components/private/transactions/filters/AdvancedFilterPanel';
+import { useInfiniteTransactions, type TransactionItem } from '@/hooks/useInfiniteTransactions';
+import PageHeader from '@/components/private/PageHeader';
 import {
   Sheet,
   SheetContent,
@@ -28,7 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet';
 
 export default function TransactionsPage() {
   // Get authenticated user
@@ -36,14 +30,12 @@ export default function TransactionsPage() {
 
   // TODO: Integrate useInfiniteTransactions and new data flow (WBS 3.1)
   // Placeholder for future filter panel (WBS 5.1)
-  const [search, setSearch] = useState("");
-  const [selectedCategory] = useState("all");
-  const [selectedAmount] = useState("all");
+  const [search, setSearch] = useState('');
+  const [selectedCategory] = useState('all');
+  const [selectedAmount] = useState('all');
   const [dateRange, setDateRange] = useState<DateRange>({});
-  const [sortBy, setSortBy] = useState<
-    "date" | "amount" | "transaction_number"
-  >("date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortBy, _setSortBy] = useState<'date' | 'amount' | 'transaction_number'>('date');
+  const [sortOrder, _setSortOrder] = useState<'asc' | 'desc'>('desc');
   const router = useRouter();
 
   // Advanced filter state
@@ -53,7 +45,7 @@ export default function TransactionsPage() {
     selectedAccounts: [],
     selectedTags: [],
     selectedGoals: [],
-    amountType: "all",
+    amountType: 'all',
     amountMin: undefined,
     amountMax: undefined,
     dateRange: {},
@@ -67,15 +59,13 @@ export default function TransactionsPage() {
   });
 
   // Drawer state
-  const [drawerTransactionId, setDrawerTransactionId] = useState<string | null>(
-    null
-  );
+  const [drawerTransactionId, setDrawerTransactionId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Debounced search state
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(handler);
@@ -105,19 +95,19 @@ export default function TransactionsPage() {
 
     // Category filter - use advanced filters if set, otherwise simple
     ...(advancedFilters.selectedCategories.length > 0 && {
-      category: advancedFilters.selectedCategories.join(","),
+      category: advancedFilters.selectedCategories.join(','),
     }),
     ...(!advancedFilters.selectedCategories.length &&
-      selectedCategory !== "all" && { category: selectedCategory }),
+      selectedCategory !== 'all' && { category: selectedCategory }),
 
     // Amount filter - use advanced filters if set, otherwise simple
-    ...(advancedFilters.amountType !== "all" && {
+    ...(advancedFilters.amountType !== 'all' && {
       amountType: advancedFilters.amountType,
     }),
     ...(!advancedFilters.amountType ||
-      (advancedFilters.amountType === "all" &&
-        selectedAmount !== "all" && {
-          amountType: selectedAmount as "income" | "expense",
+      (advancedFilters.amountType === 'all' &&
+        selectedAmount !== 'all' && {
+          amountType: selectedAmount as 'income' | 'expense',
         })),
 
     // Amount range
@@ -130,7 +120,7 @@ export default function TransactionsPage() {
 
     // Other advanced filters
     ...(advancedFilters.selectedMerchants.length > 0 && {
-      merchants: advancedFilters.selectedMerchants.join(","),
+      merchants: advancedFilters.selectedMerchants.join(','),
     }),
     ...(advancedFilters.otherFilters.needsReview && { needsReview: true }),
     ...(advancedFilters.otherFilters.uncategorized && { uncategorized: true }),
@@ -153,14 +143,14 @@ export default function TransactionsPage() {
   // Rebuild the transaction list with proper date headers
   const rebuildWithDateHeaders = (transactions: TransactionItem[]) => {
     const result: TransactionItem[] = [];
-    let currentDate = "";
+    let currentDate = '';
 
     for (const transaction of transactions) {
-      if ("type" in transaction && transaction.type === "date-header") {
+      if ('type' in transaction && transaction.type === 'date-header') {
         continue; // Skip old date headers
       }
 
-      const tx = transaction as FormattedTransaction;
+      const tx = transaction;
       const transactionDate = new Date(tx.date).toDateString();
 
       if (transactionDate !== currentDate) {
@@ -172,30 +162,26 @@ export default function TransactionsPage() {
 
         let displayDate: string;
         if (date.toDateString() === today.toDateString()) {
-          displayDate = "Today";
+          displayDate = 'Today';
         } else if (date.toDateString() === yesterday.toDateString()) {
-          displayDate = "Yesterday";
+          displayDate = 'Yesterday';
         } else {
-          displayDate = date.toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
+          displayDate = date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
           });
         }
 
         // Calculate daily total for this date
         const dailyTotal = transactions
-          .filter((t) => !("type" in t) || t.type !== "date-header")
-          .filter(
-            (t) =>
-              new Date((t as FormattedTransaction).date).toDateString() ===
-              transactionDate
-          )
-          .reduce((sum, t) => sum + (t as FormattedTransaction).amount, 0);
+          .filter((t) => !('type' in t) || t.type !== 'date-header')
+          .filter((t) => new Date(t.date).toDateString() === transactionDate)
+          .reduce((sum, t) => sum + t.amount, 0);
 
         result.push({
-          type: "date-header",
+          type: 'date-header',
           date: transactionDate,
           displayDate,
           id: `date-header-${transactionDate}`,
@@ -211,7 +197,7 @@ export default function TransactionsPage() {
 
   const finalTransactions = rebuildWithDateHeaders(filteredTransactions);
 
-  console.log("TransactionsPage render:", {
+  console.log('TransactionsPage render:', {
     transactionsCount: finalTransactions.length,
     allTransactionsCount: allTransactions.length,
     isLoadingMore,
@@ -226,9 +212,7 @@ export default function TransactionsPage() {
   const handleEditTransaction = (_transaction: FormattedTransaction) => {
     void _transaction;
   };
-  const handleDeleteTransaction = async (
-    _transaction: FormattedTransaction
-  ) => {
+  const handleDeleteTransaction = (_transaction: FormattedTransaction) => {
     void _transaction;
   };
 
@@ -241,7 +225,7 @@ export default function TransactionsPage() {
     transaction: Record<string, unknown> & {
       id: string;
       __explicit_save?: boolean;
-    }
+    },
   ) => {
     // Optimistic update: apply locally first, but don't close the drawer until
     // the server confirms success. On failure, rollback via revalidation.
@@ -250,32 +234,26 @@ export default function TransactionsPage() {
       // Ignore accidental/on-the-fly edits from the drawer; only proceed when
       // the drawer sends an explicit save flag.
       if (!transaction.__explicit_save) {
-        console.log(
-          "handleDrawerEdit: ignoring non-explicit edit",
-          transaction.id
-        );
+        console.log('handleDrawerEdit: ignoring non-explicit edit', transaction.id);
         return;
       }
 
-      console.log("handleDrawerEdit: saving transaction", transaction);
+      console.log('handleDrawerEdit: saving transaction', transaction);
 
       // Apply optimistic update first
       if (updateTransactionOptimistic) {
         updateTransactionOptimistic(transaction as Record<string, unknown>);
         didOptimisticallyUpdate = true;
-        console.log(
-          "Applied optimistic update for transaction:",
-          transaction.id
-        );
+        console.log('Applied optimistic update for transaction:', transaction.id);
       }
 
       // Persist to server
       const response = await fetch(`/api/transactions/${transaction.id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        credentials: "include",
+        credentials: 'include',
         body: JSON.stringify(transaction),
       });
 
@@ -284,7 +262,7 @@ export default function TransactionsPage() {
       }
 
       const result = await response.json();
-      console.log("Transaction updated successfully:", result);
+      console.log('Transaction updated successfully:', result);
 
       // Wait a bit before revalidating to ensure DB has updated
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -292,21 +270,21 @@ export default function TransactionsPage() {
       // Revalidate from server for final truth, but preserve optimistic updates
       if (revalidate) {
         await revalidate();
-        console.log("Data revalidated from server");
+        console.log('Data revalidated from server');
       }
 
       // Close the drawer only after a successful save
       handleCloseDrawer();
     } catch (err) {
-      console.error("Error updating transaction:", err);
+      console.error('Error updating transaction:', err);
       // Rollback by revalidating from server if we applied an optimistic update
       try {
         if (didOptimisticallyUpdate && revalidate) {
           await revalidate();
-          console.log("Rolled back optimistic update due to error");
+          console.log('Rolled back optimistic update due to error');
         }
       } catch (reErr) {
-        console.error("Error revalidating after failed update:", reErr);
+        console.error('Error revalidating after failed update:', reErr);
       }
       // Keep the drawer open so the user can retry or correct the data
       // TODO: show error notification to user (toast)
@@ -317,8 +295,8 @@ export default function TransactionsPage() {
   const handleDrawerDelete = async (transactionId: string) => {
     try {
       const response = await fetch(`/api/transactions/${transactionId}`, {
-        method: "DELETE",
-        credentials: "include",
+        method: 'DELETE',
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -326,17 +304,21 @@ export default function TransactionsPage() {
       }
 
       // Revalidate the transactions cache
-      if (revalidate) await revalidate();
+      if (revalidate) {
+        await revalidate();
+      }
 
       // Close the drawer if still open
       handleCloseDrawer();
     } catch (err) {
-      console.error("Error deleting transaction:", err);
+      console.error('Error deleting transaction:', err);
       // Attempt to revalidate to ensure UI reflects server
       try {
-        if (revalidate) await revalidate();
+        if (revalidate) {
+          await revalidate();
+        }
       } catch (reErr) {
-        console.error("Error revalidating after failed delete:", reErr);
+        console.error('Error revalidating after failed delete:', reErr);
       }
       // TODO: surface error to user via toast/notification
     }
@@ -428,7 +410,7 @@ export default function TransactionsPage() {
                       selectedAccounts: [],
                       selectedTags: [],
                       selectedGoals: [],
-                      amountType: "all",
+                      amountType: 'all',
                       amountMin: undefined,
                       amountMax: undefined,
                       dateRange: {},
@@ -444,14 +426,10 @@ export default function TransactionsPage() {
                 />
               </SheetContent>
             </Sheet>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push("/private/rules")}
-            >
+            <Button variant="outline" size="sm" onClick={() => router.push('/private/rules')}>
               Edit rules
             </Button>
-            <Button size="sm" onClick={() => router.push("/private/upload")}>
+            <Button size="sm" onClick={() => router.push('/private/upload')}>
               <Plus className="mr-2 h-4 w-4" />
               Add transaction
             </Button>
@@ -488,8 +466,8 @@ export default function TransactionsPage() {
         transactionId={drawerTransactionId}
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        onEdit={handleDrawerEdit}
-        onDelete={handleDrawerDelete}
+        onEdit={(transaction) => { void handleDrawerEdit(transaction); }}
+        onDelete={(transactionId) => { void handleDrawerDelete(transactionId); }}
       />
     </>
   );

@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     const treeData = await response.json();
 
     // Flatten tree into a simple array of categories
-    const flatten: Array<Record<string, any>> = [];
+    const flatten: Record<string, any>[] = [];
     const walk = (nodes: any[]) => {
       for (const n of nodes || []) {
         flatten.push({
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
           icon: n.icon,
           transaction_count: n.transaction_count || 0,
         });
-        if (n.children && n.children.length > 0) walk(n.children);
+        if (n.children && n.children.length > 0) {walk(n.children);}
       }
     };
 

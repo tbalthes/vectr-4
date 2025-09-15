@@ -29,7 +29,7 @@ export async function GET() {
   try {
     const requestCookies = await cookies();
     const supabase = createRouteHandlerClient({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       cookies: () => requestCookies as any,
     });
 
@@ -78,7 +78,7 @@ export async function GET() {
     if (merchantsData) {
       merchantsData.forEach((row: Record<string, unknown>) => {
         const merchant = row.merchants as Record<string, unknown> | null;
-        if (!merchant) return;
+        if (!merchant) {return;}
 
         const merchantKey = String(merchant.merchant_id);
 

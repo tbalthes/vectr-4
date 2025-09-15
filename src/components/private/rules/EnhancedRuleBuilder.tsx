@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { Plus, X, Trash2, GripVertical } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,7 +61,7 @@ interface EnhancedRuleBuilderProps {
   rule?: EnhancedUserRule;
   onSave: (rule: Omit<EnhancedUserRule, "id">) => void;
   onCancel: () => void;
-  categories: Array<{ category_id: string; name: string; color?: string }>;
+  categories: { category_id: string; name: string; color?: string }[];
   userId: string;
 }
 

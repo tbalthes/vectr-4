@@ -1,5 +1,6 @@
 import React from "react";
-import { Budget } from "@/types/budgets";
+
+import type { Budget } from "@/types/budgets";
 import { BudgetCard } from "@/components/private/budgets/BudgetCard";
 import { getStatusColor } from "@/components/private/budgets/budget-utils";
 import BudgetStatusIcon from "@/components/private/budgets/BudgetStatusIcon";

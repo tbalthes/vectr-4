@@ -117,7 +117,7 @@ export async function POST(req: Request) {
         totalRemoved += nextResult.removed;
         currentCursor = nextResult.next_cursor;
 
-        if (!nextResult.has_more) break;
+        if (!nextResult.has_more) {break;}
       } else {
         console.warn(`⚠️ Batch ${syncCount + 1} failed, stopping sync`);
         break;

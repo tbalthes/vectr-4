@@ -1,7 +1,8 @@
 import React, { useRef, useState } from "react";
+import { FileText, AlertCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, AlertCircle } from "lucide-react";
 
 interface FileUploadStepProps {
   onFileUpload: (file: File, content: string) => void;
@@ -77,9 +78,11 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
-    const file = e.target.files && e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
-      handleFileSelect(file);
+      handleFileSelect(file).catch((err) => {
+        console.error('File processing failed', err);
+      });
     }
   };
 
@@ -98,7 +101,7 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
         setError("Only CSV files are accepted. Please drop a .csv file.");
         return;
       }
-      handleFileSelect(file);
+      void handleFileSelect(file);
     }
   };
 

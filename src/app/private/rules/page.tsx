@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import type { DragEndEvent } from '@dnd-kit/core';
 import {
   DndContext,
   closestCenter,
@@ -8,15 +9,14 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   Plus,
   Settings,
@@ -27,31 +27,31 @@ import {
   Copy,
   Eye,
   GripVertical,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+} from 'lucide-react';
+import Link from 'next/link';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import Link from "next/link";
-
-import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
-import { useCategories } from "@/hooks/useCategories";
-import { useAuth } from "@/contexts/AuthContext";
+} from '@/components/ui/dropdown-menu';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useEnhancedUserRules } from '@/hooks/useEnhancedUserRules';
+import { useCategories } from '@/hooks/useCategories';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Type definitions for rule structure
 interface RuleCondition {
@@ -62,12 +62,12 @@ interface RuleCondition {
 }
 
 interface RuleConditionGroup {
-  operator: "AND" | "OR";
+  operator: 'AND' | 'OR';
   conditions: RuleCondition[];
 }
 
 interface RuleConditions {
-  operator: "AND" | "OR";
+  operator: 'AND' | 'OR';
   groups: RuleConditionGroup[];
 }
 
@@ -131,25 +131,23 @@ export default function EnhancedRulesPage() {
     // exportRules,
     // importRules,
   } = useEnhancedUserRules({
-    userId: user?.id || "",
+    userId: user?.id || '',
     autoFetch: !!user?.id,
   });
 
   // UI State
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyEnabled, setShowOnlyEnabled] = useState(false);
   // Sheet-based builder removed; navigation used instead for create/edit
   const [showPreview, setShowPreview] = useState(false);
-  const [previewData, setPreviewData] = useState<RulePreviewResponse | null>(
-    null
-  );
+  const [previewData, setPreviewData] = useState<RulePreviewResponse | null>(null);
 
   // Drag and Drop
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -161,7 +159,9 @@ export default function EnhancedRulesPage() {
       const fromIndex = ids.indexOf(String(active.id));
       const toIndex = ids.indexOf(String(over?.id));
 
-      if (fromIndex === -1 || toIndex === -1) return;
+      if (fromIndex === -1 || toIndex === -1) {
+        return;
+      }
 
       const newIds = [...ids];
       const [moved] = newIds.splice(fromIndex, 1);
@@ -170,7 +170,7 @@ export default function EnhancedRulesPage() {
       try {
         await reorderRules(newIds);
       } catch (error) {
-        console.error("Failed to reorder rules via reorder endpoint:", error);
+        console.error('Failed to reorder rules via reorder endpoint:', error);
       }
     }
   };
@@ -196,55 +196,51 @@ export default function EnhancedRulesPage() {
     );
 
     const formatCondition = (cond: RuleCondition): React.ReactNode => {
-      const fieldNames: { [key: string]: string } = {
-        description: "Description",
-        merchant: "Merchant",
-        amount: "Amount",
-        category: "Category",
-        accounts: "Account",
-        date: "Date",
+      const fieldNames: Record<string, string> = {
+        description: 'Description',
+        merchant: 'Merchant',
+        amount: 'Amount',
+        category: 'Category',
+        accounts: 'Account',
+        date: 'Date',
       };
       const field = fieldNames[cond.field] || cond.field;
 
-      if (cond.operator === "equals") {
+      if (cond.operator === 'equals') {
         return (
           <>
             <Box>{field}</Box> exactly matches <Box>{cond.value}</Box>
           </>
         );
-      } else if (cond.operator === "contains") {
+      } else if (cond.operator === 'contains') {
         return (
           <>
             <Box>{field}</Box> contains <Box>{cond.value}</Box>
           </>
         );
-      } else if (cond.operator === "starts_with") {
+      } else if (cond.operator === 'starts_with') {
         return (
           <>
             <Box>{field}</Box> starts with <Box>{cond.value}</Box>
           </>
         );
-      } else if (cond.operator === "ends_with") {
+      } else if (cond.operator === 'ends_with') {
         return (
           <>
             <Box>{field}</Box> ends with <Box>{cond.value}</Box>
           </>
         );
-      } else if (cond.operator === "greater_than") {
+      } else if (cond.operator === 'greater_than') {
         const value =
-          cond.field === "amount"
-            ? `$${parseFloat(String(cond.value)).toFixed(2)}`
-            : cond.value;
+          cond.field === 'amount' ? `$${parseFloat(String(cond.value)).toFixed(2)}` : cond.value;
         return (
           <>
             <Box>{field}</Box> is greater than <Box>{value}</Box>
           </>
         );
-      } else if (cond.operator === "less_than") {
+      } else if (cond.operator === 'less_than') {
         const value =
-          cond.field === "amount"
-            ? `$${parseFloat(String(cond.value)).toFixed(2)}`
-            : cond.value;
+          cond.field === 'amount' ? `$${parseFloat(String(cond.value)).toFixed(2)}` : cond.value;
         return (
           <>
             <Box>{field}</Box> is less than <Box>{value}</Box>
@@ -284,9 +280,7 @@ export default function EnhancedRulesPage() {
         <span key={index}>
           {formatGroup(group)}
           {index < rule.conditions.groups.length - 1 && (
-            <span className="mx-2 font-bold underline">
-              {rule.conditions.operator}
-            </span>
+            <span className="mx-2 font-bold underline">{rule.conditions.operator}</span>
           )}
         </span>
       ));
@@ -297,13 +291,9 @@ export default function EnhancedRulesPage() {
     let actionText: React.ReactNode = <Box>categorize</Box>;
     if (rule.actions.category_id) {
       // Normalize comparison to string to avoid type mismatches (number vs string ids)
-      const category = categories.find(
-        (c) => String(c.id) === String(rule.actions.category_id)
-      );
+      const category = categories.find((c) => String(c.id) === String(rule.actions.category_id));
       // If name not available, show the id so user sees something useful instead of 'Unknown Category'
-      actionText = (
-        <Box>{category?.name ?? String(rule.actions.category_id)}</Box>
-      );
+      actionText = <Box>{category?.name ?? String(rule.actions.category_id)}</Box>;
     }
 
     return (
@@ -318,14 +308,9 @@ export default function EnhancedRulesPage() {
 
   // Sortable Rule Card Component
   const SortableRuleCard = ({ rule }: { rule: EnhancedUserRule }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: rule.id });
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+      id: rule.id,
+    });
 
     const style = {
       transform: CSS.Transform.toString(transform),
@@ -338,8 +323,8 @@ export default function EnhancedRulesPage() {
         ref={setNodeRef}
         style={style}
         className={`flex items-center gap-3 p-3 border rounded-lg bg-card transition-all ${
-          !rule.enabled ? "opacity-60" : ""
-        } ${isDragging ? "shadow-lg z-10" : ""} hover:bg-accent/50`}
+          !rule.enabled ? 'opacity-60' : ''
+        } ${isDragging ? 'shadow-lg z-10' : ''} hover:bg-accent/50`}
       >
         {/* Drag Handle */}
         <div
@@ -359,16 +344,14 @@ export default function EnhancedRulesPage() {
 
         {/* Rule Summary */}
         <div className="flex-1 min-w-0">
-          <div className="bg-accent/30 rounded-lg p-2 text-sm">
-            {generateRuleSummary(rule)}
-          </div>
+          <div className="bg-accent/30 rounded-lg p-2 text-sm">{generateRuleSummary(rule)}</div>
         </div>
 
         {/* Actions */}
         <div className="flex items-center space-x-2 flex-shrink-0">
           <Switch
             checked={rule.enabled}
-            onCheckedChange={(enabled) => handleToggleRule(rule.id, enabled)}
+            onCheckedChange={(enabled) => void handleToggleRule(rule.id, enabled)}
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -377,7 +360,7 @@ export default function EnhancedRulesPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handlePreviewRule(rule)}>
+              <DropdownMenuItem onClick={() => void handlePreviewRule(rule)}>
                 <Eye className="h-4 w-4 mr-2" />
                 Preview
               </DropdownMenuItem>
@@ -387,27 +370,24 @@ export default function EnhancedRulesPage() {
                   Edit
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleToggleRule(rule.id, !rule.enabled)}
-              >
+              <DropdownMenuItem onClick={() => void handleToggleRule(rule.id, !rule.enabled)}>
                 <Settings className="h-4 w-4 mr-2" />
-                {rule.enabled ? "Disable" : "Enable"}
+                {rule.enabled ? 'Disable' : 'Enable'}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
                   // Create a copy with incremented priority
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   const { id: _id, ...rest } = rule;
                   const ruleCopy = {
                     ...rest,
                     name: `${rule.name} (Copy)`,
                     priority: rule.priority + 1,
-                    user_id: user?.id || "",
+                    user_id: user?.id || '',
                   };
-                  createRule(
-                    ruleCopy as Omit<EnhancedUserRule, "id"> & {
+                  void createRule(
+                    ruleCopy as Omit<EnhancedUserRule, 'id'> & {
                       user_id: string;
-                    }
+                    },
                   );
                 }}
               >
@@ -416,7 +396,7 @@ export default function EnhancedRulesPage() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => handleDeleteRule(rule.id)}
+                onClick={() => void handleDeleteRule(rule.id)}
                 className="text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -433,11 +413,11 @@ export default function EnhancedRulesPage() {
   // Create/Update handled on dedicated pages now
 
   const handleDeleteRule = async (ruleId: string) => {
-    if (confirm("Are you sure you want to delete this rule?")) {
+    if (confirm('Are you sure you want to delete this rule?')) {
       try {
         await deleteRule(ruleId);
       } catch (error) {
-        console.error("Failed to delete rule:", error);
+        console.error('Failed to delete rule:', error);
       }
     }
   };
@@ -446,7 +426,7 @@ export default function EnhancedRulesPage() {
     try {
       await updateRule(ruleId, { enabled });
     } catch (error) {
-      console.error("Failed to toggle rule:", error);
+      console.error('Failed to toggle rule:', error);
     }
   };
 
@@ -456,7 +436,7 @@ export default function EnhancedRulesPage() {
       setPreviewData(preview);
       setShowPreview(true);
     } catch (error) {
-      console.error("Failed to preview rule:", error);
+      console.error('Failed to preview rule:', error);
     }
   };
 
@@ -475,9 +455,7 @@ export default function EnhancedRulesPage() {
       {!authLoading && !user && (
         <div className="text-center py-8">
           <Alert>
-            <AlertDescription>
-              Please log in to manage your transaction rules.
-            </AlertDescription>
+            <AlertDescription>Please log in to manage your transaction rules.</AlertDescription>
           </Alert>
         </div>
       )}
@@ -490,9 +468,7 @@ export default function EnhancedRulesPage() {
             <CardContent className="p-1">
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {totalCount}
-                  </div>
+                  <div className="text-2xl font-bold text-blue-600">{totalCount}</div>
                   <div className="text-sm text-gray-600">Total Rules</div>
                 </div>
                 <div className="text-center">
@@ -558,13 +534,11 @@ export default function EnhancedRulesPage() {
               <Card>
                 <CardContent className="text-center py-12">
                   <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No rules found
-                  </h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No rules found</h3>
                   <p className="text-gray-600 mb-6">
                     {searchTerm || showOnlyEnabled
-                      ? "No rules match your current filters"
-                      : "Create your first rule to automatically categorize transactions"}
+                      ? 'No rules match your current filters'
+                      : 'Create your first rule to automatically categorize transactions'}
                   </p>
                   {!searchTerm && !showOnlyEnabled && (
                     <Button asChild>
@@ -580,7 +554,7 @@ export default function EnhancedRulesPage() {
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
+                onDragEnd={(event) => void handleDragEnd(event)}
               >
                 <SortableContext
                   items={filteredRules.map((rule) => rule.id)}
@@ -601,16 +575,12 @@ export default function EnhancedRulesPage() {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Rule Preview</DialogTitle>
-                <DialogDescription>
-                  See what transactions would match this rule
-                </DialogDescription>
+                <DialogDescription>See what transactions would match this rule</DialogDescription>
               </DialogHeader>
               {previewData && (
                 <div className="space-y-4">
                   <div className="bg-blue-50 rounded-lg p-4">
-                    <p className="text-sm font-medium text-blue-900">
-                      {previewData.rule_summary}
-                    </p>
+                    <p className="text-sm font-medium text-blue-900">{previewData.rule_summary}</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-4 text-center">
@@ -618,9 +588,7 @@ export default function EnhancedRulesPage() {
                       <div className="text-lg font-bold">
                         {previewData.total_transactions_checked}
                       </div>
-                      <div className="text-xs text-gray-600">
-                        Transactions Checked
-                      </div>
+                      <div className="text-xs text-gray-600">Transactions Checked</div>
                     </div>
                     <div>
                       <div className="text-lg font-bold text-green-600">
@@ -632,41 +600,29 @@ export default function EnhancedRulesPage() {
                       <div className="text-lg font-bold text-orange-600">
                         {previewData.would_override_count}
                       </div>
-                      <div className="text-xs text-gray-600">
-                        Would Override
-                      </div>
+                      <div className="text-xs text-gray-600">Would Override</div>
                     </div>
                   </div>
 
                   {previewData.matching_transactions.length > 0 && (
                     <div>
-                      <h4 className="font-medium mb-2">
-                        Matching Transactions:
-                      </h4>
+                      <h4 className="font-medium mb-2">Matching Transactions:</h4>
                       <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {previewData.matching_transactions.map(
-                          (tx: TransactionMatch) => (
-                            <div
-                              key={tx.transaction_id}
-                              className="border rounded p-2 text-sm"
-                            >
-                              <div className="flex justify-between">
-                                <span className="font-medium">
-                                  {tx.description}
-                                </span>
-                                <span>${tx.amount.toFixed(2)}</span>
-                              </div>
-                              <div className="text-gray-600 text-xs mt-1">
-                                {tx.date} • {tx.merchant_name || "No merchant"}
-                              </div>
+                        {previewData.matching_transactions.map((tx: TransactionMatch) => (
+                          <div key={tx.transaction_id} className="border rounded p-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="font-medium">{tx.description}</span>
+                              <span>${tx.amount.toFixed(2)}</span>
                             </div>
-                          )
-                        )}
+                            <div className="text-gray-600 text-xs mt-1">
+                              {tx.date} • {tx.merchant_name || 'No merchant'}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                       {previewData.sample_limit_reached && (
                         <p className="text-xs text-gray-600 mt-2">
-                          Showing first{" "}
-                          {previewData.matching_transactions.length} matches...
+                          Showing first {previewData.matching_transactions.length} matches...
                         </p>
                       )}
                     </div>

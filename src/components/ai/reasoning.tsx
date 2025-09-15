@@ -1,15 +1,11 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Brain, ChevronDown, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils/utils";
+import * as React from 'react';
+import { Brain, ChevronDown, ChevronRight } from 'lucide-react';
+
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils/utils';
 
 export interface ReasoningProps {
   children: React.ReactNode;
@@ -23,7 +19,7 @@ export interface ReasoningProps {
 const Reasoning: React.FC<ReasoningProps> = ({
   children,
   isStreaming = false,
-  title = "Thinking",
+  title = 'Thinking',
   className,
   defaultOpen = false,
   hideWhenEmpty = true,
@@ -39,17 +35,14 @@ const Reasoning: React.FC<ReasoningProps> = ({
   }, [isStreaming, defaultOpen]);
 
   const hasContent =
-    React.isValidElement(children) ||
-    (typeof children === "string" && children.trim().length > 0);
+    React.isValidElement(children) || (typeof children === 'string' && children.trim().length > 0);
 
   if (hideWhenEmpty && !hasContent) {
     return null;
   }
 
   return (
-    <div
-      className={cn("border rounded-lg overflow-hidden bg-muted/30", className)}
-    >
+    <div className={cn('border rounded-lg overflow-hidden bg-muted/30', className)}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <button className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors">
@@ -60,15 +53,15 @@ const Reasoning: React.FC<ReasoningProps> = ({
                 <div className="flex space-x-1">
                   <div
                     className="w-1 h-1 bg-current rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
+                    style={{ animationDelay: '0ms' }}
                   />
                   <div
                     className="w-1 h-1 bg-current rounded-full animate-bounce"
-                    style={{ animationDelay: "150ms" }}
+                    style={{ animationDelay: '150ms' }}
                   />
                   <div
                     className="w-1 h-1 bg-current rounded-full animate-bounce"
-                    style={{ animationDelay: "300ms" }}
+                    style={{ animationDelay: '300ms' }}
                   />
                 </div>
               )}
@@ -83,8 +76,8 @@ const Reasoning: React.FC<ReasoningProps> = ({
               {hasContent && (
                 <ChevronIcon
                   className={cn(
-                    "h-4 w-4 transition-transform duration-200",
-                    isOpen && "transform rotate-180"
+                    'h-4 w-4 transition-transform duration-200',
+                    isOpen && 'transform rotate-180',
                   )}
                 />
               )}

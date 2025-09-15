@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 // Test stub for /api/transactions route (WBS 1.5)
 // If using Jest or similar, implement API route tests here.
 // Example: test pagination, filtering, sorting, and response shape.

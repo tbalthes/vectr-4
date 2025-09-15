@@ -1,5 +1,6 @@
 import React from "react";
 import * as Icons from "lucide-react";
+
 import CustomIcons from "@/components/icons/CustomIcons";
 
 interface CategoryIconProps {
@@ -21,9 +22,9 @@ const ALIASES: Record<string, string> = {
 };
 
 function normalizeIconName(name?: string) {
-  if (!name) return "Package";
+  if (!name) {return "Package";}
   const cleaned = name.trim();
-  if (ALIASES[cleaned]) return ALIASES[cleaned];
+  if (ALIASES[cleaned]) {return ALIASES[cleaned];}
   // Convert kebab/snake/caseless names to PascalCase (best-effort)
   const pascal = cleaned
     .replace(/[_-]+/g, " ")
@@ -42,14 +43,14 @@ export default function CategoryIcon({
   // Prefer project-local overrides (so DB values like 'Rabbit' can map directly)
   const Local = (CustomIcons as Record<string, unknown>)[name];
   if (Local)
-    return React.createElement(Local as unknown as IconConstructor, {
+    {return React.createElement(Local as unknown as IconConstructor, {
       className,
       style,
-    });
+    });}
 
   const Candidate = (Icons as unknown as Record<string, unknown>)[name];
   const Icon =
-    (Candidate as unknown) ??
+    (Candidate) ??
     (Icons as unknown as Record<string, unknown>).Package;
   if (!Candidate) {
     console.debug("CategoryIcon: falling back to Package for:", name);

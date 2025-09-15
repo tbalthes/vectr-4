@@ -1,18 +1,17 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import { Download } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
-import AddTransactionModal from "@/components/private/transactions/AddTransactionModal";
-import SearchBar from "@/components/private/transactions/SearchBar";
-import PageHeader from "@/components/private/PageHeader";
-import TransactionTable from "@/components/private/transactions/TransactionTable";
-
+import { Button } from '@/components/ui/button';
+import AddTransactionModal from '@/components/private/transactions/AddTransactionModal';
+import SearchBar from '@/components/private/transactions/SearchBar';
+import PageHeader from '@/components/private/PageHeader';
+import TransactionTable from '@/components/private/transactions/TransactionTable';
 // Swap this import with a Supabase query for production
-import { allTransactions as rawTransactions } from "@/data/transaction-data";
+import { allTransactions as rawTransactions } from '@/data/transaction-data';
 // Update the import to match the actual exported type from "@/types/transactions"
-import type { FormattedTransaction } from "@/types/transactions";
+import type { FormattedTransaction } from '@/types/transactions';
 
 // Hook to fetch all available categories
 function useAllCategories() {
@@ -25,8 +24,8 @@ function useAllCategories() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch("/api/analytics/categories?namesOnly=true", {
-          credentials: "include",
+        const response = await fetch('/api/analytics/categories?namesOnly=true', {
+          credentials: 'include',
         });
         if (!response.ok) {
           throw new Error(`Failed to fetch categories: ${response.status}`);
@@ -34,8 +33,8 @@ function useAllCategories() {
         const data = await response.json();
         setCategories(data.data || []);
       } catch (err) {
-        console.error("Error fetching categories:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch categories");
+        console.error('Error fetching categories:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch categories');
         // Fallback to extracting from mock data
         const fallbackCategories = [...new Set(rawTransactions.map((t) => t.category))];
         setCategories(fallbackCategories);
@@ -44,7 +43,7 @@ function useAllCategories() {
       }
     };
 
-    fetchCategories();
+    void fetchCategories();
   }, []);
 
   return { categories, loading, error };
@@ -63,9 +62,7 @@ interface RawTransaction {
 }
 
 // Converter function from Transaction to FormattedTransaction for mock data
-function convertToFormattedTransaction(
-  transaction: RawTransaction
-): FormattedTransaction {
+function convertToFormattedTransaction(transaction: RawTransaction): FormattedTransaction {
   return {
     id: transaction.id.toString(),
     transaction_number: `TXN-${transaction.id}`,
@@ -79,19 +76,19 @@ function convertToFormattedTransaction(
     merchantName: transaction.description,
     merchantLogoUrl: null,
     categoryName: transaction.category,
-    categoryIcon: "Utensils", // Default icon
-    type: transaction.type as "income" | "expense",
+    categoryIcon: 'Utensils', // Default icon
+    type: transaction.type as 'income' | 'expense',
     category: transaction.category,
     account: transaction.account,
-    status: transaction.status as "completed" | "pending",
+    status: transaction.status as 'completed' | 'pending',
     note: undefined,
   };
 }
 
 export default function Transactions() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedAccount, setSelectedAccount] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedAccount, setSelectedAccount] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   // Fetch all available categories from API
@@ -99,20 +96,15 @@ export default function Transactions() {
 
   const allTransactions = rawTransactions.map(convertToFormattedTransaction);
   const filteredTransactions = allTransactions.filter((transaction) => {
-    const matchesSearch = transaction.description
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" || transaction.category === selectedCategory;
-    const matchesAccount =
-      selectedAccount === "all" || transaction.account === selectedAccount;
+    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || transaction.category === selectedCategory;
+    const matchesAccount = selectedAccount === 'all' || transaction.account === selectedAccount;
     return matchesSearch && matchesCategory && matchesAccount;
   });
 
   // Use fetched categories, fallback to mock data categories if API fails
-  const categories = allCategories.length > 0
-    ? allCategories
-    : [...new Set(allTransactions.map((t) => t.category))];
+  const categories =
+    allCategories.length > 0 ? allCategories : [...new Set(allTransactions.map((t) => t.category))];
   const accounts = [...new Set(allTransactions.map((t) => t.account))];
 
   return (
@@ -127,10 +119,7 @@ export default function Transactions() {
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <AddTransactionModal
-              open={isAddDialogOpen}
-              setOpen={setIsAddDialogOpen}
-            />
+            <AddTransactionModal open={isAddDialogOpen} setOpen={setIsAddDialogOpen} />
           </>
         }
       />
@@ -148,10 +137,7 @@ export default function Transactions() {
       />
 
       {/* Transactions Table */}
-      <TransactionTable
-        transactions={filteredTransactions}
-        allCount={allTransactions.length}
-      />
+      <TransactionTable transactions={filteredTransactions} allCount={allTransactions.length} />
     </div>
   );
 }

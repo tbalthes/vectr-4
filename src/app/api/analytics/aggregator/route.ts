@@ -16,13 +16,12 @@
  * Security: Uses createRouteHandlerClient with RLS (auth.uid())
  */
 
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { NextRequest, NextResponse } from "next/server";
-import {
-  calculateDateRange,
-  validateAnalyticsParams,
-} from "@/lib/analytics/calculateDateRange";
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+import { calculateDateRange, validateAnalyticsParams } from '@/lib/analytics/calculateDateRange';
 
 // Type definitions for API contract
 interface AggregateRow {
@@ -37,7 +36,7 @@ interface AnalyticsResponse {
   metadata: {
     startDate: string; // YYYY-MM-DD
     endDate: string; // YYYY-MM-DD
-    granularity: "day" | "week" | "month";
+    granularity: 'day' | 'week' | 'month';
     totalRecords: number;
     emptyBuckets: number;
     requestId: string; // For debugging
@@ -52,7 +51,7 @@ interface ErrorResponse {
 
 // Cache headers for performance optimization
 const CACHE_HEADERS = {
-  "Cache-Control": "s-maxage=30, stale-while-revalidate=300",
+  'Cache-Control': 's-maxage=30, stale-while-revalidate=300',
 };
 
 /**
@@ -60,9 +59,7 @@ const CACHE_HEADERS = {
  * Returns zero-filled time series data for dashboard charts
  */
 export async function GET(request: NextRequest) {
-  const requestId = `agg_${Date.now()}_${Math.random()
-    .toString(36)
-    .substr(2, 8)}`;
+  const requestId = `agg_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
 
   try {
     // Initialize Supabase client with request-scoped authentication
@@ -73,26 +70,26 @@ export async function GET(request: NextRequest) {
 
     // Provide the already-resolved Next.js cookie store directly so the
     // Supabase helper can synchronously read cookies (getSession will work).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const supabase = createRouteHandlerClient({
       cookies: () => requestCookies as any,
     });
 
     // Dev-only: log whether any auth headers or cookies appear to be present (no secret values printed)
     try {
-      const cookieHeader = request.headers.get("cookie") || "";
+      const cookieHeader = request.headers.get('cookie') || '';
       const hasCookie = cookieHeader.length > 0;
       const authHeader =
-        request.headers.get("authorization") ||
-        request.headers.get("x-supabase-access-token") ||
-        "";
+        request.headers.get('authorization') ||
+        request.headers.get('x-supabase-access-token') ||
+        '';
       const hasAuthHeader = authHeader.length > 0;
-      if (process.env.NODE_ENV !== "production") {
+      if (process.env.NODE_ENV !== 'production') {
         console.info(
-          "[analytics] dev-auth-presence hasCookie=",
+          '[analytics] dev-auth-presence hasCookie=',
           hasCookie,
-          "hasAuthHeader=",
-          hasAuthHeader
+          'hasAuthHeader=',
+          hasAuthHeader,
         );
       }
     } catch {
@@ -107,27 +104,23 @@ export async function GET(request: NextRequest) {
     if (authError || !session?.user) {
       return NextResponse.json(
         {
-          error: "Unauthorized",
-          message: "Valid authentication required",
-          code: "AUTH_REQUIRED",
+          error: 'Unauthorized',
+          message: 'Valid authentication required',
+          code: 'AUTH_REQUIRED',
         } as ErrorResponse,
         {
           status: 401,
-          headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
-        }
+          headers: { ...CACHE_HEADERS, 'X-Request-ID': requestId },
+        },
       );
     }
 
     // Parse and validate query parameters
     const { searchParams } = new URL(request.url);
-    const range = searchParams.get("range") || "30d";
-    const start = searchParams.get("start");
-    const end = searchParams.get("end");
-    const granularityOverride = searchParams.get("granularity") as
-      | "day"
-      | "week"
-      | "month"
-      | null;
+    const range = searchParams.get('range') || '30d';
+    const start = searchParams.get('start');
+    const end = searchParams.get('end');
+    const granularityOverride = searchParams.get('granularity') as 'day' | 'week' | 'month' | null;
 
     // Validate parameters
     try {
@@ -135,37 +128,25 @@ export async function GET(request: NextRequest) {
     } catch (validationError) {
       return NextResponse.json(
         {
-          error: "Bad Request",
+          error: 'Bad Request',
           message:
-            validationError instanceof Error
-              ? validationError.message
-              : "Invalid parameters",
-          code: "INVALID_PARAMS",
+            validationError instanceof Error ? validationError.message : 'Invalid parameters',
+          code: 'INVALID_PARAMS',
         } as ErrorResponse,
         {
           status: 400,
-          headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
-        }
+          headers: { ...CACHE_HEADERS, 'X-Request-ID': requestId },
+        },
       );
     }
 
     // Calculate date range
-    type RangeKey =
-      | "7d"
-      | "30d"
-      | "90d"
-      | "1M"
-      | "3M"
-      | "6M"
-      | "YTD"
-      | "1Y"
-      | "all";
+    type RangeKey = '7d' | '30d' | '90d' | '1M' | '3M' | '6M' | 'YTD' | '1Y' | 'all';
     const dateRange = calculateDateRange(range as RangeKey, start, end);
 
     // Apply granularity override if provided
     const finalGranularity =
-      granularityOverride &&
-      ["day", "week", "month"].includes(granularityOverride)
+      granularityOverride && ['day', 'week', 'month'].includes(granularityOverride)
         ? granularityOverride
         : dateRange.granularity;
 
@@ -178,62 +159,65 @@ export async function GET(request: NextRequest) {
     };
 
     // DEBUG: print env + request id
+    console.info('[analytics] NEXT_PUBLIC_SUPABASE_URL=', process.env.NEXT_PUBLIC_SUPABASE_URL);
     console.info(
-      "[analytics] NEXT_PUBLIC_SUPABASE_URL=",
-      process.env.NEXT_PUBLIC_SUPABASE_URL
+      '[analytics] NEXT_PUBLIC_SUPABASE_ANON_KEY present=',
+      !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     );
-    console.info(
-      "[analytics] NEXT_PUBLIC_SUPABASE_ANON_KEY present=",
-      !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-    console.info("[analytics] requestId=", requestId, "rpcParams=", rpcParams);
+    console.info('[analytics] requestId=', requestId, 'rpcParams=', rpcParams);
 
     // Call RPC function (relies on RLS via auth.uid())
     const { data: rpcData, error: rpcError } = await supabase.rpc(
-      "rpc_aggregate_time_series",
-      rpcParams
+      'rpc_aggregate_time_series',
+      rpcParams,
     );
     if (rpcError) {
-      console.error("[analytics] RPC Error:", rpcError.message);
+      console.error('[analytics] RPC Error:', rpcError.message);
       return NextResponse.json(
         {
-          error: "Database Error",
-          message: "Failed to fetch analytics data",
-          code: "DB_ERROR",
+          error: 'Database Error',
+          message: 'Failed to fetch analytics data',
+          code: 'DB_ERROR',
         },
         {
           status: 500,
-          headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
-        }
+          headers: { ...CACHE_HEADERS, 'X-Request-ID': requestId },
+        },
       );
     }
 
     // Validate RPC response
     if (!rpcData || !Array.isArray(rpcData)) {
-      console.error("Invalid RPC response:", rpcData);
+      console.error('Invalid RPC response:', rpcData);
       return NextResponse.json(
         {
-          error: "Database Error",
-          message: "Invalid response from analytics service",
-          code: "INVALID_RESPONSE",
+          error: 'Database Error',
+          message: 'Invalid response from analytics service',
+          code: 'INVALID_RESPONSE',
         } as ErrorResponse,
         {
           status: 500,
-          headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
-        }
+          headers: { ...CACHE_HEADERS, 'X-Request-ID': requestId },
+        },
       );
     }
 
     // Transform RPC response to API contract format
-    const data: AggregateRow[] = rpcData.map(
-      (row: Record<string, unknown>) => ({
-        // RPC may return 'bucket' or 'bucket_date' depending on SQL — handle both
-        bucket: String(row.bucket ?? row.bucket_date ?? row.bucket_day ?? ""),
-        income: Number(row.income ?? row.income_amount ?? 0),
-        spending: Number(row.spending ?? row.spending_amount ?? 0),
-        tx_count: Number(row.tx_count ?? row.count ?? 0),
-      })
-    );
+    const data: AggregateRow[] = rpcData.map((row: Record<string, unknown>) => ({
+      // RPC may return 'bucket' or 'bucket_date' depending on SQL — handle both
+      bucket: typeof row.bucket === 'string'
+        ? row.bucket
+        : row.bucket_date instanceof Date
+          ? row.bucket_date.toISOString().split('T')[0]
+          : row.bucket_day instanceof Date
+            ? row.bucket_day.toISOString().split('T')[0]
+            : typeof row.bucket_day === 'string'
+              ? row.bucket_day
+              : '',
+      income: Number(row.income ?? row.income_amount ?? 0),
+      spending: Number(row.spending ?? row.spending_amount ?? 0),
+      tx_count: Number(row.tx_count ?? row.count ?? 0),
+    }));
 
     // Calculate metadata
     const totalRecords = data.reduce((sum, row) => sum + row.tx_count, 0);
@@ -242,8 +226,8 @@ export async function GET(request: NextRequest) {
     const response: AnalyticsResponse = {
       data,
       metadata: {
-        startDate: dateRange.startDate.toISOString().split("T")[0],
-        endDate: dateRange.endDate.toISOString().split("T")[0],
+        startDate: dateRange.startDate.toISOString().split('T')[0],
+        endDate: dateRange.endDate.toISOString().split('T')[0],
         granularity: finalGranularity,
         totalRecords,
         emptyBuckets,
@@ -255,23 +239,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response, {
       headers: {
         ...CACHE_HEADERS,
-        "X-Request-ID": requestId,
-        "Content-Type": "application/json",
+        'X-Request-ID': requestId,
+        'Content-Type': 'application/json',
       },
     });
   } catch (error) {
-    console.error("Analytics API Error:", error);
+    console.error('Analytics API Error:', error);
 
     return NextResponse.json(
       {
-        error: "Internal Server Error",
-        message: "An unexpected error occurred",
-        code: "INTERNAL_ERROR",
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
+        code: 'INTERNAL_ERROR',
       } as ErrorResponse,
       {
         status: 500,
-        headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
-      }
+        headers: { ...CACHE_HEADERS, 'X-Request-ID': requestId },
+      },
     );
   }
 }

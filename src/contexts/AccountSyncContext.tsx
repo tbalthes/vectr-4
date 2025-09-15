@@ -1,16 +1,19 @@
 "use client";
 
+import type {
+  ReactNode} from "react";
 import React, {
   createContext,
   useContext,
   useReducer,
-  useEffect,
-  ReactNode,
+  useEffect
 } from "react";
-import {
-  accountToasts,
+
+import type {
   SyncProgressData,
-  BulkSyncProgressData,
+  BulkSyncProgressData} from "@/lib/notifications/account-notifications";
+import {
+  accountToasts
 } from "@/lib/notifications/account-notifications";
 
 export interface AccountSyncState {
@@ -18,11 +21,11 @@ export interface AccountSyncState {
   activeSyncs: Map<string, SyncProgressData>;
   bulkSyncData: BulkSyncProgressData | null;
   lastSyncTime: Date | null;
-  backgroundProcesses: Array<{
+  backgroundProcesses: {
     id: string;
     message: string;
     startTime: Date;
-  }>;
+  }[];
 }
 
 export type AccountSyncAction =

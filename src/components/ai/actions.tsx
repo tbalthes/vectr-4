@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
 import { Bold, Italic, Code, Link, List, Copy, Zap } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
 
 export interface ActionProps {

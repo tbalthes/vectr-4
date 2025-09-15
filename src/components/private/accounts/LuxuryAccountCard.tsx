@@ -1,16 +1,16 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import Image from "next/image";
-import { DndContext, closestCenter } from "@dnd-kit/core";
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import Image from 'next/image';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
   arrayMove,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // --- DATA PROCESSING & GROUPING LOGIC ---
-type Account = {
+interface Account {
   id: string;
   name: string;
   mask: string;
@@ -21,7 +21,7 @@ type Account = {
   balance_amount: number;
   available: number | null;
   last_synced_at: string;
-};
+}
 
 interface GroupTimeframe {
   totalBalance: number;
@@ -34,33 +34,28 @@ interface GroupData {
   category: string;
   icon: keyof typeof Icons;
   accounts: Account[];
-  timeframes: {
-    [key: string]: GroupTimeframe;
-  };
+  timeframes: Record<string, GroupTimeframe>;
 }
 
 const groupAccountsByType = (accounts: Account[]) => {
-  const categoryMap: Record<
-    string,
-    { category: string; icon: keyof typeof Icons }
-  > = {
-    depository: { category: "Cash & Liquid Assets", icon: "cash" },
-    investment: { category: "Investments", icon: "invest" },
-    credit: { category: "Credit Cards", icon: "credit" },
-    loan: { category: "Loans", icon: "loan" },
-    other: { category: "Other Assets", icon: "cash" }, // fallback to a valid icon key
+  const categoryMap: Record<string, { category: string; icon: keyof typeof Icons }> = {
+    depository: { category: 'Cash & Liquid Assets', icon: 'cash' },
+    investment: { category: 'Investments', icon: 'invest' },
+    credit: { category: 'Credit Cards', icon: 'credit' },
+    loan: { category: 'Loans', icon: 'loan' },
+    other: { category: 'Other Assets', icon: 'cash' }, // fallback to a valid icon key
   };
 
-  type CategoryKey = keyof typeof categoryMap;
-
-  type GroupedType = {
-    [key: string]: {
+  type GroupedType = Record<
+    string,
+    {
       category: string;
       icon: keyof typeof Icons;
       id: string;
       accounts: Account[];
-      timeframes: {
-        [key: string]: {
+      timeframes: Record<
+        string,
+        {
           totalBalance: number;
           change: {
             amount: number;
@@ -68,15 +63,13 @@ const groupAccountsByType = (accounts: Account[]) => {
             positive: boolean;
           };
           history: number[];
-        };
-      };
-    };
-  };
+        }
+      >;
+    }
+  >;
 
   const grouped = accounts.reduce((acc: GroupedType, account) => {
-    const groupKey = (
-      account.type in categoryMap ? account.type : "other"
-    ) as CategoryKey;
+    const groupKey = account.type in categoryMap ? account.type : 'other';
     if (!acc[groupKey]) {
       acc[groupKey] = {
         ...categoryMap[groupKey],
@@ -84,17 +77,17 @@ const groupAccountsByType = (accounts: Account[]) => {
         accounts: [],
         // Mocking timeframes for demonstration purposes
         timeframes: {
-          "7D": {
+          '7D': {
             totalBalance: 0,
             change: { amount: 0, percent: 0, positive: true },
             history: [],
           },
-          "30D": {
+          '30D': {
             totalBalance: 0,
             change: { amount: 0, percent: 0, positive: true },
             history: [],
           },
-          "90D": {
+          '90D': {
             totalBalance: 0,
             change: { amount: 0, percent: 0, positive: true },
             history: [],
@@ -108,17 +101,14 @@ const groupAccountsByType = (accounts: Account[]) => {
 
   // Calculate total balances and generate mock history
   Object.values(grouped).forEach((group) => {
-    const total = group.accounts.reduce(
-      (sum, acc) => sum + acc.balance_amount,
-      0
-    );
+    const total = group.accounts.reduce((sum, acc) => sum + acc.balance_amount, 0);
     Object.keys(group.timeframes).forEach((tf) => {
       group.timeframes[tf].totalBalance = total;
       // Simple mock data generation
-      const days = parseInt(tf.replace("D", ""));
+      const days = parseInt(tf.replace('D', ''));
       group.timeframes[tf].history = Array.from(
         { length: days },
-        (_, i) => total * (1 + (Math.random() - 0.5) * 0.1 * (i / days))
+        (_, i) => total * (1 + (Math.random() - 0.5) * 0.1 * (i / days)),
       );
       const changeAmount = (Math.random() - 0.4) * total * 0.05;
       group.timeframes[tf].change = {
@@ -134,20 +124,32 @@ const groupAccountsByType = (accounts: Account[]) => {
 
 // --- HELPERS ---
 const timeAgo = (dateString: string) => {
-  if (!dateString) return null;
+  if (!dateString) {
+    return null;
+  }
   const date = new Date(dateString);
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
   let interval = seconds / 31536000;
-  if (interval > 1) return Math.floor(interval) + " years ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' years ago';
+  }
   interval = seconds / 2592000;
-  if (interval > 1) return Math.floor(interval) + " months ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' months ago';
+  }
   interval = seconds / 86400;
-  if (interval > 1) return Math.floor(interval) + " days ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' days ago';
+  }
   interval = seconds / 3600;
-  if (interval > 1) return Math.floor(interval) + " hours ago";
+  if (interval > 1) {
+    return Math.floor(interval) + ' hours ago';
+  }
   interval = seconds / 60;
-  if (interval > 1) return Math.floor(interval) + " minutes ago";
-  return "Just now";
+  if (interval > 1) {
+    return Math.floor(interval) + ' minutes ago';
+  }
+  return 'Just now';
 };
 
 // --- UI & VISUAL COMPONENTS ---
@@ -245,31 +247,15 @@ const Icons = {
   ),
   loan: (p: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" {...p}>
-      <circle
-        cx="12"
-        cy="12"
-        r="9.25"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
+      <circle cx="12" cy="12" r="9.25" stroke="currentColor" strokeWidth="1.5" />
       <path
         d="M14.25 8.75L9.75 15.25"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
-      <path
-        d="M10.25 8.75H14.25"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M9.75 15.25H13.75"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M10.25 8.75H14.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M9.75 15.25H13.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
   grip: (p: React.SVGProps<SVGSVGElement>) => (
@@ -411,20 +397,18 @@ const InteractiveSparkline: React.FC<{ data: number[]; positive: boolean }> = ({
   const svgRef = useRef<SVGSVGElement | null>(null);
   const width = 120;
   const height = 50;
-  const strokeColor = positive ? "#22c55e" : "#ef4444";
+  const strokeColor = positive ? '#22c55e' : '#ef4444';
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min === 0 ? 1 : max - min;
-  const yPoints = data.map(
-    (d) => height - ((d - min) / range) * (height - 10) - 5
-  );
+  const yPoints = data.map((d) => height - ((d - min) / range) * (height - 10) - 5);
   const xPoints = data.map((_, i) => (i / (data.length - 1)) * width);
-  const points = yPoints
-    .map((y, i) => `${xPoints[i].toFixed(2)},${y.toFixed(2)}`)
-    .join(" ");
+  const points = yPoints.map((y, i) => `${xPoints[i].toFixed(2)},${y.toFixed(2)}`).join(' ');
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     const svg = svgRef.current;
-    if (!svg) return;
+    if (!svg) {
+      return;
+    }
     const rect = svg.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     // Find the closest xPoint to the mouse x position
@@ -445,10 +429,7 @@ const InteractiveSparkline: React.FC<{ data: number[]; positive: boolean }> = ({
   };
   const gradientId = `spark-grad-${Math.random()}`;
   return (
-    <div
-      className="relative w-full h-full cursor-crosshair"
-      onMouseLeave={() => setTooltip(null)}
-    >
+    <div className="relative w-full h-full cursor-crosshair" onMouseLeave={() => setTooltip(null)}>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
@@ -463,17 +444,10 @@ const InteractiveSparkline: React.FC<{ data: number[]; positive: boolean }> = ({
           </linearGradient>
         </defs>
         <path
-          d={`M${xPoints[0]},${height} L${points} L${
-            xPoints[xPoints.length - 1]
-          },${height} Z`}
+          d={`M${xPoints[0]},${height} L${points} L${xPoints[xPoints.length - 1]},${height} Z`}
           fill={`url(#${gradientId})`}
         />
-        <polyline
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth="2"
-          points={points}
-        />
+        <polyline fill="none" stroke={strokeColor} strokeWidth="2" points={points} />
         {tooltip && (
           <>
             <line
@@ -502,7 +476,7 @@ const InteractiveSparkline: React.FC<{ data: number[]; positive: boolean }> = ({
           style={{
             left: tooltip.x,
             top: tooltip.y - 30,
-            transform: "translateX(-50%)",
+            transform: 'translateX(-50%)',
           }}
         >
           ${tooltip.value.toLocaleString()}
@@ -532,11 +506,11 @@ const AccountActionsMenu = ({
     };
 
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
 
@@ -581,12 +555,9 @@ const AccountActionsMenu = ({
   );
 };
 
-const InstitutionLogo: React.FC<{ url: string | null; name: string }> = ({
-  url,
-  name,
-}) => {
+const InstitutionLogo: React.FC<{ url: string | null; name: string }> = ({ url, name }) => {
   const [hasError, setHasError] = useState(false);
-  const fallbackInitial = name ? name.charAt(0).toUpperCase() : "?";
+  const fallbackInitial = name ? name.charAt(0).toUpperCase() : '?';
 
   if (!url || hasError) {
     return (
@@ -607,13 +578,13 @@ const InstitutionLogo: React.FC<{ url: string | null; name: string }> = ({
   );
 };
 
-type AccountLedgerRowProps = {
+interface AccountLedgerRowProps {
   account: Account;
   dndAttributes?: React.HTMLAttributes<HTMLDivElement>;
-  dndListeners?: ReturnType<typeof useSortable>["listeners"];
+  dndListeners?: ReturnType<typeof useSortable>['listeners'];
   onViewAccount: (account: Account) => void;
   onDeleteAccount: (account: Account) => void;
-};
+}
 
 const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
   account,
@@ -653,57 +624,48 @@ const AccountLedgerRow: React.FC<AccountLedgerRowProps> = ({
       <div className="flex items-center">
         <div className="text-right mr-4">
           <p className="font-medium text-slate-900 text-base tracking-tight">
-            {balance_amount.toLocaleString("en-US", {
-              style: "currency",
-              currency: "USD",
+            {balance_amount.toLocaleString('en-US', {
+              style: 'currency',
+              currency: 'USD',
             })}
           </p>
           {available !== null && available !== balance_amount && (
             <p className="text-xs text-slate-500" title="Available Balance">
-              {available.toLocaleString("en-US", {
-                style: "currency",
-                currency: "USD",
-              })}{" "}
+              {available.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+              })}{' '}
               avail.
             </p>
           )}
         </div>
         <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <AccountActionsMenu
-            account={account}
-            onView={onViewAccount}
-            onDelete={onDeleteAccount}
-          />
+          <AccountActionsMenu account={account} onView={onViewAccount} onDelete={onDeleteAccount} />
         </div>
       </div>
     </div>
   );
 };
 
-type SortableAccountLedgerRowProps = {
+interface SortableAccountLedgerRowProps {
   account: Account;
   onViewAccount: (account: Account) => void;
   onDeleteAccount: (account: Account) => void;
-};
+}
 
 const SortableAccountLedgerRow: React.FC<SortableAccountLedgerRowProps> = ({
   account,
   onViewAccount,
   onDeleteAccount,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: account.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: account.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    backgroundColor: isDragging ? "#f1f5f9" : "transparent",
+    backgroundColor: isDragging ? '#f1f5f9' : 'transparent',
   };
 
   return (
@@ -719,25 +681,26 @@ const SortableAccountLedgerRow: React.FC<SortableAccountLedgerRowProps> = ({
   );
 };
 
-type FinancialInsightCardProps = {
+interface FinancialInsightCardProps {
   groupData: {
     category: string;
     icon: keyof typeof Icons;
     id: string;
     accounts: Account[];
-    timeframes: {
-      [key: string]: {
+    timeframes: Record<
+      string,
+      {
         totalBalance: number;
         change: { amount: number; percent: number | string; positive: boolean };
         history: number[];
-      };
-    };
+      }
+    >;
   };
   dndAttributes?: React.HTMLAttributes<HTMLDivElement>;
-  dndListeners?: ReturnType<typeof useSortable>["listeners"];
+  dndListeners?: ReturnType<typeof useSortable>['listeners'];
   onViewAccount: (account: Account) => void;
   onDeleteAccount: (account: Account) => void;
-};
+}
 
 const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
   groupData,
@@ -747,13 +710,13 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
   onDeleteAccount,
 }) => {
   const [isOpen, setIsOpen] = useState(true);
-  const [activeTimeframe, setActiveTimeframe] = useState("30D");
+  const [activeTimeframe, setActiveTimeframe] = useState('30D');
   const { category, icon, timeframes, accounts } = groupData;
   const { totalBalance, change, history } = timeframes[activeTimeframe];
   const IconComponent = Icons[icon];
-  const formattedBalance = totalBalance.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
+  const formattedBalance = totalBalance.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
   });
   return (
     <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200/80 mb-6 group/card hover:scale-[1.01] hover:border-slate-300">
@@ -782,15 +745,13 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
             </p>
             <div className="flex items-center text-sm mt-1">
               <span
-                className={`${
-                  change.positive ? "text-green-600" : "text-red-600"
-                } font-semibold`}
+                className={`${change.positive ? 'text-green-600' : 'text-red-600'} font-semibold`}
               >
-                {change.positive ? "▲" : "▼"}{" "}
-                {Math.abs(change.amount).toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                })}{" "}
+                {change.positive ? '▲' : '▼'}{' '}
+                {Math.abs(change.amount).toLocaleString('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                })}{' '}
                 ({change.percent}%)
               </span>
               <span className="text-slate-500 ml-2">in {activeTimeframe}</span>
@@ -802,14 +763,14 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
           <div className="pl-4">
             <Icons.chevron
               className={`w-6 h-6 text-slate-500 transition-transform duration-300 ${
-                isOpen ? "rotate-180" : ""
+                isOpen ? 'rotate-180' : ''
               }`}
             />
           </div>
         </div>
         <div className="flex justify-end mt-2">
           <div className="flex items-center space-x-1 bg-slate-200/70 p-1 rounded-full text-xs font-semibold">
-            {["7D", "30D", "90D"].map((tf) => (
+            {['7D', '30D', '90D'].map((tf) => (
               <button
                 key={tf}
                 onClick={(e) => {
@@ -818,8 +779,8 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
                 }}
                 className={`px-3 py-1 rounded-full transition-colors ${
                   activeTimeframe === tf
-                    ? "bg-white text-slate-800 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 {tf}
@@ -830,13 +791,10 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
       </div>
       <div
         className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isOpen ? "max-h-[1000px]" : "max-h-0"
+          isOpen ? 'max-h-[1000px]' : 'max-h-0'
         }`}
       >
-        <SortableContext
-          items={accounts.map((a) => a.id)}
-          strategy={verticalListSortingStrategy}
-        >
+        <SortableContext items={accounts.map((a) => a.id)} strategy={verticalListSortingStrategy}>
           <div>
             {accounts.map((account) => (
               <SortableAccountLedgerRow
@@ -853,23 +811,20 @@ const FinancialInsightCard: React.FC<FinancialInsightCardProps> = ({
   );
 };
 
-type SortableFinancialInsightCardProps = {
-  groupData: FinancialInsightCardProps["groupData"];
+interface SortableFinancialInsightCardProps {
+  groupData: FinancialInsightCardProps['groupData'];
   onViewAccount: (account: Account) => void;
   onDeleteAccount: (account: Account) => void;
-};
+}
 
-const SortableFinancialInsightCard: React.FC<
-  SortableFinancialInsightCardProps
-> = ({ groupData, onViewAccount, onDeleteAccount }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: groupData.id });
+const SortableFinancialInsightCard: React.FC<SortableFinancialInsightCardProps> = ({
+  groupData,
+  onViewAccount,
+  onDeleteAccount,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: groupData.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -896,13 +851,8 @@ interface LuxuryAccountCardProps {
   accounts: Account[];
 }
 
-export default function LuxuryAccountCard({
-  accounts = [],
-}: LuxuryAccountCardProps) {
-  const initialGroupedData = useMemo(
-    () => groupAccountsByType(accounts),
-    [accounts]
-  );
+export default function LuxuryAccountCard({ accounts = [] }: LuxuryAccountCardProps) {
+  const initialGroupedData = useMemo(() => groupAccountsByType(accounts), [accounts]);
   const [groupedData, setGroupedData] = useState(initialGroupedData);
 
   // Update grouped data when accounts change
@@ -911,53 +861,41 @@ export default function LuxuryAccountCard({
     setGroupedData(fresh);
   }, [accounts]);
 
-  const handleDragEnd = (event: import("@dnd-kit/core").DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     const activeId = active.id;
     const overId = over.id;
 
     // Check if we are dragging a card
-    if (
-      String(activeId).startsWith("group-") &&
-      String(overId).startsWith("group-")
-    ) {
+    if (String(activeId).startsWith('group-') && String(overId).startsWith('group-')) {
       if (activeId !== overId) {
         setGroupedData((items: GroupData[]) => {
-          const oldIndex = items.findIndex(
-            (item: GroupData) => item.id === activeId
-          );
-          const newIndex = items.findIndex(
-            (item: GroupData) => item.id === overId
-          );
+          const oldIndex = items.findIndex((item: GroupData) => item.id === activeId);
+          const newIndex = items.findIndex((item: GroupData) => item.id === overId);
           return arrayMove(items, oldIndex, newIndex);
         });
       }
     }
 
-    if (
-      String(activeId).startsWith("acc-") &&
-      String(overId).startsWith("acc-")
-    ) {
+    if (String(activeId).startsWith('acc-') && String(overId).startsWith('acc-')) {
       setGroupedData((prevData: GroupData[]) => {
         const newData = [...prevData];
         const activeGroupIndex = newData.findIndex((group: GroupData) =>
-          group.accounts.some((acc: Account) => acc.id === activeId)
+          group.accounts.some((acc: Account) => acc.id === activeId),
         );
         const overGroupIndex = newData.findIndex((group: GroupData) =>
-          group.accounts.some((acc: Account) => acc.id === overId)
+          group.accounts.some((acc: Account) => acc.id === overId),
         );
 
         // Handle reordering within the same group
         if (activeGroupIndex === overGroupIndex) {
           const group = newData[activeGroupIndex];
-          const oldIndex = group.accounts.findIndex(
-            (acc: Account) => acc.id === activeId
-          );
-          const newIndex = group.accounts.findIndex(
-            (acc: Account) => acc.id === overId
-          );
+          const oldIndex = group.accounts.findIndex((acc: Account) => acc.id === activeId);
+          const newIndex = group.accounts.findIndex((acc: Account) => acc.id === overId);
           if (oldIndex !== newIndex) {
             group.accounts = arrayMove(group.accounts, oldIndex, newIndex);
           }
@@ -968,20 +906,18 @@ export default function LuxuryAccountCard({
   };
 
   const handleViewAccount = (account: Account) => {
-    console.log("View account:", account);
+    console.log('View account:', account);
     // Implement view account logic here
   };
 
   const handleDeleteAccount = (account: Account) => {
-    console.log("Delete account:", account);
+    console.log('Delete account:', account);
     // Implement delete account logic here
     setGroupedData((prevData: GroupData[]) => {
       return prevData
         .map((group: GroupData) => ({
           ...group,
-          accounts: group.accounts.filter(
-            (acc: Account) => acc.id !== account.id
-          ),
+          accounts: group.accounts.filter((acc: Account) => acc.id !== account.id),
         }))
         .filter((group: GroupData) => group.accounts.length > 0);
     });
@@ -1000,10 +936,7 @@ export default function LuxuryAccountCard({
               A dynamic overview of your financial landscape.
             </p>
           </header>
-          <DndContext
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext
               items={groupedData.map((g: GroupData) => g.id)}
               strategy={verticalListSortingStrategy}

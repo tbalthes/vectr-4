@@ -1,14 +1,15 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Sparkles, Lightbulb, Target } from "lucide-react";
-import { cn } from "@/lib/utils/utils";
+import * as React from 'react';
+import { Sparkles, Lightbulb, Target } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils/utils';
 
 export interface SuggestionItem {
   id: string;
   text: string;
-  category?: "prompt" | "question" | "action" | "analysis";
+  category?: 'prompt' | 'question' | 'action' | 'analysis';
   confidence?: number;
 }
 
@@ -23,27 +24,27 @@ export interface SuggestionProps {
 
 const getCategoryIcon = (category?: string) => {
   switch (category) {
-    case "question":
+    case 'question':
       return <Lightbulb className="h-3 w-3" />;
-    case "action":
+    case 'action':
       return <Target className="h-3 w-3" />;
-    case "analysis":
+    case 'analysis':
       return <Sparkles className="h-3 w-3" />;
     default:
       return <Sparkles className="h-3 w-3" />;
   }
 };
 
-const getCategoryColor = (category?: string) => {
+const _getCategoryColor = (category?: string) => {
   switch (category) {
-    case "question":
-      return "bg-blue-100 text-blue-800 border-blue-200";
-    case "action":
-      return "bg-green-100 text-green-800 border-green-200";
-    case "analysis":
-      return "bg-purple-100 text-purple-800 border-purple-200";
+    case 'question':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'action':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'analysis':
+      return 'bg-purple-100 text-purple-800 border-purple-200';
     default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
+      return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
 
@@ -52,20 +53,15 @@ const SuggestionPill: React.FC<{
   onSelect: () => void;
   showCategory?: boolean;
   showConfidence?: boolean;
-}> = ({
-  suggestion,
-  onSelect,
-  showCategory = false,
-  showConfidence = false,
-}) => {
+}> = ({ suggestion, onSelect, showCategory = false, showConfidence = false }) => {
   return (
     <button
       onClick={onSelect}
       className={cn(
-        "inline-flex items-center dark:bg-muted-foreground space-x-2 px-3 py-1.5 rounded-full",
-        "bg-secondary hover:bg-secondary/80 text-secondary-foreground",
-        "text-sm transition-all duration-200 hover:scale-105",
-        "border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+        'inline-flex items-center dark:bg-muted-foreground space-x-2 px-3 py-1.5 rounded-full',
+        'bg-secondary hover:bg-secondary/80 text-secondary-foreground',
+        'text-sm transition-all duration-200 hover:scale-105',
+        'border border-border focus:outline-none focus:ring-2 focus:ring-ring',
       )}
     >
       {showCategory && getCategoryIcon(suggestion.category)}
@@ -91,12 +87,10 @@ const Suggestion: React.FC<SuggestionProps> = ({
   const hasMore = suggestions.length > maxVisible;
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn('space-y-3', className)}>
       <div className="flex items-center space-x-2">
         <Sparkles className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-muted-foreground">
-          Suggested prompts
-        </span>
+        <span className="text-sm font-medium text-muted-foreground">Suggested prompts</span>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -107,7 +101,6 @@ const Suggestion: React.FC<SuggestionProps> = ({
             onSelect={() => onSelect(suggestion)}
             showCategory={showCategories}
             showConfidence={showConfidence}
-            className="pb-"
           />
         ))}
 

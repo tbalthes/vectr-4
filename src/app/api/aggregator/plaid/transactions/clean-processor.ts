@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
 // Merchant interface for database operations
 interface Merchant {
@@ -14,27 +14,27 @@ interface Merchant {
 
 // Counterparty interface for better typing
 interface Counterparty {
-  confidence_level: "VERY_HIGH" | "HIGH" | "MEDIUM" | "LOW";
+  confidence_level: 'VERY_HIGH' | 'HIGH' | 'MEDIUM' | 'LOW';
   entity_id: string | null;
   logo_url: string | null;
   name: string;
   phone_number: string | null;
   type:
-    | "merchant"
-    | "financial_institution"
-    | "payment_app"
-    | "marketplace"
-    | "government"
-    | "payroll"
-    | "cryptocurrency"
-    | "third_party_processor"
-    | "peer_to_peer"
-    | "gig_economy"
-    | "subscription"
-    | "insurance"
-    | "utility"
-    | "healthcare"
-    | "other";
+    | 'merchant'
+    | 'financial_institution'
+    | 'payment_app'
+    | 'marketplace'
+    | 'government'
+    | 'payroll'
+    | 'cryptocurrency'
+    | 'third_party_processor'
+    | 'peer_to_peer'
+    | 'gig_economy'
+    | 'subscription'
+    | 'insurance'
+    | 'utility'
+    | 'healthcare'
+    | 'other';
   website: string | null;
 }
 
@@ -48,30 +48,30 @@ export interface PlaidTransaction {
   category: string[] | null;
   category_id: string | null;
   check_number: string | null;
-  counterparties: Array<{
-    confidence_level: "VERY_HIGH" | "HIGH" | "MEDIUM" | "LOW";
+  counterparties: {
+    confidence_level: 'VERY_HIGH' | 'HIGH' | 'MEDIUM' | 'LOW';
     entity_id: string | null;
     logo_url: string | null;
     name: string;
     phone_number: string | null;
     type:
-      | "merchant"
-      | "financial_institution"
-      | "payment_app"
-      | "marketplace"
-      | "government"
-      | "payroll"
-      | "cryptocurrency"
-      | "third_party_processor"
-      | "peer_to_peer"
-      | "gig_economy"
-      | "subscription"
-      | "insurance"
-      | "utility"
-      | "healthcare"
-      | "other";
+      | 'merchant'
+      | 'financial_institution'
+      | 'payment_app'
+      | 'marketplace'
+      | 'government'
+      | 'payroll'
+      | 'cryptocurrency'
+      | 'third_party_processor'
+      | 'peer_to_peer'
+      | 'gig_economy'
+      | 'subscription'
+      | 'insurance'
+      | 'utility'
+      | 'healthcare'
+      | 'other';
     website: string | null;
-  }>;
+  }[];
   date: string;
   datetime: string | null;
   iso_currency_code: string;
@@ -93,7 +93,7 @@ export interface PlaidTransaction {
   pending: boolean;
   pending_transaction_id: string | null;
   personal_finance_category: {
-    confidence_level: "VERY_HIGH" | "HIGH" | "MEDIUM" | "LOW";
+    confidence_level: 'VERY_HIGH' | 'HIGH' | 'MEDIUM' | 'LOW';
     detailed: string;
     primary: string;
   } | null;
@@ -138,25 +138,23 @@ export interface ProcessedTransaction {
  * Maps Plaid transaction data 1:1 to database schema
  */
 export class CleanPlaidTransactionProcessor {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private supabase: any; // Using any to avoid complex Supabase typing issues
 
   constructor() {
     this.supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
   }
 
   /**
    * Process Plaid transaction with clean 1:1 mapping
    */
-  async processTransaction(
-    plaidTransaction: PlaidTransaction
-  ): Promise<ProcessedTransaction> {
+  async processTransaction(plaidTransaction: PlaidTransaction): Promise<ProcessedTransaction> {
     console.log(
-      "🔄 Processing Plaid transaction with clean mapping:",
-      plaidTransaction.transaction_id
+      '🔄 Processing Plaid transaction with clean mapping:',
+      plaidTransaction.transaction_id,
     );
 
     // 1. Direct field mapping
@@ -166,10 +164,8 @@ export class CleanPlaidTransactionProcessor {
       original_description: plaidTransaction.name,
       check_number: plaidTransaction.check_number,
       pending: plaidTransaction.pending,
-      primary_category:
-        plaidTransaction.personal_finance_category?.primary || null,
-      detailed_category:
-        plaidTransaction.personal_finance_category?.detailed || null,
+      primary_category: plaidTransaction.personal_finance_category?.primary || null,
+      detailed_category: plaidTransaction.personal_finance_category?.detailed || null,
       confidence_level_category:
         plaidTransaction.personal_finance_category?.confidence_level || null,
       account_id: plaidTransaction.account_id,
@@ -196,14 +192,10 @@ export class CleanPlaidTransactionProcessor {
       baseTransaction.plaid_entity_id = counterparty.entity_id;
 
       // Handle merchant matching based on confidence level
-      if (counterparty.confidence_level === "VERY_HIGH") {
+      if (counterparty.confidence_level === 'VERY_HIGH') {
         await this.processHighConfidenceMerchant(baseTransaction, counterparty);
-      } else if (counterparty.confidence_level === "LOW") {
-        await this.processLowConfidenceMerchant(
-          baseTransaction,
-          counterparty,
-          plaidTransaction
-        );
+      } else if (counterparty.confidence_level === 'LOW') {
+        await this.processLowConfidenceMerchant(baseTransaction, counterparty, plaidTransaction);
       } else {
         // MEDIUM/HIGH confidence - use counterparty name directly
         baseTransaction.merchant_name = counterparty.name;
@@ -214,7 +206,7 @@ export class CleanPlaidTransactionProcessor {
     // 3. Map category
     if (baseTransaction.detailed_category) {
       baseTransaction.category_id = await this.mapCategoryToDatabase(
-        baseTransaction.detailed_category
+        baseTransaction.detailed_category,
       );
     }
 
@@ -227,37 +219,30 @@ export class CleanPlaidTransactionProcessor {
    */
   private async processHighConfidenceMerchant(
     transaction: ProcessedTransaction,
-    counterparty: Counterparty
+    counterparty: Counterparty,
   ): Promise<void> {
-    console.log(
-      "🎯 Processing VERY_HIGH confidence merchant:",
-      counterparty.name
-    );
+    console.log('🎯 Processing VERY_HIGH confidence merchant:', counterparty.name);
 
     // Try to find existing merchant by regex match
     const { data: merchants } = await this.supabase
-      .from("merchants")
-      .select("merchant_id, name, regex_match, default_category_id, logo_url")
-      .eq("is_active", true);
+      .from('merchants')
+      .select('merchant_id, name, regex_match, default_category_id, logo_url')
+      .eq('is_active', true);
 
     let matchedMerchant: Merchant | null = null;
     if (merchants && Array.isArray(merchants)) {
       for (const merchant of merchants as Merchant[]) {
         if (merchant.regex_match) {
           try {
-            // Handle PostgreSQL regex patterns that start with (?i)
-            let jsPattern = merchant.regex_match;
-            if (jsPattern.startsWith("(?i)")) {
-              jsPattern = jsPattern.substring(4);
-            }
-
-            if (new RegExp(jsPattern, "i").test(counterparty.name)) {
+            // Strip (?i) prefix if present (Perl/PCRE syntax not supported in JS)
+            const cleanRegex = merchant.regex_match.replace(/^\(\?i\)/, '');
+            if (new RegExp(cleanRegex, 'i').test(counterparty.name)) {
               matchedMerchant = merchant;
-              console.log("✅ Found regex match:", merchant.name);
+              console.log('✅ Found regex match:', merchant.name);
               break;
             }
           } catch {
-            console.warn("⚠️ Invalid regex pattern:", merchant.regex_match);
+            console.warn('Invalid regex pattern:', merchant.regex_match);
           }
         }
       }
@@ -275,10 +260,7 @@ export class CleanPlaidTransactionProcessor {
       }
     } else {
       // Create new merchant
-      const newMerchant = await this.createMerchant(
-        counterparty,
-        transaction.category_id
-      );
+      const newMerchant = await this.createMerchant(counterparty, transaction.category_id);
       if (newMerchant) {
         transaction.merchant_id = newMerchant.merchant_id;
         transaction.merchant_name = newMerchant.name;
@@ -294,48 +276,38 @@ export class CleanPlaidTransactionProcessor {
   private async processLowConfidenceMerchant(
     transaction: ProcessedTransaction,
     counterparty: Counterparty,
-    plaidTransaction: PlaidTransaction
+    plaidTransaction: PlaidTransaction,
   ): Promise<void> {
-    console.log("⚠️ Processing LOW confidence merchant:", counterparty.name);
+    console.log('⚠️ Processing LOW confidence merchant:', counterparty.name);
 
     // Concat name + merchant_name as per your requirement
-    const combinedDescription = [
-      plaidTransaction.name,
-      plaidTransaction.merchant_name,
-    ]
+    const combinedDescription = [plaidTransaction.name, plaidTransaction.merchant_name]
       .filter(Boolean)
-      .join(" ");
+      .join(' ');
 
     transaction.original_description = combinedDescription;
 
     // Parse through existing transaction logic (CSV-style processing)
     // This would use your existing regex matching logic
     const { data: merchants } = await this.supabase
-      .from("merchants")
-      .select("merchant_id, name, regex_match, default_category_id, logo_url")
-      .eq("is_active", true);
+      .from('merchants')
+      .select('merchant_id, name, regex_match, default_category_id, logo_url')
+      .eq('is_active', true);
 
     let matchedMerchant: Merchant | null = null;
     if (merchants && Array.isArray(merchants)) {
       for (const merchant of merchants as Merchant[]) {
         if (merchant.regex_match) {
           try {
-            // Handle PostgreSQL regex patterns that start with (?i)
-            let jsPattern = merchant.regex_match;
-            if (jsPattern.startsWith("(?i)")) {
-              jsPattern = jsPattern.substring(4);
-            }
-
-            if (new RegExp(jsPattern, "i").test(combinedDescription)) {
+            // Strip (?i) prefix if present (Perl/PCRE syntax not supported in JS)
+            const cleanRegex = merchant.regex_match.replace(/^\(\?i\)/, '');
+            if (new RegExp(cleanRegex, 'i').test(combinedDescription)) {
               matchedMerchant = merchant;
-              console.log(
-                "✅ Found regex match for low confidence:",
-                merchant.name
-              );
+              console.log('✅ Found regex match for low confidence:', merchant.name);
               break;
             }
           } catch {
-            console.warn("⚠️ Invalid regex pattern:", merchant.regex_match);
+            console.warn('Invalid regex pattern:', merchant.regex_match);
           }
         }
       }
@@ -351,8 +323,7 @@ export class CleanPlaidTransactionProcessor {
       }
     } else {
       // No match - use clean_description and category lookup
-      transaction.merchant_name =
-        this.extractCleanDescription(combinedDescription);
+      transaction.merchant_name = this.extractCleanDescription(combinedDescription);
     }
   }
 
@@ -361,9 +332,9 @@ export class CleanPlaidTransactionProcessor {
    */
   private async createMerchant(
     counterparty: Counterparty,
-    categoryId: string | null
+    categoryId: string | null,
   ): Promise<Merchant | null> {
-    console.log("🏪 Creating new merchant:", counterparty.name);
+    console.log('🏪 Creating new merchant:', counterparty.name);
 
     try {
       const merchantData = {
@@ -378,20 +349,20 @@ export class CleanPlaidTransactionProcessor {
       };
 
       const { data: newMerchant, error } = await this.supabase
-        .from("merchants")
+        .from('merchants')
         .insert(merchantData)
-        .select("merchant_id, name, logo_url")
+        .select('merchant_id, name, logo_url')
         .single();
 
       if (error) {
-        console.error("❌ Error creating merchant:", error);
+        console.error('❌ Error creating merchant:', error);
         return null;
       }
 
-      console.log("✅ Created new merchant:", (newMerchant as Merchant).name);
+      console.log('✅ Created new merchant:', (newMerchant as Merchant).name);
       return newMerchant as Merchant;
     } catch (error) {
-      console.error("❌ Error in createMerchant:", error);
+      console.error('❌ Error in createMerchant:', error);
       return null;
     }
   }
@@ -399,28 +370,26 @@ export class CleanPlaidTransactionProcessor {
   /**
    * Map Plaid detailed category to database category_id
    */
-  private async mapCategoryToDatabase(
-    detailedCategory: string
-  ): Promise<string | null> {
-    console.log("🏷️ Mapping category:", detailedCategory);
+  private async mapCategoryToDatabase(detailedCategory: string): Promise<string | null> {
+    console.log('🏷️ Mapping category:', detailedCategory);
 
     try {
       const { data: category } = await this.supabase
-        .from("categories")
-        .select("category_id")
-        .eq("category", detailedCategory)
-        .is("user_id", null)
+        .from('categories')
+        .select('category_id')
+        .eq('category', detailedCategory)
+        .is('user_id', null)
         .single();
 
       if (category) {
-        console.log("✅ Found category mapping:", detailedCategory);
+        console.log('✅ Found category mapping:', detailedCategory);
         return category.category_id;
       }
 
-      console.log("⚠️ No category mapping found for:", detailedCategory);
+      console.log('⚠️ No category mapping found for:', detailedCategory);
       return null;
     } catch (error) {
-      console.error("❌ Error mapping category:", error);
+      console.error('❌ Error mapping category:', error);
       return null;
     }
   }
@@ -431,8 +400,8 @@ export class CleanPlaidTransactionProcessor {
   private extractCleanDescription(description: string): string {
     // Simple cleaning - remove common noise
     return description
-      .replace(/\b(debit|card|purchase|payment|pos|dda)\b/gi, "")
-      .replace(/\s+/g, " ")
+      .replace(/\b(debit|card|purchase|payment|pos|dda)\b/gi, '')
+      .replace(/\s+/g, ' ')
       .trim();
   }
 
@@ -440,66 +409,33 @@ export class CleanPlaidTransactionProcessor {
    * Escape regex special characters for safe pattern creation
    */
   private escapeRegexPattern(input: string): string {
-    return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  /**
-   * Look up internal account ID from Plaid account ID
-   */
-  private async getInternalAccountId(
-    plaidAccountId: string,
-    userId: string
-  ): Promise<string | null> {
-    try {
-      const { data, error } = await this.supabase
-        .from("accounts")
-        .select("id")
-        .eq("aggregator_account_id", plaidAccountId)
-        .eq("user_id", userId)
-        .single();
-
-      if (error || !data) {
-        console.warn(
-          `⚠️ No internal account found for Plaid account: ${plaidAccountId}`,
-          error
-        );
-        return null;
-      }
-
-      return data.id;
-    } catch (error) {
-      console.error("❌ Error looking up internal account ID:", error);
-      return null;
-    }
+    return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   /**
    * Save processed transaction to database
    */
-  async saveTransaction(
-    transaction: ProcessedTransaction,
-    userId: string
-  ): Promise<boolean> {
-    console.log("💾 Saving transaction:", transaction.plaid_transaction_id);
+  async saveTransaction(transaction: ProcessedTransaction, userId: string): Promise<boolean> {
+    console.log('💾 Saving transaction:', transaction.plaid_transaction_id);
 
     try {
-      // Look up internal account ID from Plaid account ID
-      const internalAccountId = await this.getInternalAccountId(
-        transaction.account_id, // This is the Plaid account ID
-        userId
-      );
+      // Map Plaid account ID to internal account ID
+      const { data: accountMapping } = await this.supabase
+        .from('accounts')
+        .select('id')
+        .eq('aggregator_account_id', transaction.account_id)
+        .eq('user_id', userId)
+        .single();
 
-      if (!internalAccountId) {
-        console.error(
-          `❌ Cannot save transaction - no internal account found for Plaid account: ${transaction.account_id}`
-        );
+      if (!accountMapping) {
+        console.error('❌ No internal account found for Plaid account:', transaction.account_id);
         return false;
       }
 
-      const { error } = await this.supabase.from("transactions").upsert(
+      const { error } = await this.supabase.from('transactions').upsert(
         {
           user_id: userId,
-          account_id: internalAccountId, // Use internal UUID, not Plaid account ID
+          account_id: accountMapping.id, // Use internal UUID, not Plaid account ID
           merchant_id: transaction.merchant_id,
           category_id: transaction.category_id,
           date: transaction.date,
@@ -521,24 +457,22 @@ export class CleanPlaidTransactionProcessor {
             plaid_data: transaction.plaid_data,
             processed_at: new Date().toISOString(),
           },
-          needs_review:
-            transaction.confidence_level_merchant === "LOW" ||
-            !transaction.merchant_id,
+          needs_review: transaction.confidence_level_merchant === 'LOW' || !transaction.merchant_id,
         },
         {
-          onConflict: "aggregator_transaction_id",
-        }
+          onConflict: 'aggregator_transaction_id',
+        },
       );
 
       if (error) {
-        console.error("❌ Error saving transaction:", error);
+        console.error('❌ Error saving transaction:', error);
         return false;
       }
 
-      console.log("✅ Transaction saved successfully");
+      console.log('✅ Transaction saved successfully');
       return true;
     } catch (error) {
-      console.error("❌ Error in saveTransaction:", error);
+      console.error('❌ Error in saveTransaction:', error);
       return false;
     }
   }

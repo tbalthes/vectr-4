@@ -38,7 +38,7 @@ export async function listSessions(userId: string) {
     .select("id, title, updated_at")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false });
-  if (error) throw error;
+  if (error) {throw error;}
   return data;
 }
 
@@ -53,7 +53,7 @@ export async function saveMessage(
     .insert({ session_id: sessionId, type, content, metadata })
     .select("*")
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   // update session updated_at
   await supabase
     .from("chat_sessions")
@@ -68,7 +68,7 @@ export async function loadSessionMessages(sessionId: string) {
     .select("id, type, content, metadata, timestamp")
     .eq("session_id", sessionId)
     .order("timestamp", { ascending: true });
-  if (error) throw error;
+  if (error) {throw error;}
   return data;
 }
 
@@ -77,7 +77,7 @@ export async function deleteSession(sessionId: string) {
     .from("chat_sessions")
     .delete()
     .eq("id", sessionId);
-  if (error) throw error;
+  if (error) {throw error;}
   return true;
 }
 
@@ -89,6 +89,6 @@ export async function updateSessionTitle(sessionId: string, title: string) {
     .select("*")
     .single();
 
-  if (error) throw error;
+  if (error) {throw error;}
   return data;
 }
