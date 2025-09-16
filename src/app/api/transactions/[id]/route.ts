@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
@@ -25,7 +24,7 @@ interface DetailedTransaction {
   custom_fields: Record<string, string | number | boolean>;
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: Request) {
   try {
     // Get the authenticated user from the client
     const requestCookies = await cookies();
@@ -43,7 +42,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    const { id: transactionId } = params as { id: string };
+    // Extract transaction id from the request URL (app router style)
+    const url = new URL(request.url);
+    const segments = url.pathname.split('/').filter(Boolean);
+    // Expecting path like /api/transactions/[id]
+    const transactionId = segments[segments.length - 1];
     console.log('API: Fetching detailed transaction:', transactionId, 'for user:', user.id);
 
     // Create a service role client to bypass RLS
@@ -248,7 +251,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: Request) {
   try {
     // Get the authenticated user from the client
     const requestCookies = await cookies();
@@ -266,7 +269,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    const { id: transactionId } = params as { id: string };
+    const url = new URL(request.url);
+    const segments = url.pathname.split('/').filter(Boolean);
+    const transactionId = segments[segments.length - 1];
     const updateData = await request.json();
 
     console.log(
@@ -398,8 +403,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
           debugCategoryLookup ||= {};
           debugCategoryLookup.exact = catExact ?? null;
 
-          if (catExact?.category_id !== null) {
-            updateObject.category_id = String(catExact?.category_id !== null);
+          if (catExact?.category_id !== null && catExact?.category_id !== undefined) {
+            updateObject.category_id = String(catExact.category_id);
           } else {
             // try ilike without wildcard first (case-insensitive exact)
             const { data: catLike, error: catLikeErr } = (await serviceSupabase
@@ -415,7 +420,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
             });
             debugCategoryLookup.ilike = catLike ?? null;
 
-            if (catLike && catLike.category_id !== null && catLike.category_id !== undefined) {
+            if (catLike?.category_id !== null && catLike?.category_id !== undefined) {
               updateObject.category_id = String(catLike.category_id);
             } else {
               // final attempt: wildcard ilike
@@ -438,7 +443,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
                 pattern,
               };
 
-              if (catLikeWildcard && catLikeWildcard.category_id !== null && catLikeWildcard.category_id !== undefined) {
+              if (
+                catLikeWildcard?.category_id !== null &&
+                catLikeWildcard?.category_id !== undefined
+              ) {
                 updateObject.category_id = String(catLikeWildcard.category_id);
               } else {
                 // No match found; explicitly unset mapping (do not create new category)
@@ -544,8 +552,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
           const mergedMeta = {
             ...existingMetaRecord,
-            manual_merchant: updateData.merchant_name ?? existingMetaRecord.manual_merchant,
-            manual_category: updateData.category_name ?? existingMetaRecord.manual_category,
+            manual_merchant:
+              updateData.merchant_name ?? (existingMetaRecord as any).manual_merchant,
+            manual_category:
+              updateData.category_name ?? (existingMetaRecord as any).manual_category,
           };
 
           const { data: metaUpdated, error: metaErr } = await serviceSupabase
@@ -692,8 +702,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
           const mergedMeta = {
             ...existingMetaRecord,
-            manual_merchant: updateData.merchant_name ?? existingMetaRecord.manual_merchant,
-            manual_category: updateData.category_name ?? existingMetaRecord.manual_category,
+            manual_merchant:
+              updateData.merchant_name ?? (existingMetaRecord as any).manual_merchant,
+            manual_category:
+              updateData.category_name ?? (existingMetaRecord as any).manual_category,
           };
 
           const { data: metaUpdated, error: metaErr } = await serviceSupabase
@@ -748,7 +760,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request) {
   try {
     // Get the authenticated user from the client
     const requestCookies = await cookies();
@@ -766,7 +778,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    const transactionId = params.id;
+    const url = new URL(request.url);
+    const segments = url.pathname.split('/').filter(Boolean);
+    const transactionId = segments[segments.length - 1];
     console.log('API: Deleting transaction:', transactionId, 'for user:', user.id);
 
     // Create a service role client to bypass RLS

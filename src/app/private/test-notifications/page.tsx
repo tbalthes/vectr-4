@@ -136,7 +136,7 @@ export default function NotificationTestPage() {
           loading={loading}
           error={error}
           onRefresh={() => void refetch()}
-          onSyncAccount={(id, name) => void handleSyncAccount(id, name)}
+          onSyncAccount={handleSyncAccount}
           onSyncAll={handleSyncAll}
         />
       </div>

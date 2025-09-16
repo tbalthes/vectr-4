@@ -1,35 +1,33 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { CategoryTreePicker } from "@/components/private/categories/CategoryTreePicker";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CategoryTreePicker } from '@/components/private/categories/CategoryTreePicker';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Category {
-  id: string;
+  category_id: string;
   name: string;
   icon?: string;
   parent_id?: string;
   parent_name?: string;
+  // Optional fields returned by the CategoryTreePicker backend
+  children?: Category[];
+  depth?: number;
+  transaction_count?: number;
 }
 
 export default function CategoryPickerDemo() {
   const [singleSelected, setSingleSelected] = useState<string[]>([]);
-  const [singleSelectedCategories, setSingleSelectedCategories] = useState<
-    Category[]
-  >([]);
+  const [singleSelectedCategories, setSingleSelectedCategories] = useState<Category[]>([]);
   const [multiSelected, setMultiSelected] = useState<string[]>([]);
-  const [multiSelectedCategories, setMultiSelectedCategories] = useState<
-    Category[]
-  >([]);
+  const [multiSelectedCategories, setMultiSelectedCategories] = useState<Category[]>([]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-2">Category Tree Picker Demo</h1>
-        <p className="text-gray-600">
-          Test the hierarchical category picker component
-        </p>
+        <p className="text-gray-600">Test the hierarchical category picker component</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -55,9 +53,7 @@ export default function CategoryPickerDemo() {
               <pre className="text-xs text-gray-600 mb-2">
                 {JSON.stringify(singleSelected, null, 2)}
               </pre>
-              <div className="text-sm font-medium mb-1">
-                Selected Categories:
-              </div>
+              <div className="text-sm font-medium mb-1">Selected Categories:</div>
               <pre className="text-xs text-gray-600">
                 {JSON.stringify(singleSelectedCategories, null, 2)}
               </pre>
@@ -87,9 +83,7 @@ export default function CategoryPickerDemo() {
               <pre className="text-xs text-gray-600 mb-2">
                 {JSON.stringify(multiSelected, null, 2)}
               </pre>
-              <div className="text-sm font-medium mb-1">
-                Selected Categories:
-              </div>
+              <div className="text-sm font-medium mb-1">Selected Categories:</div>
               <pre className="text-xs text-gray-600">
                 {JSON.stringify(multiSelectedCategories, null, 2)}
               </pre>

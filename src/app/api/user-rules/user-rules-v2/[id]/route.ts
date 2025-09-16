@@ -6,14 +6,17 @@ import type { NextRequest } from 'next/server';
 
 const FASTAPI_BASE = 'http://localhost:8000';
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: NextRequest) {
   try {
-    const resolvedParams = await params;
-    const body = await request.json();
+    // Extract id from URL path
     const url = new URL(request.url);
+    const segments = url.pathname.split('/').filter(Boolean);
+    const id = segments[segments.length - 1];
+
+    const body = await request.json();
     const searchParams = url.searchParams;
 
-    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${resolvedParams.id}?${searchParams.toString()}`;
+    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${id}?${searchParams.toString()}`;
 
     // forward incoming headers (cookies/auth) to FastAPI
     const forwardHeaders = Object.fromEntries(request.headers.entries());
@@ -48,16 +51,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(request: NextRequest) {
   try {
-    const resolvedParams = await params;
+    // Extract id from URL path
     const url = new URL(request.url);
+    const segments = url.pathname.split('/').filter(Boolean);
+    const id = segments[segments.length - 1];
+
     const searchParams = url.searchParams;
 
-    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${resolvedParams.id}?${searchParams.toString()}`;
+    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${id}?${searchParams.toString()}`;
 
     const forwardHeaders = Object.fromEntries(request.headers.entries());
     const response = await fetch(fastApiUrl, {
