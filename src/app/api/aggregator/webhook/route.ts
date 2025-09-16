@@ -27,25 +27,26 @@ export async function POST(req: Request) {
   }
 
   // Extract event details
-  let eventType: string | undefined;
+  let webhookType: string | undefined;
   let itemId: string | undefined;
   let webhookCode: string | undefined;
 
   if (payload && typeof payload === 'object') {
     const obj = payload as Record<string, unknown>;
-    eventType = obj.webhook_type as string | undefined;
+    webhookType = obj.webhook_type as string | undefined;
     webhookCode = obj.webhook_code as string | undefined;
     itemId = obj.item_id as string | undefined;
   }
 
-  const eventId = `${provider}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Generate deterministic dedupe key for idempotency
+  const dedupeKey = generateDedupeKey(provider, webhookType, webhookCode, itemId, payload);
 
   console.log('[aggregator/webhook]', {
     provider,
-    eventType,
+    webhookType,
     webhookCode,
     itemId,
-    eventId,
+    dedupeKey,
   });
 
   // Store webhook event for idempotency and audit trail
@@ -55,34 +56,85 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    await supabase.from('webhook_events').insert({
-      event_id: eventId,
+    // Use upsert with ON CONFLICT DO NOTHING to handle duplicates
+    const { data, error } = await supabase.from('webhook_events').upsert({
+      dedupe_key: dedupeKey,
       provider: provider,
-      event_type: eventType || 'unknown',
+      webhook_type: webhookType || 'unknown',
       webhook_code: webhookCode,
       item_id: itemId,
-      payload: payload,
-      processed: false,
-      created_at: new Date().toISOString(),
+      payload_json: payload,
+      status: 'received',
+      received_at: new Date().toISOString(),
+    }, {
+      onConflict: 'dedupe_key',
+      ignoreDuplicates: true,
     });
+
+    if (error && !error.message.includes('duplicate')) {
+      console.error('[webhook] Failed to store event:', error);
+      // Don't fail the webhook for storage issues
+    } else if (data === null || (Array.isArray(data) && data.length === 0)) {
+      console.log('[webhook] Duplicate webhook detected, skipping processing');
+      return NextResponse.json({
+        ok: true,
+        provider,
+        webhookType,
+        webhookCode,
+        dedupeKey,
+        message: 'Duplicate webhook received, skipped processing',
+      });
+    }
   } catch (storageError) {
     console.error('[webhook] Failed to store event:', storageError);
     // Don't fail the webhook for storage issues
   }
 
   // Process specific webhook types
-  if (provider === 'plaid' && eventType) {
-    await processPlaidWebhook(eventType, webhookCode, itemId, payload);
+  if (provider === 'plaid' && webhookType) {
+    await processPlaidWebhook(webhookType, webhookCode, itemId, payload);
   }
 
   return NextResponse.json({
     ok: true,
     provider,
-    eventType,
+    webhookType,
     webhookCode,
-    eventId,
+    dedupeKey,
     message: 'Webhook received and processed',
   });
+}
+
+/**
+ * Generate deterministic dedupe key for webhook idempotency
+ */
+function generateDedupeKey(
+  provider: string,
+  webhookType: string | undefined,
+  webhookCode: string | undefined,
+  itemId: string | undefined,
+  payload: unknown,
+): string {
+  // Create a deterministic key based on webhook content
+  // Include timestamp from webhook payload if available for uniqueness
+  let timestamp = '';
+  if (payload && typeof payload === 'object') {
+    const obj = payload as Record<string, unknown>;
+    // Try to get timestamp from various common webhook fields
+    timestamp = (obj.timestamp || obj.created_at || obj.sent_at || '') as string;
+  }
+  
+  // Create deterministic string from key webhook properties
+  const keyComponents = [
+    provider,
+    webhookType || 'unknown',
+    webhookCode || 'unknown',
+    itemId || 'unknown',
+    timestamp,
+  ].join('|');
+
+  // Generate SHA256 hash for deterministic dedupe key
+  return crypto.createHash('sha256').update(keyComponents).digest('hex');
 }
 
 /**
@@ -281,13 +333,13 @@ async function verifyPlaidWebhook(req: Request, rawBody: string): Promise<boolea
  * Process Plaid webhook events
  */
 async function processPlaidWebhook(
-  eventType: string,
+  webhookType: string,
   webhookCode: string | undefined,
   itemId: string | undefined,
   payload: unknown,
 ): Promise<void> {
   try {
-    switch (eventType) {
+    switch (webhookType) {
       case 'TRANSACTIONS':
         await handleTransactionsWebhook(webhookCode, itemId, payload);
         break;
@@ -301,10 +353,10 @@ async function processPlaidWebhook(
         break;
 
       default:
-        console.log(`[webhook] Unhandled event type: ${eventType}`);
+        console.log(`[webhook] Unhandled webhook type: ${webhookType}`);
     }
   } catch (error) {
-    console.error(`[webhook] Error processing ${eventType} webhook:`, error);
+    console.error(`[webhook] Error processing ${webhookType} webhook:`, error);
   }
 }
 
