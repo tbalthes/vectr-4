@@ -188,8 +188,6 @@
 │ │ │ │ │ │ │ └── route.ts
 │ │ │ │ │ │ ├── sync
 │ │ │ │ │ │ │ └── route.ts
-│ │ │ │ │ │ ├── sync-optimized
-│ │ │ │ │ │ │ └── route.ts
 │ │ │ │ │ │ ├── clean-processor.ts
 │ │ │ │ │ │ ├── sync-log-test.log
 │ │ │ │ │ │ └── transactions.json
@@ -736,8 +734,6 @@
 │ │ │ │ │ ├── clean
 │ │ │ │ │ │ └── route.ts
 │ │ │ │ │ ├── sync
-│ │ │ │ │ │ └── route.ts
-│ │ │ │ │ ├── sync-optimized
 │ │ │ │ │ │ └── route.ts
 │ │ │ │ │ ├── clean-processor.ts
 │ │ │ │ │ ├── sync-log-test.log
