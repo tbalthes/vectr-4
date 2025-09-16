@@ -1,0 +1,470 @@
+diff --git a/project_tree.txt b/project_tree.txt
+index 2cabcd3..9bd8701 100644
+--- a/project_tree.txt
++++ b/project_tree.txt
+@@ -188,6 +188,8 @@
+ │ │ │ │ │ │ │ └── route.ts
+ │ │ │ │ │ │ ├── sync
+ │ │ │ │ │ │ │ └── route.ts
++│ │ │ │ │ │ ├── sync-optimized
++│ │ │ │ │ │ │ └── route.ts
+ │ │ │ │ │ │ ├── clean-processor.ts
+ │ │ │ │ │ │ ├── sync-log-test.log
+ │ │ │ │ │ │ └── transactions.json
+@@ -735,6 +737,8 @@
+ │ │ │ │ │ │ └── route.ts
+ │ │ │ │ │ ├── sync
+ │ │ │ │ │ │ └── route.ts
++│ │ │ │ │ ├── sync-optimized
++│ │ │ │ │ │ └── route.ts
+ │ │ │ │ │ ├── clean-processor.ts
+ │ │ │ │ │ ├── sync-log-test.log
+ │ │ │ │ │ └── transactions.json
+diff --git a/src/app/api/aggregator/plaid/update-webhook/route.ts b/src/app/api/aggregator/plaid/update-webhook/route.ts
+index e7bbf2f..a711716 100644
+--- a/src/app/api/aggregator/plaid/update-webhook/route.ts
++++ b/src/app/api/aggregator/plaid/update-webhook/route.ts
+@@ -1,29 +1,27 @@
+-import { NextResponse } from "next/server";
+-import { Configuration, PlaidApi, PlaidEnvironments } from "plaid";
++import { NextResponse } from 'next/server';
++import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
+ 
+ // POST /api/aggregator/plaid/update-webhook
+ // Updates webhook URL for existing Plaid items
+ export async function POST(req: Request) {
+   try {
+-    const { item_id } = await req.json();
++    const body = await req.json();
++    // Accept either snake_case or camelCase from callers
++    const item_id = (body?.item_id ?? body?.itemId) as string | undefined;
+ 
+     if (!item_id) {
+-      return NextResponse.json(
+-        { error: "item_id required" },
+-        { status: 400 }
+-      );
++      return NextResponse.json({ error: 'item_id (or itemId) required' }, { status: 400 });
+     }
+ 
+     // Initialize Plaid client
+     const configuration = new Configuration({
+       basePath:
+-        PlaidEnvironments[
+-          process.env.PLAID_ENV as keyof typeof PlaidEnvironments
+-        ] || PlaidEnvironments.sandbox,
++        PlaidEnvironments[process.env.PLAID_ENV as keyof typeof PlaidEnvironments] ||
++        PlaidEnvironments.sandbox,
+       baseOptions: {
+         headers: {
+-          "PLAID-CLIENT-ID": process.env.PLAID_CLIENT_ID,
+-          "PLAID-SECRET": process.env.PLAID_SECRET,
++          'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
++          'PLAID-SECRET': process.env.PLAID_SECRET,
+         },
+       },
+     });
+@@ -31,30 +29,26 @@ export async function POST(req: Request) {
+     const client = new PlaidApi(configuration);
+ 
+     // Update webhook URL
+-    const webhookUrl = process.env.PLAID_WEBHOOK_URL || 
+-      `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/webhook`;
++    const webhookUrl =
++      process.env.PLAID_WEBHOOK_URL || `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/webhook`;
+ 
+     console.log(`🔄 Updating webhook for item ${item_id} to: ${webhookUrl}`);
+ 
+-    const response = await client.itemWebhookUpdate({
+-      item_id: item_id,
+-      webhook: webhookUrl,
+-    });
++    // The Plaid SDK typings have varied between versions (snake_case vs camelCase).
++    // Cast to `any` for compatibility across versions while keeping runtime payload camelCase.
++    const payload: any = { itemId: item_id, webhook: webhookUrl };
++    const response = await client.itemWebhookUpdate(payload);
+ 
+-    console.log("✅ Webhook updated successfully");
++    console.log('✅ Webhook updated successfully');
+ 
+     return NextResponse.json({
+       success: true,
+-      message: "Webhook URL updated successfully",
++      message: 'Webhook URL updated successfully',
+       webhook_url: webhookUrl,
+       item: response.data.item,
+     });
+-
+   } catch (error) {
+-    console.error("❌ Error updating webhook:", error);
+-    return NextResponse.json(
+-      { error: "Failed to update webhook" },
+-      { status: 500 }
+-    );
++    console.error('❌ Error updating webhook:', error);
++    return NextResponse.json({ error: 'Failed to update webhook' }, { status: 500 });
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/app/api/transactions/[id]/route.ts b/src/app/api/transactions/[id]/route.ts
+index a8bc2be..39110bc 100644
+--- a/src/app/api/transactions/[id]/route.ts
++++ b/src/app/api/transactions/[id]/route.ts
+@@ -1,5 +1,4 @@
+ import { NextResponse } from 'next/server';
+-import type { NextRequest } from 'next/server';
+ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+ import { createClient } from '@supabase/supabase-js';
+ import { cookies } from 'next/headers';
+@@ -25,7 +24,7 @@ interface DetailedTransaction {
+   custom_fields: Record<string, string | number | boolean>;
+ }
+ 
+-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
++export async function GET(request: Request) {
+   try {
+     // Get the authenticated user from the client
+     const requestCookies = await cookies();
+@@ -43,7 +42,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
+       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+     }
+ 
+-    const { id: transactionId } = params as { id: string };
++    // Extract transaction id from the request URL (app router style)
++    const url = new URL(request.url);
++    const segments = url.pathname.split('/').filter(Boolean);
++    // Expecting path like /api/transactions/[id]
++    const transactionId = segments[segments.length - 1];
+     console.log('API: Fetching detailed transaction:', transactionId, 'for user:', user.id);
+ 
+     // Create a service role client to bypass RLS
+@@ -248,7 +251,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
+   }
+ }
+ 
+-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
++export async function PUT(request: Request) {
+   try {
+     // Get the authenticated user from the client
+     const requestCookies = await cookies();
+@@ -266,7 +269,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
+       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+     }
+ 
+-    const { id: transactionId } = params as { id: string };
++    const url = new URL(request.url);
++    const segments = url.pathname.split('/').filter(Boolean);
++    const transactionId = segments[segments.length - 1];
+     const updateData = await request.json();
+ 
+     console.log(
+@@ -398,8 +403,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
+           debugCategoryLookup ||= {};
+           debugCategoryLookup.exact = catExact ?? null;
+ 
+-          if (catExact?.category_id !== null) {
+-            updateObject.category_id = String(catExact?.category_id !== null);
++          if (catExact?.category_id !== null && catExact?.category_id !== undefined) {
++            updateObject.category_id = String(catExact.category_id);
+           } else {
+             // try ilike without wildcard first (case-insensitive exact)
+             const { data: catLike, error: catLikeErr } = (await serviceSupabase
+@@ -415,7 +420,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
+             });
+             debugCategoryLookup.ilike = catLike ?? null;
+ 
+-            if (catLike && catLike.category_id !== null && catLike.category_id !== undefined) {
++            if (catLike?.category_id !== null && catLike?.category_id !== undefined) {
+               updateObject.category_id = String(catLike.category_id);
+             } else {
+               // final attempt: wildcard ilike
+@@ -438,7 +443,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
+                 pattern,
+               };
+ 
+-              if (catLikeWildcard && catLikeWildcard.category_id !== null && catLikeWildcard.category_id !== undefined) {
++              if (
++                catLikeWildcard?.category_id !== null &&
++                catLikeWildcard?.category_id !== undefined
++              ) {
+                 updateObject.category_id = String(catLikeWildcard.category_id);
+               } else {
+                 // No match found; explicitly unset mapping (do not create new category)
+@@ -544,8 +552,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
+ 
+           const mergedMeta = {
+             ...existingMetaRecord,
+-            manual_merchant: updateData.merchant_name ?? existingMetaRecord.manual_merchant,
+-            manual_category: updateData.category_name ?? existingMetaRecord.manual_category,
++            manual_merchant:
++              updateData.merchant_name ?? (existingMetaRecord as any).manual_merchant,
++            manual_category:
++              updateData.category_name ?? (existingMetaRecord as any).manual_category,
+           };
+ 
+           const { data: metaUpdated, error: metaErr } = await serviceSupabase
+@@ -692,8 +702,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
+ 
+           const mergedMeta = {
+             ...existingMetaRecord,
+-            manual_merchant: updateData.merchant_name ?? existingMetaRecord.manual_merchant,
+-            manual_category: updateData.category_name ?? existingMetaRecord.manual_category,
++            manual_merchant:
++              updateData.merchant_name ?? (existingMetaRecord as any).manual_merchant,
++            manual_category:
++              updateData.category_name ?? (existingMetaRecord as any).manual_category,
+           };
+ 
+           const { data: metaUpdated, error: metaErr } = await serviceSupabase
+@@ -748,7 +760,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
+   }
+ }
+ 
+-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
++export async function DELETE(request: Request) {
+   try {
+     // Get the authenticated user from the client
+     const requestCookies = await cookies();
+@@ -766,7 +778,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
+       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+     }
+ 
+-    const transactionId = params.id;
++    const url = new URL(request.url);
++    const segments = url.pathname.split('/').filter(Boolean);
++    const transactionId = segments[segments.length - 1];
+     console.log('API: Deleting transaction:', transactionId, 'for user:', user.id);
+ 
+     // Create a service role client to bypass RLS
+diff --git a/src/app/api/user-rules/user-rules-v2/[id]/route.ts b/src/app/api/user-rules/user-rules-v2/[id]/route.ts
+index c9cf478..f0485b6 100644
+--- a/src/app/api/user-rules/user-rules-v2/[id]/route.ts
++++ b/src/app/api/user-rules/user-rules-v2/[id]/route.ts
+@@ -6,14 +6,17 @@ import type { NextRequest } from 'next/server';
+ 
+ const FASTAPI_BASE = 'http://localhost:8000';
+ 
+-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
++export async function PUT(request: NextRequest) {
+   try {
+-    const resolvedParams = await params;
+-    const body = await request.json();
++    // Extract id from URL path
+     const url = new URL(request.url);
++    const segments = url.pathname.split('/').filter(Boolean);
++    const id = segments[segments.length - 1];
++
++    const body = await request.json();
+     const searchParams = url.searchParams;
+ 
+-    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${resolvedParams.id}?${searchParams.toString()}`;
++    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${id}?${searchParams.toString()}`;
+ 
+     // forward incoming headers (cookies/auth) to FastAPI
+     const forwardHeaders = Object.fromEntries(request.headers.entries());
+@@ -48,16 +51,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{
+   }
+ }
+ 
+-export async function DELETE(
+-  request: NextRequest,
+-  { params }: { params: Promise<{ id: string }> },
+-) {
++export async function DELETE(request: NextRequest) {
+   try {
+-    const resolvedParams = await params;
++    // Extract id from URL path
+     const url = new URL(request.url);
++    const segments = url.pathname.split('/').filter(Boolean);
++    const id = segments[segments.length - 1];
++
+     const searchParams = url.searchParams;
+ 
+-    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${resolvedParams.id}?${searchParams.toString()}`;
++    const fastApiUrl = `${FASTAPI_BASE}/user_rules/${id}?${searchParams.toString()}`;
+ 
+     const forwardHeaders = Object.fromEntries(request.headers.entries());
+     const response = await fetch(fastApiUrl, {
+diff --git a/src/app/plaid/webhook/route.ts b/src/app/plaid/webhook/route.ts
+index db30858..7dd81a2 100644
+--- a/src/app/plaid/webhook/route.ts
++++ b/src/app/plaid/webhook/route.ts
+@@ -1,26 +1,29 @@
+-import type { NextRequest } from "next/server";
++import type { NextRequest } from 'next/server';
+ 
+ // POST /plaid/webhook
+ // Legacy webhook endpoint - redirects to new aggregator webhook
+ export async function POST(req: NextRequest) {
+-  const userAgent = req.headers.get("user-agent") || "unknown";
+-  const origin = req.headers.get("origin") || "unknown";
+-  const referer = req.headers.get("referer") || "unknown";
+-  const ip = req.headers.get("x-forwarded-for") || req.ip || "unknown";
++  const userAgent = req.headers.get('user-agent') || 'unknown';
++  const origin = req.headers.get('origin') || 'unknown';
++  const referer = req.headers.get('referer') || 'unknown';
++  // NextRequest doesn't expose `ip`; prefer standard proxy headers
++  const xff = req.headers.get('x-forwarded-for');
++  const xri = req.headers.get('x-real-ip');
++  const ip = xff ? xff.split(',')[0].trim() : xri || 'unknown';
+ 
+-  console.log("🚨 [LOG] POST /plaid/webhook called");
+-  console.log("   User-Agent:", userAgent);
+-  console.log("   Origin:", origin);
+-  console.log("   Referer:", referer);
+-  console.log("   IP:", ip);
+-  console.log("   Timestamp:", new Date().toISOString());
++  console.log('🚨 [LOG] POST /plaid/webhook called');
++  console.log('   User-Agent:', userAgent);
++  console.log('   Origin:', origin);
++  console.log('   Referer:', referer);
++  console.log('   IP:', ip);
++  console.log('   Timestamp:', new Date().toISOString());
+ 
+-  let body = "";
++  let body = '';
+   try {
+     body = await req.text();
+-    console.log("   Body:", body);
++    console.log('   Body:', body);
+   } catch {
+-    console.log("   Body: <unparsable>");
++    console.log('   Body: <unparsable>');
+   }
+ 
+   try {
+@@ -28,14 +31,14 @@ export async function POST(req: NextRequest) {
+     const response = await fetch(
+       `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/aggregator/webhook`,
+       {
+-        method: "POST",
++        method: 'POST',
+         headers: {
+-          "Content-Type": "application/json",
+-          "X-Aggregator-Provider": "plaid",
+-          "Plaid-Verification": req.headers.get("plaid-verification") || "",
++          'Content-Type': 'application/json',
++          'X-Aggregator-Provider': 'plaid',
++          'Plaid-Verification': req.headers.get('plaid-verification') || '',
+         },
+         body: body,
+-      }
++      },
+     );
+ 
+     console.log(`🔄 Forwarded legacy webhook: ${response.status}`);
+@@ -44,18 +47,14 @@ export async function POST(req: NextRequest) {
+     return new Response(result, {
+       status: response.status,
+       headers: {
+-        "Content-Type": "application/json",
++        'Content-Type': 'application/json',
+       },
+     });
+-
+   } catch (error) {
+-    console.error("❌ Error forwarding legacy webhook:", error);
+-    return new Response(
+-      JSON.stringify({ error: "Failed to forward webhook" }),
+-      {
+-        status: 500,
+-        headers: { "Content-Type": "application/json" },
+-      }
+-    );
++    console.error('❌ Error forwarding legacy webhook:', error);
++    return new Response(JSON.stringify({ error: 'Failed to forward webhook' }), {
++      status: 500,
++      headers: { 'Content-Type': 'application/json' },
++    });
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/app/private/category-demo/page.tsx b/src/app/private/category-demo/page.tsx
+index 6a0dc9f..e624da8 100644
+--- a/src/app/private/category-demo/page.tsx
++++ b/src/app/private/category-demo/page.tsx
+@@ -1,35 +1,33 @@
+-"use client";
++'use client';
+ 
+-import { useState } from "react";
++import { useState } from 'react';
+ 
+-import { CategoryTreePicker } from "@/components/private/categories/CategoryTreePicker";
+-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
++import { CategoryTreePicker } from '@/components/private/categories/CategoryTreePicker';
++import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+ 
+ interface Category {
+-  id: string;
++  category_id: string;
+   name: string;
+   icon?: string;
+   parent_id?: string;
+   parent_name?: string;
++  // Optional fields returned by the CategoryTreePicker backend
++  children?: Category[];
++  depth?: number;
++  transaction_count?: number;
+ }
+ 
+ export default function CategoryPickerDemo() {
+   const [singleSelected, setSingleSelected] = useState<string[]>([]);
+-  const [singleSelectedCategories, setSingleSelectedCategories] = useState<
+-    Category[]
+-  >([]);
++  const [singleSelectedCategories, setSingleSelectedCategories] = useState<Category[]>([]);
+   const [multiSelected, setMultiSelected] = useState<string[]>([]);
+-  const [multiSelectedCategories, setMultiSelectedCategories] = useState<
+-    Category[]
+-  >([]);
++  const [multiSelectedCategories, setMultiSelectedCategories] = useState<Category[]>([]);
+ 
+   return (
+     <div className="container mx-auto p-6 space-y-6">
+       <div className="text-center">
+         <h1 className="text-3xl font-bold mb-2">Category Tree Picker Demo</h1>
+-        <p className="text-gray-600">
+-          Test the hierarchical category picker component
+-        </p>
++        <p className="text-gray-600">Test the hierarchical category picker component</p>
+       </div>
+ 
+       <div className="grid md:grid-cols-2 gap-6">
+@@ -55,9 +53,7 @@ export default function CategoryPickerDemo() {
+               <pre className="text-xs text-gray-600 mb-2">
+                 {JSON.stringify(singleSelected, null, 2)}
+               </pre>
+-              <div className="text-sm font-medium mb-1">
+-                Selected Categories:
+-              </div>
++              <div className="text-sm font-medium mb-1">Selected Categories:</div>
+               <pre className="text-xs text-gray-600">
+                 {JSON.stringify(singleSelectedCategories, null, 2)}
+               </pre>
+@@ -87,9 +83,7 @@ export default function CategoryPickerDemo() {
+               <pre className="text-xs text-gray-600 mb-2">
+                 {JSON.stringify(multiSelected, null, 2)}
+               </pre>
+-              <div className="text-sm font-medium mb-1">
+-                Selected Categories:
+-              </div>
++              <div className="text-sm font-medium mb-1">Selected Categories:</div>
+               <pre className="text-xs text-gray-600">
+                 {JSON.stringify(multiSelectedCategories, null, 2)}
+               </pre>
+diff --git a/src/app/private/test-notifications/page.tsx b/src/app/private/test-notifications/page.tsx
+index f41fb8c..988c747 100644
+--- a/src/app/private/test-notifications/page.tsx
++++ b/src/app/private/test-notifications/page.tsx
+@@ -136,7 +136,7 @@ export default function NotificationTestPage() {
+           loading={loading}
+           error={error}
+           onRefresh={() => void refetch()}
+-          onSyncAccount={(id, name) => void handleSyncAccount(id, name)}
++          onSyncAccount={handleSyncAccount}
+           onSyncAll={handleSyncAll}
+         />
+       </div>

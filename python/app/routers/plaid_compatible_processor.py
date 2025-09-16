@@ -160,7 +160,7 @@ def process_plaid_transaction_batch(
                     "transaction_id": tx_data.transaction_id,
                     "error": str(tx_error)
                 })
-                print(f"❌ Transaction processing error: {tx_error}")
+                print(f"Transaction processing error: {tx_error}")
         
         return PlaidProcessingResponse(
             success=len(errors) == 0,
@@ -173,7 +173,7 @@ def process_plaid_transaction_batch(
         )
         
     except Exception as e:
-        print(f"❌ Plaid transaction processing error: {e}")
+        print(f"Plaid transaction processing error: {e}")
         raise HTTPException(
             status_code=500, 
             detail=f"Failed to process Plaid transactions: {str(e)}"

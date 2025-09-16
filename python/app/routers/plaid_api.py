@@ -47,20 +47,25 @@ async def plaid_webhook(request: Request):
             print(f"❌ Failed to create Supabase client: {client_error}")
             return {"status": "error", "message": f"Database client failed: {str(client_error)}"}
         
-        print(f"🔍 Looking up account link for item_id: {item_id}")
-        # Find user and access token for this item_id
+        print(f"🔍 Looking up active account link for item_id: {item_id}")
+        # Find user and access token for this item_id, only if status is 'active'
         account_link = supabase.table("account_links").select(
             "user_id, access_token_encrypted"
-        ).eq("item_id", item_id).execute()
-        
+        ).eq("item_id", item_id).eq("status", "active").execute()
+
         if not account_link.data:
-            print(f"❌ No account link found for item_id: {item_id}")
-            return {"status": "error", "message": f"No account link found for item_id: {item_id}"}
-        
+            # Optionally, check if any link exists for this item_id (but not active)
+            inactive_link = supabase.table("account_links").select("id, status").eq("item_id", item_id).execute()
+            if inactive_link.data:
+                print(f"⚠️ Account link(s) found for item_id {item_id} but not active: {[l['status'] for l in inactive_link.data]}")
+            else:
+                print(f"❌ No account link found for item_id: {item_id}")
+            return {"status": "error", "message": f"No active account link found for item_id: {item_id}"}
+
         user_id = account_link.data[0]['user_id']
         access_token = account_link.data[0]['access_token_encrypted']
-        
-        print(f"✅ Found user {user_id} for {webhook_code}")
+
+        print(f"✅ Found active user {user_id} for {webhook_code}")
         
         # Call the Next.js sync endpoint to get the actual transactions
         print("📡 Calling Next.js sync endpoint...")

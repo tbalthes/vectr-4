@@ -1,9 +1,5 @@
 # API Migration WBS: Align Codebase To Ideal Plaid Workflow
 
-This work breakdown structure (WBS) converts the workflow audit and ideal design into step-by-step development tasks. Scope is development/code changes only (no ops/infra provisioning). Target stack: Next.js API routes, Supabase/Postgres, Plaid.
-
----
-
 ## 0. Preparation & Safety
 
 - Server-only boundaries and import audit

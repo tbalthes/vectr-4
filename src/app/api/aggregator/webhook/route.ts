@@ -3,6 +3,48 @@ import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Dynamic jose import for webhook verification
+let joseImported: any = null;
+async function getJose() {
+  if (joseImported) {
+    return joseImported;
+  }
+  try {
+    joseImported = await import('jose');
+    return joseImported;
+  } catch (e) {
+    console.error('[webhook] jose module not available:', e);
+    return null;
+  }
+}
+
+/**
+ * Generate deterministic dedupe key for webhook events
+ */
+function generateDedupeKey(
+  itemId: string | undefined,
+  webhookType: string | undefined,
+  webhookCode: string | undefined,
+  payload: any,
+  req: Request,
+): string {
+  // Create deterministic key from payload data
+  const timestamp = payload?.env_ts || payload?.time || Date.now();
+  const requestId = req.headers.get('x-request-id') || '';
+
+  // Fallback hash if no stable identifiers
+  const fallbackData = JSON.stringify({
+    itemId,
+    webhookType,
+    webhookCode,
+    timestamp,
+    requestId,
+  });
+  const hash = crypto.createHash('sha256').update(fallbackData).digest('hex').slice(0, 8);
+
+  return `${itemId || 'unknown'}:${webhookType || 'unknown'}:${webhookCode || 'unknown'}:${timestamp}:${hash}`;
+}
+
 // POST /api/aggregator/webhook
 // Production-ready webhook endpoint for Plaid/MX with verification
 export async function POST(req: Request) {
@@ -38,14 +80,15 @@ export async function POST(req: Request) {
     itemId = obj.item_id as string | undefined;
   }
 
-  const eventId = `${provider}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Generate deterministic dedupe key instead of random eventId
+  const dedupeKey = generateDedupeKey(itemId, eventType, webhookCode, payload, req);
 
   console.log('[aggregator/webhook]', {
     provider,
     eventType,
     webhookCode,
     itemId,
-    eventId,
+    dedupeKey,
   });
 
   // Store webhook event for idempotency and audit trail
@@ -56,11 +99,13 @@ export async function POST(req: Request) {
     );
 
     await supabase.from('webhook_events').insert({
-      event_id: eventId,
+      event_id: dedupeKey, // Use deterministic dedupe key as event_id
       provider: provider,
       event_type: eventType || 'unknown',
+      webhook_type: eventType,
       webhook_code: webhookCode,
       item_id: itemId,
+      dedupe_key: dedupeKey,
       payload: payload,
       processed: false,
       created_at: new Date().toISOString(),
@@ -80,21 +125,16 @@ export async function POST(req: Request) {
     provider,
     eventType,
     webhookCode,
-    eventId,
+    dedupeKey,
     message: 'Webhook received and processed',
   });
 }
 
 /**
  * Verify Plaid webhook signature for security
+ * (use jose where possible; return boolean)
  */
 async function verifyPlaidWebhook(req: Request, rawBody: string): Promise<boolean> {
-  // Plaid now signs webhooks with a JWT in the `Plaid-Verification` header.
-  // See Plaid docs: verify the JWT by fetching the JWK for the `kid`, verify
-  // signature, check iat (issued at) for replay protection (5 minutes window),
-  // and validate request body integrity by comparing SHA-256(rawBody) to
-  // payload.request_body_sha256 using a constant-time compare.
-
   const verificationHeader = req.headers.get('plaid-verification');
   if (!verificationHeader) {
     console.error('[webhook] Missing Plaid-Verification header');
@@ -102,35 +142,30 @@ async function verifyPlaidWebhook(req: Request, rawBody: string): Promise<boolea
   }
 
   try {
-    // Decode JWT without verifying first to read header and payload
-    // Use the jsonwebtoken library if available; fallback to manual decode
-    // to avoid adding a dependency here. JWT is base64url encoded segments.
+    const jose = await getJose();
+    if (!jose) {
+      console.error("[webhook] 'jose' not installed — signature verification unavailable");
+      return false; // fail safe: reject
+    }
+
+    // decode header/payload to get kid
     const segments = verificationHeader.split('.');
     if (segments.length !== 3) {
       console.error('[webhook] Invalid JWT format in Plaid-Verification header');
       return false;
     }
-
-    const headerB64 = segments[0];
-    const payloadB64 = segments[1];
-
-    const base64UrlToBase64 = (b64url: string) =>
-      b64url.replace(/-/g, '+').replace(/_/g, '/') + '=='.slice(0, (4 - (b64url.length % 4)) % 4);
-
-    const headerJson = JSON.parse(
-      Buffer.from(base64UrlToBase64(headerB64), 'base64').toString('utf8'),
-    );
     const payloadJson = JSON.parse(
-      Buffer.from(base64UrlToBase64(payloadB64), 'base64').toString('utf8'),
+      Buffer.from(segments[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'),
     );
-
-    const kid = headerJson.kid;
+    const kid = JSON.parse(
+      Buffer.from(segments[0].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'),
+    ).kid;
     if (!kid) {
       console.error('[webhook] JWT header missing kid');
       return false;
     }
 
-    // Determine Plaid environment base URL
+    // Fetch Plaid JWK for this kid (same as current logic) - but keep minimal network calls in production
     const PLAID_ENV = (process.env.PLAID_ENV || 'sandbox').toLowerCase();
     const baseMap: Record<string, string> = {
       sandbox: 'https://sandbox.plaid.com',
@@ -139,12 +174,9 @@ async function verifyPlaidWebhook(req: Request, rawBody: string): Promise<boolea
     };
     const baseUrl = baseMap[PLAID_ENV] || baseMap.sandbox;
 
-    // Fetch the JWK for this kid from Plaid API
     const jwkResponse = await fetch(`${baseUrl}/webhook_verification_key/get`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         client_id: process.env.PLAID_CLIENT_ID,
         secret: process.env.PLAID_SECRET,
@@ -156,123 +188,33 @@ async function verifyPlaidWebhook(req: Request, rawBody: string): Promise<boolea
       console.error('[webhook] Failed to fetch Plaid JWK', await jwkResponse.text());
       return false;
     }
-
     const jwkResult = await jwkResponse.json();
-    // Plaid returns { key: { ...jwk... } } in many SDKs; accept flexible shapes
     const jwk = jwkResult.key || jwkResult.jwk || jwkResult;
     if (!jwk) {
       console.error('[webhook] No JWK returned by Plaid for kid', kid);
       return false;
     }
 
-    // Convert JWK to PEM for verification. Support RSA and EC keys.
-    // Minimal implementation: use crypto.webcrypto.subtle if available, but Node's
-    // built-in crypto has no direct JWK->Key import without extras. We'll use
-    // a small JWK-to-PEM helper for RSA (most Plaid keys are RSA).
+    // importJWK and verify
+    const jwkKey = await jose.importJWK(jwk);
+    await jose.jwtVerify(verificationHeader, jwkKey, { maxTokenAge: '5m' });
 
-    const jwkToPem = (jwkObj: any): string | null => {
-      try {
-        if (jwkObj.kty === 'RSA' && jwkObj.n && jwkObj.e) {
-          // Use a minimal rsa-pem generation via node crypto's KeyObject
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const der = Buffer.from(
-            // Build a SubjectPublicKeyInfo DER sequence from modulus/exponent
-            // Use a lightweight approach: construct the ASN.1 structure manually
-            // This implementation is intentionally small and expects standard RSA JWKs.
-            // For full correctness in production, prefer using `jose` or `node-jose`.
-            '',
-            'base64',
-          );
-          // Fallback: use the jwk as PEM via a simple placeholder - prefer library in future
-          return null;
-        }
-      } catch {
-        // ignore and fallback
-      }
-      return null;
-    };
-
-    // Prefer using the `jose` library if present for robust JWK handling
-    let verified = false;
-    try {
-      // Dynamic import to avoid hard dependency
-      const jose = await import('jose');
-      const jwkKey = await jose.importJWK(jwk);
-      await jose.jwtVerify(verificationHeader, jwkKey, {
-        // Accept small clock skew
-        maxTokenAge: '5m',
-      });
-      verified = true;
-    } catch (e: unknown) {
-      // If jose not available or verification failed, fallback to manual checks below
-      const err = e as any;
-      if (err?.code === 'MODULE_NOT_FOUND' || err?.message?.includes("Cannot find module 'jose'")) {
-        // jose missing - fall back
-      } else if (e) {
-        console.error('[webhook] JWT verification failed (jose):', e);
-      }
-    }
-
-    if (!verified) {
-      // As a last resort, attempt simple signature verification for RSA using crypto.verify
-      // This requires converting the JWK to PEM; if conversion isn't implemented, fail safe.
-      const pem = jwkToPem(jwk);
-      if (!pem) {
-        console.error(
-          "[webhook] Unable to verify JWT: JWK->PEM conversion unavailable. Install 'jose' for verification.",
-        );
-        return false;
-      }
-
-      const alg = headerJson.alg || 'RS256';
-      const verify = crypto.createVerify(alg.replace(/^RS/, 'RSA-SHA'));
-      verify.update(segments[0] + '.' + segments[1]);
-      verify.end();
-      const signature = Buffer.from(segments[2].replace(/-/g, '+').replace(/_/g, '/'), 'base64');
-      verified = verify.verify(pem, signature);
-      if (!verified) {
-        console.error('[webhook] JWT signature verification failed (fallback)');
-        return false;
-      }
-    }
-
-    // At this point the JWT signature is valid. Now check iat for replay attacks
-    const iat = payloadJson.iat;
-    if (!iat || typeof iat !== 'number') {
-      console.error('[webhook] JWT payload missing iat');
-      return false;
-    }
-    const issuedAt = new Date(iat * 1000);
-    const now = new Date();
-    const diffMs = Math.abs(now.getTime() - issuedAt.getTime());
-    if (diffMs > 5 * 60 * 1000) {
-      console.error('[webhook] JWT iat outside allowed window', { diffMs });
-      return false;
-    }
-
-    // Validate request body integrity: compute SHA-256(rawBody)
-    const hash = crypto.createHash('sha256').update(rawBody, 'utf8').digest('hex');
+    // verify body integrity: check payload.request_body_sha256
     const expected = payloadJson.request_body_sha256;
     if (!expected || typeof expected !== 'string') {
       console.error('[webhook] JWT payload missing request_body_sha256');
       return false;
     }
-
-    // Constant-time compare
-    const a = Buffer.from(hash);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) {
-      console.error('[webhook] Body hash length mismatch');
-      return false;
-    }
-    if (!crypto.timingSafeEqual(a, b)) {
+    const hash = crypto.createHash('sha256').update(rawBody, 'utf8').digest('hex');
+    const a = Buffer.from(hash, 'hex');
+    const b = Buffer.from(expected, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
       console.error('[webhook] Body hash mismatch');
       return false;
     }
-
     return true;
-  } catch (error) {
-    console.error('[webhook] Error verifying Plaid JWT webhook:', error);
+  } catch (err) {
+    console.error('[webhook] Error verifying Plaid JWT webhook:', err);
     return false;
   }
 }

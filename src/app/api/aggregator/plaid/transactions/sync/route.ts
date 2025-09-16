@@ -48,10 +48,26 @@ export async function POST(req: Request) {
     }
     userId = body.user_id;
   }
-  const { access_token, cursor, count = 100 } = body;
+  const { access_token, cursor, count = 100, item_id: bodyItemId } = body;
 
   if (!access_token) {
     return NextResponse.json({ error: 'access_token required' }, { status: 400 });
+  }
+
+  // Ensure item_id is available, fetch if not provided
+  let item_id = bodyItemId;
+  if (!item_id) {
+    // Try to fetch item_id from account_links using access_token and user_id
+    const { data: linkData, error: linkError } = await supabase
+      .from('account_links')
+      .select('item_id')
+      .eq('access_token_encrypted', access_token)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (linkError || !linkData?.item_id) {
+      return NextResponse.json({ error: 'item_id not found for access_token' }, { status: 400 });
+    }
+    item_id = linkData.item_id;
   }
 
   try {
@@ -219,14 +235,14 @@ export async function POST(req: Request) {
     }
 
     // Update account links with last sync time and cursor
-    if (access_token && allData.next_cursor) {
+    if (item_id && allData.next_cursor) {
       await supabase
         .from('account_links')
         .update({
           last_sync_at: new Date().toISOString(),
           cursor: allData.next_cursor,
         })
-        .eq('access_token_encrypted', access_token)
+        .eq('item_id', item_id)
         .eq('user_id', userId);
     }
 
