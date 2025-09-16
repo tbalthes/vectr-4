@@ -21,14 +21,12 @@
 **Goal**: Search-enabled merchant selector that pulls from Supabase merchants table
 
 - [x] **1.2.1** Enhanced Merchant API Endpoint
-
   - ✅ Created `/api/merchants/search` with search functionality
   - ✅ Added fuzzy search capabilities with ranking
   - ✅ Include merchant categories and metadata
   - ✅ Pagination support for large merchant lists
 
 - [x] **1.2.2** MerchantPicker React Component
-
   - ✅ Search-enabled dropdown with typeahead
   - ✅ Real-time search as user types
   - ✅ Display merchant name, logo, and category context
@@ -47,7 +45,6 @@
 **Goal**: Comprehensive filtering UI for transaction table with multiple criteria
 
 - [ ] **1.3.1** Advanced Filter Components
-
   - Amount range filter (min/max with operators)
   - Date range picker component
   - Category filter (using CategoryTreePicker)
@@ -56,7 +53,6 @@
   - Multi-criteria combination logic
 
 - [ ] **1.3.2** Filter State Management
-
   - URL-based filter persistence
   - Filter save/load functionality
   - Filter presets (e.g., "Last Month", "Needs Review")
@@ -73,14 +69,12 @@
 **Goal**: UI for creating and managing user_rules that automatically categorize transactions
 
 - [ ] **1.4.1** User Rules API Enhancement
-
   - Extend existing `/user-rules` endpoints
   - Add rule testing/preview functionality
   - Batch rule application to existing transactions
   - Rule priority and conflict resolution
 
 - [ ] **1.4.2** Rule Builder UI Component
-
   - Visual rule builder with condition/action pattern
   - Field selection: `original_description`, `amount`, `merchant_name`
   - Operator selection: `contains`, `equals`, `regex`, `greater_than`, etc.
@@ -99,7 +93,6 @@
 **Goal**: Advanced date picker with presets and flexible date range selection
 
 - [ ] **1.5.1** DateRangePicker Component
-
   - Calendar-based date selection
   - Quick preset buttons (Last 7/30/90 days, This Month, etc.)
   - Custom date range input

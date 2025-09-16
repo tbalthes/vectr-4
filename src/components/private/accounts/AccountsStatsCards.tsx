@@ -1,9 +1,9 @@
-"use client";
-import React from "react";
-import { Wallet, TrendingUp, TrendingDown, CreditCard } from "lucide-react";
+'use client';
+import React from 'react';
+import { Wallet, TrendingUp, TrendingDown, CreditCard } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Account {
   id: string;
@@ -19,10 +19,7 @@ interface AccountsStatsCardsProps {
   loading: boolean;
 }
 
-export function AccountsStatsCards({
-  accounts,
-  loading,
-}: AccountsStatsCardsProps) {
+export function AccountsStatsCards({ accounts, loading }: AccountsStatsCardsProps) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -42,18 +39,15 @@ export function AccountsStatsCards({
     );
   }
 
-  const totalBalance = accounts.reduce(
-    (sum, account) => sum + (account.balance_amount || 0),
-    0
-  );
+  const totalBalance = accounts.reduce((sum, account) => sum + (account.balance_amount || 0), 0);
   const totalAssets = accounts
     .filter((account) => (account.balance_amount || 0) > 0)
     .reduce((sum, account) => sum + (account.balance_amount || 0), 0);
   const totalDebt = accounts.reduce((sum, account) => {
     const bal = account.balance_amount || 0;
-    const type = (account.type || "").toLowerCase();
+    const type = (account.type || '').toLowerCase();
     // Count all loan and credit balances as debt (absolute value)
-    if (type === "loan" || type === "credit") {
+    if (type === 'loan' || type === 'credit') {
       return sum + Math.abs(bal);
     }
     return sum;
@@ -61,19 +55,19 @@ export function AccountsStatsCards({
   const accountCount = accounts.length;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount);
   };
 
   const formatCompactCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      notation: "compact",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      notation: 'compact',
       maximumFractionDigits: 1,
     }).format(amount);
   };
@@ -87,12 +81,8 @@ export function AccountsStatsCards({
         </CardHeader>
         <CardContent>
           <div className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
-            <span className="hidden sm:inline">
-              {formatCurrency(totalBalance)}
-            </span>
-            <span className="sm:hidden">
-              {formatCompactCurrency(totalBalance)}
-            </span>
+            <span className="hidden sm:inline">{formatCurrency(totalBalance)}</span>
+            <span className="sm:hidden">{formatCompactCurrency(totalBalance)}</span>
           </div>
           <p className="text-xs text-muted-foreground">Assets minus debts</p>
         </CardContent>
@@ -105,12 +95,8 @@ export function AccountsStatsCards({
         </CardHeader>
         <CardContent>
           <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 truncate">
-            <span className="hidden sm:inline">
-              {formatCurrency(totalAssets)}
-            </span>
-            <span className="sm:hidden">
-              {formatCompactCurrency(totalAssets)}
-            </span>
+            <span className="hidden sm:inline">{formatCurrency(totalAssets)}</span>
+            <span className="sm:hidden">{formatCompactCurrency(totalAssets)}</span>
           </div>
           <p className="text-xs text-muted-foreground">All positive balances</p>
         </CardContent>
@@ -123,16 +109,10 @@ export function AccountsStatsCards({
         </CardHeader>
         <CardContent>
           <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600 truncate">
-            <span className="hidden sm:inline">
-              {formatCurrency(totalDebt)}
-            </span>
-            <span className="sm:hidden">
-              {formatCompactCurrency(totalDebt)}
-            </span>
+            <span className="hidden sm:inline">{formatCurrency(totalDebt)}</span>
+            <span className="sm:hidden">{formatCompactCurrency(totalDebt)}</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            All loan and credit balances
-          </p>
+          <p className="text-xs text-muted-foreground">All loan and credit balances</p>
         </CardContent>
       </Card>
 
@@ -142,12 +122,8 @@ export function AccountsStatsCards({
           <CreditCard className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-            {accountCount}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Connected institutions
-          </p>
+          <div className="text-lg sm:text-xl lg:text-2xl font-bold">{accountCount}</div>
+          <p className="text-xs text-muted-foreground">Connected institutions</p>
         </CardContent>
       </Card>
     </div>

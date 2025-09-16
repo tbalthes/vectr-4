@@ -1,5 +1,5 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { NextRequest } from "next/server";
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { NextRequest } from 'next/server';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -8,32 +8,29 @@ export async function POST(req: NextRequest) {
     const { message, history = [] } = await req.json();
 
     if (!message) {
-      return new Response("Message is required", { status: 400 });
+      return new Response('Message is required', { status: 400 });
     }
 
     let model;
     try {
-      model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+      model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      console.error(
-        "Model 'gemini-2.5-flash-lite' not found or not supported. Details:",
-        errMsg
-      );
+      console.error("Model 'gemini-2.5-flash-lite' not found or not supported. Details:", errMsg);
       return new Response(
         `Model 'gemini-2.5-flash-lite' not found or not supported. Details: ${errMsg}`,
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     // Build conversation history for context
     interface HistoryMessage {
-      type: "user" | "ai";
+      type: 'user' | 'ai';
       message: string;
     }
 
     const chatHistory = history.map((msg: HistoryMessage) => ({
-      role: msg.type === "user" ? "user" : "model",
+      role: msg.type === 'user' ? 'user' : 'model',
       parts: [{ text: msg.message }],
     }));
 
@@ -83,7 +80,7 @@ User message: ${message}`;
           controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
           controller.close();
         } catch (error) {
-          console.error("Streaming error:", error);
+          console.error('Streaming error:', error);
           controller.error(error);
         }
       },
@@ -91,13 +88,13 @@ User message: ${message}`;
 
     return new Response(stream, {
       headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
       },
     });
   } catch (error) {
-    console.error("Gemini API error:", error);
-    return new Response("Failed to generate AI response", { status: 500 });
+    console.error('Gemini API error:', error);
+    return new Response('Failed to generate AI response', { status: 500 });
   }
 }

@@ -12,7 +12,7 @@ export interface ChatSession {
 export interface PersistedChatMessage {
   id: string;
   session_id: string;
-  type: "user" | "ai";
+  type: 'user' | 'ai';
   content: string;
   timestamp: string;
   metadata?: {

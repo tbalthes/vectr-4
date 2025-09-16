@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -6,39 +6,37 @@ import {
   CreditCard,
   PiggyBank,
   ArrowUpRight,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { dashboardData } from "@/data/dashboard-data";
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { dashboardData } from '@/data/dashboard-data';
 
 export function StatCards() {
   // Determine color classes based on savings goal percentage
   const getSavingsGoalColorClasses = (value: number) => {
     if (value >= 80) {
       return {
-        bg: "bg-success/10",
-        text: "text-success",
-        icon: "text-success",
+        bg: 'bg-success/10',
+        text: 'text-success',
+        icon: 'text-success',
       };
     } else if (value >= 50) {
       return {
-        bg: "bg-warning/10",
-        text: "text-warning",
-        icon: "text-warning",
+        bg: 'bg-warning/10',
+        text: 'text-warning',
+        icon: 'text-warning',
       };
     } else {
       return {
-        bg: "bg-destructive/10",
-        text: "text-destructive",
-        icon: "text-destructive",
+        bg: 'bg-destructive/10',
+        text: 'text-destructive',
+        icon: 'text-destructive',
       };
     }
   };
 
-  const savingsGoalColors = getSavingsGoalColorClasses(
-    dashboardData.savingsGoalValue
-  );
+  const savingsGoalColors = getSavingsGoalColorClasses(dashboardData.savingsGoalValue);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -48,9 +46,7 @@ export function StatCards() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold  ">Total Balance</p>
-              <p className="text-2xl font-bold text-foreground">
-                {dashboardData.totalBalance}
-              </p>
+              <p className="text-2xl font-bold text-foreground">{dashboardData.totalBalance}</p>
             </div>
             <div className="h-8 w-8 bg-success/10 rounded-lg flex items-center justify-center">
               <DollarSign className="h-4 w-4 text-success" />
@@ -72,9 +68,7 @@ export function StatCards() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm  font-semibold ">Monthly Spending</p>
-              <p className="text-2xl font-bold text-foreground">
-                {dashboardData.monthlySpending}
-              </p>
+              <p className="text-2xl font-bold text-foreground">{dashboardData.monthlySpending}</p>
             </div>
             <div className="h-8 w-8 bg-destructive/10 rounded-lg flex items-center justify-center">
               <CreditCard className="h-4 w-4 text-destructive" />
@@ -96,9 +90,7 @@ export function StatCards() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm  font-semibold  ">Monthly Income</p>
-              <p className="text-2xl font-bold text-foreground">
-                {dashboardData.monthlyIncome}
-              </p>
+              <p className="text-2xl font-bold text-foreground">{dashboardData.monthlyIncome}</p>
             </div>
             <div className="h-8 w-8 bg-info/10 rounded-lg flex items-center justify-center">
               <ArrowUpRight className="h-4 w-4 text-info" />

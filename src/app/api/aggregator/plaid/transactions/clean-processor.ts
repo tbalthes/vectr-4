@@ -138,7 +138,6 @@ export interface ProcessedTransaction {
  * Maps Plaid transaction data 1:1 to database schema
  */
 export class CleanPlaidTransactionProcessor {
-   
   private supabase: any; // Using any to avoid complex Supabase typing issues
 
   constructor() {

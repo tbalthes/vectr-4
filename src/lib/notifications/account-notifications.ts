@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import React from 'react';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 export interface AccountNotificationOptions {
   id?: string;
@@ -10,12 +10,12 @@ export interface AccountNotificationOptions {
   dismissible?: boolean;
   persistent?: boolean;
   position?:
-    | "top-left"
-    | "top-center"
-    | "top-right"
-    | "bottom-left"
-    | "bottom-center"
-    | "bottom-right";
+    | 'top-left'
+    | 'top-center'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-center'
+    | 'bottom-right';
 }
 
 export interface SyncProgressData {
@@ -48,19 +48,17 @@ export class AccountNotifications {
    */
   static connectionSuccess(accountName: string, syncMessage?: string): void {
     toast.success(
-      `✅ ${accountName} connected successfully!${
-        syncMessage ? ` ${syncMessage}` : ""
-      }`,
+      `✅ ${accountName} connected successfully!${syncMessage ? ` ${syncMessage}` : ''}`,
       {
         duration: 5000,
         dismissible: true,
-        position: "bottom-right",
-        description: syncMessage || "Syncing your accounts...",
+        position: 'bottom-right',
+        description: syncMessage || 'Syncing your accounts...',
         action: {
-          label: "View Account",
-          onClick: () => console.log("Navigate to account details"),
+          label: 'View Account',
+          onClick: () => console.log('Navigate to account details'),
         },
-      }
+      },
     );
   }
 
@@ -70,7 +68,7 @@ export class AccountNotifications {
   static disconnectionSuccess(accountName: string): void {
     toast.success(`🔗 ${accountName} disconnected`, {
       duration: 4000,
-      description: "Your data remains secure",
+      description: 'Your data remains secure',
     });
   }
 
@@ -90,7 +88,7 @@ export class AccountNotifications {
   static bulkOperationSuccess(accountCount: number, operation: string): void {
     toast.success(`📊 ${accountCount} accounts ${operation} successfully`, {
       duration: 4000,
-      description: "All operations completed",
+      description: 'All operations completed',
     });
   }
 
@@ -101,7 +99,7 @@ export class AccountNotifications {
     const toastId = `sync-${data.accountName}`;
     const message = `🔄 Syncing ${data.accountName}... Step ${data.step} of ${data.totalSteps}`;
     const description = `${data.currentOperation}${
-      data.estimatedTime ? ` • Est. ${data.estimatedTime} remaining` : ""
+      data.estimatedTime ? ` • Est. ${data.estimatedTime} remaining` : ''
     }`;
 
     const existingId = this.activeToasts.get(toastId);
@@ -112,10 +110,10 @@ export class AccountNotifications {
       duration: Infinity,
       description,
       dismissible: true, // Allow user to dismiss
-      position: "bottom-right", // Bottom-right corner
-      icon: React.createElement(Loader2, { className: "h-4 w-4 animate-spin" }),
+      position: 'bottom-right', // Bottom-right corner
+      icon: React.createElement(Loader2, { className: 'h-4 w-4 animate-spin' }),
       action: {
-        label: "Dismiss",
+        label: 'Dismiss',
         onClick: () => toast.dismiss(existingId || toastId),
       },
     });
@@ -128,46 +126,37 @@ export class AccountNotifications {
    * Bulk Account Sync Progress - Bottom-right dismissible popup
    */
   static bulkSyncProgress(data: BulkSyncProgressData): string {
-    const progressPercentage = Math.round(
-      (data.completedAccounts / data.totalAccounts) * 100
-    );
+    const progressPercentage = Math.round((data.completedAccounts / data.totalAccounts) * 100);
     const message = `🔄 Syncing accounts... ${data.completedAccounts} of ${data.totalAccounts} complete (${progressPercentage}%)`;
 
-    let description = "";
+    let description = '';
     if (data.currentAccount) {
       description += `Currently: ${data.currentAccount}`;
     }
     if (data.estimatedTime) {
-      description += `${description ? " • " : ""}Est. ${
-        data.estimatedTime
-      } remaining`;
+      description += `${description ? ' • ' : ''}Est. ${data.estimatedTime} remaining`;
     }
     if (data.failedAccounts && data.failedAccounts.length > 0) {
-      description += `${description ? " • " : ""}${
-        data.failedAccounts.length
-      } failed`;
+      description += `${description ? ' • ' : ''}${data.failedAccounts.length} failed`;
     }
 
     // Always use a stable ID for bulk sync to prevent duplicates
-    const stableId = "bulk-sync";
+    const stableId = 'bulk-sync';
     const initialMessage = `🔄 Syncing ${data.totalAccounts} accounts... This may take 2-3 minutes`;
-    const id = toast.loading(
-      data.completedAccounts === 0 ? initialMessage : message,
-      {
-        id: this.bulkSyncToastId || stableId,
-        duration: Infinity,
-        description,
-        dismissible: true, // Allow user to dismiss
-        position: "bottom-right", // Bottom-right corner
-        icon: React.createElement(Loader2, {
-          className: "h-4 w-4 animate-spin",
-        }),
-        action: {
-          label: "Dismiss",
-          onClick: () => toast.dismiss(this.bulkSyncToastId || stableId),
-        },
-      }
-    );
+    const id = toast.loading(data.completedAccounts === 0 ? initialMessage : message, {
+      id: this.bulkSyncToastId || stableId,
+      duration: Infinity,
+      description,
+      dismissible: true, // Allow user to dismiss
+      position: 'bottom-right', // Bottom-right corner
+      icon: React.createElement(Loader2, {
+        className: 'h-4 w-4 animate-spin',
+      }),
+      action: {
+        label: 'Dismiss',
+        onClick: () => toast.dismiss(this.bulkSyncToastId || stableId),
+      },
+    });
     this.bulkSyncToastId = String(id);
     return this.bulkSyncToastId;
   }
@@ -182,9 +171,7 @@ export class AccountNotifications {
     const message = `✅ ${accountName} synced successfully!`;
     const description =
       newTransactions && newTransactions > 0
-        ? `${newTransactions} new transaction${
-            newTransactions > 1 ? "s" : ""
-          } found`
+        ? `${newTransactions} new transaction${newTransactions > 1 ? 's' : ''} found`
         : undefined;
 
     if (existingId) {
@@ -192,7 +179,7 @@ export class AccountNotifications {
         id: existingId,
         duration: 4000,
         dismissible: true,
-        position: "bottom-right",
+        position: 'bottom-right',
         description,
       });
       this.activeToasts.delete(toastId);
@@ -207,22 +194,22 @@ export class AccountNotifications {
   static bulkSyncComplete(
     totalAccounts: number,
     totalTransactions?: number,
-    failedAccounts?: string[]
+    failedAccounts?: string[],
   ): void {
     const successCount = totalAccounts - (failedAccounts?.length || 0);
     const message = `✅ All accounts synced! ${successCount} of ${totalAccounts} successful`;
 
-    let description = "";
+    let description = '';
     if (totalTransactions && totalTransactions > 0) {
       description += `${totalTransactions} new transactions found`;
     }
     if (failedAccounts && failedAccounts.length > 0) {
-      description += `${description ? " • " : ""}${
+      description += `${description ? ' • ' : ''}${
         failedAccounts.length
-      } failed: ${failedAccounts.join(", ")}`;
+      } failed: ${failedAccounts.join(', ')}`;
     }
 
-    const id = this.bulkSyncToastId || "bulk-sync";
+    const id = this.bulkSyncToastId || 'bulk-sync';
     toast.success(message, {
       id,
       duration: 6000,
@@ -230,8 +217,8 @@ export class AccountNotifications {
       action:
         failedAccounts && failedAccounts.length > 0
           ? {
-              label: "Retry Failed",
-              onClick: () => console.log("Retry failed syncs"),
+              label: 'Retry Failed',
+              onClick: () => console.log('Retry failed syncs'),
             }
           : undefined,
     });
@@ -241,17 +228,13 @@ export class AccountNotifications {
   /**
    * Error Handling with Recovery Options
    */
-  static syncError(
-    accountName: string,
-    errorMessage: string,
-    canRetry = true
-  ): void {
+  static syncError(accountName: string, errorMessage: string, canRetry = true): void {
     const toastId = `sync-${accountName}`;
     const existingId = this.activeToasts.get(toastId);
 
     const message = `⚠️ Unable to sync ${accountName}`;
     const description = `${errorMessage}${
-      canRetry ? " • Try individual refresh if bulk sync fails" : ""
+      canRetry ? ' • Try individual refresh if bulk sync fails' : ''
     }`;
 
     const toastOptions = {
@@ -259,13 +242,13 @@ export class AccountNotifications {
       description,
       action: canRetry
         ? {
-            label: "Retry",
+            label: 'Retry',
             onClick: () => console.log(`Retry sync for ${accountName}`),
           }
         : undefined,
       cancel: {
-        label: "Dismiss",
-        onClick: () => console.log("Dismissed error"),
+        label: 'Dismiss',
+        onClick: () => console.log('Dismissed error'),
       },
     };
 
@@ -283,19 +266,19 @@ export class AccountNotifications {
   static connectionWarning(accountCount: number, estimatedTime: string): void {
     const message =
       accountCount === 1
-        ? "⏳ This will refresh 1 account"
+        ? '⏳ This will refresh 1 account'
         : `⏳ This will refresh all ${accountCount} accounts`;
 
     toast.warning(message, {
       duration: 5000,
       description: `Typically takes ${estimatedTime}`,
       action: {
-        label: "Continue",
-        onClick: () => console.log("User confirmed bulk sync"),
+        label: 'Continue',
+        onClick: () => console.log('User confirmed bulk sync'),
       },
       cancel: {
-        label: "Cancel",
-        onClick: () => console.log("User cancelled bulk sync"),
+        label: 'Cancel',
+        onClick: () => console.log('User cancelled bulk sync'),
       },
     });
   }
@@ -307,7 +290,7 @@ export class AccountNotifications {
     toast.info(`🔄 Retry suggested for ${accountName}`, {
       description: `Attempt ${attempt} - Try individual refresh if bulk sync continues to fail.`,
       action: {
-        label: "Retry",
+        label: 'Retry',
         onClick: () => {
           toast.loading(`Retrying ${accountName}...`);
         },
@@ -322,7 +305,7 @@ export class AccountNotifications {
   static backgroundProcessIndicator(message: string): string {
     const id = toast.loading(`🔄 ${message}`, {
       duration: Infinity,
-      position: "bottom-right",
+      position: 'bottom-right',
     });
     return String(id);
   }
@@ -347,8 +330,12 @@ export class AccountNotifications {
         this.activeToasts.delete(key);
       }
     });
-    if (this.syncToastId === toastId) {this.syncToastId = null;}
-    if (this.bulkSyncToastId === toastId) {this.bulkSyncToastId = null;}
+    if (this.syncToastId === toastId) {
+      this.syncToastId = null;
+    }
+    if (this.bulkSyncToastId === toastId) {
+      this.bulkSyncToastId = null;
+    }
   }
 }
 
@@ -360,18 +347,15 @@ export const accountToasts = {
   connected: (accountName: string, syncMessage?: string) =>
     AccountNotifications.connectionSuccess(accountName, syncMessage),
 
-  disconnected: (accountName: string) =>
-    AccountNotifications.disconnectionSuccess(accountName),
+  disconnected: (accountName: string) => AccountNotifications.disconnectionSuccess(accountName),
 
   renamed: (oldName: string, newName: string) =>
     AccountNotifications.nicknameUpdated(oldName, newName),
 
   // Sync operations
-  syncProgress: (data: SyncProgressData) =>
-    AccountNotifications.accountSyncProgress(data),
+  syncProgress: (data: SyncProgressData) => AccountNotifications.accountSyncProgress(data),
 
-  bulkSyncProgress: (data: BulkSyncProgressData) =>
-    AccountNotifications.bulkSyncProgress(data),
+  bulkSyncProgress: (data: BulkSyncProgressData) => AccountNotifications.bulkSyncProgress(data),
 
   syncComplete: (accountName: string, newTransactions?: number) =>
     AccountNotifications.syncComplete(accountName, newTransactions),
@@ -379,13 +363,8 @@ export const accountToasts = {
   bulkSyncComplete: (
     totalAccounts: number,
     totalTransactions?: number,
-    failedAccounts?: string[]
-  ) =>
-    AccountNotifications.bulkSyncComplete(
-      totalAccounts,
-      totalTransactions,
-      failedAccounts
-    ),
+    failedAccounts?: string[],
+  ) => AccountNotifications.bulkSyncComplete(totalAccounts, totalTransactions, failedAccounts),
 
   // Error handling
   syncError: (accountName: string, errorMessage: string, canRetry?: boolean) =>
@@ -398,8 +377,7 @@ export const accountToasts = {
     AccountNotifications.connectionWarning(accountCount, estimatedTime),
 
   // Background processes
-  backgroundProcess: (message: string) =>
-    AccountNotifications.backgroundProcessIndicator(message),
+  backgroundProcess: (message: string) => AccountNotifications.backgroundProcessIndicator(message),
 
   // Bulk operations
   bulkSuccess: (accountCount: number, operation: string) =>

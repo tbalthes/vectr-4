@@ -1,11 +1,11 @@
 // Remove the createClient import from the top-level
-import type { SupabaseClient } from "@supabase/supabase-js"; // Import the type
+import type { SupabaseClient } from '@supabase/supabase-js'; // Import the type
 
-import type { TransactionFromApi } from "@/types/transactions";
+import type { TransactionFromApi } from '@/types/transactions';
 
 // The function now accepts any valid Supabase client
 export async function getTransactionsWithDetails(
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
 ): Promise<TransactionFromApi[]> {
   // First, let's check if we have an authenticated user
   const {
@@ -14,14 +14,14 @@ export async function getTransactionsWithDetails(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.error("Authentication error:", userError);
-    throw new Error("User not authenticated");
+    console.error('Authentication error:', userError);
+    throw new Error('User not authenticated');
   }
 
-  console.log("Authenticated user ID:", user.id);
+  console.log('Authenticated user ID:', user.id);
 
   const { data, error, status } = await supabase
-    .from("transactions")
+    .from('transactions')
     .select(
       `
       id,
@@ -49,20 +49,20 @@ export async function getTransactionsWithDetails(
           icon
         )
       )
-    `
+    `,
     )
-    .eq("user_id", user.id) // Explicitly filter by user_id
-    .order("date", { ascending: false });
+    .eq('user_id', user.id) // Explicitly filter by user_id
+    .order('date', { ascending: false });
 
   if (error) {
-    console.error("Supabase Error:", {
+    console.error('Supabase Error:', {
       message: error.message,
       details: error.details,
       hint: error.hint,
       code: error.code,
       status: status,
     });
-    throw new Error("Could not fetch transaction data.");
+    throw new Error('Could not fetch transaction data.');
   }
 
   console.log(`Fetched ${data?.length || 0} transactions for user ${user.id}`);
@@ -72,7 +72,7 @@ export async function getTransactionsWithDetails(
 export async function updateTransactionNote(
   supabase: SupabaseClient,
   transactionId: string,
-  note: string
+  note: string,
 ): Promise<void> {
   // First, let's check if we have an authenticated user
   const {
@@ -81,18 +81,18 @@ export async function updateTransactionNote(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.error("Authentication error:", userError);
-    throw new Error("User not authenticated");
+    console.error('Authentication error:', userError);
+    throw new Error('User not authenticated');
   }
 
   const { error } = await supabase
-    .from("transactions")
+    .from('transactions')
     .update({ transaction_note: note })
-    .eq("id", transactionId)
-    .eq("user_id", user.id); // Ensure user can only update their own transactions
+    .eq('id', transactionId)
+    .eq('user_id', user.id); // Ensure user can only update their own transactions
 
   if (error) {
-    console.error("Error updating transaction note:", error);
-    throw new Error("Failed to update transaction note");
+    console.error('Error updating transaction note:', error);
+    throw new Error('Failed to update transaction note');
   }
 }

@@ -30,7 +30,6 @@ Concrete step-by-step changes
 
 - Replace the current header block with a flex container that centers both items.
 - Example Tailwind structure:
-
   - Parent: `div className="flex justify-center items-center gap-4 py-6"`
   - Logo: `<img className="w-16 h-16 rounded-xl object-contain border border-border" alt="{merchantName} logo" ... />`
   - Name: `<div className="text-2xl font-semibold text-center leading-none">{merchantName}</div>`

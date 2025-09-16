@@ -205,15 +205,16 @@ export async function GET(request: NextRequest) {
     // Transform RPC response to API contract format
     const data: AggregateRow[] = rpcData.map((row: Record<string, unknown>) => ({
       // RPC may return 'bucket' or 'bucket_date' depending on SQL — handle both
-      bucket: typeof row.bucket === 'string'
-        ? row.bucket
-        : row.bucket_date instanceof Date
-          ? row.bucket_date.toISOString().split('T')[0]
-          : row.bucket_day instanceof Date
-            ? row.bucket_day.toISOString().split('T')[0]
-            : typeof row.bucket_day === 'string'
-              ? row.bucket_day
-              : '',
+      bucket:
+        typeof row.bucket === 'string'
+          ? row.bucket
+          : row.bucket_date instanceof Date
+            ? row.bucket_date.toISOString().split('T')[0]
+            : row.bucket_day instanceof Date
+              ? row.bucket_day.toISOString().split('T')[0]
+              : typeof row.bucket_day === 'string'
+                ? row.bucket_day
+                : '',
       income: Number(row.income ?? row.income_amount ?? 0),
       spending: Number(row.spending ?? row.spending_amount ?? 0),
       tx_count: Number(row.tx_count ?? row.count ?? 0),

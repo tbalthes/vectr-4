@@ -1,60 +1,53 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { format, subDays, subMonths, subYears, startOfYear } from "date-fns";
+import * as React from 'react';
+import { useState } from 'react';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { format, subDays, subMonths, subYears, startOfYear } from 'date-fns';
 
-import { useAnalytics, type RangeKey } from "@/hooks/useAnalytics";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useAnalytics, type RangeKey } from '@/hooks/useAnalytics';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent, type ChartConfig
-} from "@/components/ui/chart";
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 // The chart consumes aggregated series returned by the analytics API.
 
 // --- Step 3: Update Chart Configuration for Income & Spending ---
 const chartConfig = {
   income: {
-    label: "Income",
+    label: 'Income',
     theme: {
-      light: "oklch(0.6 0.118 184.704)",
-      dark: "oklch(0.696 0.17 162.48)",
+      light: 'oklch(0.6 0.118 184.704)',
+      dark: 'oklch(0.696 0.17 162.48)',
     },
   },
   spending: {
-    label: "Spending",
+    label: 'Spending',
     theme: {
-      light: "oklch(0.646 0.222 41.116)",
-      dark: "oklch(0.488 0.243 264.376)",
+      light: 'oklch(0.646 0.222 41.116)',
+      dark: 'oklch(0.488 0.243 264.376)',
     },
   },
 } satisfies ChartConfig;
 
 export default function IncomeSpendingOverTime() {
-  const [range, setRange] = useState<RangeKey>("30d");
+  const [range, setRange] = useState<RangeKey>('30d');
   const { data } = useAnalytics(range);
   // active series state: control which series are shown
-  const [activeSeries, setActiveSeries] = React.useState<
-    Record<string, boolean>
-  >({
+  const [activeSeries, setActiveSeries] = React.useState<Record<string, boolean>>({
     income: true,
     spending: true,
   });
@@ -66,32 +59,29 @@ export default function IncomeSpendingOverTime() {
         income: r.income,
         spending: r.spending,
       })),
-    [data]
+    [data],
   );
 
-  if (process.env.NODE_ENV === "development") {
-    console.debug(
-      "[IncomeSpendingOverTime] chartDataMemo preview",
-      chartDataMemo.slice?.(0, 20)
-    );
+  if (process.env.NODE_ENV === 'development') {
+    console.debug('[IncomeSpendingOverTime] chartDataMemo preview', chartDataMemo.slice?.(0, 20));
   }
 
   const filteredData = React.useMemo(() => {
     const today = new Date();
 
     // If range is 'all', try to find the earliest non-empty bucket and start there
-    if (range === "all") {
+    if (range === 'all') {
       const firstNonZero = chartDataMemo.find(
-        (r) => (Number(r.income) || Number(r.spending)) !== 0
+        (r) => (Number(r.income) || Number(r.spending)) !== 0,
       );
       if (firstNonZero) {
-        const d = String(firstNonZero.date ?? "");
-        const start = new Date(d.includes("T") ? d : d + "T00:00:00");
+        const d = String(firstNonZero.date ?? '');
+        const start = new Date(d.includes('T') ? d : d + 'T00:00:00');
         return chartDataMemo.filter((item) => {
           const itmDate = new Date(
-            String(item.date ?? "").includes("T")
+            String(item.date ?? '').includes('T')
               ? String(item.date)
-              : String(item.date) + "T00:00:00"
+              : String(item.date) + 'T00:00:00',
           );
           return itmDate >= start;
         });
@@ -104,28 +94,28 @@ export default function IncomeSpendingOverTime() {
     let startDate: Date;
 
     switch (range) {
-      case "7d":
+      case '7d':
         startDate = subDays(today, 7);
         break;
-      case "30d":
+      case '30d':
         startDate = subDays(today, 30);
         break;
-      case "90d":
+      case '90d':
         startDate = subDays(today, 90);
         break;
-      case "1M":
+      case '1M':
         startDate = subMonths(today, 1);
         break;
-      case "3M":
+      case '3M':
         startDate = subMonths(today, 3);
         break;
-      case "6M":
+      case '6M':
         startDate = subMonths(today, 6);
         break;
-      case "YTD":
+      case 'YTD':
         startDate = startOfYear(today);
         break;
-      case "1Y":
+      case '1Y':
         startDate = subYears(today, 1);
         break;
       default:
@@ -134,8 +124,8 @@ export default function IncomeSpendingOverTime() {
     }
 
     return chartDataMemo.filter((item) => {
-      const d = String(item.date ?? "");
-      const date = new Date(d.includes("T") ? d : d + "T00:00:00");
+      const d = String(item.date ?? '');
+      const date = new Date(d.includes('T') ? d : d + 'T00:00:00');
       return date >= startDate;
     });
   }, [range, chartDataMemo]);
@@ -143,7 +133,9 @@ export default function IncomeSpendingOverTime() {
   // compute visible domain for Y axis based on active series
   const yDomain = React.useMemo(() => {
     const keys = Object.keys(activeSeries).filter((k) => activeSeries[k]);
-    if (!keys.length) {return [0, 1];}
+    if (!keys.length) {
+      return [0, 1];
+    }
 
     let min = Infinity;
     let max = -Infinity;
@@ -152,13 +144,19 @@ export default function IncomeSpendingOverTime() {
       for (const k of keys) {
         const v = Number((row as Record<string, unknown>)[k] ?? 0);
         if (Number.isFinite(v)) {
-          if (v < min) {min = v;}
-          if (v > max) {max = v;}
+          if (v < min) {
+            min = v;
+          }
+          if (v > max) {
+            max = v;
+          }
         }
       }
     }
 
-    if (min === Infinity || max === -Infinity) {return [0, 1];}
+    if (min === Infinity || max === -Infinity) {
+      return [0, 1];
+    }
 
     // add small padding
     const padding = Math.max((max - min) * 0.08, 1);
@@ -180,8 +178,12 @@ export default function IncomeSpendingOverTime() {
 
   function formatYAxisTick(value: number) {
     const abs = Math.abs(value);
-    if (abs >= 1000000) {return `$${(value / 1000000).toFixed(1)}M`;}
-    if (abs >= 1000) {return `$${(value / 1000).toFixed(1)}k`;}
+    if (abs >= 1000000) {
+      return `$${(value / 1000000).toFixed(1)}M`;
+    }
+    if (abs >= 1000) {
+      return `$${(value / 1000).toFixed(1)}k`;
+    }
     return `$${value.toLocaleString()}`;
   }
 
@@ -190,15 +192,10 @@ export default function IncomeSpendingOverTime() {
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
         <div className="grid flex-1 gap-1">
           <CardTitle>Income vs. Spending</CardTitle>
-          <CardDescription>
-            Showing total income and spending over time
-          </CardDescription>
+          <CardDescription>Showing total income and spending over time</CardDescription>
         </div>
         <Select value={range} onValueChange={(v) => setRange(v as RangeKey)}>
-          <SelectTrigger
-            className="w-[160px] rounded-lg sm:ml-auto"
-            aria-label="Select a value"
-          >
+          <SelectTrigger className="w-[160px] rounded-lg sm:ml-auto" aria-label="Select a value">
             <SelectValue placeholder="Select time range" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
@@ -227,37 +224,18 @@ export default function IncomeSpendingOverTime() {
         </Select>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-5">
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-auto  h-[300px] w-full pt-7"
-        >
+        <ChartContainer config={chartConfig} className="aspect-auto  h-[300px] w-full pt-7">
           <AreaChart data={animatedData}>
             <defs>
               {/* Gradient for the Spending area */}
               <linearGradient id="fillSpending" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-spending)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-spending)"
-                  stopOpacity={0.1}
-                />
+                <stop offset="5%" stopColor="var(--color-spending)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="var(--color-spending)" stopOpacity={0.1} />
               </linearGradient>
               {/* Gradient for the Income area */}
               <linearGradient id="fillIncome" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-income)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-income)"
-                  stopOpacity={0.1}
-                />
+                <stop offset="5%" stopColor="var(--color-income)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="var(--color-income)" stopOpacity={0.1} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
@@ -268,11 +246,9 @@ export default function IncomeSpendingOverTime() {
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const str = String(value ?? "");
-                const date = new Date(
-                  str.includes("T") ? str : str + "T00:00:00"
-                );
-                return format(date, "MMM d");
+                const str = String(value ?? '');
+                const date = new Date(str.includes('T') ? str : str + 'T00:00:00');
+                return format(date, 'MMM d');
               }}
             />
             {/* dynamic domain scales to visible series */}
@@ -280,7 +256,7 @@ export default function IncomeSpendingOverTime() {
               domain={yDomain}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#6b7280", fontSize: 12 }}
+              tick={{ fill: '#6b7280', fontSize: 12 }}
               tickFormatter={formatYAxisTick}
             />
             <ChartTooltip
@@ -290,11 +266,11 @@ export default function IncomeSpendingOverTime() {
                   labelFormatter={(value) =>
                     format(
                       new Date(
-                        String(value ?? "").includes("T")
+                        String(value ?? '').includes('T')
                           ? String(value)
-                          : String(value) + "T00:00:00"
+                          : String(value) + 'T00:00:00',
                       ),
-                      "MMM d, yyyy"
+                      'MMM d, yyyy',
                     )
                   }
                   indicator="dot"
@@ -328,14 +304,14 @@ export default function IncomeSpendingOverTime() {
             <ChartLegend
               payload={[
                 {
-                  dataKey: "spending",
-                  value: "spending",
-                  color: "var(--color-spending)",
+                  dataKey: 'spending',
+                  value: 'spending',
+                  color: 'var(--color-spending)',
                 },
                 {
-                  dataKey: "income",
-                  value: "income",
-                  color: "var(--color-income)",
+                  dataKey: 'income',
+                  value: 'income',
+                  color: 'var(--color-income)',
                 },
               ]}
               content={(props) => (

@@ -1,30 +1,26 @@
 // src/components/private/transactions/filters/DateRangePicker.tsx
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { Calendar } from "lucide-react";
-import { format } from "date-fns";
+import React, { useState } from 'react';
+import { Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 export interface DateRange {
   from?: Date;
   to?: Date;
   preset?:
-    | "last7days"
-    | "last30days"
-    | "last90days"
-    | "thisMonth"
-    | "lastMonth"
-    | "thisYear"
-    | "custom";
+    | 'last7days'
+    | 'last30days'
+    | 'last90days'
+    | 'thisMonth'
+    | 'lastMonth'
+    | 'thisYear'
+    | 'custom';
 }
 
 interface DateRangePickerProps {
@@ -36,24 +32,24 @@ interface DateRangePickerProps {
 }
 
 const presets = [
-  { value: "last7days", label: "Last 7 Days" },
-  { value: "last30days", label: "Last 30 Days" },
-  { value: "last90days", label: "Last 90 Days" },
-  { value: "thisMonth", label: "This Month" },
-  { value: "lastMonth", label: "Last Month" },
-  { value: "thisYear", label: "This Year" },
+  { value: 'last7days', label: 'Last 7 Days' },
+  { value: 'last30days', label: 'Last 30 Days' },
+  { value: 'last90days', label: 'Last 90 Days' },
+  { value: 'thisMonth', label: 'This Month' },
+  { value: 'lastMonth', label: 'Last Month' },
+  { value: 'thisYear', label: 'This Year' },
 ];
 
 export function DateRangePicker({
   value,
   onChange,
-  placeholder = "Select date range...",
+  placeholder = 'Select date range...',
   className,
   disabled = false,
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [customFrom, setCustomFrom] = useState<string>("");
-  const [customTo, setCustomTo] = useState<string>("");
+  const [customFrom, setCustomFrom] = useState<string>('');
+  const [customTo, setCustomTo] = useState<string>('');
 
   const applyPreset = (presetValue: string) => {
     const now = new Date();
@@ -61,23 +57,23 @@ export function DateRangePicker({
     let to: Date = now;
 
     switch (presetValue) {
-      case "last7days":
+      case 'last7days':
         from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
-      case "last30days":
+      case 'last30days':
         from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         break;
-      case "last90days":
+      case 'last90days':
         from = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
         break;
-      case "thisMonth":
+      case 'thisMonth':
         from = new Date(now.getFullYear(), now.getMonth(), 1);
         break;
-      case "lastMonth":
+      case 'lastMonth':
         from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         to = new Date(now.getFullYear(), now.getMonth(), 0);
         break;
-      case "thisYear":
+      case 'thisYear':
         from = new Date(now.getFullYear(), 0, 1);
         break;
     }
@@ -85,7 +81,7 @@ export function DateRangePicker({
     onChange({
       from,
       to,
-      preset: presetValue as DateRange["preset"],
+      preset: presetValue as DateRange['preset'],
     });
     setIsOpen(false);
   };
@@ -97,37 +93,37 @@ export function DateRangePicker({
     onChange({
       from,
       to,
-      preset: "custom",
+      preset: 'custom',
     });
     setIsOpen(false);
   };
 
   const clearSelection = () => {
     onChange({});
-    setCustomFrom("");
-    setCustomTo("");
+    setCustomFrom('');
+    setCustomTo('');
     setIsOpen(false);
   };
 
   const getDisplayText = () => {
-    if (value.preset && value.preset !== "custom") {
+    if (value.preset && value.preset !== 'custom') {
       const preset = presets.find((p) => p.value === value.preset);
-      return preset?.label || "";
+      return preset?.label || '';
     }
 
     if (value.from && value.to) {
-      return `${format(value.from, "MMM dd")} - ${format(value.to, "MMM dd")}`;
+      return `${format(value.from, 'MMM dd')} - ${format(value.to, 'MMM dd')}`;
     }
 
     if (value.from) {
-      return `From ${format(value.from, "MMM dd, yyyy")}`;
+      return `From ${format(value.from, 'MMM dd, yyyy')}`;
     }
 
     if (value.to) {
-      return `Until ${format(value.to, "MMM dd, yyyy")}`;
+      return `Until ${format(value.to, 'MMM dd, yyyy')}`;
     }
 
-    return "";
+    return '';
   };
 
   const hasSelection = value.from || value.to || value.preset;
@@ -138,9 +134,9 @@ export function DateRangePicker({
         <Button
           variant="outline"
           className={cn(
-            "justify-start text-left font-normal",
-            !hasSelection && "text-muted-foreground",
-            className
+            'justify-start text-left font-normal',
+            !hasSelection && 'text-muted-foreground',
+            className,
           )}
           disabled={disabled}
         >
@@ -156,9 +152,7 @@ export function DateRangePicker({
               {presets.map((preset) => (
                 <Button
                   key={preset.value}
-                  variant={
-                    value.preset === preset.value ? "default" : "outline"
-                  }
+                  variant={value.preset === preset.value ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => applyPreset(preset.value)}
                   className="text-xs"
@@ -199,12 +193,7 @@ export function DateRangePicker({
                 >
                   Apply
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={clearSelection}
-                  className="flex-1"
-                >
+                <Button size="sm" variant="outline" onClick={clearSelection} className="flex-1">
                   Clear
                 </Button>
               </div>

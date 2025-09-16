@@ -1,18 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
-import { supabase } from "@/lib/supabase/chat-queries";
+import { supabase } from '@/lib/supabase/chat-queries';
 
 export async function GET() {
   try {
     // Test if tables exist
     const { data: sessions, error: sessionsError } = await supabase
-      .from("chat_sessions")
-      .select("*")
+      .from('chat_sessions')
+      .select('*')
       .limit(1);
 
     const { data: messages, error: messagesError } = await supabase
-      .from("chat_messages")
-      .select("*")
+      .from('chat_messages')
+      .select('*')
       .limit(1);
 
     return NextResponse.json({
@@ -25,9 +25,9 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

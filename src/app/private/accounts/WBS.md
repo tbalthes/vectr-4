@@ -160,27 +160,22 @@ Acceptance:
 To comply with Plaid's requirements for launching Link in Production in the US or Canada, the following use case descriptions outline how end-user data shared via Plaid will be used:
 
 1. **Account Linking and Management**
-
    - Data such as account names, balances, and transaction histories will be used to provide users with a consolidated view of their financial accounts within the app.
    - This includes displaying account details, recent transactions, and aggregated financial metrics like net worth, total assets, and total debt.
 
 2. **Transaction Categorization and Insights**
-
    - Transaction data will be categorized to help users understand their spending patterns and financial habits.
    - Insights derived from this data will be used to generate reports and visualizations for better financial planning.
 
 3. **Budgeting and Financial Planning**
-
    - Users can set budgets and track their progress using the financial data retrieved via Plaid.
    - Historical transaction data will be analyzed to provide personalized recommendations and alerts.
 
 4. **Fraud Detection and Security**
-
    - Transaction data will be monitored for unusual activity to help detect potential fraud.
    - Alerts will be sent to users in case of suspicious transactions.
 
 5. **Data Sync and Updates**
-
    - Plaid data will be used to keep account balances and transaction histories up-to-date, ensuring users have access to the latest financial information.
 
 6. **Third-Party Integrations**

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Plus } from "lucide-react";
+import React from 'react';
+import { Plus } from 'lucide-react';
 
 import {
   Dialog,
@@ -11,20 +11,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface AddTransactionModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
 }
 
-const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
-  open,
-  setOpen,
-}) => {
+const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ open, setOpen }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -36,17 +33,12 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Transaction</DialogTitle>
-          <DialogDescription>
-            Add a new transaction to track your finances.
-          </DialogDescription>
+          <DialogDescription>Add a new transaction to track your finances.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              placeholder="Enter transaction description"
-            />
+            <Input id="description" placeholder="Enter transaction description" />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="amount">Amount</Label>

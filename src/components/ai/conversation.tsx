@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 
-import { cn } from "@/lib/utils/utils";
+import { cn } from '@/lib/utils/utils';
 
 export interface ConversationProps {
   children?: React.ReactNode;
@@ -48,14 +48,12 @@ export const Conversation: React.FC<ConversationProps> = ({
   }, []);
 
   return (
-    <div className={cn("flex flex-col min-h-0", className)}>
+    <div className={cn('flex flex-col min-h-0', className)}>
       <div
         ref={scrollRef}
         className={cn(
-          maxHeight
-            ? "overflow-y-auto scroll-smooth"
-            : "flex-1 overflow-y-auto scroll-smooth",
-          "scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+          maxHeight ? 'overflow-y-auto scroll-smooth' : 'flex-1 overflow-y-auto scroll-smooth',
+          'scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent',
         )}
         style={maxHeight ? { maxHeight } : undefined}
         onScroll={handleScroll}
@@ -70,20 +68,15 @@ export const Conversation: React.FC<ConversationProps> = ({
             <button
               onClick={scrollToBottom}
               className={cn(
-                "flex items-center justify-center",
-                "w-8 h-8 rounded-full",
-                "bg-primary text-primary-foreground",
-                "shadow-lg hover:shadow-xl",
-                "transition-all duration-200",
-                "focus:outline-none focus:ring-2 focus:ring-primary-foreground/50"
+                'flex items-center justify-center',
+                'w-8 h-8 rounded-full',
+                'bg-primary text-primary-foreground',
+                'shadow-lg hover:shadow-xl',
+                'transition-all duration-200',
+                'focus:outline-none focus:ring-2 focus:ring-primary-foreground/50',
               )}
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -103,7 +96,7 @@ export const ConversationContent: React.FC<ConversationContentProps> = ({
   children,
   className,
 }) => {
-  return <div className={cn("space-y-4", className)}>{children}</div>;
+  return <div className={cn('space-y-4', className)}>{children}</div>;
 };
 
 export { Conversation as default };

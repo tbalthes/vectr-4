@@ -1,20 +1,13 @@
-"use client";
+'use client';
 
-import type {
-  ReactNode} from "react";
-import React, {
-  createContext,
-  useContext,
-  useReducer,
-  useEffect
-} from "react";
+import type { ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 import type {
   SyncProgressData,
-  BulkSyncProgressData} from "@/lib/notifications/account-notifications";
-import {
-  accountToasts
-} from "@/lib/notifications/account-notifications";
+  BulkSyncProgressData,
+} from '@/lib/notifications/account-notifications';
+import { accountToasts } from '@/lib/notifications/account-notifications';
 
 export interface AccountSyncState {
   isGlobalSyncActive: boolean;
@@ -29,29 +22,29 @@ export interface AccountSyncState {
 }
 
 export type AccountSyncAction =
-  | { type: "START_ACCOUNT_SYNC"; payload: SyncProgressData }
-  | { type: "UPDATE_ACCOUNT_SYNC"; payload: SyncProgressData }
+  | { type: 'START_ACCOUNT_SYNC'; payload: SyncProgressData }
+  | { type: 'UPDATE_ACCOUNT_SYNC'; payload: SyncProgressData }
   | {
-      type: "COMPLETE_ACCOUNT_SYNC";
+      type: 'COMPLETE_ACCOUNT_SYNC';
       payload: { accountName: string; newTransactions?: number };
     }
   | {
-      type: "ERROR_ACCOUNT_SYNC";
+      type: 'ERROR_ACCOUNT_SYNC';
       payload: { accountName: string; error: string };
     }
-  | { type: "START_BULK_SYNC"; payload: BulkSyncProgressData }
-  | { type: "UPDATE_BULK_SYNC"; payload: BulkSyncProgressData }
+  | { type: 'START_BULK_SYNC'; payload: BulkSyncProgressData }
+  | { type: 'UPDATE_BULK_SYNC'; payload: BulkSyncProgressData }
   | {
-      type: "COMPLETE_BULK_SYNC";
+      type: 'COMPLETE_BULK_SYNC';
       payload: {
         totalAccounts: number;
         totalTransactions?: number;
         failedAccounts?: string[];
       };
     }
-  | { type: "ADD_BACKGROUND_PROCESS"; payload: { id: string; message: string } }
-  | { type: "REMOVE_BACKGROUND_PROCESS"; payload: { id: string } }
-  | { type: "CLEAR_ALL_SYNCS" };
+  | { type: 'ADD_BACKGROUND_PROCESS'; payload: { id: string; message: string } }
+  | { type: 'REMOVE_BACKGROUND_PROCESS'; payload: { id: string } }
+  | { type: 'CLEAR_ALL_SYNCS' };
 
 const initialState: AccountSyncState = {
   isGlobalSyncActive: false,
@@ -61,12 +54,9 @@ const initialState: AccountSyncState = {
   backgroundProcesses: [],
 };
 
-function accountSyncReducer(
-  state: AccountSyncState,
-  action: AccountSyncAction
-): AccountSyncState {
+function accountSyncReducer(state: AccountSyncState, action: AccountSyncAction): AccountSyncState {
   switch (action.type) {
-    case "START_ACCOUNT_SYNC": {
+    case 'START_ACCOUNT_SYNC': {
       const newActiveSyncs = new Map(state.activeSyncs);
       newActiveSyncs.set(action.payload.accountName, action.payload);
 
@@ -80,7 +70,7 @@ function accountSyncReducer(
       };
     }
 
-    case "UPDATE_ACCOUNT_SYNC": {
+    case 'UPDATE_ACCOUNT_SYNC': {
       const newActiveSyncs = new Map(state.activeSyncs);
       newActiveSyncs.set(action.payload.accountName, action.payload);
 
@@ -93,26 +83,22 @@ function accountSyncReducer(
       };
     }
 
-    case "COMPLETE_ACCOUNT_SYNC": {
+    case 'COMPLETE_ACCOUNT_SYNC': {
       const newActiveSyncs = new Map(state.activeSyncs);
       newActiveSyncs.delete(action.payload.accountName);
 
       // Show completion toast
-      accountToasts.syncComplete(
-        action.payload.accountName,
-        action.payload.newTransactions
-      );
+      accountToasts.syncComplete(action.payload.accountName, action.payload.newTransactions);
 
       return {
         ...state,
         activeSyncs: newActiveSyncs,
-        isGlobalSyncActive:
-          newActiveSyncs.size > 0 || state.bulkSyncData !== null,
+        isGlobalSyncActive: newActiveSyncs.size > 0 || state.bulkSyncData !== null,
         lastSyncTime: new Date(),
       };
     }
 
-    case "ERROR_ACCOUNT_SYNC": {
+    case 'ERROR_ACCOUNT_SYNC': {
       const newActiveSyncs = new Map(state.activeSyncs);
       newActiveSyncs.delete(action.payload.accountName);
 
@@ -122,12 +108,11 @@ function accountSyncReducer(
       return {
         ...state,
         activeSyncs: newActiveSyncs,
-        isGlobalSyncActive:
-          newActiveSyncs.size > 0 || state.bulkSyncData !== null,
+        isGlobalSyncActive: newActiveSyncs.size > 0 || state.bulkSyncData !== null,
       };
     }
 
-    case "START_BULK_SYNC": {
+    case 'START_BULK_SYNC': {
       return {
         ...state,
         isGlobalSyncActive: true,
@@ -135,7 +120,7 @@ function accountSyncReducer(
       };
     }
 
-    case "UPDATE_BULK_SYNC": {
+    case 'UPDATE_BULK_SYNC': {
       // Update bulk sync progress toast
       accountToasts.bulkSyncProgress(action.payload);
 
@@ -145,12 +130,12 @@ function accountSyncReducer(
       };
     }
 
-    case "COMPLETE_BULK_SYNC": {
+    case 'COMPLETE_BULK_SYNC': {
       // Show completion toast
       accountToasts.bulkSyncComplete(
         action.payload.totalAccounts,
         action.payload.totalTransactions,
-        action.payload.failedAccounts
+        action.payload.failedAccounts,
       );
 
       return {
@@ -161,7 +146,7 @@ function accountSyncReducer(
       };
     }
 
-    case "ADD_BACKGROUND_PROCESS": {
+    case 'ADD_BACKGROUND_PROCESS': {
       const newProcess = {
         id: action.payload.id,
         message: action.payload.message,
@@ -177,16 +162,14 @@ function accountSyncReducer(
       };
     }
 
-    case "REMOVE_BACKGROUND_PROCESS": {
+    case 'REMOVE_BACKGROUND_PROCESS': {
       return {
         ...state,
-        backgroundProcesses: state.backgroundProcesses.filter(
-          (p) => p.id !== action.payload.id
-        ),
+        backgroundProcesses: state.backgroundProcesses.filter((p) => p.id !== action.payload.id),
       };
     }
 
-    case "CLEAR_ALL_SYNCS": {
+    case 'CLEAR_ALL_SYNCS': {
       // Clear all notifications
       accountToasts.clearAll();
 
@@ -217,7 +200,7 @@ interface AccountSyncContextType {
   completeBulkSync: (
     totalAccounts: number,
     totalTransactions?: number,
-    failedAccounts?: string[]
+    failedAccounts?: string[],
   ) => void;
   addBackgroundProcess: (id: string, message: string) => void;
   removeBackgroundProcess: (id: string) => void;
@@ -229,16 +212,12 @@ interface AccountSyncContextType {
   getSyncProgress: () => number;
 }
 
-const AccountSyncContext = createContext<AccountSyncContextType | undefined>(
-  undefined
-);
+const AccountSyncContext = createContext<AccountSyncContextType | undefined>(undefined);
 
 export function useAccountSync(): AccountSyncContextType {
   const context = useContext(AccountSyncContext);
   if (!context) {
-    throw new Error(
-      "useAccountSync must be used within an AccountSyncProvider"
-    );
+    throw new Error('useAccountSync must be used within an AccountSyncProvider');
   }
   return context;
 }
@@ -257,7 +236,7 @@ export function AccountSyncProvider({ children }: AccountSyncProviderProps) {
       state.backgroundProcesses.forEach((process) => {
         if (process.startTime < fiveMinutesAgo) {
           dispatch({
-            type: "REMOVE_BACKGROUND_PROCESS",
+            type: 'REMOVE_BACKGROUND_PROCESS',
             payload: { id: process.id },
           });
         }
@@ -269,56 +248,53 @@ export function AccountSyncProvider({ children }: AccountSyncProviderProps) {
 
   // Convenience methods
   const startAccountSync = (data: SyncProgressData) => {
-    dispatch({ type: "START_ACCOUNT_SYNC", payload: data });
+    dispatch({ type: 'START_ACCOUNT_SYNC', payload: data });
   };
 
   const updateAccountSync = (data: SyncProgressData) => {
-    dispatch({ type: "UPDATE_ACCOUNT_SYNC", payload: data });
+    dispatch({ type: 'UPDATE_ACCOUNT_SYNC', payload: data });
   };
 
-  const completeAccountSync = (
-    accountName: string,
-    newTransactions?: number
-  ) => {
+  const completeAccountSync = (accountName: string, newTransactions?: number) => {
     dispatch({
-      type: "COMPLETE_ACCOUNT_SYNC",
+      type: 'COMPLETE_ACCOUNT_SYNC',
       payload: { accountName, newTransactions },
     });
   };
 
   const errorAccountSync = (accountName: string, error: string) => {
-    dispatch({ type: "ERROR_ACCOUNT_SYNC", payload: { accountName, error } });
+    dispatch({ type: 'ERROR_ACCOUNT_SYNC', payload: { accountName, error } });
   };
 
   const startBulkSync = (data: BulkSyncProgressData) => {
-    dispatch({ type: "START_BULK_SYNC", payload: data });
+    dispatch({ type: 'START_BULK_SYNC', payload: data });
   };
 
   const updateBulkSync = (data: BulkSyncProgressData) => {
-    dispatch({ type: "UPDATE_BULK_SYNC", payload: data });
+    dispatch({ type: 'UPDATE_BULK_SYNC', payload: data });
   };
 
   const completeBulkSync = (
     totalAccounts: number,
     totalTransactions?: number,
-    failedAccounts?: string[]
+    failedAccounts?: string[],
   ) => {
     dispatch({
-      type: "COMPLETE_BULK_SYNC",
+      type: 'COMPLETE_BULK_SYNC',
       payload: { totalAccounts, totalTransactions, failedAccounts },
     });
   };
 
   const addBackgroundProcess = (id: string, message: string) => {
-    dispatch({ type: "ADD_BACKGROUND_PROCESS", payload: { id, message } });
+    dispatch({ type: 'ADD_BACKGROUND_PROCESS', payload: { id, message } });
   };
 
   const removeBackgroundProcess = (id: string) => {
-    dispatch({ type: "REMOVE_BACKGROUND_PROCESS", payload: { id } });
+    dispatch({ type: 'REMOVE_BACKGROUND_PROCESS', payload: { id } });
   };
 
   const clearAllSyncs = () => {
-    dispatch({ type: "CLEAR_ALL_SYNCS" });
+    dispatch({ type: 'CLEAR_ALL_SYNCS' });
   };
 
   // Status check methods
@@ -337,19 +313,17 @@ export function AccountSyncProvider({ children }: AccountSyncProviderProps) {
   const getSyncProgress = () => {
     if (state.bulkSyncData) {
       return Math.round(
-        (state.bulkSyncData.completedAccounts /
-          state.bulkSyncData.totalAccounts) *
-          100
+        (state.bulkSyncData.completedAccounts / state.bulkSyncData.totalAccounts) * 100,
       );
     }
     if (state.activeSyncs.size > 0) {
       const totalSteps = Array.from(state.activeSyncs.values()).reduce(
         (sum, sync) => sum + sync.totalSteps,
-        0
+        0,
       );
       const completedSteps = Array.from(state.activeSyncs.values()).reduce(
         (sum, sync) => sum + (sync.step - 1),
-        0
+        0,
       );
       return Math.round((completedSteps / totalSteps) * 100);
     }
@@ -375,9 +349,5 @@ export function AccountSyncProvider({ children }: AccountSyncProviderProps) {
     getSyncProgress,
   };
 
-  return (
-    <AccountSyncContext.Provider value={contextValue}>
-      {children}
-    </AccountSyncContext.Provider>
-  );
+  return <AccountSyncContext.Provider value={contextValue}>{children}</AccountSyncContext.Provider>;
 }

@@ -1,54 +1,50 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 // GET /api/debug/force-sync
 // Force sync transactions for all users (debug only)
 export async function GET() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
   try {
     // Get all active Plaid account links
     const { data: accountLinks, error: linksError } = await supabase
-      .from("account_links")
-      .select("*")
-      .eq("provider", "plaid")
-      .eq("status", "active");
+      .from('account_links')
+      .select('*')
+      .eq('provider', 'plaid')
+      .eq('status', 'active');
 
     if (linksError) {
       return NextResponse.json({ error: linksError.message }, { status: 500 });
     }
 
-    console.log(
-      `Found ${accountLinks?.length || 0} active Plaid account links`
-    );
+    console.log(`Found ${accountLinks?.length || 0} active Plaid account links`);
 
     const results = [];
 
     for (const link of accountLinks || []) {
       try {
-        console.log(
-          `🔄 Forcing sync for account link ${link.id} (item: ${link.item_id})`
-        );
+        console.log(`🔄 Forcing sync for account link ${link.id} (item: ${link.item_id})`);
 
         // Call the sync endpoint with service authentication
         const syncResponse = await fetch(
           `http://localhost:3000/api/aggregator/plaid/transactions/sync`,
           {
-            method: "POST",
+            method: 'POST',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
               Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-              "X-User-ID": link.user_id,
+              'X-User-ID': link.user_id,
             },
             body: JSON.stringify({
               access_token: link.access_token_encrypted,
               cursor: link.cursor || undefined,
               count: 500,
             }),
-          }
+          },
         );
 
         if (syncResponse.ok) {
@@ -82,7 +78,7 @@ export async function GET() {
           account_link_id: link.id,
           item_id: link.item_id,
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
         console.error(`❌ Sync error for ${link.id}:`, error);
       }
@@ -93,10 +89,7 @@ export async function GET() {
       results,
     });
   } catch (error) {
-    console.error("Force sync error:", error);
-    return NextResponse.json(
-      { error: "Failed to force sync" },
-      { status: 500 }
-    );
+    console.error('Force sync error:', error);
+    return NextResponse.json({ error: 'Failed to force sync' }, { status: 500 });
   }
 }

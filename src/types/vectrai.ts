@@ -5,7 +5,7 @@ export interface AIInsight {
   type: string;
   title: string;
   description: string;
-  impact: "high" | "medium" | "low";
+  impact: 'high' | 'medium' | 'low';
   savings: number;
   confidence: number;
   category: string;
@@ -13,7 +13,7 @@ export interface AIInsight {
 
 export interface ChatMessage {
   id: number;
-  type: "ai" | "user";
+  type: 'ai' | 'user';
   message: string;
   timestamp: string;
 }
@@ -24,5 +24,5 @@ export interface FinancialGoal {
   target: number;
   current: number;
   deadline: string;
-  status: "completed" | "on-track" | "behind";
+  status: 'completed' | 'on-track' | 'behind';
 }

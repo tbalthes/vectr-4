@@ -14,7 +14,7 @@ export interface CategoryData {
 
 export interface RecentTransaction {
   id: string | number;
-  type: "income" | "spending";
+  type: 'income' | 'spending';
   description: string;
   category: string;
   date: string;

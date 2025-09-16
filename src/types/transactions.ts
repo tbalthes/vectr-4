@@ -7,8 +7,8 @@ export interface Transaction {
   category: string;
   date: string;
   account: string;
-  type: "income" | "expense";
-  status: "completed" | "pending";
+  type: 'income' | 'expense';
+  status: 'completed' | 'pending';
 }
 // This type matches the nested structure returned by our Supabase query
 export interface TransactionFromApi {
@@ -54,10 +54,10 @@ export interface FormattedTransaction {
   categoryName: string;
   categoryIcon: string;
   // Additional properties for TransactionTable compatibility
-  type: "income" | "expense";
+  type: 'income' | 'expense';
   category: string;
   account: string;
-  status: "completed" | "pending";
+  status: 'completed' | 'pending';
   // This will be used by the TransactionDetails component
   allCategories?: string[];
   note?: string;

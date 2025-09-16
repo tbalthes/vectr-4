@@ -1,23 +1,23 @@
 /**
  * Enhanced Rule Builder - Supports complex AND/OR conditions like Monarch Money
  */
-import React, { useState, useEffect } from "react";
-import { Plus, X, Trash2, GripVertical } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Plus, X, Trash2, GripVertical } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 // Type definitions
 interface RuleCondition {
@@ -28,12 +28,12 @@ interface RuleCondition {
 }
 
 interface RuleConditionGroup {
-  operator: "AND" | "OR";
+  operator: 'AND' | 'OR';
   conditions: RuleCondition[];
 }
 
 interface RuleConditions {
-  operator: "AND" | "OR";
+  operator: 'AND' | 'OR';
   groups: RuleConditionGroup[];
 }
 
@@ -59,7 +59,7 @@ interface EnhancedUserRule {
 
 interface EnhancedRuleBuilderProps {
   rule?: EnhancedUserRule;
-  onSave: (rule: Omit<EnhancedUserRule, "id">) => void;
+  onSave: (rule: Omit<EnhancedUserRule, 'id'>) => void;
   onCancel: () => void;
   categories: { category_id: string; name: string; color?: string }[];
   userId: string;
@@ -67,23 +67,23 @@ interface EnhancedRuleBuilderProps {
 
 // Field options for user-friendly display
 const FIELD_OPTIONS = [
-  { value: "description", label: "Description" },
-  { value: "merchant", label: "Merchant Name" },
-  { value: "amount", label: "Amount" },
+  { value: 'description', label: 'Description' },
+  { value: 'merchant', label: 'Merchant Name' },
+  { value: 'amount', label: 'Amount' },
 ];
 
 // Operator options by field type
 const TEXT_OPERATORS = [
-  { value: "contains", label: "contains" },
-  { value: "equals", label: "exactly matches" },
-  { value: "starts_with", label: "starts with" },
-  { value: "ends_with", label: "ends with" },
+  { value: 'contains', label: 'contains' },
+  { value: 'equals', label: 'exactly matches' },
+  { value: 'starts_with', label: 'starts with' },
+  { value: 'ends_with', label: 'ends with' },
 ];
 
 const AMOUNT_OPERATORS = [
-  { value: "equals", label: "equals" },
-  { value: "greater_than", label: "greater than" },
-  { value: "less_than", label: "less than" },
+  { value: 'equals', label: 'equals' },
+  { value: 'greater_than', label: 'greater than' },
+  { value: 'less_than', label: 'less than' },
 ];
 
 export function EnhancedRuleBuilder({
@@ -94,51 +94,44 @@ export function EnhancedRuleBuilder({
   userId,
 }: EnhancedRuleBuilderProps) {
   // Form state
-  const [name, setName] = useState(rule?.name || "");
-  const [description, setDescription] = useState(rule?.description || "");
+  const [name, setName] = useState(rule?.name || '');
+  const [description, setDescription] = useState(rule?.description || '');
   const [enabled, setEnabled] = useState(rule?.enabled ?? true);
   const [priority, setPriority] = useState(rule?.priority || 100);
 
   // Rule conditions state
-  const [rootOperator, setRootOperator] = useState<"AND" | "OR">(
-    rule?.conditions?.operator || "AND"
+  const [rootOperator, setRootOperator] = useState<'AND' | 'OR'>(
+    rule?.conditions?.operator || 'AND',
   );
   const [conditionGroups, setConditionGroups] = useState<RuleConditionGroup[]>(
     rule?.conditions?.groups || [
       {
-        operator: "AND",
-        conditions: [{ field: "description", operator: "contains", value: "" }],
+        operator: 'AND',
+        conditions: [{ field: 'description', operator: 'contains', value: '' }],
       },
-    ]
+    ],
   );
 
   // Rule actions state
   const [selectedCategoryId, setSelectedCategoryId] = useState(
-    rule?.actions?.category_id || "no-change"
+    rule?.actions?.category_id || 'no-change',
   );
-  const [renameTo, setRenameTo] = useState(rule?.actions?.rename_to || "");
-  const [addTags, setAddTags] = useState(
-    rule?.actions?.add_tags?.join(", ") || ""
-  );
-  const [hideTransaction, setHideTransaction] = useState(
-    rule?.actions?.hide_transaction || false
-  );
+  const [renameTo, setRenameTo] = useState(rule?.actions?.rename_to || '');
+  const [addTags, setAddTags] = useState(rule?.actions?.add_tags?.join(', ') || '');
+  const [hideTransaction, setHideTransaction] = useState(rule?.actions?.hide_transaction || false);
   const [needsReview, setNeedsReview] = useState(rule?.actions?.needs_review);
 
   // Preview state
-  const [ruleSummary, setRuleSummary] = useState("");
+  const [ruleSummary, setRuleSummary] = useState('');
 
   // Generate rule summary
   const generateRuleSummary = React.useCallback((): string => {
     const formatCondition = (cond: RuleCondition): string => {
-      const field =
-        FIELD_OPTIONS.find((f) => f.value === cond.field)?.label || cond.field;
+      const field = FIELD_OPTIONS.find((f) => f.value === cond.field)?.label || cond.field;
       const operator =
-        cond.field === "amount"
-          ? AMOUNT_OPERATORS.find((o) => o.value === cond.operator)?.label ||
-            cond.operator
-          : TEXT_OPERATORS.find((o) => o.value === cond.operator)?.label ||
-            cond.operator;
+        cond.field === 'amount'
+          ? AMOUNT_OPERATORS.find((o) => o.value === cond.operator)?.label || cond.operator
+          : TEXT_OPERATORS.find((o) => o.value === cond.operator)?.label || cond.operator;
 
       return `${field} ${operator} '${cond.value}'`;
     };
@@ -163,11 +156,9 @@ export function EnhancedRuleBuilder({
 
     // Format actions
     const actionsParts: string[] = [];
-    if (selectedCategoryId && selectedCategoryId !== "no-change") {
-      const category = categories.find(
-        (c) => c.category_id === selectedCategoryId
-      );
-      actionsParts.push(`categorize as ${category?.name || "Unknown"}`);
+    if (selectedCategoryId && selectedCategoryId !== 'no-change') {
+      const category = categories.find((c) => c.category_id === selectedCategoryId);
+      actionsParts.push(`categorize as ${category?.name || 'Unknown'}`);
     }
     if (renameTo) {
       actionsParts.push(`rename to '${renameTo}'`);
@@ -176,11 +167,10 @@ export function EnhancedRuleBuilder({
       actionsParts.push(`add tags: ${addTags}`);
     }
     if (hideTransaction) {
-      actionsParts.push("hide transaction");
+      actionsParts.push('hide transaction');
     }
 
-    const actionsText =
-      actionsParts.length > 0 ? actionsParts.join(", ") : "categorize";
+    const actionsText = actionsParts.length > 0 ? actionsParts.join(', ') : 'categorize';
 
     return `If ${conditionsText} then ${actionsText}`;
   }, [
@@ -202,9 +192,9 @@ export function EnhancedRuleBuilder({
   const addCondition = (groupIndex: number) => {
     const newGroups = [...conditionGroups];
     newGroups[groupIndex].conditions.push({
-      field: "description",
-      operator: "contains",
-      value: "",
+      field: 'description',
+      operator: 'contains',
+      value: '',
     });
     setConditionGroups(newGroups);
   };
@@ -222,8 +212,8 @@ export function EnhancedRuleBuilder({
     // Ensure at least one group exists
     if (newGroups.length === 0) {
       newGroups.push({
-        operator: "AND",
-        conditions: [{ field: "description", operator: "contains", value: "" }],
+        operator: 'AND',
+        conditions: [{ field: 'description', operator: 'contains', value: '' }],
       });
     }
 
@@ -235,7 +225,7 @@ export function EnhancedRuleBuilder({
     groupIndex: number,
     conditionIndex: number,
     field: keyof RuleCondition,
-    value: string | number | boolean
+    value: string | number | boolean,
   ) => {
     const newGroups = [...conditionGroups];
     newGroups[groupIndex].conditions[conditionIndex] = {
@@ -250,8 +240,8 @@ export function EnhancedRuleBuilder({
     setConditionGroups([
       ...conditionGroups,
       {
-        operator: "AND",
-        conditions: [{ field: "description", operator: "contains", value: "" }],
+        operator: 'AND',
+        conditions: [{ field: 'description', operator: 'contains', value: '' }],
       },
     ]);
   };
@@ -264,8 +254,8 @@ export function EnhancedRuleBuilder({
     // Ensure at least one group exists
     if (newGroups.length === 0) {
       newGroups.push({
-        operator: "AND",
-        conditions: [{ field: "description", operator: "contains", value: "" }],
+        operator: 'AND',
+        conditions: [{ field: 'description', operator: 'contains', value: '' }],
       });
     }
 
@@ -273,7 +263,7 @@ export function EnhancedRuleBuilder({
   };
 
   // Update group operator
-  const updateGroupOperator = (groupIndex: number, operator: "AND" | "OR") => {
+  const updateGroupOperator = (groupIndex: number, operator: 'AND' | 'OR') => {
     const newGroups = [...conditionGroups];
     newGroups[groupIndex].operator = operator;
     setConditionGroups(newGroups);
@@ -282,21 +272,21 @@ export function EnhancedRuleBuilder({
   // Handle save
   const handleSave = () => {
     if (!name.trim()) {
-      alert("Please enter a rule name");
+      alert('Please enter a rule name');
       return;
     }
 
     // Validate conditions
     const hasValidConditions = conditionGroups.some((group) =>
-      group.conditions.some((cond) => cond.value.toString().trim() !== "")
+      group.conditions.some((cond) => cond.value.toString().trim() !== ''),
     );
 
     if (!hasValidConditions) {
-      alert("Please add at least one condition with a value");
+      alert('Please add at least one condition with a value');
       return;
     }
 
-    const ruleData: Omit<EnhancedUserRule, "id"> = {
+    const ruleData: Omit<EnhancedUserRule, 'id'> = {
       user_id: userId,
       name: name.trim(),
       description: description.trim() || undefined,
@@ -308,13 +298,11 @@ export function EnhancedRuleBuilder({
       },
       actions: {
         category_id:
-          selectedCategoryId && selectedCategoryId !== "no-change"
-            ? selectedCategoryId
-            : undefined,
+          selectedCategoryId && selectedCategoryId !== 'no-change' ? selectedCategoryId : undefined,
         rename_to: renameTo.trim() || undefined,
         add_tags: addTags.trim()
           ? addTags
-              .split(",")
+              .split(',')
               .map((tag) => tag.trim())
               .filter((tag) => tag)
           : undefined,
@@ -367,9 +355,7 @@ export function EnhancedRuleBuilder({
                 placeholder="100"
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Lower numbers = higher priority
-              </p>
+              <p className="text-xs text-gray-500 mt-1">Lower numbers = higher priority</p>
             </div>
           </div>
 
@@ -385,11 +371,7 @@ export function EnhancedRuleBuilder({
           </div>
 
           <div className="flex items-center space-x-2">
-            <Switch
-              id="enabled"
-              checked={enabled}
-              onCheckedChange={setEnabled}
-            />
+            <Switch id="enabled" checked={enabled} onCheckedChange={setEnabled} />
             <Label htmlFor="enabled">Rule enabled</Label>
           </div>
         </CardContent>
@@ -399,9 +381,7 @@ export function EnhancedRuleBuilder({
       <Card>
         <CardHeader>
           <CardTitle>Conditions</CardTitle>
-          <p className="text-sm text-gray-600">
-            Define when this rule should apply
-          </p>
+          <p className="text-sm text-gray-600">Define when this rule should apply</p>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Root Operator */}
@@ -410,7 +390,7 @@ export function EnhancedRuleBuilder({
               <Label className="text-sm font-medium">Match</Label>
               <Select
                 value={rootOperator}
-                onValueChange={(value: "AND" | "OR") => setRootOperator(value)}
+                onValueChange={(value: 'AND' | 'OR') => setRootOperator(value)}
               >
                 <SelectTrigger className="w-20 h-8">
                   <SelectValue />
@@ -420,9 +400,7 @@ export function EnhancedRuleBuilder({
                   <SelectItem value="OR">ANY</SelectItem>
                 </SelectContent>
               </Select>
-              <Label className="text-sm">
-                of the following condition groups:
-              </Label>
+              <Label className="text-sm">of the following condition groups:</Label>
             </div>
           )}
 
@@ -437,7 +415,7 @@ export function EnhancedRuleBuilder({
                       <Label className="text-sm">Match</Label>
                       <Select
                         value={group.operator}
-                        onValueChange={(value: "AND" | "OR") =>
+                        onValueChange={(value: 'AND' | 'OR') =>
                           updateGroupOperator(groupIndex, value)
                         }
                       >
@@ -467,10 +445,7 @@ export function EnhancedRuleBuilder({
 
               {/* Conditions within group */}
               {group.conditions.map((condition, conditionIndex) => (
-                <div
-                  key={conditionIndex}
-                  className="space-y-3 p-4 border rounded-lg bg-gray-50"
-                >
+                <div key={conditionIndex} className="space-y-3 p-4 border rounded-lg bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <GripVertical className="h-4 w-4 text-gray-400" />
@@ -482,9 +457,7 @@ export function EnhancedRuleBuilder({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() =>
-                          removeCondition(groupIndex, conditionIndex)
-                        }
+                        onClick={() => removeCondition(groupIndex, conditionIndex)}
                         className="text-red-600 hover:text-red-700"
                       >
                         <X className="h-4 w-4" />
@@ -498,12 +471,7 @@ export function EnhancedRuleBuilder({
                       <Select
                         value={condition.field}
                         onValueChange={(value) =>
-                          updateCondition(
-                            groupIndex,
-                            conditionIndex,
-                            "field",
-                            value
-                          )
+                          updateCondition(groupIndex, conditionIndex, 'field', value)
                         }
                       >
                         <SelectTrigger className="w-full">
@@ -524,26 +492,20 @@ export function EnhancedRuleBuilder({
                       <Select
                         value={condition.operator}
                         onValueChange={(value) =>
-                          updateCondition(
-                            groupIndex,
-                            conditionIndex,
-                            "operator",
-                            value
-                          )
+                          updateCondition(groupIndex, conditionIndex, 'operator', value)
                         }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {(condition.field === "amount"
-                            ? AMOUNT_OPERATORS
-                            : TEXT_OPERATORS
-                          ).map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
+                          {(condition.field === 'amount' ? AMOUNT_OPERATORS : TEXT_OPERATORS).map(
+                            (option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ),
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -551,25 +513,14 @@ export function EnhancedRuleBuilder({
                     <div>
                       <Label>Value</Label>
                       <Input
-                        type={condition.field === "amount" ? "number" : "text"}
+                        type={condition.field === 'amount' ? 'number' : 'text'}
                         value={condition.value}
                         onChange={(e) => {
                           const value =
-                            condition.field === "amount"
-                              ? Number(e.target.value)
-                              : e.target.value;
-                          updateCondition(
-                            groupIndex,
-                            conditionIndex,
-                            "value",
-                            value
-                          );
+                            condition.field === 'amount' ? Number(e.target.value) : e.target.value;
+                          updateCondition(groupIndex, conditionIndex, 'value', value);
                         }}
-                        placeholder={
-                          condition.field === "amount"
-                            ? "0.00"
-                            : "Enter text..."
-                        }
+                        placeholder={condition.field === 'amount' ? '0.00' : 'Enter text...'}
                         className="w-full"
                       />
                     </div>
@@ -591,11 +542,7 @@ export function EnhancedRuleBuilder({
           ))}
 
           {/* Add condition group */}
-          <Button
-            variant="outline"
-            onClick={addConditionGroup}
-            className="w-full"
-          >
+          <Button variant="outline" onClick={addConditionGroup} className="w-full">
             <Plus className="h-4 w-4 mr-2" />
             Add Condition Group
           </Button>
@@ -606,28 +553,20 @@ export function EnhancedRuleBuilder({
       <Card>
         <CardHeader>
           <CardTitle>Actions</CardTitle>
-          <p className="text-sm text-gray-600">
-            What to do when conditions match
-          </p>
+          <p className="text-sm text-gray-600">What to do when conditions match</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="category">Category</Label>
-              <Select
-                value={selectedCategoryId}
-                onValueChange={setSelectedCategoryId}
-              >
+              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="no-change">No category change</SelectItem>
                   {categories.map((category) => (
-                    <SelectItem
-                      key={category.category_id}
-                      value={category.category_id}
-                    >
+                    <SelectItem key={category.category_id} value={category.category_id}>
                       <div className="flex items-center space-x-2">
                         {category.color && (
                           <div
@@ -673,22 +612,16 @@ export function EnhancedRuleBuilder({
                 checked={hideTransaction}
                 onCheckedChange={setHideTransaction}
               />
-              <Label htmlFor="hideTransaction">
-                Hide transaction from main view
-              </Label>
+              <Label htmlFor="hideTransaction">Hide transaction from main view</Label>
             </div>
 
             <div className="flex items-center space-x-2">
               <Switch
                 id="needsReview"
                 checked={needsReview ?? false}
-                onCheckedChange={(checked) =>
-                  setNeedsReview(checked ? true : undefined)
-                }
+                onCheckedChange={(checked) => setNeedsReview(checked ? true : undefined)}
               />
-              <Label htmlFor="needsReview">
-                Mark transaction as needing review
-              </Label>
+              <Label htmlFor="needsReview">Mark transaction as needing review</Label>
             </div>
           </div>
         </CardContent>
@@ -696,11 +629,7 @@ export function EnhancedRuleBuilder({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4 border-t">
-        <Button
-          variant="outline"
-          onClick={onCancel}
-          className="w-full sm:w-auto"
-        >
+        <Button variant="outline" onClick={onCancel} className="w-full sm:w-auto">
           Cancel
         </Button>
         <Button onClick={handleSave} className="w-full sm:w-auto">

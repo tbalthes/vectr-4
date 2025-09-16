@@ -235,33 +235,29 @@ export function Spending90v90() {
   }
 
   // build chart arrays (API returns spending as numbers per day)
-  const currentChartData =
-    rpcCurrent?.length
-      ? rpcCurrent.map((r) => ({
-          date: r.bucket,
-          value: Number(r.spending ?? 0),
-        }))
-      : fallback.currentChartData;
+  const currentChartData = rpcCurrent?.length
+    ? rpcCurrent.map((r) => ({
+        date: r.bucket,
+        value: Number(r.spending ?? 0),
+      }))
+    : fallback.currentChartData;
 
-  const previousChartData =
-    rpcPrevious?.length
-      ? rpcPrevious.map((r) => ({
-          date: r.bucket,
-          value: Number(r.spending ?? 0),
-        }))
-      : fallback.previousChartData;
+  const previousChartData = rpcPrevious?.length
+    ? rpcPrevious.map((r) => ({
+        date: r.bucket,
+        value: Number(r.spending ?? 0),
+      }))
+    : fallback.previousChartData;
 
   const [activeChart, setActiveChart] = React.useState<'current' | 'previous'>('current');
 
   const total = {
-    current:
-      rpcCurrent?.length
-        ? rpcCurrent.reduce((s, r) => s + Number(r.spending ?? 0), 0)
-        : fallback.totalCurrent,
-    previous:
-      rpcPrevious?.length
-        ? rpcPrevious.reduce((s, r) => s + Number(r.spending ?? 0), 0)
-        : fallback.totalPrevious,
+    current: rpcCurrent?.length
+      ? rpcCurrent.reduce((s, r) => s + Number(r.spending ?? 0), 0)
+      : fallback.totalCurrent,
+    previous: rpcPrevious?.length
+      ? rpcPrevious.reduce((s, r) => s + Number(r.spending ?? 0), 0)
+      : fallback.totalPrevious,
   };
 
   if (process.env.NODE_ENV === 'development') {

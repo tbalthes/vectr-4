@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import type { FinancialGoal } from "@/types/vectrai";
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import type { FinancialGoal } from '@/types/vectrai';
 
 interface GoalTrackingCardProps {
   financialGoals: FinancialGoal[];
@@ -27,7 +27,7 @@ export default function GoalTrackingCard({
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg">{goal.title}</CardTitle>
                 <Badge className={`text-xs ${getStatusColor(goal.status)}`}>
-                  {goal.status.replace("-", " ")}
+                  {goal.status.replace('-', ' ')}
                 </Badge>
               </div>
             </CardHeader>
@@ -41,9 +41,7 @@ export default function GoalTrackingCard({
                     </span>
                   </div>
                   <Progress value={Math.min(progress, 100)} className="h-2" />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {progress.toFixed(1)}% complete
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{progress.toFixed(1)}% complete</p>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t">
                   <div>

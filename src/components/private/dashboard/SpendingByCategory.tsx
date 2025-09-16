@@ -1,13 +1,7 @@
-"use client";
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+'use client';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 interface Category {
   name: string;
@@ -29,10 +23,11 @@ export function SpendingByCategory({ categories }: SpendingByCategoryProps) {
   };
   // Simple currency formatter for display values
   const formatValue = (value: number) => {
-    if (typeof value !== 'number' || isNaN(value)) {return '$0.00';}
+    if (typeof value !== 'number' || isNaN(value)) {
+      return '$0.00';
+    }
     return `$${value.toFixed(2)}`;
   };
-
 
   // Consistent styling for tooltip content
   const tooltipStyles = {
@@ -45,9 +40,7 @@ export function SpendingByCategory({ categories }: SpendingByCategoryProps) {
   return (
     <Card className="card-clean">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold">
-          Spending by Category
-        </CardTitle>
+        <CardTitle className="text-lg font-semibold">Spending by Category</CardTitle>
         <CardDescription>This month&apos;s expenses breakdown</CardDescription>
       </CardHeader>
       <CardContent>
@@ -66,28 +59,17 @@ export function SpendingByCategory({ categories }: SpendingByCategoryProps) {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip
-              formatter={formatCurrency}
-              contentStyle={tooltipStyles}
-            />
+            <Tooltip formatter={formatCurrency} contentStyle={tooltipStyles} />
           </PieChart>
         </ResponsiveContainer>
         <div className="space-y-2 mt-4">
           {categories.slice(0, 4).map((category, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between text-sm"
-            >
+            <div key={index} className="flex items-center justify-between text-sm">
               <div className="flex items-center space-x-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: category.color }}
-                />
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
                 <span className="text-foreground-muted">{category.name}</span>
               </div>
-              <span className="font-medium text-foreground">
-                {formatValue(category.value)}
-              </span>
+              <span className="font-medium text-foreground">{formatValue(category.value)}</span>
             </div>
           ))}
         </div>

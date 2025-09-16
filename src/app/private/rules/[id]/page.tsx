@@ -1,40 +1,37 @@
-"use client";
+'use client';
 
-import React, { useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 
-import { useAuth } from "@/contexts/AuthContext";
-import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
-import { useCategories } from "@/hooks/useCategories";
-import { MonarchStyleRuleBuilder } from "@/components/private/rules/MonarchStyleRuleBuilder";
+import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedUserRules } from '@/hooks/useEnhancedUserRules';
+import { useCategories } from '@/hooks/useCategories';
+import { MonarchStyleRuleBuilder } from '@/components/private/rules/MonarchStyleRuleBuilder';
 
 export default function EditRulePage() {
   const params = useParams();
-  const ruleId = Array.isArray(params?.id)
-    ? params?.id[0]
-    : params?.id ?? "";
+  const ruleId = Array.isArray(params?.id) ? params?.id[0] : (params?.id ?? '');
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { loading: categoriesLoading } = useCategories(user?.id);
   const { rules, updateRule } = useEnhancedUserRules({
-    userId: user?.id || "",
+    userId: user?.id || '',
     autoFetch: true,
   });
 
-  const rule = useMemo(
-    () => rules.find((r) => r.id === ruleId) || null,
-    [rules, ruleId]
-  );
+  const rule = useMemo(() => rules.find((r) => r.id === ruleId) || null, [rules, ruleId]);
 
-  const handleCancel = () => router.push("/private/rules");
+  const handleCancel = () => router.push('/private/rules');
 
   const handleSave = async (updates: any) => {
-    if (!ruleId) {return;}
+    if (!ruleId) {
+      return;
+    }
     try {
       await updateRule(ruleId, updates);
-      router.push("/private/rules");
+      router.push('/private/rules');
     } catch (e) {
-      console.error("Failed to update rule", e);
+      console.error('Failed to update rule', e);
     }
   };
 
@@ -52,7 +49,9 @@ export default function EditRulePage() {
     <div className="max-w-6xl mx-auto">
       <MonarchStyleRuleBuilder
         rule={rule}
-        onSave={(updates) => { void handleSave(updates); }}
+        onSave={(updates) => {
+          void handleSave(updates);
+        }}
         onCancel={handleCancel}
         userId={user.id}
       />

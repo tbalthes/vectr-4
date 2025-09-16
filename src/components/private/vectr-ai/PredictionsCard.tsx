@@ -1,15 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Calendar, Bot } from "lucide-react";
+import React from 'react';
+import { Calendar, Bot } from 'lucide-react';
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 export default function PredictionsCard() {
   return (
@@ -20,8 +14,7 @@ export default function PredictionsCard() {
           Financial Predictions
         </CardTitle>
         <CardDescription>
-          AI-powered forecasts based on your spending patterns and financial
-          behavior
+          AI-powered forecasts based on your spending patterns and financial behavior
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -29,12 +22,8 @@ export default function PredictionsCard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-4 border rounded-lg">
               <h4 className="font-medium mb-2">Next Month Spending Forecast</h4>
-              <div className="text-2xl font-bold text-blue-600 mb-1">
-                $2,750
-              </div>
-              <p className="text-sm text-gray-600">
-                5% decrease from this month
-              </p>
+              <div className="text-2xl font-bold text-blue-600 mb-1">$2,750</div>
+              <p className="text-sm text-gray-600">5% decrease from this month</p>
               <div className="mt-3 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Food & Dining</span>
@@ -52,12 +41,8 @@ export default function PredictionsCard() {
             </div>
             <div className="p-4 border rounded-lg">
               <h4 className="font-medium mb-2">Savings Goal Timeline</h4>
-              <div className="text-2xl font-bold text-green-600 mb-1">
-                6.2 months
-              </div>
-              <p className="text-sm text-gray-600">
-                To reach $3,000 vacation fund
-              </p>
+              <div className="text-2xl font-bold text-green-600 mb-1">6.2 months</div>
+              <p className="text-sm text-gray-600">To reach $3,000 vacation fund</p>
               <div className="mt-3 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Current Rate</span>
@@ -78,13 +63,11 @@ export default function PredictionsCard() {
             <div className="flex items-start space-x-3">
               <Bot className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
-                <h4 className="font-medium text-blue-800 mb-1">
-                  AI Prediction Insight
-                </h4>
+                <h4 className="font-medium text-blue-800 mb-1">AI Prediction Insight</h4>
                 <p className="text-sm text-blue-700">
-                  Based on your historical data, you typically spend 15% more
-                  during summer months. Consider adjusting your budget for
-                  June-August to account for vacation and activity expenses.
+                  Based on your historical data, you typically spend 15% more during summer months.
+                  Consider adjusting your budget for June-August to account for vacation and
+                  activity expenses.
                 </p>
               </div>
             </div>

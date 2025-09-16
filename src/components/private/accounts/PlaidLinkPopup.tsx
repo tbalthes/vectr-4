@@ -1,8 +1,8 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { usePlaidLink } from "react-plaid-link";
-import { X } from "lucide-react";
+'use client';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { usePlaidLink } from 'react-plaid-link';
+import { X } from 'lucide-react';
 
 interface PlaidLinkPopupProps {
   linkToken: string | null;
@@ -11,12 +11,7 @@ interface PlaidLinkPopupProps {
   onSuccess: (public_token: string, metadata: unknown) => void;
 }
 
-export function PlaidLinkPopup({
-  linkToken,
-  isOpen,
-  onClose,
-  onSuccess,
-}: PlaidLinkPopupProps) {
+export function PlaidLinkPopup({ linkToken, isOpen, onClose, onSuccess }: PlaidLinkPopupProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -69,12 +64,8 @@ export function PlaidLinkPopup({
               <span className="text-white font-bold text-lg">P</span>
             </div>
             <div className="text-left">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Connect with Plaid
-              </h2>
-              <p className="text-sm text-gray-600">
-                Securely link your bank account
-              </p>
+              <h2 className="text-xl font-semibold text-gray-900">Connect with Plaid</h2>
+              <p className="text-sm text-gray-600">Securely link your bank account</p>
             </div>
           </div>
 
@@ -87,9 +78,7 @@ export function PlaidLinkPopup({
                   <div className="h-4 bg-gray-300 rounded w-1/2"></div>
                 </div>
               </div>
-              <p className="text-sm text-gray-500">
-                Preparing secure connection...
-              </p>
+              <p className="text-sm text-gray-500">Preparing secure connection...</p>
             </div>
           )}
 
@@ -108,6 +97,6 @@ export function PlaidLinkPopup({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

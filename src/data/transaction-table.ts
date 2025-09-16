@@ -14,7 +14,15 @@ export interface Transaction {
   // Keep existing fields for backward compatibility and UI
   merchantLogo?: string;
   categories: string[];
-  mainCategory: 'food-dining' | 'transportation' | 'shopping' | 'entertainment' | 'utilities' | 'healthcare' | 'income' | 'other';
+  mainCategory:
+    | 'food-dining'
+    | 'transportation'
+    | 'shopping'
+    | 'entertainment'
+    | 'utilities'
+    | 'healthcare'
+    | 'income'
+    | 'other';
   type: 'income' | 'expense';
 }
 
@@ -30,11 +38,11 @@ export const mockTransactions: Transaction[] = [
     note: 'Morning coffee',
     user_metadata: {
       field1: { label: 'Location', value: 'Downtown' },
-      field2: { label: 'Purpose', value: 'Business meeting' }
+      field2: { label: 'Purpose', value: 'Business meeting' },
     },
     categories: ['Coffee', 'Food & Dining'],
     mainCategory: 'food-dining',
-    type: 'expense'
+    type: 'expense',
   },
   {
     transaction_number: 'TXN-2024-002',
@@ -42,12 +50,12 @@ export const mockTransactions: Transaction[] = [
     original_description: 'UBER TRIP 123ABC SAN FRANCISCO CA',
     clean_description: 'Uber',
     category: 'Transportation',
-    amount: -23.50,
+    amount: -23.5,
     needs_review: false,
     note: 'Airport trip',
     categories: ['Transportation', 'Rideshare'],
     mainCategory: 'transportation',
-    type: 'expense'
+    type: 'expense',
   },
   {
     transaction_number: 'TXN-2024-003',
@@ -59,11 +67,11 @@ export const mockTransactions: Transaction[] = [
     needs_review: true,
     note: 'Electronics purchase',
     user_metadata: {
-      field1: { label: 'Order ID', value: '#123-456789' }
+      field1: { label: 'Order ID', value: '#123-456789' },
     },
     categories: ['Shopping', 'Electronics'],
     mainCategory: 'shopping',
-    type: 'expense'
+    type: 'expense',
   },
   {
     transaction_number: 'TXN-2024-004',
@@ -75,7 +83,7 @@ export const mockTransactions: Transaction[] = [
     needs_review: false,
     categories: ['Entertainment', 'Streaming'],
     mainCategory: 'entertainment',
-    type: 'expense'
+    type: 'expense',
   },
   {
     transaction_number: 'TXN-2024-005',
@@ -88,7 +96,7 @@ export const mockTransactions: Transaction[] = [
     note: 'Monthly electricity bill',
     categories: ['Utilities', 'Electricity'],
     mainCategory: 'utilities',
-    type: 'expense'
+    type: 'expense',
   },
   {
     transaction_number: 'TXN-2024-006',
@@ -101,7 +109,7 @@ export const mockTransactions: Transaction[] = [
     note: 'Prescription pickup',
     categories: ['Healthcare', 'Medication'],
     mainCategory: 'healthcare',
-    type: 'expense'
+    type: 'expense',
   },
   {
     transaction_number: 'TXN-2024-007',
@@ -109,12 +117,12 @@ export const mockTransactions: Transaction[] = [
     original_description: 'COMPANY PAYROLL DIRECT DEP',
     clean_description: 'Salary Direct Deposit',
     category: 'Income',
-    amount: 3500.00,
+    amount: 3500.0,
     needs_review: false,
     note: 'Bi-weekly salary',
     categories: ['Income', 'Salary'],
     mainCategory: 'income',
-    type: 'income'
+    type: 'income',
   },
   {
     transaction_number: 'TXN-2024-008',
@@ -126,11 +134,11 @@ export const mockTransactions: Transaction[] = [
     needs_review: false,
     user_metadata: {
       field1: { label: 'Category', value: 'Groceries' },
-      field2: { label: 'Store Type', value: 'Superstore' }
+      field2: { label: 'Store Type', value: 'Superstore' },
     },
     categories: ['Shopping', 'Groceries', 'Household'],
     mainCategory: 'shopping',
-    type: 'expense'
+    type: 'expense',
   },
   {
     transaction_number: 'TXN-2024-009',
@@ -143,7 +151,7 @@ export const mockTransactions: Transaction[] = [
     note: 'Family dinner',
     categories: ['Food & Dining', 'Restaurant'],
     mainCategory: 'food-dining',
-    type: 'expense'
+    type: 'expense',
   },
   {
     transaction_number: 'TXN-2024-010',
@@ -151,11 +159,11 @@ export const mockTransactions: Transaction[] = [
     original_description: 'SHELL OIL #567890 FUEL PURCHASE',
     clean_description: 'Gas Station',
     category: 'Transportation',
-    amount: -38.90,
+    amount: -38.9,
     needs_review: true,
     note: 'Weekly fuel',
     categories: ['Transportation', 'Fuel'],
     mainCategory: 'transportation',
-    type: 'expense'
-  }
+    type: 'expense',
+  },
 ];

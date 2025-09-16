@@ -1,19 +1,13 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Trash, Plus } from "lucide-react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import * as React from 'react';
+import { Trash, Plus } from 'lucide-react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 export interface ChatSessionItem {
   id: string;
@@ -49,16 +43,16 @@ export default function ChatSidebar({
   loadingSessionId,
 }: ChatSidebarProps) {
   const [open, setOpen] = React.useState(false);
-  const controlled = typeof openProp === "boolean";
-  const [query, setQuery] = React.useState("");
+  const controlled = typeof openProp === 'boolean';
+  const [query, setQuery] = React.useState('');
 
   const filtered = React.useMemo(() => {
-    if (!query) {return sessions;}
+    if (!query) {
+      return sessions;
+    }
     const q = query.toLowerCase();
     return sessions.filter(
-      (s) =>
-        s.title.toLowerCase().includes(q) ||
-        (s.lastMessage || "").toLowerCase().includes(q)
+      (s) => s.title.toLowerCase().includes(q) || (s.lastMessage || '').toLowerCase().includes(q),
     );
   }, [sessions, query]);
 
@@ -80,16 +74,16 @@ export default function ChatSidebar({
       <SheetContent
         side="right"
         className={cn(
-          "w-[95vw] max-w-[400px] p-0 flex flex-col h-[98vh] bg-white dark:bg-zinc-900 border border-border shadow-xl rounded-xl m-2 xs:m-4 focus:outline-none",
-          className
+          'w-[95vw] max-w-[400px] p-0 flex flex-col h-[98vh] bg-white dark:bg-zinc-900 border border-border shadow-xl rounded-xl m-2 xs:m-4 focus:outline-none',
+          className,
         )}
         style={{ background: undefined }}
       >
         {/* Hide the default close button */}
         <style jsx global>{`
           /* Hide the default Sheet close button in the top right */
-          .absolute.top-4.right-4[aria-label="Close"],
-          .absolute.top-4.right-4 > .sr-only:contains("Close") {
+          .absolute.top-4.right-4[aria-label='Close'],
+          .absolute.top-4.right-4 > .sr-only:contains('Close') {
             display: none !important;
           }
           /* Or, more generally: */
@@ -107,11 +101,7 @@ export default function ChatSidebar({
               <Button size="sm" variant="ghost" onClick={onCreate}>
                 <Plus className="mr-2 h-4 w-4" /> New
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setOpenState(false)}
-              >
+              <Button size="sm" variant="outline" onClick={() => setOpenState(false)}>
                 Close
               </Button>
             </div>
@@ -137,16 +127,18 @@ export default function ChatSidebar({
               <div
                 key={s.id}
                 className={cn(
-                  "flex items-center group justify-between px-3 py-2 rounded-lg transition-colors cursor-pointer border border-transparent",
+                  'flex items-center group justify-between px-3 py-2 rounded-lg transition-colors cursor-pointer border border-transparent',
                   loadingSessionId === s.id
-                    ? "opacity-60 pointer-events-none"
-                    : "hover:bg-accent/60 hover:border-accent"
+                    ? 'opacity-60 pointer-events-none'
+                    : 'hover:bg-accent/60 hover:border-accent',
                 )}
                 tabIndex={0}
                 onClick={() => {
                   onSelect?.(s.id);
                   const shouldClose = closeOnSelect ?? true;
-                  if (shouldClose) {setOpenState(false);}
+                  if (shouldClose) {
+                    setOpenState(false);
+                  }
                 }}
               >
                 <div className="flex-1 min-w-0">
@@ -161,9 +153,7 @@ export default function ChatSidebar({
                 </div>
                 <div className="ml-2 flex items-center gap-1">
                   {loadingSessionId === s.id ? (
-                    <div className="text-muted-foreground text-xs">
-                      Loading...
-                    </div>
+                    <div className="text-muted-foreground text-xs">Loading...</div>
                   ) : (
                     <button
                       onClick={(e) => {

@@ -1,7 +1,7 @@
 // src/components/private/transactions/filters/AdvancedFilters.tsx
-"use client";
+'use client';
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback } from 'react';
 import {
   Search,
   Filter,
@@ -13,33 +13,33 @@ import {
   ChevronDown,
   ChevronUp,
   RotateCcw,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { CategoryTreePicker } from "@/components/private/categories/CategoryTreePicker";
-import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { CategoryTreePicker } from '@/components/private/categories/CategoryTreePicker';
+import { cn } from '@/lib/utils';
 
 export interface DateRangeFilter {
   from?: Date;
   to?: Date;
   preset?:
-    | "last7days"
-    | "last30days"
-    | "last90days"
-    | "thisMonth"
-    | "lastMonth"
-    | "thisYear"
-    | "custom";
+    | 'last7days'
+    | 'last30days'
+    | 'last90days'
+    | 'thisMonth'
+    | 'lastMonth'
+    | 'thisYear'
+    | 'custom';
 }
 
 export interface AmountRangeFilter {
   min?: number;
   max?: number;
-  operator?: "equals" | "greater" | "less" | "between";
+  operator?: 'equals' | 'greater' | 'less' | 'between';
 }
 
 export interface AdvancedFiltersState {
@@ -62,26 +62,26 @@ interface AdvancedFiltersProps {
 }
 
 const statusOptions = [
-  { value: "completed", label: "Completed", color: "bg-green-500" },
-  { value: "pending", label: "Pending", color: "bg-yellow-500" },
-  { value: "needs_review", label: "Needs Review", color: "bg-red-500" },
-  { value: "manual_edit", label: "Manual Edit", color: "bg-blue-500" },
+  { value: 'completed', label: 'Completed', color: 'bg-green-500' },
+  { value: 'pending', label: 'Pending', color: 'bg-yellow-500' },
+  { value: 'needs_review', label: 'Needs Review', color: 'bg-red-500' },
+  { value: 'manual_edit', label: 'Manual Edit', color: 'bg-blue-500' },
 ];
 
 const amountOperators = [
-  { value: "equals", label: "Equals" },
-  { value: "greater", label: "Greater than" },
-  { value: "less", label: "Less than" },
-  { value: "between", label: "Between" },
+  { value: 'equals', label: 'Equals' },
+  { value: 'greater', label: 'Greater than' },
+  { value: 'less', label: 'Less than' },
+  { value: 'between', label: 'Between' },
 ];
 
 const datePresets = [
-  { value: "last7days", label: "Last 7 Days" },
-  { value: "last30days", label: "Last 30 Days" },
-  { value: "last90days", label: "Last 90 Days" },
-  { value: "thisMonth", label: "This Month" },
-  { value: "lastMonth", label: "Last Month" },
-  { value: "thisYear", label: "This Year" },
+  { value: 'last7days', label: 'Last 7 Days' },
+  { value: 'last30days', label: 'Last 30 Days' },
+  { value: 'last90days', label: 'Last 90 Days' },
+  { value: 'thisMonth', label: 'This Month' },
+  { value: 'lastMonth', label: 'Last Month' },
+  { value: 'thisYear', label: 'This Year' },
 ];
 
 export function AdvancedFilters({
@@ -97,12 +97,12 @@ export function AdvancedFilters({
     (updates: Partial<AdvancedFiltersState>) => {
       onFiltersChange({ ...filters, ...updates });
     },
-    [filters, onFiltersChange]
+    [filters, onFiltersChange],
   );
 
   const clearAllFilters = useCallback(() => {
     onFiltersChange({
-      searchTerm: "",
+      searchTerm: '',
       dateRange: {},
       amountRange: {},
       categoryIds: [],
@@ -113,23 +113,30 @@ export function AdvancedFilters({
 
   const getActiveFilterCount = useCallback(() => {
     let count = 0;
-    if (filters.searchTerm) {count++;}
-    if (
-      filters.dateRange.from ||
-      filters.dateRange.to ||
-      filters.dateRange.preset
-    )
-      {count++;}
-    if (
-      filters.amountRange.min !== undefined ||
-      filters.amountRange.max !== undefined
-    )
-      {count++;}
-    if (filters.categoryIds.length > 0) {count++;}
-    if (filters.merchantIds.length > 0) {count++;}
-    if (filters.status.length > 0) {count++;}
-    if (filters.needsReview !== undefined) {count++;}
-    if (filters.manualEdit !== undefined) {count++;}
+    if (filters.searchTerm) {
+      count++;
+    }
+    if (filters.dateRange.from || filters.dateRange.to || filters.dateRange.preset) {
+      count++;
+    }
+    if (filters.amountRange.min !== undefined || filters.amountRange.max !== undefined) {
+      count++;
+    }
+    if (filters.categoryIds.length > 0) {
+      count++;
+    }
+    if (filters.merchantIds.length > 0) {
+      count++;
+    }
+    if (filters.status.length > 0) {
+      count++;
+    }
+    if (filters.needsReview !== undefined) {
+      count++;
+    }
+    if (filters.manualEdit !== undefined) {
+      count++;
+    }
     return count;
   }, [filters]);
 
@@ -137,13 +144,8 @@ export function AdvancedFilters({
 
   if (isCollapsed) {
     return (
-      <div className={cn("flex items-center gap-2", className)}>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onToggleCollapse}
-          className="gap-2"
-        >
+      <div className={cn('flex items-center gap-2', className)}>
+        <Button variant="outline" size="sm" onClick={onToggleCollapse} className="gap-2">
           <Filter className="h-4 w-4" />
           Filters
           {activeFilterCount > 0 && (
@@ -170,15 +172,13 @@ export function AdvancedFilters({
   }
 
   return (
-    <Card className={cn("w-full", className)}>
+    <Card className={cn('w-full', className)}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             <span className="font-semibold">Filters</span>
-            {activeFilterCount > 0 && (
-              <Badge variant="secondary">{activeFilterCount} active</Badge>
-            )}
+            {activeFilterCount > 0 && <Badge variant="secondary">{activeFilterCount} active</Badge>}
           </div>
 
           <div className="flex items-center gap-2">
@@ -194,12 +194,7 @@ export function AdvancedFilters({
             </Button>
 
             {onToggleCollapse && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggleCollapse}
-                className="gap-2"
-              >
+              <Button variant="ghost" size="sm" onClick={onToggleCollapse} className="gap-2">
                 <ChevronUp className="h-4 w-4" />
               </Button>
             )}
@@ -227,7 +222,7 @@ export function AdvancedFilters({
                 variant="ghost"
                 size="sm"
                 className="absolute right-1 top-1 h-8 w-8 p-0"
-                onClick={() => updateFilters({ searchTerm: "" })}
+                onClick={() => updateFilters({ searchTerm: '' })}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -244,8 +239,8 @@ export function AdvancedFilters({
               return (
                 <Badge
                   key={status.value}
-                  variant={isSelected ? "default" : "outline"}
-                  className={cn("cursor-pointer", isSelected && status.color)}
+                  variant={isSelected ? 'default' : 'outline'}
+                  className={cn('cursor-pointer', isSelected && status.color)}
                   onClick={() => {
                     const newStatus = isSelected
                       ? filters.status.filter((s) => s !== status.value)
@@ -270,11 +265,7 @@ export function AdvancedFilters({
             className="gap-2 p-0 h-auto font-normal"
           >
             Advanced Filters
-            {showAdvanced ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
+            {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
         </div>
 
@@ -292,11 +283,7 @@ export function AdvancedFilters({
                 {datePresets.map((preset) => (
                   <Button
                     key={preset.value}
-                    variant={
-                      filters.dateRange.preset === preset.value
-                        ? "default"
-                        : "outline"
-                    }
+                    variant={filters.dateRange.preset === preset.value ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => {
                       const now = new Date();
@@ -304,33 +291,23 @@ export function AdvancedFilters({
                       let to: Date = now;
 
                       switch (preset.value) {
-                        case "last7days":
-                          from = new Date(
-                            now.getTime() - 7 * 24 * 60 * 60 * 1000
-                          );
+                        case 'last7days':
+                          from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
                           break;
-                        case "last30days":
-                          from = new Date(
-                            now.getTime() - 30 * 24 * 60 * 60 * 1000
-                          );
+                        case 'last30days':
+                          from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
                           break;
-                        case "last90days":
-                          from = new Date(
-                            now.getTime() - 90 * 24 * 60 * 60 * 1000
-                          );
+                        case 'last90days':
+                          from = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
                           break;
-                        case "thisMonth":
+                        case 'thisMonth':
                           from = new Date(now.getFullYear(), now.getMonth(), 1);
                           break;
-                        case "lastMonth":
-                          from = new Date(
-                            now.getFullYear(),
-                            now.getMonth() - 1,
-                            1
-                          );
+                        case 'lastMonth':
+                          from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
                           to = new Date(now.getFullYear(), now.getMonth(), 0);
                           break;
-                        case "thisYear":
+                        case 'thisYear':
                           from = new Date(now.getFullYear(), 0, 1);
                           break;
                       }
@@ -339,7 +316,7 @@ export function AdvancedFilters({
                         dateRange: {
                           from,
                           to,
-                          preset: preset.value as DateRangeFilter["preset"],
+                          preset: preset.value as DateRangeFilter['preset'],
                         },
                       });
                     }}
@@ -356,18 +333,14 @@ export function AdvancedFilters({
                   <label className="text-xs text-muted-foreground">From</label>
                   <Input
                     type="date"
-                    value={
-                      filters.dateRange.from?.toISOString().split("T")[0] || ""
-                    }
+                    value={filters.dateRange.from?.toISOString().split('T')[0] || ''}
                     onChange={(e) => {
-                      const date = e.target.value
-                        ? new Date(e.target.value)
-                        : undefined;
+                      const date = e.target.value ? new Date(e.target.value) : undefined;
                       updateFilters({
                         dateRange: {
                           ...filters.dateRange,
                           from: date,
-                          preset: "custom",
+                          preset: 'custom',
                         },
                       });
                     }}
@@ -377,18 +350,14 @@ export function AdvancedFilters({
                   <label className="text-xs text-muted-foreground">To</label>
                   <Input
                     type="date"
-                    value={
-                      filters.dateRange.to?.toISOString().split("T")[0] || ""
-                    }
+                    value={filters.dateRange.to?.toISOString().split('T')[0] || ''}
                     onChange={(e) => {
-                      const date = e.target.value
-                        ? new Date(e.target.value)
-                        : undefined;
+                      const date = e.target.value ? new Date(e.target.value) : undefined;
                       updateFilters({
                         dateRange: {
                           ...filters.dateRange,
                           to: date,
-                          preset: "custom",
+                          preset: 'custom',
                         },
                       });
                     }}
@@ -406,13 +375,12 @@ export function AdvancedFilters({
 
               <div className="flex items-center gap-2">
                 <select
-                  value={filters.amountRange.operator || "between"}
+                  value={filters.amountRange.operator || 'between'}
                   onChange={(e) =>
                     updateFilters({
                       amountRange: {
                         ...filters.amountRange,
-                        operator: e.target
-                          .value as AmountRangeFilter["operator"],
+                        operator: e.target.value as AmountRangeFilter['operator'],
                       },
                     })
                   }
@@ -428,34 +396,30 @@ export function AdvancedFilters({
                 <Input
                   type="number"
                   placeholder="Min"
-                  value={filters.amountRange.min || ""}
+                  value={filters.amountRange.min || ''}
                   onChange={(e) =>
                     updateFilters({
                       amountRange: {
                         ...filters.amountRange,
-                        min: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
+                        min: e.target.value ? parseFloat(e.target.value) : undefined,
                       },
                     })
                   }
                   className="w-24"
                 />
 
-                {filters.amountRange.operator === "between" && (
+                {filters.amountRange.operator === 'between' && (
                   <>
                     <span className="text-muted-foreground">to</span>
                     <Input
                       type="number"
                       placeholder="Max"
-                      value={filters.amountRange.max || ""}
+                      value={filters.amountRange.max || ''}
                       onChange={(e) =>
                         updateFilters({
                           amountRange: {
                             ...filters.amountRange,
-                            max: e.target.value
-                              ? parseFloat(e.target.value)
-                              : undefined,
+                            max: e.target.value ? parseFloat(e.target.value) : undefined,
                           },
                         })
                       }
@@ -510,28 +474,23 @@ export function AdvancedFilters({
                   Search: {filters.searchTerm}
                   <X
                     className="h-3 w-3 cursor-pointer"
-                    onClick={() => updateFilters({ searchTerm: "" })}
+                    onClick={() => updateFilters({ searchTerm: '' })}
                   />
                 </Badge>
               )}
 
-              {(filters.dateRange.preset ||
-                filters.dateRange.from ||
-                filters.dateRange.to) && (
+              {(filters.dateRange.preset || filters.dateRange.from || filters.dateRange.to) && (
                 <Badge variant="secondary" className="gap-1">
-                  Date:{" "}
-                  {filters.dateRange.preset &&
-                  filters.dateRange.preset !== "custom"
-                    ? datePresets.find(
-                        (p) => p.value === filters.dateRange.preset
-                      )?.label || ""
+                  Date:{' '}
+                  {filters.dateRange.preset && filters.dateRange.preset !== 'custom'
+                    ? datePresets.find((p) => p.value === filters.dateRange.preset)?.label || ''
                     : filters.dateRange.from && filters.dateRange.to
-                    ? `${filters.dateRange.from.toLocaleDateString()} - ${filters.dateRange.to.toLocaleDateString()}`
-                    : filters.dateRange.from
-                    ? `From ${filters.dateRange.from.toLocaleDateString()}`
-                    : filters.dateRange.to
-                    ? `Until ${filters.dateRange.to.toLocaleDateString()}`
-                    : ""}
+                      ? `${filters.dateRange.from.toLocaleDateString()} - ${filters.dateRange.to.toLocaleDateString()}`
+                      : filters.dateRange.from
+                        ? `From ${filters.dateRange.from.toLocaleDateString()}`
+                        : filters.dateRange.to
+                          ? `Until ${filters.dateRange.to.toLocaleDateString()}`
+                          : ''}
                   <X
                     className="h-3 w-3 cursor-pointer"
                     onClick={() => updateFilters({ dateRange: {} })}

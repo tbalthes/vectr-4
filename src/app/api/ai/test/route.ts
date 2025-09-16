@@ -6,6 +6,6 @@ export function GET() {
     geminiApiKeyConfigured: !!API_KEY,
     nodeEnv: NODE_ENV,
     apiKeyFirstChars: API_KEY ? API_KEY.substring(0, 8) + '...' : null,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }
