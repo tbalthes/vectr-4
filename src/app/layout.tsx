@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
-// Temporarily disabled for offline build: import { Inter } from "next/font/google";
+import { Inter } from 'next/font/google';
 
 import './globals.css';
 import '../styles/plaid-fix.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
-// Temporarily disabled for offline build: const inter = Inter({ subsets: ["latin"] });
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Vectr-4 Finance',
