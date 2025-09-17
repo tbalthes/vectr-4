@@ -1,421 +1,48 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
+import { z } from 'zod';
 
 import { logger } from '@/lib/status_logging/logger';
+import { validateBody } from '@/lib/api/validator';
+import { runTransactionsSync } from '@/lib/plaid/sync';
+
+// Schema for validation
+const SyncSchema = z.object({
+  access_token: z.string().min(1),
+  cursor: z.string().nullable().optional(),
+  count: z.number().int().positive().max(500).optional(),
+  user_id: z.string().min(1),
+  item_id: z.string().min(1),
+});
 
 // POST /api/aggregator/plaid/transactions/sync
-// Implements Plaid's /transactions/sync endpoint with cursor-based pagination
-// Following Plaid Academy tutorial best practices
-// This route loops internally until has_more=false; callers MUST NOT loop.
+// Thin controller: validate → service → respond
 export async function POST(req: Request) {
-  // Use createClient for server-side operations to avoid cookies issues
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-
-  // Check if this is an internal service call
-  const authHeader = req.headers.get('authorization');
-  const userIdHeader = req.headers.get('x-user-id');
-
-  let userId: string;
-
-  if (authHeader?.startsWith('Bearer ') && userIdHeader) {
-    // Internal service call - validate service key and get user
-    const serviceKey = authHeader.substring(7);
-    if (serviceKey === process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      userId = userIdHeader;
-      console.log('🔧 Internal service call authenticated for user:', userIdHeader);
-    } else {
-      return NextResponse.json({ error: 'Invalid service key' }, { status: 401 });
-    }
-  } else {
-    // For webhook calls, we need to get the user from the request body
-    // Don't call req.json() here yet, we'll parse it once below
-    userId = ''; // Will be set from body below
-  }
-
-  // Validate required environment variables
-  if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
-    console.error('Missing required Plaid configuration');
-    return NextResponse.json({ error: 'Plaid configuration missing' }, { status: 500 });
-  }
-
-  const body = await req.json().catch(() => ({}));
-
-  // If userId is empty, get it from the body (webhook case)
-  if (!userId) {
-    if (!body.user_id) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
-    }
-    userId = body.user_id;
-  }
-  const { access_token, cursor, count = 100, item_id: bodyItemId } = body;
-
-  if (!access_token) {
-    return NextResponse.json({ error: 'access_token required' }, { status: 400 });
-  }
-
-  // Ensure item_id is available, fetch if not provided
-  let item_id = bodyItemId;
-  if (!item_id) {
-    // Try to fetch item_id from account_links using access_token and user_id
-    const { data: linkData, error: linkError } = await supabase
-      .from('account_links')
-      .select('item_id')
-      .eq('access_token_encrypted', access_token)
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (linkError || !linkData?.item_id) {
-      return NextResponse.json({ error: 'item_id not found for access_token' }, { status: 400 });
-    }
-    item_id = linkData.item_id;
-  }
-
   try {
-    // Initialize Plaid client
-    const configuration = new Configuration({
-      basePath:
-        PlaidEnvironments[process.env.PLAID_ENV as keyof typeof PlaidEnvironments] ||
-        PlaidEnvironments.sandbox,
-      baseOptions: {
-        headers: {
-          'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
-          'PLAID-SECRET': process.env.PLAID_SECRET,
-        },
-      },
-    });
+    const body = await req.json().catch(() => ({}));
+    const { access_token, cursor, count, user_id, item_id } = validateBody(SyncSchema, body) as any;
 
-    const client = new PlaidApi(configuration);
-
-    console.log('📥 Starting Plaid /transactions/sync', {
-      cursor: cursor ? 'provided' : 'null',
-      count,
-    });
-
-    // Fetch all sync data with pagination and error handling
-    const allData = await fetchNewSyncData(client, access_token, cursor, 3);
-
-    if (!allData) {
-      return NextResponse.json(
-        { error: 'Failed to fetch transaction data after retries' },
-        { status: 500 },
-      );
-    }
-
-    console.log('📊 Plaid sync completed', {
-      added_count: allData.added.length,
-      modified_count: allData.modified.length,
-      removed_count: allData.removed.length,
-      final_cursor: allData.next_cursor ? 'present' : 'null',
-    });
-
-    // Process transactions using the clean processor
-    let stored_added = 0;
-    let stored_modified = 0;
-    let stored_removed = 0;
-
-    // Process added transactions through the clean processor
-    if (allData.added.length > 0) {
-      console.log(`🔄 Processing ${allData.added.length} new transactions through clean processor`);
-
-      try {
-        // Call the clean processor with the transaction array
-        const cleanProcessorResponse = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-          }/api/aggregator/plaid/transactions/clean`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-              'X-User-ID': userId,
-            },
-            body: JSON.stringify({
-              transactions: allData.added,
-              internal_user_id: userId, // Pass user ID for internal flow
-              // Fallback in case some platform strips Authorization headers internally
-              service_role_key: process.env.SUPABASE_SERVICE_ROLE_KEY,
-            }),
-          },
-        );
-
-        if (cleanProcessorResponse.ok) {
-          const cleanResult = await cleanProcessorResponse.json();
-          stored_added = cleanResult.results?.processed || 0;
-          console.log(`✅ Clean processor completed: ${stored_added} transactions processed`);
-          console.log(`📊 Clean processor results:`, cleanResult.results);
-        } else {
-          const errorText = await cleanProcessorResponse.text();
-          console.error(`❌ Clean processor failed:`, errorText);
-          // Fall back to the old processing logic if clean processor fails
-          console.log(`🔄 Falling back to legacy processing...`);
-          // TODO: Add fallback logic here if needed
-        }
-      } catch (cleanError) {
-        console.error(`❌ Error calling clean processor:`, cleanError);
-        // Fall back to the old processing logic if clean processor fails
-        console.log(`🔄 Fallingback to legacy processing...`);
-        // TODO: Add fallback logic here if needed
-      }
-    }
-
-    // Process modified transactions through the clean processor
-    if (allData.modified.length > 0) {
-      console.log(
-        `🔄 Processing ${allData.modified.length} modified transactions through clean processor`,
-      );
-
-      try {
-        // Call the clean processor with the modified transaction array
-        const cleanProcessorResponse = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-          }/api/aggregator/plaid/transactions/clean`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-              'X-User-ID': userId,
-            },
-            body: JSON.stringify({
-              transactions: allData.modified,
-              internal_user_id: userId, // Pass user ID for internal flow
-              // Fallback in case some platform strips Authorization headers internally
-              service_role_key: process.env.SUPABASE_SERVICE_ROLE_KEY,
-            }),
-          },
-        );
-
-        if (cleanProcessorResponse.ok) {
-          const cleanResult = await cleanProcessorResponse.json();
-          stored_modified = cleanResult.results?.processed || 0;
-          console.log(
-            `✅ Clean processor (modified) completed: ${stored_modified} transactions processed`,
-          );
-        } else {
-          const errorText = await cleanProcessorResponse.text();
-          console.error(`❌ Clean processor (modified) failed:`, errorText);
-        }
-      } catch (cleanError) {
-        console.error(`❌ Error calling clean processor for modified transactions:`, cleanError);
-      }
-    }
-
-    // Process removed transactions (mark as deleted)
-    if (allData.removed.length > 0) {
-      console.log(`🗑️ Processing ${allData.removed.length} removed transactions`);
-
-      for (const removedTx of allData.removed) {
-        try {
-          const { error: removeError } = await supabase
-            .from('transactions')
-            .update({
-              is_deleted: true,
-              deleted_at: new Date().toISOString(),
-            })
-            .eq('aggregator_transaction_id', removedTx.transaction_id)
-            .eq('user_id', userId);
-
-          if (removeError) {
-            console.error(
-              `❌ Error removing transaction ${removedTx.transaction_id}:`,
-              removeError,
-            );
-          } else {
-            stored_removed++;
-          }
-        } catch (txError) {
-          console.error(
-            `❌ Error processing removed transaction ${removedTx.transaction_id}:`,
-            txError,
-          );
-        }
-      }
-    }
-
-    // Update account links with last sync time and cursor
-    if (item_id && allData.next_cursor) {
-      try {
-        await supabase
-          .from('account_links')
-          .update({
-            last_sync_at: new Date().toISOString(),
-            cursor: allData.next_cursor,
-          })
-          .eq('item_id', item_id)
-          .eq('user_id', userId);
-      } catch (cursorError) {
-        logger.error(
-          { event: 'sync.cursor_update_failed', error: cursorError },
-          'Failed to update cursor in account_links',
-        );
-        // Don't throw - work has been done, log and continue (MVP)
-      }
-    }
-
-    console.log('✅ Transaction sync complete', {
-      stored_added,
-      stored_modified,
-      stored_removed,
-    });
-
-    return NextResponse.json({
-      added: stored_added,
-      modified: stored_modified,
-      removed: stored_removed,
-      next_cursor: allData.next_cursor,
-      has_more: false, // We've processed all available data
-      accounts:
-        allData.accounts?.map((acc) => ({
-          account_id: acc.account_id,
-          name: acc.name,
-          type: acc.type,
-          subtype: acc.subtype,
-          balances: acc.balances,
-        })) || [],
-      transactions_update_status: 'COMPLETE',
-    });
-  } catch (error) {
-    console.error('❌ Plaid transactions/sync error:', error);
-
-    // Check for specific Plaid errors
-    if (error && typeof error === 'object' && 'response' in error) {
-      const plaidError = error as {
-        response?: { data?: { error_code?: string } };
-      };
-      if (
-        plaidError.response?.data?.error_code === 'TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION'
-      ) {
-        console.error('⚠️ Sync mutation during pagination - should retry from beginning');
-        return NextResponse.json(
-          {
-            error: 'Sync mutation detected - please retry',
-            error_code: 'SYNC_MUTATION',
-          },
-          { status: 409 },
-        );
-      }
-    }
-
-    return NextResponse.json({ error: 'Failed to sync transactions' }, { status: 500 });
-  }
-}
-
-/**
- * Fetch new sync data with pagination and error handling
- * Following Plaid Academy tutorial pattern
- */
-async function fetchNewSyncData(
-  client: PlaidApi,
-  access_token: string,
-  initialCursor: string | null = null,
-  retriesLeft = 3,
-): Promise<{
-  added: any[];
-  modified: any[];
-  removed: any[];
-  next_cursor: string | null;
-  accounts?: any[];
-} | null> {
-  try {
-    let keepGoing = true;
-    const allData = {
-      added: [] as any[],
-      modified: [] as any[],
-      removed: [] as any[],
-      next_cursor: initialCursor,
-      accounts: undefined as any[] | undefined,
-    };
-
-    do {
-      console.log(
-        `📥 Fetching sync batch with cursor: ${allData.next_cursor ? 'present' : 'null'}`,
-      );
-
-      const syncRequest: {
-        access_token: string;
-        count: number;
-        cursor?: string;
-        options?: {
-          include_personal_finance_category?: boolean;
-        };
-      } = {
-        access_token,
-        count: 500, // Max transactions per request
-        options: {
-          include_personal_finance_category: true, // Use new improved categories
-        },
-      };
-
-      if (allData.next_cursor) {
-        syncRequest.cursor = allData.next_cursor;
-      }
-
-      const response = await client.transactionsSync(syncRequest);
-      const { added, modified, removed, next_cursor, has_more, accounts } = response.data;
-
-      // Concatenate new data
-      allData.added = allData.added.concat(added);
-      allData.modified = allData.modified.concat(modified);
-      allData.removed = allData.removed.concat(removed);
-      allData.next_cursor = next_cursor;
-
-      // Store accounts from first response
-      if (!allData.accounts && accounts) {
-        allData.accounts = accounts;
-      }
-
-      keepGoing = has_more;
-
-      console.log(
-        `📊 Batch received: ${added.length} added, ${modified.length} modified, ${removed.length} removed, has_more: ${has_more}`,
-      );
-
-      // Small delay to be respectful of rate limits
-      if (keepGoing) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-    } while (keepGoing);
-
-    console.log(
-      `✅ All sync data fetched: ${allData.added.length} total added, ${allData.modified.length} total modified, ${allData.removed.length} total removed`,
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
-    return allData;
-  } catch (error) {
-    console.error('❌ Error in fetchNewSyncData:', error);
+    const summary = await runTransactionsSync({
+      client: supabase,
+      access_token,
+      user_id,
+      item_id,
+      start_cursor: cursor ?? null,
+      pageSize: count ?? 100,
+    });
 
-    // Check for sync mutation error
-    if (error && typeof error === 'object' && 'response' in error) {
-      const plaidError = error as {
-        response?: { data?: { error_code?: string } };
-      };
-      if (
-        plaidError.response?.data?.error_code === 'TRANSACTIONS_SYNC_MUTATION_DURING_PAGINATION'
-      ) {
-        console.warn('⚠️ Sync mutation during pagination, retrying from beginning...');
-
-        if (retriesLeft > 0) {
-          // Wait a second and retry from the beginning
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          return fetchNewSyncData(client, access_token, initialCursor, retriesLeft - 1);
-        }
-      }
-    }
-
-    // For other errors, retry if we have retries left
-    if (retriesLeft > 0) {
-      console.warn(`⚠️ Retrying sync (${retriesLeft} retries left)...`);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return fetchNewSyncData(client, access_token, initialCursor, retriesLeft - 1);
-    }
-
-    console.error('❌ Failed to fetch sync data after all retries');
-    return null;
+    return NextResponse.json(summary, { status: 200 });
+  } catch (err) {
+    logger.error(
+      { event: 'sync.route.unhandled', error: (err as Error)?.message },
+      'Unhandled error in sync route',
+    );
+    return NextResponse.json({ ok: false, error: 'Unhandled error' }, { status: 500 });
   }
 }
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/status_logging/logger';
+import { runTransactionsSync } from '@/lib/plaid/sync';
 
 // POST /api/aggregator/plaid/sync-account
 // Manually trigger a transactions sync for a given item_id.
@@ -45,54 +46,20 @@ export async function POST(req: Request) {
 
     logger.info({ event: 'manual_sync.requested', itemId }, 'Manual sync requested');
 
-    // Build body expected by /transactions/sync (that route handles pagination internally)
-    const syncBody = {
+    // Preferred: call orchestrator directly (single call; no loops here)
+    const summary = await runTransactionsSync({
+      client: supabase,
       access_token: link.access_token_encrypted,
-      cursor: link.cursor || undefined,
-      count: 100, // /transactions/sync route will use/adjust as needed
       user_id: link.user_id,
-    };
+      item_id: itemId,
+      start_cursor: link.cursor || null,
+      pageSize: 100,
+    });
 
-    // MVP: call once and await completion (so caller sees the result)
-    // Acceptance wants 202 and “quick return”; we still call once, but do not paginate here.
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/aggregator/plaid/transactions/sync`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(syncBody),
-      },
-    );
+    logger.info({ event: 'manual_sync.sync_completed', itemId, summary }, 'Manual sync completed');
 
-    const text = await res.text();
-    let parsed: any = null;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      parsed = { raw: text?.slice(0, 2000) };
-    }
-
-    if (!res.ok) {
-      logger.error(
-        { event: 'manual_sync.sync_failed', itemId, status: res.status, parsed },
-        'Transactions sync failed',
-      );
-      return NextResponse.json(
-        { ok: false, itemId, status: res.status, error: parsed?.error || 'Sync failed' },
-        { status: 502 },
-      );
-    }
-
-    logger.info(
-      { event: 'manual_sync.sync_completed', itemId, summary: parsed },
-      'Manual sync completed',
-    );
-
-    // Return 202 to indicate accepted/started; include summary if available
-    return NextResponse.json(
-      { ok: true, itemId, accepted: true, summary: parsed },
-      { status: 202 },
-    );
+    // Return 202 Accepted with summary for transparency
+    return NextResponse.json({ accepted: true, ...summary }, { status: 202 });
 
     // If you truly want fire-and-forget (return immediately), comment out the await block above
     // and use this instead (be aware: on serverless, background work may be killed after response):

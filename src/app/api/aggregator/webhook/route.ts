@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/status_logging/logger';
+import { runTransactionsSync } from '@/lib/plaid/sync';
 
 // Dynamic jose import for webhook verification
 let joseImported: any = null;
@@ -580,7 +581,7 @@ async function handleTransactionsWebhook(
       break;
     }
 
-    case 'SYNC_UPDATES_AVAILABLE':
+    case 'SYNC_UPDATES_AVAILABLE': {
       logger.info(
         {
           event: 'webhook.transactions.sync_updates_available',
@@ -591,8 +592,9 @@ async function handleTransactionsWebhook(
         },
         'Sync updates available - triggering sync',
       );
-      await triggerTransactionSync(itemId, 'sync');
+      await triggerTransactionSyncOnce(itemId);
       break;
+    }
 
     default:
       logger.info(
@@ -610,7 +612,7 @@ async function handleTransactionsWebhook(
 /**
  * Trigger transaction sync for an item
  */
-async function triggerTransactionSync(itemId: string | undefined, syncType: string): Promise<void> {
+async function triggerTransactionSyncOnce(itemId: string | undefined): Promise<void> {
   if (!itemId) {
     return;
   }
@@ -631,89 +633,41 @@ async function triggerTransactionSync(itemId: string | undefined, syncType: stri
 
     if (!accountLink) {
       logger.warn(
-        { event: 'webhook.sync.no_account_link', itemId, syncType },
+        { event: 'webhook.sync.no_account_link', itemId, syncType: 'sync' },
         'No active account link found',
       );
       return;
     }
 
     logger.info(
-      { event: 'webhook.sync.triggered', itemId, syncType },
+      { event: 'webhook.sync.triggered', itemId, syncType: 'sync' },
       'Triggering transaction sync',
     );
-
-    // Build payload for internal Plaid sync endpoint per docs
-    const syncBody = {
-      access_token: accountLink.access_token_encrypted,
-      cursor: accountLink.cursor || undefined,
-      count: syncType === 'initial' ? 500 : 100,
-      user_id: accountLink.user_id,
-    };
-
-    const syncResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/aggregator/plaid/transactions/sync`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(syncBody),
-      },
-    );
-
-    // Debug: log status info
-    logger.debug(
-      {
-        event: 'webhook.sync.response_status',
-        itemId,
-        syncType,
-        status: syncResponse.status,
-        redirected: syncResponse.redirected,
-        url: syncResponse.url,
-      },
-      'Sync response status',
-    );
+    // Preferred: call orchestrator directly (single call; no external loops)
     try {
-      const text = await syncResponse.text();
-      // Try to parse JSON if applicable
-      try {
-        const parsed = JSON.parse(text);
-        logger.debug(
-          { event: 'webhook.sync.response_body', itemId, syncType, parsed },
-          'Sync response body (parsed)',
-        );
-      } catch {
-        logger.debug(
-          {
-            event: 'webhook.sync.response_body_text',
-            itemId,
-            syncType,
-            text: text.substring(0, 1000),
-          },
-          'Sync response body (text)',
-        );
-      }
-    } catch (_e) {
-      logger.warn(
-        { event: 'webhook.sync.response_read_failed', itemId, syncType, error: _e },
-        'Failed to read sync response body',
-      );
-    }
-
-    if (syncResponse.ok) {
+      const summary = await runTransactionsSync({
+        client: supabase,
+        access_token: accountLink.access_token_encrypted,
+        user_id: accountLink.user_id,
+        item_id: itemId,
+        start_cursor: accountLink.cursor || null,
+        pageSize: 100,
+      });
       logger.info(
-        { event: 'webhook.sync.completed', itemId, syncType },
+        { event: 'webhook.sync.completed', itemId, syncType: 'sync', summary },
         'Sync completed successfully',
       );
-      // If response contained JSON with has_more, we logged it above when reading body
-      // Continue syncing if we detected 'has_more' in the parsed response
-      // (we don't reparse the request body here)
-    } else {
+    } catch (e: any) {
       logger.error(
-        { event: 'webhook.sync.failed', itemId, syncType, status: syncResponse.status },
-        'Sync failed with non-ok response',
+        { event: 'webhook.sync.failed', itemId, syncType: 'sync', error: e?.message },
+        'Sync failed',
       );
     }
   } catch (error) {
-    logger.error({ event: 'webhook.sync.error', itemId, syncType, error }, 'Error triggering sync');
+    logger.error(
+      { event: 'webhook.sync.error', itemId, syncType: 'sync', error },
+      'Error triggering sync',
+    );
   }
 }
 
