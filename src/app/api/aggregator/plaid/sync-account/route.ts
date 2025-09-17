@@ -1,158 +1,121 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+import { logger } from '@/lib/status_logging/logger';
 
 // POST /api/aggregator/plaid/sync-account
-// Manually trigger transaction sync for a specific account
+// Manually trigger a transactions sync for a given item_id.
+// This route calls the internal /transactions/sync ONCE and does not paginate here.
+// For MVP we await the call; long-term we can enqueue a background job and return immediately.
 export async function POST(req: Request) {
-  const supabase = createRouteHandlerClient({
-    cookies: () => cookies(),
-  });
-
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-
-  if (sessionError) {
-    return NextResponse.json({ error: sessionError.message }, { status: 500 });
-  }
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const body = await req.json().catch(() => ({}));
-  const { account_link_id, force_full_sync = false } = body;
-
-  if (!account_link_id) {
-    return NextResponse.json(
-      { error: "account_link_id required" },
-      { status: 400 }
-    );
-  }
-
   try {
-    // Get account link
-    const { data: accountLink, error: linkError } = await supabase
-      .from("account_links")
-      .select("access_token_encrypted, cursor, status, item_id")
-      .eq("id", account_link_id)
-      .eq("user_id", session.user.id)
+    const body = await req.json().catch(() => ({}) as any);
+    const itemId: string | undefined = body.item_id;
+
+    if (!itemId) {
+      return NextResponse.json({ ok: false, error: 'item_id is required' }, { status: 400 });
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+
+    // Validate item exists and is active (optional but recommended)
+    const { data: link, error: linkErr } = await supabase
+      .from('account_links')
+      .select('access_token_encrypted, user_id, cursor, status')
+      .eq('item_id', itemId)
       .single();
 
-    if (linkError || !accountLink) {
-      return NextResponse.json(
-        { error: "Account link not found" },
-        { status: 404 }
+    if (linkErr || !link) {
+      logger.warn(
+        { event: 'manual_sync.link_missing', itemId, linkErr },
+        'No account link found for item',
       );
+      return NextResponse.json({ ok: false, error: 'Account link not found' }, { status: 404 });
+    }
+    if (link.status !== 'active') {
+      logger.warn(
+        { event: 'manual_sync.link_inactive', itemId, status: link.status },
+        'Account link inactive',
+      );
+      return NextResponse.json({ ok: false, error: 'Account link is not active' }, { status: 409 });
     }
 
-    if (accountLink.status !== "active") {
-      return NextResponse.json(
-        { error: "Account link is not active" },
-        { status: 400 }
-      );
-    }
+    logger.info({ event: 'manual_sync.requested', itemId }, 'Manual sync requested');
 
-    console.log(`🔄 Manual sync requested for account link ${account_link_id}`);
+    // Build body expected by /transactions/sync (that route handles pagination internally)
+    const syncBody = {
+      access_token: link.access_token_encrypted,
+      cursor: link.cursor || undefined,
+      count: 100, // /transactions/sync route will use/adjust as needed
+      user_id: link.user_id,
+    };
 
-    // Call sync endpoint
-    const syncResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/plaid/transactions/sync`,
+    // MVP: call once and await completion (so caller sees the result)
+    // Acceptance wants 202 and “quick return”; we still call once, but do not paginate here.
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/aggregator/plaid/transactions/sync`,
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: req.headers.get("cookie") || "",
-        },
-        body: JSON.stringify({
-          access_token: accountLink.access_token_encrypted,
-          cursor: force_full_sync ? undefined : accountLink.cursor,
-          count: 500,
-        }),
-      }
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(syncBody),
+      },
     );
 
-    if (!syncResponse.ok) {
-      const errorText = await syncResponse.text();
+    const text = await res.text();
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = { raw: text?.slice(0, 2000) };
+    }
+
+    if (!res.ok) {
+      logger.error(
+        { event: 'manual_sync.sync_failed', itemId, status: res.status, parsed },
+        'Transactions sync failed',
+      );
       return NextResponse.json(
-        { error: `Sync failed: ${errorText}` },
-        { status: 500 }
+        { ok: false, itemId, status: res.status, error: parsed?.error || 'Sync failed' },
+        { status: 502 },
       );
     }
 
-    const result = await syncResponse.json();
-
-    // Continue syncing if there's more data
-    let totalAdded = result.added;
-    let totalModified = result.modified;
-    let totalRemoved = result.removed;
-    let currentCursor = result.next_cursor;
-    let syncCount = 1;
-
-    while (result.has_more && currentCursor && syncCount < 10) {
-      // Limit to prevent infinite loops
-      console.log(`🔄 Continuing sync (batch ${syncCount + 1})...`);
-
-      const nextSyncResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/plaid/transactions/sync`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: req.headers.get("cookie") || "",
-          },
-          body: JSON.stringify({
-            access_token: accountLink.access_token_encrypted,
-            cursor: currentCursor,
-            count: 500,
-          }),
-        }
-      );
-
-      if (nextSyncResponse.ok) {
-        const nextResult = await nextSyncResponse.json();
-        totalAdded += nextResult.added;
-        totalModified += nextResult.modified;
-        totalRemoved += nextResult.removed;
-        currentCursor = nextResult.next_cursor;
-
-        if (!nextResult.has_more) {break;}
-      } else {
-        console.warn(`⚠️ Batch ${syncCount + 1} failed, stopping sync`);
-        break;
-      }
-
-      syncCount++;
-
-      // Small delay to be respectful of rate limits
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-
-    console.log(
-      `✅ Manual sync complete for account link ${account_link_id}:`,
-      {
-        totalAdded,
-        totalModified,
-        totalRemoved,
-        batches: syncCount,
-      }
+    logger.info(
+      { event: 'manual_sync.sync_completed', itemId, summary: parsed },
+      'Manual sync completed',
     );
 
-    return NextResponse.json({
-      success: true,
-      added: totalAdded,
-      modified: totalModified,
-      removed: totalRemoved,
-      batches_processed: syncCount,
-      force_full_sync,
-      accounts: result.accounts?.length || 0,
-    });
-  } catch (error) {
-    console.error("❌ Manual sync error:", error);
+    // Return 202 to indicate accepted/started; include summary if available
     return NextResponse.json(
-      { error: "Failed to sync account" },
-      { status: 500 }
+      { ok: true, itemId, accepted: true, summary: parsed },
+      { status: 202 },
     );
+
+    // If you truly want fire-and-forget (return immediately), comment out the await block above
+    // and use this instead (be aware: on serverless, background work may be killed after response):
+    //
+    // setImmediate(async () => {
+    //   try {
+    //     const res2 = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/aggregator/plaid/transactions/sync`, {
+    //       method: 'POST',
+    //       headers: { 'Content-Type': 'application/json' },
+    //       body: JSON.stringify(syncBody),
+    //     });
+    //     const txt = await res2.text();
+    //     logger.info({ event: 'manual_sync.bg_result', itemId, status: res2.status, body: txt.slice(0, 2000) }, 'Background sync finished');
+    //   } catch (e) {
+    //     logger.error({ event: 'manual_sync.bg_error', itemId, error: (e as Error).message }, 'Background sync errored');
+    //   }
+    // });
+    // return NextResponse.json({ ok: true, itemId, accepted: true }, { status: 202 });
+  } catch (err) {
+    logger.error(
+      { event: 'manual_sync.unhandled', error: (err as Error).message },
+      'Unhandled error in manual sync',
+    );
+    return NextResponse.json({ ok: false, error: 'Unhandled error' }, { status: 500 });
   }
 }

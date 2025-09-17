@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 
+import { logger } from '@/lib/status_logging/logger';
+
 // POST /api/aggregator/plaid/transactions/sync
 // Implements Plaid's /transactions/sync endpoint with cursor-based pagination
 // Following Plaid Academy tutorial best practices
+// This route loops internally until has_more=false; callers MUST NOT loop.
 export async function POST(req: Request) {
   // Use createClient for server-side operations to avoid cookies issues
   const supabase = createClient(
@@ -236,14 +239,22 @@ export async function POST(req: Request) {
 
     // Update account links with last sync time and cursor
     if (item_id && allData.next_cursor) {
-      await supabase
-        .from('account_links')
-        .update({
-          last_sync_at: new Date().toISOString(),
-          cursor: allData.next_cursor,
-        })
-        .eq('item_id', item_id)
-        .eq('user_id', userId);
+      try {
+        await supabase
+          .from('account_links')
+          .update({
+            last_sync_at: new Date().toISOString(),
+            cursor: allData.next_cursor,
+          })
+          .eq('item_id', item_id)
+          .eq('user_id', userId);
+      } catch (cursorError) {
+        logger.error(
+          { event: 'sync.cursor_update_failed', error: cursorError },
+          'Failed to update cursor in account_links',
+        );
+        // Don't throw - work has been done, log and continue (MVP)
+      }
     }
 
     console.log('✅ Transaction sync complete', {

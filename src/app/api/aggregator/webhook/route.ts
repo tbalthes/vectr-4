@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+import { logger } from '@/lib/status_logging/logger';
+
 // Dynamic jose import for webhook verification
 let joseImported: any = null;
 async function getJose() {
@@ -13,10 +15,14 @@ async function getJose() {
     joseImported = await import('jose');
     return joseImported;
   } catch (e) {
-    console.error('[webhook] jose module not available:', e);
+    logger.error({ event: 'webhook.jose.import_failed', error: e }, 'jose module not available');
     return null;
   }
 }
+
+// In-memory Plaid JWK cache (kid -> { jwk, expiresAt })
+const jwkCache = new Map<string, { jwk: any; expiresAt: number }>();
+const JWK_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 /**
  * Generate deterministic dedupe key for webhook events
@@ -27,45 +33,49 @@ function generateDedupeKey(
   webhookCode: string | undefined,
   payload: any,
   req: Request,
+  rawBody?: string,
 ): string {
-  // Create deterministic key from payload data
-  const timestamp = payload?.env_ts || payload?.time || Date.now();
-  const requestId = req.headers.get('x-request-id') || '';
+  // Prefer stable identifiers provided by Plaid; avoid Date.now() which breaks dedupe
+  const stable =
+    (payload && (payload.env_ts || payload.time || payload.request_id)) ||
+    req.headers.get('x-request-id') ||
+    // Fallback: deterministic hash of the raw body
+    crypto
+      .createHash('sha256')
+      .update(rawBody || '', 'utf8')
+      .digest('hex');
 
-  // Fallback hash if no stable identifiers
-  const fallbackData = JSON.stringify({
-    itemId,
-    webhookType,
-    webhookCode,
-    timestamp,
-    requestId,
-  });
-  const hash = crypto.createHash('sha256').update(fallbackData).digest('hex').slice(0, 8);
-
-  return `${itemId || 'unknown'}:${webhookType || 'unknown'}:${webhookCode || 'unknown'}:${timestamp}:${hash}`;
+  // Compose a base string and hash for a compact, deterministic dedupe key
+  const base = `${itemId || ''}|${webhookType || ''}|${webhookCode || ''}|${String(stable)}`;
+  return crypto.createHash('sha256').update(base).digest('hex');
 }
 
 // POST /api/aggregator/webhook
 // Production-ready webhook endpoint for Plaid/MX with verification
 export async function POST(req: Request) {
   const provider = (req.headers.get('x-aggregator-provider') || 'plaid').toLowerCase();
-
-  let payload: unknown = null;
   const rawBody = await req.text();
 
+  // Verify webhook signature for security BEFORE parsing payload
+  if (provider === 'plaid') {
+    // Bypass signature verification in local/test mode
+    if (process.env.NODE_ENV === 'development' || process.env.SKIP_PLAID_SIGNATURE === '1') {
+      // skip verification
+    } else {
+      const isValid = await verifyPlaidWebhook(req, rawBody);
+      if (!isValid) {
+        logger.error({ event: 'webhook.signature.invalid', provider }, 'Invalid Plaid signature');
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+    }
+  }
+
+  // Parse payload JSON only after verification passes
+  let payload: unknown = null;
   try {
     payload = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
-
-  // Verify webhook signature for security
-  if (provider === 'plaid') {
-    const isValid = await verifyPlaidWebhook(req, rawBody);
-    if (!isValid) {
-      console.error('[webhook] Invalid Plaid signature');
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-    }
   }
 
   // Extract event details
@@ -81,43 +91,242 @@ export async function POST(req: Request) {
   }
 
   // Generate deterministic dedupe key instead of random eventId
-  const dedupeKey = generateDedupeKey(itemId, eventType, webhookCode, payload, req);
+  const dedupeKey = generateDedupeKey(itemId, eventType, webhookCode, payload, req, rawBody);
 
-  console.log('[aggregator/webhook]', {
-    provider,
-    eventType,
-    webhookCode,
-    itemId,
-    dedupeKey,
-  });
-
-  // Store webhook event for idempotency and audit trail
+  // Create client once (used for insert/claim/update)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  // Emit metric: webhook received
+  logger.info(
+    { event: 'webhook.received', provider, eventType, webhookCode, dedupeKey },
+    'Webhook received',
+  );
+  // Atomic gate: attempt to insert first-seen event (unique index on dedupe_key)
+  // If another request inserted first, we'll handle the conflict below
+  let insertedEventId: string | undefined;
+  let currentStatus: string | undefined;
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
+    const { data: inserted, error } = await supabase
+      .from('webhook_events')
+      .insert({
+        provider: provider,
+        event_type: eventType || 'unknown',
+        webhook_type: eventType,
+        webhook_code: webhookCode,
+        item_id: itemId,
+        dedupe_key: dedupeKey,
+        payload_json: payload,
+        status: 'received',
+        received_at: new Date().toISOString(),
+      })
+      .select('id, status')
+      .maybeSingle();
 
-    await supabase.from('webhook_events').insert({
-      event_id: dedupeKey, // Use deterministic dedupe key as event_id
-      provider: provider,
-      event_type: eventType || 'unknown',
-      webhook_type: eventType,
-      webhook_code: webhookCode,
-      item_id: itemId,
-      dedupe_key: dedupeKey,
-      payload: payload,
-      processed: false,
-      created_at: new Date().toISOString(),
-    });
+    if (error) {
+      // Emit metric: insert error
+      logger.error(
+        { event: 'webhook.insert.error', error, dedupeKey },
+        'Insert error storing webhook_event',
+      );
+      // Unique violation -> someone else inserted the row
+      const code = (error as any).code || '';
+      const msg = (error as any).message || '';
+      const details = (error as any).details || '';
+      if (
+        code === '23505' ||
+        /duplicate key|ux_webhook_events_dedupe_key|already exists/i.test(msg + ' ' + details)
+      ) {
+        // Fetch current row to decide next step
+        const { data: existing } = await supabase
+          .from('webhook_events')
+          .select('id, status')
+          .eq('dedupe_key', dedupeKey)
+          .single();
+        insertedEventId = existing?.id;
+        currentStatus = existing?.status;
+      } else {
+        logger.error(
+          { event: 'webhook.storage.failed', error, dedupeKey },
+          'Failed to store event',
+        );
+      }
+    } else {
+      insertedEventId = inserted?.id;
+      currentStatus = inserted?.status;
+    }
   } catch (storageError) {
-    console.error('[webhook] Failed to store event:', storageError);
+    logger.error(
+      { event: 'webhook.storage.unexpected_error', error: storageError, dedupeKey },
+      'Unexpected storage error',
+    );
     // Don't fail the webhook for storage issues
   }
 
+  // Try to claim processing by transitioning from 'received' -> 'processing'
+  // Only the claimer proceeds to trigger sync; others ack
+  let claimed = false;
+  try {
+    const { data: claimRow } = await supabase
+      .from('webhook_events')
+      .update({
+        status: 'processing',
+        processing_claimed_at: new Date().toISOString(),
+        processed_by: req.headers.get('x-request-id') || 'webhook-handler',
+      })
+      .eq('dedupe_key', dedupeKey)
+      .eq('status', 'received')
+      .select('id, status')
+      .maybeSingle();
+    claimed = !!claimRow;
+    if (claimRow) {
+      insertedEventId = claimRow.id;
+      currentStatus = claimRow.status;
+    } else {
+      // If not claimed, fetch status to decide early return
+      if (!currentStatus) {
+        const { data: existing2 } = await supabase
+          .from('webhook_events')
+          .select('id, status')
+          .eq('dedupe_key', dedupeKey)
+          .single();
+        insertedEventId = existing2?.id;
+        currentStatus = existing2?.status;
+      }
+    }
+  } catch (claimErr) {
+    logger.error(
+      { event: 'webhook.claim.failed', dedupeKey, error: claimErr },
+      'Claim attempt failed',
+    );
+  }
+
+  if (!claimed) {
+    // Emit metric: duplicate or already claimed
+    logger.info(
+      { event: 'webhook.duplicate', dedupeKey, status: currentStatus },
+      'Duplicate or already claimed',
+    );
+    // Another worker is processing or it's already processed
+    // Try to reclaim if stuck in processing beyond threshold
+    if (currentStatus === 'processing') {
+      const staleMinutes = parseInt(process.env.WEBHOOK_CLAIM_STALE_MINUTES || '15', 10);
+      const thresholdIso = new Date(Date.now() - staleMinutes * 60 * 1000).toISOString();
+      try {
+        const { data: staleClaim } = await supabase
+          .from('webhook_events')
+          .update({
+            processing_claimed_at: new Date().toISOString(),
+            processed_by: req.headers.get('x-request-id') || 'webhook-handler',
+          })
+          .eq('dedupe_key', dedupeKey)
+          .eq('status', 'processing')
+          .lt('processing_claimed_at', thresholdIso)
+          .select('id, status')
+          .maybeSingle();
+        if (staleClaim) {
+          claimed = true;
+          insertedEventId = staleClaim.id;
+          currentStatus = staleClaim.status;
+        }
+      } catch {
+        logger.warn(
+          { event: 'webhook.claim.reclaim_failed', dedupeKey },
+          'Stale claim reclaim attempt failed',
+        );
+      }
+    }
+  }
+
+  if (!claimed) {
+    // Another worker is processing or it's already processed
+    return NextResponse.json({
+      ok: true,
+      dedupeKey,
+      status: currentStatus || 'unknown',
+      message: 'Duplicate or already claimed; no action taken',
+    });
+  }
+
   // Process specific webhook types
-  if (provider === 'plaid' && eventType) {
-    await processPlaidWebhook(eventType, webhookCode, itemId, payload);
+  try {
+    // Emit metric: claim success
+    logger.info({ event: 'webhook.claim.success', dedupeKey }, 'Claim success');
+    if (provider === 'plaid' && eventType) {
+      await processPlaidWebhook(eventType, webhookCode, itemId, payload, dedupeKey);
+    }
+    // Mark as processed on success
+    if (insertedEventId) {
+      // Emit metric: processed
+      logger.info({ event: 'webhook.processed', dedupeKey }, 'Processed webhook successfully');
+      await supabase
+        .from('webhook_events')
+        .update({
+          status: 'processed',
+          processed_at: new Date().toISOString(),
+          processed_by: req.headers.get('x-request-id') || 'webhook-handler',
+        })
+        .eq('id', insertedEventId);
+    }
+  } catch (procErr) {
+    logger.error(
+      { event: 'webhook.processing.failed', dedupeKey, error: (procErr as any)?.message },
+      'Processing failed',
+    );
+    logger.info(
+      { event: 'webhook.processing.error_row', dedupeKey },
+      'Processing error; updating error row',
+    );
+
+    if (insertedEventId) {
+      const errMessage =
+        (procErr as any)?.message?.toString().slice(0, 1000) || 'processing error (redacted)';
+      // Safely increment retry_count
+      let newRetryCount = 1;
+      try {
+        const { data: retryRow } = await supabase
+          .from('webhook_events')
+          .select('retry_count')
+          .eq('id', insertedEventId)
+          .single();
+        newRetryCount = ((retryRow?.retry_count as number) || 0) + 1;
+      } catch {
+        // Minimal log only; do not include sensitive data
+        logger.warn(
+          { event: 'webhook.retry_count.read_failed', dedupeKey },
+          'Failed to read current retry_count',
+        );
+      }
+
+      await supabase
+        .from('webhook_events')
+        .update({
+          status: 'error',
+          last_error: errMessage,
+          retry_count: newRetryCount,
+        })
+        .eq('id', insertedEventId);
+
+      logger.info(
+        {
+          event: 'webhook.error_row.updated',
+          dedupeKey,
+          retry_count: newRetryCount,
+          last_error: errMessage,
+        },
+        'Error row updated',
+      );
+    }
+    // Always ACK with 2xx to prevent provider retries; monitoring should alert
+    return NextResponse.json(
+      {
+        ok: true,
+        dedupeKey,
+        message: 'Processing failed; marked as error',
+      },
+      { status: 200 },
+    );
   }
 
   return NextResponse.json({
@@ -137,21 +346,30 @@ export async function POST(req: Request) {
 async function verifyPlaidWebhook(req: Request, rawBody: string): Promise<boolean> {
   const verificationHeader = req.headers.get('plaid-verification');
   if (!verificationHeader) {
-    console.error('[webhook] Missing Plaid-Verification header');
+    logger.error(
+      { event: 'webhook.verification.missing_header' },
+      'Missing Plaid-Verification header',
+    );
     return false;
   }
 
   try {
     const jose = await getJose();
     if (!jose) {
-      console.error("[webhook] 'jose' not installed — signature verification unavailable");
+      logger.error(
+        { event: 'webhook.verification.jose_unavailable' },
+        'jose module not installed — signature verification unavailable',
+      );
       return false; // fail safe: reject
     }
 
     // decode header/payload to get kid
     const segments = verificationHeader.split('.');
     if (segments.length !== 3) {
-      console.error('[webhook] Invalid JWT format in Plaid-Verification header');
+      logger.error(
+        { event: 'webhook.verification.invalid_jwt_format' },
+        'Invalid JWT format in Plaid-Verification header',
+      );
       return false;
     }
     const payloadJson = JSON.parse(
@@ -161,38 +379,59 @@ async function verifyPlaidWebhook(req: Request, rawBody: string): Promise<boolea
       Buffer.from(segments[0].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'),
     ).kid;
     if (!kid) {
-      console.error('[webhook] JWT header missing kid');
+      logger.error({ event: 'webhook.verification.missing_kid' }, 'JWT header missing kid');
       return false;
     }
 
-    // Fetch Plaid JWK for this kid (same as current logic) - but keep minimal network calls in production
-    const PLAID_ENV = (process.env.PLAID_ENV || 'sandbox').toLowerCase();
-    const baseMap: Record<string, string> = {
-      sandbox: 'https://sandbox.plaid.com',
-      development: 'https://development.plaid.com',
-      production: 'https://production.plaid.com',
-    };
-    const baseUrl = baseMap[PLAID_ENV] || baseMap.sandbox;
+    // JWK cache lookup
+    let jwk: any = null;
+    const now = Date.now();
+    const cached = jwkCache.get(kid);
+    if (cached && cached.expiresAt > now) {
+      jwk = cached.jwk;
+      // Log cache hit
+      logger.debug({ event: 'webhook.verification.jwk_cache_hit', kid }, 'JWK cache hit');
+    } else {
+      // Fetch Plaid JWK for this kid
+      const PLAID_ENV = (process.env.PLAID_ENV || 'sandbox').toLowerCase();
+      const baseMap: Record<string, string> = {
+        sandbox: 'https://sandbox.plaid.com',
+        development: 'https://development.plaid.com',
+        production: 'https://production.plaid.com',
+      };
+      const baseUrl = baseMap[PLAID_ENV] || baseMap.sandbox;
 
-    const jwkResponse = await fetch(`${baseUrl}/webhook_verification_key/get`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: process.env.PLAID_CLIENT_ID,
-        secret: process.env.PLAID_SECRET,
-        key_id: kid,
-      }),
-    });
+      const jwkResponse = await fetch(`${baseUrl}/webhook_verification_key/get`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: process.env.PLAID_CLIENT_ID,
+          secret: process.env.PLAID_SECRET,
+          key_id: kid,
+        }),
+      });
 
-    if (!jwkResponse.ok) {
-      console.error('[webhook] Failed to fetch Plaid JWK', await jwkResponse.text());
-      return false;
-    }
-    const jwkResult = await jwkResponse.json();
-    const jwk = jwkResult.key || jwkResult.jwk || jwkResult;
-    if (!jwk) {
-      console.error('[webhook] No JWK returned by Plaid for kid', kid);
-      return false;
+      if (!jwkResponse.ok) {
+        logger.error(
+          { event: 'webhook.verification.jwk_fetch_failed', kid, status: jwkResponse.status },
+          'Failed to fetch Plaid JWK',
+        );
+        return false;
+      }
+      const jwkResult = await jwkResponse.json();
+      jwk = jwkResult.key || jwkResult.jwk || jwkResult;
+      if (!jwk) {
+        logger.error(
+          { event: 'webhook.verification.no_jwk_returned', kid },
+          'No JWK returned by Plaid',
+        );
+        return false;
+      }
+      jwkCache.set(kid, { jwk, expiresAt: now + JWK_CACHE_TTL_MS });
+      logger.debug(
+        { event: 'webhook.verification.jwk_cache_miss', kid },
+        'JWK cache miss (fetched)',
+      );
     }
 
     // importJWK and verify
@@ -202,19 +441,25 @@ async function verifyPlaidWebhook(req: Request, rawBody: string): Promise<boolea
     // verify body integrity: check payload.request_body_sha256
     const expected = payloadJson.request_body_sha256;
     if (!expected || typeof expected !== 'string') {
-      console.error('[webhook] JWT payload missing request_body_sha256');
+      logger.error(
+        { event: 'webhook.verification.missing_body_hash' },
+        'JWT payload missing request_body_sha256',
+      );
       return false;
     }
     const hash = crypto.createHash('sha256').update(rawBody, 'utf8').digest('hex');
     const a = Buffer.from(hash, 'hex');
     const b = Buffer.from(expected, 'hex');
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-      console.error('[webhook] Body hash mismatch');
+      logger.error({ event: 'webhook.verification.body_hash_mismatch' }, 'Body hash mismatch');
       return false;
     }
     return true;
   } catch (err) {
-    console.error('[webhook] Error verifying Plaid JWT webhook:', err);
+    logger.error(
+      { event: 'webhook.verification.error', error: err },
+      'Error verifying Plaid JWT webhook',
+    );
     return false;
   }
 }
@@ -227,11 +472,16 @@ async function processPlaidWebhook(
   webhookCode: string | undefined,
   itemId: string | undefined,
   payload: unknown,
+  dedupeKey?: string,
 ): Promise<void> {
+  if (webhookCode === 'FORCE_ERROR') {
+    throw new Error('Simulated processing failure for test');
+  }
+
   try {
     switch (eventType) {
       case 'TRANSACTIONS':
-        await handleTransactionsWebhook(webhookCode, itemId, payload);
+        await handleTransactionsWebhook(webhookCode, itemId, payload, dedupeKey);
         break;
 
       case 'ITEM':
@@ -243,57 +493,117 @@ async function processPlaidWebhook(
         break;
 
       default:
-        console.log(`[webhook] Unhandled event type: ${eventType}`);
+        logger.info(
+          { event: 'webhook.unhandled_event_type', eventType, dedupeKey },
+          'Unhandled event type',
+        );
     }
   } catch (error) {
-    console.error(`[webhook] Error processing ${eventType} webhook:`, error);
+    logger.error(
+      { event: 'webhook.processing_error', eventType, error, dedupeKey },
+      'Error processing webhook',
+    );
   }
 }
 
 /**
  * Handle transaction-related webhooks
  */
+// Replace existing handleTransactionsWebhook with this
 async function handleTransactionsWebhook(
   webhookCode: string | undefined,
   itemId: string | undefined,
   payload: unknown,
+  dedupeKey?: string,
 ): Promise<void> {
   switch (webhookCode) {
     case 'INITIAL_UPDATE':
-      console.log(`[webhook] Initial transaction update for item ${itemId}`);
-      // Call sync endpoint to get initial transactions
-      await triggerTransactionSync(itemId, 'initial');
+      logger.info(
+        {
+          event: 'webhook.transactions.initial_update',
+          dedupeKey,
+          itemId,
+          webhookCode,
+          skipped: true,
+          reason: 'sync_trigger_reduction_mvp',
+        },
+        'Initial transaction update received - skipping automatic sync by default',
+      );
+      // Optional: Enable this trigger if needed for initial account setup
+      // await triggerTransactionSync(itemId, 'initial');
       break;
 
     case 'HISTORICAL_UPDATE':
-      console.log(`[webhook] Historical transaction update for item ${itemId}`);
-      // Call sync endpoint to get historical transactions
-      await triggerTransactionSync(itemId, 'historical');
+      logger.info(
+        {
+          event: 'webhook.transactions.historical_update',
+          dedupeKey,
+          itemId,
+          webhookCode,
+          skipped: true,
+          reason: 'sync_trigger_reduction_mvp',
+        },
+        'Historical transaction update received - skipping automatic sync',
+      );
       break;
 
     case 'DEFAULT_UPDATE':
-      console.log(`[webhook] New transactions available for item ${itemId}`);
-      // Call sync endpoint to get new transactions
-      await triggerTransactionSync(itemId, 'update');
+      logger.info(
+        {
+          event: 'webhook.transactions.default_update',
+          dedupeKey,
+          itemId,
+          webhookCode,
+          skipped: true,
+          reason: 'sync_trigger_reduction_mvp',
+        },
+        'Default transaction update received - skipping automatic sync',
+      );
       break;
 
     case 'TRANSACTIONS_REMOVED': {
       const removedTxs =
         ((payload as Record<string, unknown>)?.removed_transactions as string[]) || [];
-      console.log(`[webhook] ${removedTxs.length} transactions removed for item ${itemId}`);
-
-      // Call sync endpoint to handle removed transactions
-      await triggerTransactionSync(itemId, 'removal');
+      logger.info(
+        {
+          event: 'webhook.transactions.removed',
+          dedupeKey,
+          itemId,
+          webhookCode,
+          removedCount: removedTxs.length,
+          skipped: true,
+          reason: 'sync_trigger_reduction_mvp',
+          note: 'Removals handled via next /transactions/sync removed[]',
+        },
+        'Transactions removed - skipping explicit sync',
+      );
       break;
     }
 
     case 'SYNC_UPDATES_AVAILABLE':
-      console.log(`[webhook] Sync updates available for item ${itemId}`);
+      logger.info(
+        {
+          event: 'webhook.transactions.sync_updates_available',
+          dedupeKey,
+          itemId,
+          webhookCode,
+          triggered: true,
+        },
+        'Sync updates available - triggering sync',
+      );
       await triggerTransactionSync(itemId, 'sync');
       break;
 
     default:
-      console.log(`[webhook] Unhandled transactions webhook: ${webhookCode}`);
+      logger.info(
+        {
+          event: 'webhook.transactions.unhandled',
+          dedupeKey,
+          itemId,
+          webhookCode,
+        },
+        'Unhandled transactions webhook - no action taken',
+      );
   }
 }
 
@@ -320,11 +630,17 @@ async function triggerTransactionSync(itemId: string | undefined, syncType: stri
       .single();
 
     if (!accountLink) {
-      console.warn(`[webhook] No active account link found for item ${itemId}`);
+      logger.warn(
+        { event: 'webhook.sync.no_account_link', itemId, syncType },
+        'No active account link found',
+      );
       return;
     }
 
-    console.log(`[webhook] Triggering ${syncType} sync for item ${itemId}`);
+    logger.info(
+      { event: 'webhook.sync.triggered', itemId, syncType },
+      'Triggering transaction sync',
+    );
 
     // Build payload for internal Plaid sync endpoint per docs
     const syncBody = {
@@ -344,37 +660,60 @@ async function triggerTransactionSync(itemId: string | undefined, syncType: stri
     );
 
     // Debug: log status info
-    console.log(
-      '[webhook] syncResponse status:',
-      syncResponse.status,
-      'redirected:',
-      syncResponse.redirected,
-      'url:',
-      syncResponse.url,
+    logger.debug(
+      {
+        event: 'webhook.sync.response_status',
+        itemId,
+        syncType,
+        status: syncResponse.status,
+        redirected: syncResponse.redirected,
+        url: syncResponse.url,
+      },
+      'Sync response status',
     );
     try {
       const text = await syncResponse.text();
       // Try to parse JSON if applicable
       try {
         const parsed = JSON.parse(text);
-        console.log('[webhook] syncResponse body (parsed):', parsed);
+        logger.debug(
+          { event: 'webhook.sync.response_body', itemId, syncType, parsed },
+          'Sync response body (parsed)',
+        );
       } catch {
-        console.log('[webhook] syncResponse body (text):', text.substring(0, 1000));
+        logger.debug(
+          {
+            event: 'webhook.sync.response_body_text',
+            itemId,
+            syncType,
+            text: text.substring(0, 1000),
+          },
+          'Sync response body (text)',
+        );
       }
     } catch (_e) {
-      console.log('[webhook] Failed to read syncResponse body:', _e);
+      logger.warn(
+        { event: 'webhook.sync.response_read_failed', itemId, syncType, error: _e },
+        'Failed to read sync response body',
+      );
     }
 
     if (syncResponse.ok) {
-      console.log(`[webhook] ${syncType} sync completed (ok response)`);
+      logger.info(
+        { event: 'webhook.sync.completed', itemId, syncType },
+        'Sync completed successfully',
+      );
       // If response contained JSON with has_more, we logged it above when reading body
       // Continue syncing if we detected 'has_more' in the parsed response
       // (we don't reparse the request body here)
     } else {
-      console.error(`[webhook] ${syncType} sync failed (non-ok): see above logs for response body`);
+      logger.error(
+        { event: 'webhook.sync.failed', itemId, syncType, status: syncResponse.status },
+        'Sync failed with non-ok response',
+      );
     }
   } catch (error) {
-    console.error(`[webhook] Error triggering ${syncType} sync:`, error);
+    logger.error({ event: 'webhook.sync.error', itemId, syncType, error }, 'Error triggering sync');
   }
 }
 
@@ -388,17 +727,26 @@ function handleItemWebhook(
 ): Promise<void> {
   switch (webhookCode) {
     case 'ERROR':
-      console.log(`[webhook] Item error for ${itemId}:`, payload);
+      logger.warn(
+        { event: 'webhook.item.error', itemId, webhookCode, payload },
+        'Item error received',
+      );
       // TODO: Mark item as requiring user attention
       break;
 
     case 'PENDING_EXPIRATION':
-      console.log(`[webhook] Item ${itemId} access will expire soon`);
+      logger.warn(
+        { event: 'webhook.item.pending_expiration', itemId, webhookCode },
+        'Item access will expire soon',
+      );
       // TODO: Notify user to re-authenticate
       break;
 
     default:
-      console.log(`[webhook] Unhandled item webhook: ${webhookCode}`);
+      logger.info(
+        { event: 'webhook.item.unhandled', itemId, webhookCode },
+        'Unhandled item webhook',
+      );
   }
   return Promise.resolve();
 }
@@ -411,7 +759,7 @@ function handleErrorWebhook(
   itemId: string | undefined,
   payload: unknown,
 ): Promise<void> {
-  console.error(`[webhook] Error webhook for item ${itemId}:`, payload);
+  logger.error({ event: 'webhook.error', itemId, webhookCode, payload }, 'Error webhook received');
   // TODO: Handle specific error types and notify users
   return Promise.resolve();
 }

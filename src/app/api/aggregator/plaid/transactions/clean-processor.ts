@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { logger } from '@/lib/status_logging/logger';
+
 // Merchant interface for database operations
 interface Merchant {
   merchant_id: string;
@@ -138,7 +140,6 @@ export interface ProcessedTransaction {
  * Maps Plaid transaction data 1:1 to database schema
  */
 export class CleanPlaidTransactionProcessor {
-   
   private supabase: any; // Using any to avoid complex Supabase typing issues
 
   constructor() {
@@ -432,40 +433,43 @@ export class CleanPlaidTransactionProcessor {
         return false;
       }
 
-      const { error } = await this.supabase.from('transactions').upsert(
-        {
-          user_id: userId,
-          account_id: accountMapping.id, // Use internal UUID, not Plaid account ID
-          merchant_id: transaction.merchant_id,
-          category_id: transaction.category_id,
-          date: transaction.date,
-          amount: transaction.amount,
-          original_description: transaction.original_description,
-          check_number: transaction.check_number,
-          pending: transaction.pending,
-          primary_category: transaction.primary_category,
-          detailed_category: transaction.detailed_category,
-          confidence_level_category: transaction.confidence_level_category,
-          transaction_type: transaction.transaction_type,
-          merchant_name: transaction.merchant_name,
-          logo_url: transaction.logo_url,
-          confidence_level_merchant: transaction.confidence_level_merchant,
-          website_url: transaction.website_url,
-          plaid_entity_id: transaction.plaid_entity_id,
-          aggregator_transaction_id: transaction.plaid_transaction_id,
-          user_metadata: {
-            plaid_data: transaction.plaid_data,
-            processed_at: new Date().toISOString(),
-          },
-          needs_review: transaction.confidence_level_merchant === 'LOW' || !transaction.merchant_id,
+      const rows = {
+        user_id: userId,
+        account_id: accountMapping.id, // Use internal UUID, not Plaid account ID
+        merchant_id: transaction.merchant_id,
+        category_id: transaction.category_id,
+        date: transaction.date,
+        amount: transaction.amount,
+        original_description: transaction.original_description,
+        check_number: transaction.check_number,
+        pending: transaction.pending,
+        primary_category: transaction.primary_category,
+        detailed_category: transaction.detailed_category,
+        confidence_level_category: transaction.confidence_level_category,
+        transaction_type: transaction.transaction_type,
+        merchant_name: transaction.merchant_name,
+        logo_url: transaction.logo_url,
+        confidence_level_merchant: transaction.confidence_level_merchant,
+        website_url: transaction.website_url,
+        plaid_entity_id: transaction.plaid_entity_id,
+        aggregator_transaction_id: transaction.plaid_transaction_id,
+        user_metadata: {
+          plaid_data: transaction.plaid_data,
+          processed_at: new Date().toISOString(),
         },
-        {
-          onConflict: 'aggregator_transaction_id',
-        },
-      );
+        needs_review: transaction.confidence_level_merchant === 'LOW' || !transaction.merchant_id,
+      };
 
-      if (error) {
-        console.error('❌ Error saving transaction:', error);
+      const { error: upsertErr } = await this.supabase.from('transactions').upsert(rows, {
+        onConflict: 'user_id,aggregator_transaction_id',
+        ignoreDuplicates: false,
+      });
+
+      if (upsertErr) {
+        logger.error(
+          { event: 'sync.upsert_failed', count: 1, error: upsertErr.message },
+          'Upsert failed',
+        );
         return false;
       }
 
