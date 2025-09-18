@@ -29,6 +29,7 @@ interface BalanceData {
     unofficial_currency_code: string | null;
   };
   last_updated: string;
+  cache_expires_at?: string;
 }
 
 // Simple in-memory cache for balances (replace with Redis in production)
@@ -154,7 +155,8 @@ async function handler(req: NextRequest) {
       return NextResponse.json({
         ok: true,
         data: [],
-        message: 'No Plaid accounts found',
+        cached: false,
+        cache_expires_at: '',
       }, {
         headers: { 'X-Request-ID': requestId },
       });
@@ -200,6 +202,7 @@ async function handler(req: NextRequest) {
               unofficial_currency_code: account.balances.unofficial_currency_code,
             },
             last_updated: new Date().toISOString(),
+            cache_expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
           }));
         } catch (plaidError: any) {
           logger.warn({
@@ -259,7 +262,7 @@ async function handler(req: NextRequest) {
       ok: true,
       data: allBalances,
       cached: false,
-      last_updated: new Date().toISOString(),
+      cache_expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes from now
     }, {
       headers: {
         'X-Request-ID': requestId,

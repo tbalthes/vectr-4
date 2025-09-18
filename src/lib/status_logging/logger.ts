@@ -68,18 +68,18 @@ function createStructuredConsoleLogger() {
     }
 
     // Build structured log entry
-    const logEntry = {
+    const logEntry: any = {
       level,
       timestamp,
       msg: message || 'Log entry',
       service: 'vectr-api',
       version: process.env.npm_package_version || 'unknown',
       environment: process.env.NODE_ENV || 'development',
-      ...context,
+      ...(typeof context === 'object' && context !== null && !(context instanceof Error) ? context : {}),
     };
 
     // Add correlation fields if available
-    if (context?.requestId) {
+    if (typeof context === 'object' && context?.requestId) {
       logEntry.correlation = { requestId: context.requestId };
     }
 

@@ -180,13 +180,20 @@ export function withErrorHandling<T>(
         // Capture to Sentry for 5xx errors
         try {
           const { captureException } = await import('@/lib/api/sentry');
-          captureException(error, {
+          void captureException(error, {
             requestId,
             route,
-            errorCode: apiError.code
+            extra: { errorCode: apiError.code }
           });
         } catch (sentryError) {
-          logger.warn({ event: 'sentry.capture_failed', error: sentryError }, 'Failed to capture error to Sentry');
+          logger.warn({ 
+            event: 'sentry.capture_failed', 
+            error: { 
+              message: (sentryError as Error)?.message || 'Unknown Sentry error',
+              code: (sentryError as any)?.code,
+              stack: (sentryError as Error)?.stack
+            } 
+          }, 'Failed to capture error to Sentry');
         }
       } else {
         logger.warn(logContext, 'API client error occurred');

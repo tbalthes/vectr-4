@@ -147,16 +147,25 @@ export async function startTransaction(
   try {
     const Sentry = await import('@sentry/node');
     
-    const transaction = Sentry.startTransaction({
+    // Use newer Sentry tracing API
+    return Sentry.startSpan({
       name,
       op,
-      tags: {
+      attributes: {
         requestId: context?.requestId,
         route: context?.route,
       },
+    }, () => {
+      // Return a span object that mimics the old transaction API
+      return {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        finish: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        setTag: () => {},
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        setData: () => {},
+      };
     });
-    
-    return transaction;
   } catch (error) {
     console.debug('Failed to start Sentry transaction:', error);
     return null;
