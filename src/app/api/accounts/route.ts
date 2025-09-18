@@ -15,7 +15,9 @@ export async function GET() {
     logger.debug(
       {
         event: 'accounts.cookies',
-        cookies: allCookies.map((c) => ({ name: c.name, hasValue: !!c.value })),
+        metadata: {
+          cookies: allCookies.map((c) => ({ name: c.name, hasValue: !!c.value })),
+        },
       },
       'Collected cookies for request',
     );
@@ -67,7 +69,10 @@ export async function GET() {
     }
 
     logger.debug(
-      { event: 'accounts.auth.cookie_used', cookieName: authToken.name },
+      { 
+        event: 'accounts.auth.cookie_used', 
+        metadata: { cookieName: authToken.name } 
+      },
       'Using auth token from cookie',
     );
 
@@ -79,7 +84,10 @@ export async function GET() {
     try {
       const parsed = JSON.parse(tokenValue);
       logger.debug(
-        { event: 'accounts.auth.token_parsed', keys: Object.keys(parsed) },
+        { 
+          event: 'accounts.auth.token_parsed', 
+          metadata: { keys: Object.keys(parsed) } 
+        },
         'Parsed token structure',
       );
 
@@ -90,8 +98,10 @@ export async function GET() {
         logger.debug(
           {
             event: 'accounts.auth.tokens_extracted',
-            hasAccessToken: !!accessToken,
-            hasRefreshToken: !!refreshToken,
+            metadata: {
+              hasAccessToken: !!accessToken,
+              hasRefreshToken: !!refreshToken,
+            },
           },
           'Extracted tokens from session array',
         );
@@ -132,7 +142,13 @@ export async function GET() {
     const { data: user, error: userError } = await supabase.auth.getUser();
 
     logger.debug(
-      { event: 'accounts.user_check', hasUser: !!user?.user, userError: userError?.message },
+      { 
+        event: 'accounts.user_check', 
+        metadata: { 
+          hasUser: !!user?.user, 
+          userError: userError?.message 
+        } 
+      },
       'User check result',
     );
 
@@ -140,7 +156,9 @@ export async function GET() {
       logger.warn(
         {
           event: 'accounts.user_validation_failed',
-          details: userError?.message || 'No user found',
+          metadata: {
+            details: userError?.message || 'No user found',
+          },
         },
         'User validation failed',
       );

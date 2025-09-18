@@ -1,112 +1,246 @@
+import 'server-only';
+
 import pino from 'pino';
+
+/**
+ * Structured JSON logger with full context fields
+ * as outlined in WBS section 7.1.1
+ */
 
 const level = process.env.LOG_LEVEL || 'info';
 const isDev = process.env.NODE_ENV === 'development' || process.env.FORCE_CONSOLE_LOGGER === '1';
 
+export interface LogContext {
+  requestId?: string;
+  userId?: string;
+  route?: string;
+  method?: string;
+  statusCode?: number;
+  duration?: number;
+  itemId?: string;
+  aggregator?: string;
+  event?: string;
+  error?: {
+    message: string;
+    code?: string;
+    stack?: string;
+  };
+  performance?: {
+    spans?: {
+      name: string;
+      duration: number;
+      metadata?: Record<string, any>;
+    }[];
+    totalDuration?: number;
+  };
+  metadata?: Record<string, any>;
+}
+
 /**
- * Lightweight console-based pretty logger used in development.
- * Keeps the same logger.* API shape used across the codebase:
- *   logger.info(meta, message)
- *   logger.error(meta, message)
- *   logger.warn(meta, message)
- *   logger.debug(meta, message)
- *
- * This avoids spawning worker threads (pino-pretty / thread-stream issues)
- * in dev environments like Next.js on Windows.
+ * Enhanced console logger with structured JSON output for development
  */
-function createConsoleLogger() {
-  function formatOutput(level: string, meta?: any, msg?: string) {
-    const time = new Date().toISOString();
-    // If caller used logger.info('message') or logger.info('message', ...), normalize
-    if (typeof meta === 'string' && !msg) {
-      // logger.info('simple message')
-      const out = { level, time, msg: meta };
-      return JSON.stringify(out);
+function createStructuredConsoleLogger() {
+  function formatOutput(level: string, context?: LogContext | string, message?: string) {
+    const timestamp = new Date().toISOString();
+    
+    // Handle simple string message
+    if (typeof context === 'string' && !message) {
+      return JSON.stringify({
+        level,
+        timestamp,
+        msg: context,
+        service: 'vectr-api',
+        version: process.env.npm_package_version || 'unknown',
+      });
     }
 
-    // If meta is an Error, convert to sanitized object
-    if (meta instanceof Error) {
-      meta = { error: meta.message, stack: meta.stack };
+    // Handle Error objects
+    if (context instanceof Error) {
+      context = {
+        error: {
+          message: context.message,
+          stack: context.stack,
+          code: (context as any).code,
+        }
+      };
     }
 
-    // Build canonical object: keep meta fields, include msg and time and level
-    const out = Object.assign({}, meta || {}, { level, time, msg: msg || '' });
-    return JSON.stringify(out);
+    // Build structured log entry
+    const logEntry = {
+      level,
+      timestamp,
+      msg: message || 'Log entry',
+      service: 'vectr-api',
+      version: process.env.npm_package_version || 'unknown',
+      environment: process.env.NODE_ENV || 'development',
+      ...context,
+    };
+
+    // Add correlation fields if available
+    if (context?.requestId) {
+      logEntry.correlation = { requestId: context.requestId };
+    }
+
+    return JSON.stringify(logEntry, null, isDev ? 2 : 0);
   }
 
   return {
-    info(meta?: any, msg?: string) {
+    info(context?: LogContext | string, message?: string) {
       try {
-        console.log(formatOutput('info', meta, msg));
-      } catch {
-        console.log(
-          JSON.stringify({
-            level: 'info',
-            time: new Date().toISOString(),
-            msg: String(meta) || String(msg),
-          }),
-        );
+        console.log(formatOutput('info', context, message));
+      } catch (err) {
+        console.log(JSON.stringify({
+          level: 'info',
+          timestamp: new Date().toISOString(),
+          msg: 'Failed to format log entry',
+          error: { message: String(err) },
+          originalContext: typeof context === 'object' ? JSON.stringify(context) : String(context),
+        }));
       }
     },
-    warn(meta?: any, msg?: string) {
+
+    warn(context?: LogContext | string, message?: string) {
       try {
-        console.warn(formatOutput('warn', meta, msg));
-      } catch {
-        console.warn(
-          JSON.stringify({
-            level: 'warn',
-            time: new Date().toISOString(),
-            msg: String(meta) || String(msg),
-          }),
-        );
+        console.warn(formatOutput('warn', context, message));
+      } catch (err) {
+        console.warn(JSON.stringify({
+          level: 'warn',
+          timestamp: new Date().toISOString(),
+          msg: 'Failed to format log entry',
+          error: { message: String(err) },
+          originalContext: typeof context === 'object' ? JSON.stringify(context) : String(context),
+        }));
       }
     },
-    error(meta?: any, msg?: string) {
+
+    error(context?: LogContext | string, message?: string) {
       try {
-        console.error(formatOutput('error', meta, msg));
-      } catch {
-        console.error(
-          JSON.stringify({
-            level: 'error',
-            time: new Date().toISOString(),
-            msg: String(meta) || String(msg),
-          }),
-        );
+        console.error(formatOutput('error', context, message));
+      } catch (err) {
+        console.error(JSON.stringify({
+          level: 'error',
+          timestamp: new Date().toISOString(),
+          msg: 'Failed to format log entry',
+          error: { message: String(err) },
+          originalContext: typeof context === 'object' ? JSON.stringify(context) : String(context),
+        }));
       }
     },
-    debug(meta?: any, msg?: string) {
+
+    debug(context?: LogContext | string, message?: string) {
       try {
-        // Map debug to console.debug if available
-        const output = formatOutput('debug', meta, msg);
+        const output = formatOutput('debug', context, message);
         if (console.debug) {
           console.debug(output);
         } else {
           console.log(output);
         }
-      } catch {
-        console.log(
-          JSON.stringify({
-            level: 'debug',
-            time: new Date().toISOString(),
-            msg: String(meta) || String(msg),
-          }),
-        );
+      } catch (err) {
+        console.log(JSON.stringify({
+          level: 'debug',
+          timestamp: new Date().toISOString(),
+          msg: 'Failed to format log entry',
+          error: { message: String(err) },
+          originalContext: typeof context === 'object' ? JSON.stringify(context) : String(context),
+        }));
       }
     },
   };
 }
 
 /**
- * Create a pino logger for non-dev environments.
- * This emits compact JSON to stdout (good for production log collectors).
+ * Enhanced Pino logger for production with structured fields
  */
-function createPinoLogger() {
-  return pino({
+function createStructuredPinoLogger() {
+  const pinoLogger = pino({
     level,
-    base: { service: 'webhook-handler' },
+    base: { 
+      service: 'vectr-api',
+      version: process.env.npm_package_version || 'unknown',
+      environment: process.env.NODE_ENV || 'production',
+    },
     timestamp: pino.stdTimeFunctions.isoTime,
+    formatters: {
+      level(label) {
+        return { level: label };
+      },
+    },
+    serializers: {
+      error: pino.stdSerializers.err,
+      req: pino.stdSerializers.req,
+      res: pino.stdSerializers.res,
+    },
   });
+
+  return {
+    info(context?: LogContext | string, message?: string) {
+      if (typeof context === 'string') {
+        pinoLogger.info(context);
+      } else {
+        pinoLogger.info(context || {}, message || 'Log entry');
+      }
+    },
+
+    warn(context?: LogContext | string, message?: string) {
+      if (typeof context === 'string') {
+        pinoLogger.warn(context);
+      } else {
+        pinoLogger.warn(context || {}, message || 'Log entry');
+      }
+    },
+
+    error(context?: LogContext | string, message?: string) {
+      if (typeof context === 'string') {
+        pinoLogger.error(context);
+      } else {
+        pinoLogger.error(context || {}, message || 'Log entry');
+      }
+    },
+
+    debug(context?: LogContext | string, message?: string) {
+      if (typeof context === 'string') {
+        pinoLogger.debug(context);
+      } else {
+        pinoLogger.debug(context || {}, message || 'Log entry');
+      }
+    },
+  };
 }
 
-export const logger = isDev ? createConsoleLogger() : createPinoLogger();
+/**
+ * Create a child logger with default context
+ */
+export function createChildLogger(defaultContext: Partial<LogContext>) {
+  return {
+    info(context?: LogContext | string, message?: string) {
+      const mergedContext = typeof context === 'string' 
+        ? { ...defaultContext, msg: context }
+        : { ...defaultContext, ...context };
+      logger.info(mergedContext, message);
+    },
+
+    warn(context?: LogContext | string, message?: string) {
+      const mergedContext = typeof context === 'string' 
+        ? { ...defaultContext, msg: context }
+        : { ...defaultContext, ...context };
+      logger.warn(mergedContext, message);
+    },
+
+    error(context?: LogContext | string, message?: string) {
+      const mergedContext = typeof context === 'string' 
+        ? { ...defaultContext, msg: context }
+        : { ...defaultContext, ...context };
+      logger.error(mergedContext, message);
+    },
+
+    debug(context?: LogContext | string, message?: string) {
+      const mergedContext = typeof context === 'string' 
+        ? { ...defaultContext, msg: context }
+        : { ...defaultContext, ...context };
+      logger.debug(mergedContext, message);
+    },
+  };
+}
+
+export const logger = isDev ? createStructuredConsoleLogger() : createStructuredPinoLogger();
 export default logger;
