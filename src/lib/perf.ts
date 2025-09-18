@@ -168,14 +168,14 @@ export function measured(name?: string) {
     const originalMethod = descriptor.value;
     const spanName = name || `${target.constructor.name}.${propertyKey}`;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (this: any, ...args: any[]) {
       const start = performance.now();
       try {
         const result = await originalMethod.apply(this, args);
         const duration = performance.now() - start;
         
         // Log if logger is available in context
-        if (this.logger) {
+        if (this && typeof this === 'object' && this.logger && typeof this.logger.debug === 'function') {
           this.logger.debug({
             event: 'performance.method',
             method: spanName,
@@ -187,7 +187,7 @@ export function measured(name?: string) {
       } catch (error) {
         const duration = performance.now() - start;
         
-        if (this.logger) {
+        if (this && typeof this === 'object' && this.logger && typeof this.logger.debug === 'function') {
           this.logger.debug({
             event: 'performance.method.error',
             method: spanName,

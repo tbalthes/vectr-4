@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 
 import "./globals.css";
 import "../styles/plaid-fix.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-const inter = Inter({ subsets: ["latin"] });
+
+// Use system fonts instead of Google Fonts to avoid external dependencies
+const inter = {
+  className: "font-sans antialiased"
+};
 
 export const metadata: Metadata = {
   title: "Vectr-4 Finance",

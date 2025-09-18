@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { withErrorHandling, ValidationError, NotFoundError } from '@/lib/api/errors';
 
@@ -18,7 +19,7 @@ function handler(req: NextRequest) {
     case 'internal':
       throw new Error('Unexpected error');
     default:
-      return Response.json({ 
+      return NextResponse.json({ 
         ok: true, 
         message: 'Error handling test endpoint',
         availableTests: ['validation', 'not_found', 'internal']

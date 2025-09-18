@@ -126,14 +126,16 @@ function getRequestId(req: NextRequest): string {
  * Wrapper for API route handlers that provides standardized error handling
  */
 export function withErrorHandling<T>(
-  handler: (req: NextRequest, context?: any) => Promise<NextResponse<T>>
+  handler: (req: NextRequest, context?: any) => Promise<NextResponse<T>> | NextResponse<T>
 ) {
   return async (req: NextRequest, context?: any): Promise<NextResponse> => {
     const requestId = getRequestId(req);
     const route = req.nextUrl.pathname;
     
     try {
-      return await handler(req, context);
+      const result = handler(req, context);
+      // Handle both sync and async handlers
+      return result instanceof Promise ? await result : result;
     } catch (error: any) {
       let apiError: ApiError;
       
