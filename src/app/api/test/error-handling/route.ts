@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { withErrorHandling, ValidationError, NotFoundError } from '@/lib/api/errors';
 
@@ -6,7 +6,7 @@ import { withErrorHandling, ValidationError, NotFoundError } from '@/lib/api/err
  * Example API route demonstrating standardized error handling
  * This demonstrates WBS section 6.1.2 - withErrorHandling wrapper
  */
-async function handler(req: NextRequest) {
+function handler(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const testType = searchParams.get('test');
 
