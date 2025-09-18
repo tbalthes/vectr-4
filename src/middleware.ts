@@ -1,9 +1,22 @@
+import { randomUUID } from 'crypto';
+
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
+  
+  // Add request ID to all API requests for observability
+  const isApiRoute = req.nextUrl.pathname.startsWith('/api');
+  if (isApiRoute) {
+    const requestId = req.headers.get('x-request-id') || randomUUID();
+    res.headers.set('x-request-id', requestId);
+    
+    // Also set it in the request for downstream handlers to access
+    req.headers.set('x-request-id', requestId);
+  }
+  
   const supabase = createMiddlewareClient({ req, res });
 
   try {
@@ -33,5 +46,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

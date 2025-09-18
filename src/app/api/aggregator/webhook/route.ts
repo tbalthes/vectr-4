@@ -5,29 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/status_logging/logger';
 import { runTransactionsSync } from '@/lib/plaid/sync';
-
-// Dynamic jose import for webhook verification
-let joseImported: any = null;
-async function getJose() {
-  if (joseImported) {
-    return joseImported;
-  }
-  try {
-    joseImported = await import('jose');
-    return joseImported;
-  } catch (e) {
-    logger.error({ event: 'webhook.jose.import_failed', error: e }, 'jose module not available');
-    return null;
-  }
-}
-
-// In-memory Plaid JWK cache (kid -> { jwk, expiresAt })
-const jwkCache = new Map<string, { jwk: any; expiresAt: number }>();
-const JWK_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
-
-/**
- * Generate deterministic dedupe key for webhook events
- */
+import { verifyPlaidWebhook, isVerificationError } from '@/lib/plaid/verify';
 function generateDedupeKey(
   itemId: string | undefined,
   webhookType: string | undefined,
@@ -63,10 +41,22 @@ export async function POST(req: Request) {
     if (process.env.NODE_ENV === 'development' || process.env.SKIP_PLAID_SIGNATURE === '1') {
       // skip verification
     } else {
-      const isValid = await verifyPlaidWebhook(req, rawBody);
-      if (!isValid) {
-        logger.error({ event: 'webhook.signature.invalid', provider }, 'Invalid Plaid signature');
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      try {
+        await verifyPlaidWebhook(Object.fromEntries(req.headers.entries()), rawBody);
+        logger.info({ event: 'webhook.verification.success' }, 'Webhook signature verified');
+      } catch (error) {
+        if (isVerificationError(error)) {
+          logger.error(
+            { event: 'webhook.verification.failed', code: error.code, message: error.message },
+            'Webhook verification failed'
+          );
+          return NextResponse.json(
+            { ok: false, error: 'Webhook verification failed' },
+            { status: 401 }
+          );
+        }
+        // Re-throw unexpected errors
+        throw error;
       }
     }
   }
@@ -341,132 +331,7 @@ export async function POST(req: Request) {
 }
 
 /**
- * Verify Plaid webhook signature for security
- * (use jose where possible; return boolean)
- */
-async function verifyPlaidWebhook(req: Request, rawBody: string): Promise<boolean> {
-  const verificationHeader = req.headers.get('plaid-verification');
-  if (!verificationHeader) {
-    logger.error(
-      { event: 'webhook.verification.missing_header' },
-      'Missing Plaid-Verification header',
-    );
-    return false;
-  }
-
-  try {
-    const jose = await getJose();
-    if (!jose) {
-      logger.error(
-        { event: 'webhook.verification.jose_unavailable' },
-        'jose module not installed — signature verification unavailable',
-      );
-      return false; // fail safe: reject
-    }
-
-    // decode header/payload to get kid
-    const segments = verificationHeader.split('.');
-    if (segments.length !== 3) {
-      logger.error(
-        { event: 'webhook.verification.invalid_jwt_format' },
-        'Invalid JWT format in Plaid-Verification header',
-      );
-      return false;
-    }
-    const payloadJson = JSON.parse(
-      Buffer.from(segments[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'),
-    );
-    const kid = JSON.parse(
-      Buffer.from(segments[0].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'),
-    ).kid;
-    if (!kid) {
-      logger.error({ event: 'webhook.verification.missing_kid' }, 'JWT header missing kid');
-      return false;
-    }
-
-    // JWK cache lookup
-    let jwk: any = null;
-    const now = Date.now();
-    const cached = jwkCache.get(kid);
-    if (cached && cached.expiresAt > now) {
-      jwk = cached.jwk;
-      // Log cache hit
-      logger.debug({ event: 'webhook.verification.jwk_cache_hit', kid }, 'JWK cache hit');
-    } else {
-      // Fetch Plaid JWK for this kid
-      const PLAID_ENV = (process.env.PLAID_ENV || 'sandbox').toLowerCase();
-      const baseMap: Record<string, string> = {
-        sandbox: 'https://sandbox.plaid.com',
-        development: 'https://development.plaid.com',
-        production: 'https://production.plaid.com',
-      };
-      const baseUrl = baseMap[PLAID_ENV] || baseMap.sandbox;
-
-      const jwkResponse = await fetch(`${baseUrl}/webhook_verification_key/get`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: process.env.PLAID_CLIENT_ID,
-          secret: process.env.PLAID_SECRET,
-          key_id: kid,
-        }),
-      });
-
-      if (!jwkResponse.ok) {
-        logger.error(
-          { event: 'webhook.verification.jwk_fetch_failed', kid, status: jwkResponse.status },
-          'Failed to fetch Plaid JWK',
-        );
-        return false;
-      }
-      const jwkResult = await jwkResponse.json();
-      jwk = jwkResult.key || jwkResult.jwk || jwkResult;
-      if (!jwk) {
-        logger.error(
-          { event: 'webhook.verification.no_jwk_returned', kid },
-          'No JWK returned by Plaid',
-        );
-        return false;
-      }
-      jwkCache.set(kid, { jwk, expiresAt: now + JWK_CACHE_TTL_MS });
-      logger.debug(
-        { event: 'webhook.verification.jwk_cache_miss', kid },
-        'JWK cache miss (fetched)',
-      );
-    }
-
-    // importJWK and verify
-    const jwkKey = await jose.importJWK(jwk);
-    await jose.jwtVerify(verificationHeader, jwkKey, { maxTokenAge: '5m' });
-
-    // verify body integrity: check payload.request_body_sha256
-    const expected = payloadJson.request_body_sha256;
-    if (!expected || typeof expected !== 'string') {
-      logger.error(
-        { event: 'webhook.verification.missing_body_hash' },
-        'JWT payload missing request_body_sha256',
-      );
-      return false;
-    }
-    const hash = crypto.createHash('sha256').update(rawBody, 'utf8').digest('hex');
-    const a = Buffer.from(hash, 'hex');
-    const b = Buffer.from(expected, 'hex');
-    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-      logger.error({ event: 'webhook.verification.body_hash_mismatch' }, 'Body hash mismatch');
-      return false;
-    }
-    return true;
-  } catch (err) {
-    logger.error(
-      { event: 'webhook.verification.error', error: err },
-      'Error verifying Plaid JWT webhook',
-    );
-    return false;
-  }
-}
-
-/**
- * Process Plaid webhook events
+ * Generate deterministic dedupe key for webhook events
  */
 async function processPlaidWebhook(
   eventType: string,
