@@ -47,7 +47,13 @@ export async function POST(req: Request) {
       } catch (error) {
         if (isVerificationError(error)) {
           logger.error(
-            { event: 'webhook.verification.failed', code: error.code, message: error.message },
+            { 
+              event: 'webhook.verification.failed', 
+              error: { 
+                message: error.message,
+                code: error.code
+              } 
+            },
             'Webhook verification failed'
           );
           return NextResponse.json(
@@ -91,7 +97,11 @@ export async function POST(req: Request) {
   );
   // Emit metric: webhook received
   logger.info(
-    { event: 'webhook.received', provider, eventType, webhookCode, dedupeKey },
+    { 
+      event: 'webhook.received', 
+      aggregator: provider,
+      metadata: { eventType, webhookCode, dedupeKey } 
+    },
     'Webhook received',
   );
   // Atomic gate: attempt to insert first-seen event (unique index on dedupe_key)
@@ -118,7 +128,15 @@ export async function POST(req: Request) {
     if (error) {
       // Emit metric: insert error
       logger.error(
-        { event: 'webhook.insert.error', error, dedupeKey },
+        { 
+          event: 'webhook.insert.error', 
+          error: { 
+            message: (error as any).message || 'Unknown error',
+            code: (error as any).code,
+            stack: (error as any).stack
+          },
+          metadata: { dedupeKey } 
+        },
         'Insert error storing webhook_event',
       );
       // Unique violation -> someone else inserted the row
@@ -139,7 +157,15 @@ export async function POST(req: Request) {
         currentStatus = existing?.status;
       } else {
         logger.error(
-          { event: 'webhook.storage.failed', error, dedupeKey },
+          { 
+            event: 'webhook.storage.failed', 
+            error: { 
+              message: (error as any).message || 'Unknown error',
+              code: (error as any).code,
+              stack: (error as any).stack
+            },
+            metadata: { dedupeKey } 
+          },
           'Failed to store event',
         );
       }
@@ -149,7 +175,15 @@ export async function POST(req: Request) {
     }
   } catch (storageError) {
     logger.error(
-      { event: 'webhook.storage.unexpected_error', error: storageError, dedupeKey },
+      { 
+        event: 'webhook.storage.unexpected_error', 
+        error: { 
+          message: (storageError as Error)?.message || 'Unknown storage error',
+          code: (storageError as any)?.code,
+          stack: (storageError as Error)?.stack
+        },
+        metadata: { dedupeKey } 
+      },
       'Unexpected storage error',
     );
     // Don't fail the webhook for storage issues
@@ -188,7 +222,15 @@ export async function POST(req: Request) {
     }
   } catch (claimErr) {
     logger.error(
-      { event: 'webhook.claim.failed', dedupeKey, error: claimErr },
+      { 
+        event: 'webhook.claim.failed', 
+        metadata: { dedupeKey },
+        error: { 
+          message: (claimErr as Error)?.message || 'Unknown claim error',
+          code: (claimErr as any)?.code,
+          stack: (claimErr as Error)?.stack
+        } 
+      },
       'Claim attempt failed',
     );
   }
@@ -196,7 +238,10 @@ export async function POST(req: Request) {
   if (!claimed) {
     // Emit metric: duplicate or already claimed
     logger.info(
-      { event: 'webhook.duplicate', dedupeKey, status: currentStatus },
+      { 
+        event: 'webhook.duplicate', 
+        metadata: { dedupeKey, status: currentStatus } 
+      },
       'Duplicate or already claimed',
     );
     // Another worker is processing or it's already processed
@@ -223,7 +268,10 @@ export async function POST(req: Request) {
         }
       } catch {
         logger.warn(
-          { event: 'webhook.claim.reclaim_failed', dedupeKey },
+          { 
+            event: 'webhook.claim.reclaim_failed', 
+            metadata: { dedupeKey } 
+          },
           'Stale claim reclaim attempt failed',
         );
       }
@@ -243,14 +291,20 @@ export async function POST(req: Request) {
   // Process specific webhook types
   try {
     // Emit metric: claim success
-    logger.info({ event: 'webhook.claim.success', dedupeKey }, 'Claim success');
+    logger.info({ 
+      event: 'webhook.claim.success', 
+      metadata: { dedupeKey } 
+    }, 'Claim success');
     if (provider === 'plaid' && eventType) {
       await processPlaidWebhook(eventType, webhookCode, itemId, payload, dedupeKey);
     }
     // Mark as processed on success
     if (insertedEventId) {
       // Emit metric: processed
-      logger.info({ event: 'webhook.processed', dedupeKey }, 'Processed webhook successfully');
+      logger.info({ 
+        event: 'webhook.processed', 
+        metadata: { dedupeKey } 
+      }, 'Processed webhook successfully');
       await supabase
         .from('webhook_events')
         .update({
@@ -262,11 +316,22 @@ export async function POST(req: Request) {
     }
   } catch (procErr) {
     logger.error(
-      { event: 'webhook.processing.failed', dedupeKey, error: (procErr as any)?.message },
+      { 
+        event: 'webhook.processing.failed', 
+        metadata: { dedupeKey },
+        error: { 
+          message: (procErr as any)?.message || 'Unknown processing error',
+          code: (procErr as any)?.code,
+          stack: (procErr as Error)?.stack
+        } 
+      },
       'Processing failed',
     );
     logger.info(
-      { event: 'webhook.processing.error_row', dedupeKey },
+      { 
+        event: 'webhook.processing.error_row', 
+        metadata: { dedupeKey } 
+      },
       'Processing error; updating error row',
     );
 
@@ -366,7 +431,16 @@ async function processPlaidWebhook(
     }
   } catch (error) {
     logger.error(
-      { event: 'webhook.processing_error', eventType, error, dedupeKey },
+      { 
+        event: 'webhook.processing_error', 
+        eventType, 
+        error: { 
+          message: (error as Error)?.message || 'Unknown processing error',
+          code: (error as any)?.code,
+          stack: (error as Error)?.stack
+        },
+        dedupeKey 
+      },
       'Error processing webhook',
     );
   }
@@ -530,7 +604,16 @@ async function triggerTransactionSyncOnce(itemId: string | undefined): Promise<v
     }
   } catch (error) {
     logger.error(
-      { event: 'webhook.sync.error', itemId, syncType: 'sync', error },
+      { 
+        event: 'webhook.sync.error', 
+        itemId, 
+        syncType: 'sync', 
+        error: { 
+          message: (error as Error)?.message || 'Unknown sync error',
+          code: (error as any)?.code,
+          stack: (error as Error)?.stack
+        } 
+      },
       'Error triggering sync',
     );
   }

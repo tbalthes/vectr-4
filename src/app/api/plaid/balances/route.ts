@@ -55,7 +55,11 @@ async function handler(req: NextRequest) {
       logger.warn({ 
         event: 'balances.auth_failed', 
         requestId, 
-        error: authError?.message 
+        error: authError ? { 
+          message: authError.message,
+          code: (authError as any).code,
+          stack: authError.stack
+        } : undefined 
       }, 'Authentication failed for balance request');
       
       throw new ValidationError('Authentication required');
@@ -128,7 +132,11 @@ async function handler(req: NextRequest) {
         event: 'balances.items_fetch_failed',
         requestId,
         userId,
-        error: itemsError.message,
+        error: { 
+          message: itemsError.message,
+          code: (itemsError as any).code,
+          stack: itemsError.stack
+        },
       }, 'Failed to fetch user items');
       
       throw new Error('Failed to fetch account information');

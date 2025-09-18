@@ -34,6 +34,8 @@ export interface LogContext {
     totalDuration?: number;
   };
   metadata?: Record<string, any>;
+  // Allow additional fields for specific logging contexts
+  [key: string]: any;
 }
 
 /**

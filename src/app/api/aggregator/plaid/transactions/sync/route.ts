@@ -39,7 +39,13 @@ export async function POST(req: Request) {
     return NextResponse.json(summary, { status: 200 });
   } catch (err) {
     logger.error(
-      { event: 'sync.route.unhandled', error: (err as Error)?.message },
+      { 
+        event: 'sync.route.unhandled', 
+        error: { 
+          message: (err as Error)?.message || 'Unknown error',
+          stack: (err as Error)?.stack
+        } 
+      },
       'Unhandled error in sync route',
     );
     return NextResponse.json({ ok: false, error: 'Unhandled error' }, { status: 500 });
