@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { withErrorHandling } from "@/lib/api/errors";
+import { type NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+
+import { withErrorHandling, UnauthorizedError, InternalError } from "@/lib/api/errors";
 import { createLinkToken } from "@/lib/plaid/accounts";
 import { logger } from "@/lib/status_logging/logger";
 
@@ -35,7 +36,7 @@ async function handler(req: NextRequest) {
       } : undefined
     }, 'Authentication failed for link token request');
     
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    throw new UnauthorizedError("Authentication required");
   }
 
   // Validate required environment variables
@@ -46,9 +47,7 @@ async function handler(req: NextRequest) {
       userId: session.user.id,
     }, 'Missing required Plaid configuration');
     
-    return NextResponse.json({
-      error: "Plaid configuration missing. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.",
-    }, { status: 500 });
+    throw new InternalError("Plaid configuration missing. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.");
   }
 
   logger.info({
@@ -105,10 +104,7 @@ async function handler(req: NextRequest) {
       }
     }, 'Failed to create link token');
 
-    return NextResponse.json({
-      error: "Failed to create link token",
-      details: error?.message,
-    }, { status: 500 });
+    throw new InternalError("Failed to create link token");
   }
 }
 
