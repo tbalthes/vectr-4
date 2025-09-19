@@ -29,6 +29,7 @@ interface BalanceData {
     unofficial_currency_code: string | null;
   };
   last_updated: string;
+  cache_expires_at?: string;
 }
 
 // Simple in-memory cache for balances (replace with Redis in production)
@@ -55,7 +56,11 @@ async function handler(req: NextRequest) {
       logger.warn({ 
         event: 'balances.auth_failed', 
         requestId, 
-        error: authError?.message 
+        error: authError ? { 
+          message: authError.message,
+          code: (authError as any).code,
+          stack: authError.stack
+        } : undefined 
       }, 'Authentication failed for balance request');
       
       throw new ValidationError('Authentication required');
@@ -128,7 +133,11 @@ async function handler(req: NextRequest) {
         event: 'balances.items_fetch_failed',
         requestId,
         userId,
-        error: itemsError.message,
+        error: { 
+          message: itemsError.message,
+          code: (itemsError as any).code,
+          stack: itemsError.stack
+        },
       }, 'Failed to fetch user items');
       
       throw new Error('Failed to fetch account information');
@@ -146,7 +155,8 @@ async function handler(req: NextRequest) {
       return NextResponse.json({
         ok: true,
         data: [],
-        message: 'No Plaid accounts found',
+        cached: false,
+        cache_expires_at: '',
       }, {
         headers: { 'X-Request-ID': requestId },
       });
@@ -192,6 +202,7 @@ async function handler(req: NextRequest) {
               unofficial_currency_code: account.balances.unofficial_currency_code,
             },
             last_updated: new Date().toISOString(),
+            cache_expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
           }));
         } catch (plaidError: any) {
           logger.warn({
@@ -251,7 +262,7 @@ async function handler(req: NextRequest) {
       ok: true,
       data: allBalances,
       cached: false,
-      last_updated: new Date().toISOString(),
+      cache_expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes from now
     }, {
       headers: {
         'X-Request-ID': requestId,

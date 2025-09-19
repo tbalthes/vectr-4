@@ -31,14 +31,22 @@ export async function POST(req: Request) {
 
     if (linkErr || !link) {
       logger.warn(
-        { event: 'manual_sync.link_missing', itemId, linkErr },
+        { 
+          event: 'manual_sync.link_missing', 
+          itemId, 
+          error: linkErr ? { message: linkErr.message, code: linkErr.code } : undefined 
+        },
         'No account link found for item',
       );
       return NextResponse.json({ ok: false, error: 'Account link not found' }, { status: 404 });
     }
     if (link.status !== 'active') {
       logger.warn(
-        { event: 'manual_sync.link_inactive', itemId, status: link.status },
+        { 
+          event: 'manual_sync.link_inactive', 
+          itemId, 
+          metadata: { status: link.status } 
+        },
         'Account link inactive',
       );
       return NextResponse.json({ ok: false, error: 'Account link is not active' }, { status: 409 });
@@ -56,7 +64,11 @@ export async function POST(req: Request) {
       pageSize: 100,
     });
 
-    logger.info({ event: 'manual_sync.sync_completed', itemId, summary }, 'Manual sync completed');
+    logger.info({ 
+      event: 'manual_sync.sync_completed', 
+      itemId, 
+      metadata: { summary } 
+    }, 'Manual sync completed');
 
     // Return 202 Accepted with summary for transparency
     return NextResponse.json({ accepted: true, ...summary }, { status: 202 });
@@ -80,7 +92,13 @@ export async function POST(req: Request) {
     // return NextResponse.json({ ok: true, itemId, accepted: true }, { status: 202 });
   } catch (err) {
     logger.error(
-      { event: 'manual_sync.unhandled', error: (err as Error).message },
+      { 
+        event: 'manual_sync.unhandled', 
+        error: { 
+          message: (err as Error).message,
+          stack: (err as Error).stack
+        } 
+      },
       'Unhandled error in manual sync',
     );
     return NextResponse.json({ ok: false, error: 'Unhandled error' }, { status: 500 });

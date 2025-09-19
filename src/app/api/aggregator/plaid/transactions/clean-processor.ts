@@ -467,7 +467,14 @@ export class CleanPlaidTransactionProcessor {
 
       if (upsertErr) {
         logger.error(
-          { event: 'sync.upsert_failed', count: 1, error: upsertErr.message },
+          { 
+            event: 'sync.upsert_failed', 
+            metadata: { count: 1 },
+            error: { 
+              message: upsertErr.message,
+              stack: upsertErr.stack
+            } 
+          },
           'Upsert failed',
         );
         return false;

@@ -46,6 +46,22 @@ export class PlaidClient {
     return this.post('/item/public_token/exchange', { public_token: publicToken });
   }
 
+  // create link token for initialization
+  async createLinkToken(userId: string, additionalOptions?: any) {
+    const request = {
+      user: {
+        client_user_id: userId,
+      },
+      client_name: "Vectr Personal Finance",
+      products: ["transactions", "auth"],
+      country_codes: ["US"],
+      language: "en",
+      webhook: additionalOptions?.webhook || process.env.PLAID_WEBHOOK_URL,
+      ...additionalOptions,
+    };
+    return this.post('/link/token/create', request);
+  }
+
   // fetch transactions sync
   async transactionsSync(accessToken: string, cursor?: string | null, count?: number) {
     return this.post('/transactions/sync', { access_token: accessToken, cursor, count });

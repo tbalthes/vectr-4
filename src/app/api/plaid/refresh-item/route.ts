@@ -47,7 +47,11 @@ async function handler(req: NextRequest) {
       logger.warn({ 
         event: 'refresh.auth_failed', 
         requestId, 
-        error: authError?.message 
+        error: authError ? { 
+          message: authError.message,
+          code: (authError as any).code,
+          stack: authError.stack
+        } : undefined 
       }, 'Authentication failed for refresh request');
       
       throw new ValidationError('Authentication required');
@@ -101,7 +105,11 @@ async function handler(req: NextRequest) {
         requestId,
         userId,
         itemId: item_id,
-        error: itemError?.message,
+        error: itemError ? { 
+          message: itemError.message,
+          code: (itemError as any).code,
+          stack: itemError.stack
+        } : undefined,
       }, 'Item not found or unauthorized');
       
       throw new ValidationError('Item not found or unauthorized');

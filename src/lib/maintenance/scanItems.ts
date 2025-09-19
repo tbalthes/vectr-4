@@ -143,7 +143,11 @@ export async function scanInactiveItems(
         logger.error({
           event: 'maintenance.scan.probe_error',
           item_id: item.item_id,
-          error: error instanceof Error ? error.message : String(error)
+          error: { 
+            message: error instanceof Error ? error.message : String(error),
+            code: (error as any)?.code,
+            stack: error instanceof Error ? error.stack : undefined
+          }
         }, 'Failed to probe item');
       }
     }
@@ -171,7 +175,11 @@ export async function scanInactiveItems(
     perf.end('scan_items');
     logger.error({
       event: 'maintenance.scan.failed',
-      error: error instanceof Error ? error.message : String(error)
+      error: { 
+        message: error instanceof Error ? error.message : String(error),
+        code: (error as any)?.code,
+        stack: error instanceof Error ? error.stack : undefined
+      }
     }, 'Inactive items scan failed');
     throw error;
   }
@@ -289,7 +297,11 @@ async function markItemDisconnected(
     logger.warn({
       event: 'maintenance.audit.failed',
       item_id: itemId,
-      error: auditError.message
+      error: { 
+        message: auditError.message,
+        code: (auditError as any).code,
+        stack: auditError.stack
+      }
     }, 'Failed to insert audit record');
   }
 }

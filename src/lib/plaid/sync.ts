@@ -39,7 +39,17 @@ export async function runTransactionsSync(params: RunSyncParams): Promise<SyncSu
     } catch (e: any) {
       const msg = String(e?.message || e);
       logger.error(
-        { event: 'sync.fetch_error', item_id, user_id, error: msg },
+        { 
+          event: 'sync.fetch_error', 
+          item_id, 
+          user_id, 
+          error: { 
+            message: msg,
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+            code: e && typeof e === 'object' && 'code' in e ? (e as any).code : undefined,
+            stack: e instanceof Error ? e.stack : undefined
+          } 
+        },
         'Error fetching sync page',
       );
       throw e;
@@ -85,7 +95,12 @@ export async function runTransactionsSync(params: RunSyncParams): Promise<SyncSu
           event: 'sync.cursor_update_failed',
           item_id,
           final_cursor: nextCursor,
-          error: cErr?.message,
+          error: cErr ? { 
+            message: cErr.message,
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+            code: cErr && typeof cErr === 'object' && 'code' in cErr ? (cErr as any).code : undefined,
+            stack: cErr instanceof Error ? cErr.stack : undefined
+          } : undefined,
         },
         'Failed to persist cursor',
       );

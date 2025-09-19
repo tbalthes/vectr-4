@@ -1,117 +1,115 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import { withErrorHandling } from "@/lib/api/errors";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import {
-  Configuration,
-  PlaidApi,
-  PlaidEnvironments,
-  Products,
-  CountryCode,
-} from "plaid";
+import { cookies } from "next/headers";
+import { createLinkToken } from "@/lib/plaid/accounts";
+import { logger } from "@/lib/status_logging/logger";
 
 // POST /api/aggregator/plaid/create_link_token
 // Returns a link_token from Plaid for frontend Link component
-export async function POST() {
-  console.log("=== CREATE LINK TOKEN REQUEST ===");
+async function handler(req: NextRequest) {
+  const requestId = req.headers.get('x-request-id') || 'unknown';
+  
+  logger.info({ 
+    event: 'link_token.request_start',
+    requestId,
+    route: '/api/aggregator/plaid/create_link_token'
+  }, 'Creating Plaid link token');
 
   const supabase = createRouteHandlerClient({
     cookies: cookies,
   });
+  
   const {
     data: { session },
     error: sessionError,
   } = await supabase.auth.getSession();
 
-  console.log("Session check:", { hasSession: !!session, sessionError });
-
-  if (sessionError) {
-    console.error("Session error:", sessionError);
-    return NextResponse.json({ error: sessionError.message }, { status: 500 });
-  }
-  if (!session?.user) {
-    console.error("No user session");
+  if (sessionError || !session?.user) {
+    logger.warn({ 
+      event: 'link_token.auth_failed',
+      requestId,
+      error: sessionError ? {
+        message: sessionError.message,
+        code: (sessionError as any).code
+      } : undefined
+    }, 'Authentication failed for link token request');
+    
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // Validate required environment variables
   if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
-    console.error("Missing required Plaid configuration:");
-    console.error("- PLAID_CLIENT_ID present:", !!process.env.PLAID_CLIENT_ID);
-    console.error("- PLAID_SECRET present:", !!process.env.PLAID_SECRET);
-    return NextResponse.json(
-      {
-        error:
-          "Plaid configuration missing. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.",
-      },
-      { status: 500 }
-    );
+    logger.error({
+      event: 'link_token.config_missing',
+      requestId,
+      userId: session.user.id,
+    }, 'Missing required Plaid configuration');
+    
+    return NextResponse.json({
+      error: "Plaid configuration missing. Please set PLAID_CLIENT_ID and PLAID_SECRET environment variables.",
+    }, { status: 500 });
   }
 
-  console.log("Using Plaid environment:", process.env.PLAID_ENV || "sandbox");
+  logger.info({
+    event: 'link_token.config_verified',
+    requestId,
+    userId: session.user.id,
+    environment: process.env.PLAID_ENV || "sandbox"
+  }, 'Plaid configuration verified');
 
-  console.log("=== PLAID SANDBOX INSTRUCTIONS ===");
-  console.log("At phone verification screen:");
-  console.log(
-    "- Use test phone: 415-555-0010 (new user) or 415-555-0011 (returning user)"
-  );
-  console.log("- Use test OTP: 123456");
-  console.log("- Then select test bank and use: user_good / pass_good");
-  console.log("=====================================");
+  // Log sandbox instructions for development
+  if ((process.env.PLAID_ENV || 'sandbox') === 'sandbox') {
+    logger.info({
+      event: 'link_token.sandbox_instructions',
+      requestId,
+      metadata: {
+        instructions: {
+          phone: '415-555-0010 (new) or 415-555-0011 (returning)',
+          otp: '123456',
+          credentials: 'user_good / pass_good'
+        }
+      }
+    }, 'Plaid sandbox test instructions');
+  }
 
   try {
-    const configuration = new Configuration({
-      basePath:
-        PlaidEnvironments[
-          process.env.PLAID_ENV as keyof typeof PlaidEnvironments
-        ] || PlaidEnvironments.sandbox,
-      baseOptions: {
-        headers: {
-          "PLAID-CLIENT-ID": process.env.PLAID_CLIENT_ID,
-          "PLAID-SECRET": process.env.PLAID_SECRET,
-        },
-      },
+    // Use service layer to create link token
+    const response = await createLinkToken(session.user.id, {
+      webhook: process.env.PLAID_WEBHOOK_URL || 
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/webhook`,
+      daysRequested: 730, // 2 years
     });
 
-    const client = new PlaidApi(configuration);
+    logger.info({
+      event: 'link_token.created',
+      requestId,
+      userId: session.user.id,
+      linkTokenCreated: !!response.link_token
+    }, 'Link token created successfully');
 
-    const linkTokenRequest = {
-      user: {
-        client_user_id: session.user.id,
-      },
-      client_name: "Vectr Personal Finance",
-      products: [Products.Transactions, Products.Auth],
-      country_codes: [CountryCode.Us],
-      language: "en" as const,
-      webhook:
-        process.env.PLAID_WEBHOOK_URL ||
-        `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/webhook`,
-      transactions: {
-        days_requested: 730, // Maximum transaction history (2 years)
-      },
-    };
+    return NextResponse.json({
+      link_token: response.link_token,
+      expiration: response.expiration,
+      request_id: response.request_id,
+    });
+  } catch (error: any) {
+    logger.error({
+      event: 'link_token.creation_failed',
+      requestId,
+      userId: session.user.id,
+      error: {
+        message: error?.message || 'Unknown error',
+        code: error?.code,
+        stack: error?.stack
+      }
+    }, 'Failed to create link token');
 
-    console.log("Creating Plaid link token with request:", linkTokenRequest);
-
-    console.log("Creating Plaid link token with request:", linkTokenRequest);
-
-    const response = await client.linkTokenCreate(linkTokenRequest);
-    console.log("Plaid link token created successfully");
-    return NextResponse.json({ link_token: response.data.link_token });
-  } catch (error) {
-    console.error("Plaid linkTokenCreate error:", error);
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-    }
-    if (error && typeof error === "object" && "response" in error) {
-      const axiosError = error as {
-        response?: { data?: unknown; status?: number };
-      };
-      console.error("Plaid API error response:", axiosError.response?.data);
-      console.error("Status:", axiosError.response?.status);
-    }
-    return NextResponse.json(
-      { error: "Failed to create link token" },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      error: "Failed to create link token",
+      details: error?.message,
+    }, { status: 500 });
   }
 }
+
+export const POST = withErrorHandling(handler);
