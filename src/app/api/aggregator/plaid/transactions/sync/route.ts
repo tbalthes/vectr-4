@@ -5,6 +5,83 @@ import { z } from 'zod';
 import { logger } from '@/lib/status_logging/logger';
 import { validateBody } from '@/lib/api/validator';
 import { runTransactionsSync } from '@/lib/plaid/sync';
+import { logApiCall } from '@/lib/monitoring/api-usage-tracker';
+
+// In-memory circuit breaker state (in production, use Redis or database)
+const circuitBreaker = new Map<string, { 
+  failures: number; 
+  lastFailure: number; 
+  state: 'closed' | 'open' | 'half-open' 
+}>();
+
+const CIRCUIT_BREAKER_CONFIG = {
+  failureThreshold: parseInt(process.env.SYNC_CIRCUIT_BREAKER_FAILURES || '5', 10),
+  timeout: parseInt(process.env.SYNC_CIRCUIT_BREAKER_TIMEOUT_MS || '60000', 10), // 1 minute
+  resetTime: parseInt(process.env.SYNC_CIRCUIT_BREAKER_RESET_MS || '300000', 10), // 5 minutes
+};
+
+function checkCircuitBreaker(itemId: string): { allowed: boolean; reason?: string } {
+  const key = `sync:${itemId}`;
+  const breaker = circuitBreaker.get(key);
+  
+  if (!breaker || breaker.state === 'closed') {
+    return { allowed: true };
+  }
+  
+  const now = Date.now();
+  
+  if (breaker.state === 'open') {
+    if (now - breaker.lastFailure > CIRCUIT_BREAKER_CONFIG.resetTime) {
+      // Transition to half-open to test if service recovered
+      breaker.state = 'half-open';
+      breaker.failures = 0;
+      logger.info({ 
+        event: 'circuit_breaker.half_open', 
+        item_id: itemId 
+      }, 'Circuit breaker transitioning to half-open');
+      return { allowed: true };
+    }
+    return { 
+      allowed: false, 
+      reason: `Circuit breaker open due to ${breaker.failures} failures. Retry after ${new Date(breaker.lastFailure + CIRCUIT_BREAKER_CONFIG.resetTime).toISOString()}` 
+    };
+  }
+  
+  // half-open state
+  return { allowed: true };
+}
+
+function recordCircuitBreakerResult(itemId: string, success: boolean): void {
+  const key = `sync:${itemId}`;
+  const breaker = circuitBreaker.get(key) || { failures: 0, lastFailure: 0, state: 'closed' as const };
+  
+  if (success) {
+    if (breaker.state === 'half-open') {
+      // Recovery confirmed, reset to closed
+      breaker.state = 'closed';
+      breaker.failures = 0;
+      logger.info({ 
+        event: 'circuit_breaker.closed', 
+        item_id: itemId 
+      }, 'Circuit breaker reset to closed after successful request');
+    }
+    // For closed state, we don't reset failure count to allow gradual recovery
+  } else {
+    breaker.failures++;
+    breaker.lastFailure = Date.now();
+    
+    if (breaker.failures >= CIRCUIT_BREAKER_CONFIG.failureThreshold) {
+      breaker.state = 'open';
+      logger.warn({ 
+        event: 'circuit_breaker.open', 
+        item_id: itemId, 
+        failures: breaker.failures 
+      }, 'Circuit breaker opened due to repeated failures');
+    }
+  }
+  
+  circuitBreaker.set(key, breaker);
+}
 
 // Schema for validation
 const SyncSchema = z.object({
@@ -16,11 +93,43 @@ const SyncSchema = z.object({
 });
 
 // POST /api/aggregator/plaid/transactions/sync
-// Thin controller: validate → service → respond
+// Thin controller: validate → circuit breaker → service → respond
 export async function POST(req: Request) {
+  let itemId: string | undefined;
+  const startTime = Date.now();
+  
   try {
     const body = await req.json().catch(() => ({}));
     const { access_token, cursor, count, user_id, item_id } = validateBody(SyncSchema, body) as any;
+    
+    itemId = item_id;
+
+    // Log API call for monitoring
+    logApiCall({
+      endpoint: '/api/aggregator/plaid/transactions/sync',
+      itemId: item_id,
+      userId: user_id,
+    });
+
+    // Check circuit breaker before processing
+    const circuitCheck = checkCircuitBreaker(item_id);
+    if (!circuitCheck.allowed) {
+      logger.warn({
+        event: 'sync.circuit_breaker_blocked',
+        item_id,
+        reason: circuitCheck.reason,
+      }, 'Sync request blocked by circuit breaker');
+      
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: 'Service temporarily unavailable', 
+          reason: circuitCheck.reason,
+          circuit_breaker: 'open'
+        }, 
+        { status: 503 }
+      );
+    }
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,11 +145,37 @@ export async function POST(req: Request) {
       pageSize: count ?? 100,
     });
 
+    // Record successful operation
+    recordCircuitBreakerResult(item_id, true);
+
+    // Log completion with duration
+    const duration = Date.now() - startTime;
+    logApiCall({
+      endpoint: '/api/aggregator/plaid/transactions/sync',
+      itemId: item_id,
+      userId: user_id,
+      duration,
+    });
+
     return NextResponse.json(summary, { status: 200 });
   } catch (err) {
+    // Record failed operation
+    if (itemId) {
+      recordCircuitBreakerResult(itemId, false);
+    }
+    
+    // Log failed call
+    const duration = Date.now() - startTime;
+    logApiCall({
+      endpoint: '/api/aggregator/plaid/transactions/sync',
+      itemId,
+      duration,
+    });
+    
     logger.error(
       { 
         event: 'sync.route.unhandled', 
+        item_id: itemId,
         error: { 
           message: (err as Error)?.message || 'Unknown error',
           stack: (err as Error)?.stack

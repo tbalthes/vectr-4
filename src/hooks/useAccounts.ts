@@ -5,6 +5,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { accountToasts } from '@/lib/notifications/account-notifications';
 import { useAccountSync } from '@/contexts/AccountSyncContext';
 
+// Rate limiting for sync operations
+const SYNC_RATE_LIMIT_MS = 30000; // 30 seconds between syncs per account
+const BULK_SYNC_RATE_LIMIT_MS = 60000; // 1 minute between bulk syncs
+
+// In-memory rate limiting (consider moving to localStorage for persistence)
+const lastSyncTimes = new Map<string, number>();
+let lastBulkSync = 0;
+
 // The Account interface for the new API structure
 export interface Account {
   id: string;
@@ -82,7 +90,25 @@ export function useAccounts() {
 
   const syncAccount = useCallback(
     async (accountId: string, accountName: string) => {
+      // Rate limiting check
+      const now = Date.now();
+      const lastSync = lastSyncTimes.get(accountId) || 0;
+      const timeSinceLastSync = now - lastSync;
+      
+      if (timeSinceLastSync < SYNC_RATE_LIMIT_MS) {
+        const remainingTime = Math.ceil((SYNC_RATE_LIMIT_MS - timeSinceLastSync) / 1000);
+        accountToasts.syncError(
+          accountName, 
+          `Please wait ${remainingTime} seconds before syncing this account again`, 
+          false
+        );
+        return;
+      }
+
       try {
+        // Record sync attempt
+        lastSyncTimes.set(accountId, now);
+
         // Start progress via sync context (shows toast once)
         startAccountSync({
           accountName,
@@ -121,6 +147,8 @@ export function useAccounts() {
         });
 
         if (!response.ok) {
+          // Remove rate limit record on failure to allow retry
+          lastSyncTimes.delete(accountId);
           throw new Error(`Failed to sync ${accountName}`);
         }
 
@@ -151,7 +179,24 @@ export function useAccounts() {
       return;
     }
 
+    // Rate limiting check for bulk sync
+    const now = Date.now();
+    const timeSinceLastBulkSync = now - lastBulkSync;
+    
+    if (timeSinceLastBulkSync < BULK_SYNC_RATE_LIMIT_MS) {
+      const remainingTime = Math.ceil((BULK_SYNC_RATE_LIMIT_MS - timeSinceLastBulkSync) / 1000);
+      accountToasts.syncError(
+        'bulk sync', 
+        `Please wait ${remainingTime} seconds before running bulk sync again`, 
+        false
+      );
+      return;
+    }
+
     try {
+      // Record bulk sync attempt
+      lastBulkSync = now;
+
       // Show pre-warning
       accountToasts.connectionWarning(accounts.length, '2-3 minutes');
 
@@ -171,6 +216,8 @@ export function useAccounts() {
       });
 
       if (!result.ok) {
+        // Remove rate limit record on failure to allow retry
+        lastBulkSync = 0;
         throw new Error('Bulk sync failed');
       }
 

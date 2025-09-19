@@ -22,20 +22,66 @@ export async function runTransactionsSync(params: RunSyncParams): Promise<SyncSu
   const { client, access_token, user_id, item_id, start_cursor, pageSize = 100 } = params;
   const startedAt = Date.now();
 
+  // Safeguards to prevent runaway loops
+  const MAX_PAGES = parseInt(process.env.PLAID_SYNC_MAX_PAGES || '50', 10);
+  const MAX_DURATION_MS = parseInt(process.env.PLAID_SYNC_MAX_DURATION_MS || '300000', 10); // 5 minutes
+  const RATE_LIMIT_DELAY_MS = parseInt(process.env.PLAID_SYNC_RATE_DELAY_MS || '100', 10);
+
   logger.info(
-    { event: 'sync.start', item_id, user_id, has_cursor: !!start_cursor, count: pageSize },
-    'Starting Plaid /transactions/sync',
+    { 
+      event: 'sync.start', 
+      item_id, 
+      user_id, 
+      has_cursor: !!start_cursor, 
+      count: pageSize,
+      max_pages: MAX_PAGES,
+      max_duration_ms: MAX_DURATION_MS
+    },
+    'Starting Plaid /transactions/sync with safeguards',
   );
 
   let nextCursor = start_cursor ?? null;
   let totalAdded = 0;
   let totalModified = 0;
   let totalRemoved = 0;
+  let pageCount = 0;
 
   while (true) {
+    // Safeguard 1: Check maximum pages processed
+    if (pageCount >= MAX_PAGES) {
+      logger.warn(
+        {
+          event: 'sync.max_pages_reached',
+          item_id,
+          user_id,
+          pages_processed: pageCount,
+          max_pages: MAX_PAGES,
+        },
+        'Maximum pages limit reached - stopping sync',
+      );
+      break;
+    }
+
+    // Safeguard 2: Check maximum duration
+    const elapsedMs = Date.now() - startedAt;
+    if (elapsedMs > MAX_DURATION_MS) {
+      logger.warn(
+        {
+          event: 'sync.max_duration_reached',
+          item_id,
+          user_id,
+          elapsed_ms: elapsedMs,
+          max_duration_ms: MAX_DURATION_MS,
+        },
+        'Maximum duration limit reached - stopping sync',
+      );
+      break;
+    }
+
     let page;
     try {
       page = await transactionsSync({ access_token, cursor: nextCursor, count: pageSize });
+      pageCount++;
     } catch (e: any) {
       const msg = String(e?.message || e);
       logger.error(
@@ -43,6 +89,7 @@ export async function runTransactionsSync(params: RunSyncParams): Promise<SyncSu
           event: 'sync.fetch_error', 
           item_id, 
           user_id, 
+          page_count: pageCount,
           error: { 
             message: msg,
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -59,6 +106,7 @@ export async function runTransactionsSync(params: RunSyncParams): Promise<SyncSu
       {
         event: 'sync.page',
         item_id,
+        page_number: pageCount,
         added: page.added?.length || 0,
         modified: page.modified?.length || 0,
         removed: page.removed?.length || 0,
@@ -77,7 +125,20 @@ export async function runTransactionsSync(params: RunSyncParams): Promise<SyncSu
     nextCursor = page.next_cursor ?? nextCursor;
 
     if (!page.has_more) {
+      logger.info(
+        {
+          event: 'sync.natural_completion',
+          item_id,
+          pages_processed: pageCount,
+        },
+        'Sync completed naturally (has_more = false)',
+      );
       break;
+    }
+
+    // Safeguard 3: Rate limiting between requests
+    if (RATE_LIMIT_DELAY_MS > 0) {
+      await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY_MS));
     }
   }
 

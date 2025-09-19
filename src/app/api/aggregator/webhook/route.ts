@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/status_logging/logger';
 import { runTransactionsSync } from '@/lib/plaid/sync';
 import { verifyPlaidWebhook, isVerificationError } from '@/lib/plaid/verify';
+import { logApiCall } from '@/lib/monitoring/api-usage-tracker';
 function generateDedupeKey(
   itemId: string | undefined,
   webhookType: string | undefined,
@@ -86,6 +87,12 @@ export async function POST(req: Request) {
     webhookCode = obj.webhook_code as string | undefined;
     itemId = obj.item_id as string | undefined;
   }
+
+  // Log webhook call for monitoring
+  logApiCall({
+    endpoint: '/api/aggregator/webhook',
+    itemId,
+  });
 
   // Generate deterministic dedupe key instead of random eventId
   const dedupeKey = generateDedupeKey(itemId, eventType, webhookCode, payload, req, rawBody);
