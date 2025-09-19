@@ -1,12 +1,19 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* Font rendering optimizations for crisp text */
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "pnum" 1, "tnum" 0,
-    "onum" 1, "lnum" 0, "dlig" 0;
+  font-feature-settings:
+    'kern' 1,
+    'liga' 1,
+    'calt' 1,
+    'pnum' 1,
+    'tnum' 0,
+    'onum' 1,
+    'lnum' 0,
+    'dlig' 0;
 }
 
 /* High DPI display optimizations */
@@ -43,7 +50,7 @@ textarea {
 
 /* Force hardware acceleration for smooth animations */
 .transition,
-[class*="transition"] {
+[class*='transition'] {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   will-change: transform;
@@ -209,24 +216,22 @@ textarea {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.275 0 0);
   --sidebar-ring: oklch(0.439 0 0);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   --radius: 0.625rem;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
   --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1),
-    0 8px 10px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 }
 
@@ -309,11 +314,11 @@ html:not(.dark) [data-sonner-toast] {
 
 /* === PLAID MODAL Z-INDEX FIX === */
 /* Ensure Plaid's iframe and modal components always appear on top */
-[data-portal] iframe[src*="plaid"],
-iframe[src*="plaid.com"],
-iframe[src*="plaid-link"],
-[data-testid*="plaid"],
-div[data-rbd-droppable-id*="plaid"],
+[data-portal] iframe[src*='plaid'],
+iframe[src*='plaid.com'],
+iframe[src*='plaid-link'],
+[data-testid*='plaid'],
+div[data-rbd-droppable-id*='plaid'],
 #plaid-link-iframe-1,
 #plaid-link-iframe-2,
 #plaid-link-iframe-3 {
@@ -322,64 +327,64 @@ div[data-rbd-droppable-id*="plaid"],
 }
 
 /* Plaid overlay and container fixes */
-div[style*="z-index"][style*="999"]:has(iframe[src*="plaid"]) {
+div[style*='z-index'][style*='999']:has(iframe[src*='plaid']) {
   z-index: 999999 !important;
 }
 
 /* Ensure Plaid modal background doesn't interfere */
-[data-radix-popper-content-wrapper]:has(iframe[src*="plaid"]) {
+[data-radix-popper-content-wrapper]:has(iframe[src*='plaid']) {
   z-index: 999999 !important;
 }
 
 /* Fix for any React portals containing Plaid */
-[data-portal]:has(iframe[src*="plaid"]) {
+[data-portal]:has(iframe[src*='plaid']) {
   z-index: 999999 !important;
 }
 
 /* Plaid Link specific fixes */
 .PlaidLink,
 .plaid-link,
-[class*="plaid-link"],
-[id*="plaid-link"] {
+[class*='plaid-link'],
+[id*='plaid-link'] {
   z-index: 999999 !important;
 }
 
 /* Fix input focus issues within Plaid iframe */
-iframe[src*="plaid"] input,
-iframe[src*="plaid"] [contenteditable],
-iframe[src*="plaid"] textarea {
+iframe[src*='plaid'] input,
+iframe[src*='plaid'] [contenteditable],
+iframe[src*='plaid'] textarea {
   z-index: 1000000 !important;
   pointer-events: auto !important;
 }
 
 /* Ensure our dialog doesn't interfere with Plaid */
-[data-slot="dialog-content"]:has(iframe[src*="plaid"]) {
+[data-slot='dialog-content']:has(iframe[src*='plaid']) {
   z-index: 999998 !important;
 }
 
-[data-slot="dialog-portal"]:has(iframe[src*="plaid"]) {
+[data-slot='dialog-portal']:has(iframe[src*='plaid']) {
   z-index: 999998 !important;
 }
 
 /* Force Plaid modals to appear on top of everything */
 #plaid-link-iframe-1,
 #plaid-link-iframe,
-[id*="plaid-link"],
-[class*="PlaidLink"],
-[data-module="PlaidLink"],
-iframe[src*="link.plaid.com"],
-iframe[src*="cdn.plaid.com"] {
+[id*='plaid-link'],
+[class*='PlaidLink'],
+[data-module='PlaidLink'],
+iframe[src*='link.plaid.com'],
+iframe[src*='cdn.plaid.com'] {
   z-index: 2147483647 !important;
   position: fixed !important;
 }
 
 /* Plaid container overrides */
-div[style*="z-index"]:has(iframe[src*="plaid"]) {
+div[style*='z-index']:has(iframe[src*='plaid']) {
   z-index: 2147483647 !important;
 }
 
 /* Generic high z-index iframe fix for Plaid */
-body > div[style*="position: fixed"]:has(iframe) {
+body > div[style*='position: fixed']:has(iframe) {
   z-index: 2147483647 !important;
 }
 
@@ -389,8 +394,8 @@ body > div[style*="position: fixed"]:has(iframe) {
 [data-nextjs-toast],
 .__next-dev-error-overlay,
 #__next-build-watcher,
-[id*="__next"],
-[class*="__next"] {
+[id*='__next'],
+[class*='__next'] {
   z-index: 2147483647 !important;
   position: fixed !important;
   top: 0 !important;

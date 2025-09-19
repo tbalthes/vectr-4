@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       console.warn('Login failed:', error);
       return NextResponse.json(
         { error: typeof error === 'string' ? error : error?.message || JSON.stringify(error) },
-        { status: 401 }
+        { status: 401 },
       );
     }
 

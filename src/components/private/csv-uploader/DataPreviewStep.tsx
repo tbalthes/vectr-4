@@ -1,17 +1,11 @@
-import React from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react";
+import React from 'react';
+import { ChevronLeft, ChevronRight, Eye, AlertCircle, CheckCircle } from 'lucide-react';
 
-import { type ColumnMapping, formatCurrency } from "./csv-utils";
+import { type ColumnMapping, formatCurrency } from './csv-utils';
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface DataPreviewStepProps {
   data: Record<string, string | number | undefined>[];
@@ -32,9 +26,9 @@ export function DataPreviewStep({
 
   const getCustomFieldValue = (
     record: Record<string, string | number | undefined>,
-    fieldName: string
+    fieldName: string,
   ) => {
-    return record[fieldName] || "";
+    return record[fieldName] || '';
   };
 
   const hasValidData = previewData.length > 0;
@@ -62,8 +56,8 @@ export function DataPreviewStep({
           <Alert variant="destructive" className="border-destructive/30">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              No valid transaction data found. Please check your column mapping
-              and ensure your CSV contains transaction data.
+              No valid transaction data found. Please check your column mapping and ensure your CSV
+              contains transaction data.
             </AlertDescription>
           </Alert>
         )}
@@ -82,8 +76,8 @@ export function DataPreviewStep({
           <div className="pl-6 pt-6 pb-4">
             <h2 className="text-xl font-semibold">Transaction Preview</h2>
             <p className="text-base text-muted-foreground">
-              Preview of first {previewData.length} transactions from your CSV
-              file ({totalRows} total)
+              Preview of first {previewData.length} transactions from your CSV file ({totalRows}{' '}
+              total)
             </p>
           </div>
           <div className="p-0">
@@ -125,35 +119,26 @@ export function DataPreviewStep({
                 </thead>
                 <tbody>
                   {previewData.map((record, index) => (
-                    <tr
-                      key={index}
-                      className="border-b hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="pl-6 py-3 text-sm text-muted-foreground">
-                        {index + 1}
-                      </td>
+                    <tr key={index} className="border-b hover:bg-muted/30 transition-colors">
+                      <td className="pl-6 py-3 text-sm text-muted-foreground">{index + 1}</td>
                       {mapping.transactionNumber && (
-                        <td className="p-3 text-sm">
-                          {record.transactionNumber || "—"}
-                        </td>
+                        <td className="p-3 text-sm">{record.transactionNumber || '—'}</td>
                       )}
                       <td className="p-3 text-sm max-w-[200px] truncate">
-                        {record.description || "—"}
+                        {record.description || '—'}
                       </td>
-                      <td className="p-3 text-sm">{record.date || "—"}</td>
+                      <td className="p-3 text-sm">{record.date || '—'}</td>
                       <td className="p-3 text-sm text-right font-mono">
-                        {record.formattedAmount || "—"}
+                        {record.formattedAmount || '—'}
                       </td>
                       {mapping.balance && (
                         <td className="p-3 text-sm text-right font-mono">
-                          {record.balance
-                            ? formatCurrency(Number(record.balance))
-                            : "—"}
+                          {record.balance ? formatCurrency(Number(record.balance)) : '—'}
                         </td>
                       )}
                       {Object.values(mapping.customFields).map((fieldName) => (
                         <td key={fieldName} className="p-3 text-sm">
-                          {getCustomFieldValue(record, fieldName) || "—"}
+                          {getCustomFieldValue(record, fieldName) || '—'}
                         </td>
                       ))}
                     </tr>
@@ -172,11 +157,7 @@ export function DataPreviewStep({
           Back to Mapping
         </Button>
 
-        <Button
-          onClick={onContinue}
-          disabled={!hasValidData}
-          className="min-w-[140px]"
-        >
+        <Button onClick={onContinue} disabled={!hasValidData} className="min-w-[140px]">
           Continue to Import
           <ChevronRight className="h-4 w-4 ml-2" />
         </Button>

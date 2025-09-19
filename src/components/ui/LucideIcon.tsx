@@ -1,6 +1,6 @@
 // src/components/ui/LucideIcon.tsx
-import React from "react";
-import * as LucideIcons from "lucide-react";
+import React from 'react';
+import * as LucideIcons from 'lucide-react';
 
 interface LucideIconProps {
   name: string;
@@ -8,13 +8,9 @@ interface LucideIconProps {
   size?: number;
 }
 
-export function LucideIcon({
-  name,
-  className = "h-4 w-4",
-  size,
-}: LucideIconProps) {
+export function LucideIcon({ name, className = 'h-4 w-4', size }: LucideIconProps) {
   // Handle the case where the icon name might be null, undefined, or empty
-  if (!name || name === "None" || name === "null") {
+  if (!name || name === 'None' || name === 'null') {
     return <LucideIcons.HelpCircle className={className} size={size} />;
   }
 

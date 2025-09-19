@@ -466,8 +466,12 @@ export default function TransactionsPage() {
         transactionId={drawerTransactionId}
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        onEdit={(transaction) => { void handleDrawerEdit(transaction); }}
-        onDelete={(transactionId) => { void handleDrawerDelete(transactionId); }}
+        onEdit={(transaction) => {
+          void handleDrawerEdit(transaction);
+        }}
+        onDelete={(transactionId) => {
+          void handleDrawerDelete(transactionId);
+        }}
       />
     </>
   );

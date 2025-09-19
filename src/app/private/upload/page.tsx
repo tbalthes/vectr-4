@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { ArrowLeft, Download } from "lucide-react";
-import { useRouter } from "next/navigation";
+import React, { useState } from 'react';
+import { ArrowLeft, Download } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-import { Button } from "@/components/ui/button";
-import { FileUploadStep } from "@/components/private/csv-uploader/FileUploadStep";
-import { HeaderDetectionStep } from "@/components/private/csv-uploader/HeaderDetectionStep";
-import { ColumnMappingStep } from "@/components/private/csv-uploader/ColumnMappingStep";
-import { DataPreviewStep } from "@/components/private/csv-uploader/DataPreviewStep";
-import { PreviewStep } from "@/components/private/csv-uploader/PreviewStep";
-import PageHeader from "@/components/private/PageHeader";
+import { Button } from '@/components/ui/button';
+import { FileUploadStep } from '@/components/private/csv-uploader/FileUploadStep';
+import { HeaderDetectionStep } from '@/components/private/csv-uploader/HeaderDetectionStep';
+import { ColumnMappingStep } from '@/components/private/csv-uploader/ColumnMappingStep';
+import { DataPreviewStep } from '@/components/private/csv-uploader/DataPreviewStep';
+import { PreviewStep } from '@/components/private/csv-uploader/PreviewStep';
+import PageHeader from '@/components/private/PageHeader';
 import {
   detectHeaderRow,
   getColumnSuggestions,
@@ -18,8 +18,8 @@ import {
   combineAmounts,
   type ColumnMapping,
   type HeaderDetectionResult,
-} from "@/components/private/csv-uploader/csv-utils";
-import { useAuth } from "@/contexts/AuthContext";
+} from '@/components/private/csv-uploader/csv-utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function UploadPage() {
   const router = useRouter();
@@ -29,13 +29,12 @@ export default function UploadPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [selectedHeaderRow, setSelectedHeaderRow] = useState<number>(0);
-  const [headerDetection, setHeaderDetection] =
-    useState<HeaderDetectionResult | null>(null);
+  const [headerDetection, setHeaderDetection] = useState<HeaderDetectionResult | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping>({
     amountColumns: [],
     customFields: {},
   });
-  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('');
 
   const handleFileUploaded = (file: File, content: string) => {
     // Parse the CSV content
@@ -74,19 +73,18 @@ export default function UploadPage() {
     setCurrentStep(2);
   };
 
-  const handleMappingComplete = (
-    finalMapping: ColumnMapping,
-    accountId: string
-  ) => {
+  const handleMappingComplete = (finalMapping: ColumnMapping, accountId: string) => {
     setMapping(finalMapping);
     setSelectedAccountId(accountId);
-    console.log("Selected account ID:", accountId);
+    console.log('Selected account ID:', accountId);
     setCurrentStep(3);
   };
 
   // Keep local copy of authenticated user id to avoid transient null during navigation
   React.useEffect(() => {
-    if (user?.id) {setAuthUserId(user.id);}
+    if (user?.id) {
+      setAuthUserId(user.id);
+    }
   }, [user?.id]);
 
   const handlePreviewComplete = () => {
@@ -95,13 +93,15 @@ export default function UploadPage() {
 
   const handleUploadComplete = () => {
     // Navigate back to dashboard
-    router.push("/private/dashboard");
+    router.push('/private/dashboard');
   };
 
   const transformDataForPreview = (
-    limitRows = true
+    limitRows = true,
   ): Record<string, string | number | undefined>[] => {
-    if (!csvData.length || !mapping.description || !mapping.date) {return [];}
+    if (!csvData.length || !mapping.description || !mapping.date) {
+      return [];
+    }
 
     const dataRows = csvData.slice(selectedHeaderRow + 1);
     const headers = csvData[selectedHeaderRow] || [];
@@ -117,22 +117,22 @@ export default function UploadPage() {
       // Map required fields
       if (mapping.transactionNumber) {
         const colIndex = headers.indexOf(mapping.transactionNumber);
-        record.transactionNumber = colIndex >= 0 ? row[colIndex] : "";
+        record.transactionNumber = colIndex >= 0 ? row[colIndex] : '';
       }
 
       if (mapping.description) {
         const colIndex = headers.indexOf(mapping.description);
-        record.description = colIndex >= 0 ? row[colIndex] : "";
+        record.description = colIndex >= 0 ? row[colIndex] : '';
       }
 
       if (mapping.date) {
         const colIndex = headers.indexOf(mapping.date);
-        record.date = colIndex >= 0 ? row[colIndex] : "";
+        record.date = colIndex >= 0 ? row[colIndex] : '';
       }
 
       if (mapping.balance) {
         const colIndex = headers.indexOf(mapping.balance);
-        record.balance = colIndex >= 0 ? row[colIndex] : "";
+        record.balance = colIndex >= 0 ? row[colIndex] : '';
       }
 
       // Calculate amount from amount columns
@@ -140,7 +140,7 @@ export default function UploadPage() {
       mapping.amountColumns.forEach((columnName) => {
         const colIndex = headers.indexOf(columnName);
         if (colIndex >= 0) {
-          amounts[columnName] = row[colIndex] || "";
+          amounts[columnName] = row[colIndex] || '';
         }
       });
 
@@ -148,9 +148,9 @@ export default function UploadPage() {
       record.amount = combinedAmount;
 
       // Add formatted amount for display
-      record.formattedAmount = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
+      record.formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
       }).format(combinedAmount);
 
       // Add custom fields
@@ -167,13 +167,7 @@ export default function UploadPage() {
 
   const headers = csvData[selectedHeaderRow] || [];
 
-  const steps = [
-    "Upload File",
-    "Detect Headers",
-    "Map Columns",
-    "Preview Data",
-    "Complete Import",
-  ];
+  const steps = ['Upload File', 'Detect Headers', 'Map Columns', 'Preview Data', 'Complete Import'];
 
   // Only show loading state if we've been loading for a while
   if (authLoading && !user) {
@@ -229,17 +223,15 @@ export default function UploadPage() {
                     <div
                       className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-medium ${
                         index <= currentStep
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background text-muted-foreground border-border"
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-muted-foreground border-border'
                       }`}
                     >
                       {index + 1}
                     </div>
                     <span
                       className={`ml-2 text-sm font-medium ${
-                        index <= currentStep
-                          ? "text-foreground"
-                          : "text-muted-foreground"
+                        index <= currentStep ? 'text-foreground' : 'text-muted-foreground'
                       }`}
                     >
                       {step}
@@ -247,7 +239,7 @@ export default function UploadPage() {
                     {index < steps.length - 1 && (
                       <div
                         className={`w-12 h-0.5 ml-4 ${
-                          index < currentStep ? "bg-primary" : "bg-border"
+                          index < currentStep ? 'bg-primary' : 'bg-border'
                         }`}
                       />
                     )}
@@ -258,9 +250,7 @@ export default function UploadPage() {
 
             {/* Upload Content */}
             <div>
-              {currentStep === 0 && (
-                <FileUploadStep onFileUpload={handleFileUploaded} />
-              )}
+              {currentStep === 0 && <FileUploadStep onFileUpload={handleFileUploaded} />}
 
               {currentStep === 1 && headerDetection && (
                 <HeaderDetectionStep
@@ -310,7 +300,7 @@ export default function UploadPage() {
                   <PreviewStep
                     data={transformDataForPreview(false)}
                     mapping={mapping}
-                    user_id={authUserId || user?.id || ""}
+                    user_id={authUserId || user?.id || ''}
                     account_id={selectedAccountId}
                     supabase={supabaseClient}
                     onComplete={handleUploadComplete}

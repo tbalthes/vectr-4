@@ -1,12 +1,12 @@
-import React from "react";
-import { ChevronLeft, ChevronRight, FileText, CheckCircle } from "lucide-react";
+import React from 'react';
+import { ChevronLeft, ChevronRight, FileText, CheckCircle } from 'lucide-react';
 
-import { type HeaderDetectionResult } from "./csv-utils";
+import { type HeaderDetectionResult } from './csv-utils';
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
 
 interface HeaderDetectionStepProps {
   rows: string[][];
@@ -30,16 +30,23 @@ export function HeaderDetectionStep({
   };
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 15) {return "bg-green-100 text-green-800 border-green-300";}
-    if (confidence >= 5)
-      {return "bg-yellow-100 text-yellow-800 border-yellow-300";}
-    return "bg-red-100 text-red-800 border-red-300";
+    if (confidence >= 15) {
+      return 'bg-green-100 text-green-800 border-green-300';
+    }
+    if (confidence >= 5) {
+      return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    }
+    return 'bg-red-100 text-red-800 border-red-300';
   };
 
   const getConfidenceLabel = (confidence: number) => {
-    if (confidence >= 15) {return "High Confidence";}
-    if (confidence >= 5) {return "Medium Confidence";}
-    return "Low Confidence";
+    if (confidence >= 15) {
+      return 'High Confidence';
+    }
+    if (confidence >= 5) {
+      return 'Medium Confidence';
+    }
+    return 'Low Confidence';
   };
 
   // Show first 10 rows for header selection
@@ -54,8 +61,8 @@ export function HeaderDetectionStep({
           Header Detection
         </h1>
         <p className="text-muted-foreground mt-2">
-          We&apos;ve analyzed your CSV file to identify the header row. Please
-          verify or select the correct row that contains your column headers.
+          We&apos;ve analyzed your CSV file to identify the header row. Please verify or select the
+          correct row that contains your column headers.
         </p>
       </div>
 
@@ -67,8 +74,7 @@ export function HeaderDetectionStep({
           <AlertDescription>
             <div className="flex items-center gap-3">
               <span>
-                <strong>Auto-detected header:</strong> Row{" "}
-                {headerDetection.headerRowIndex + 1}
+                <strong>Auto-detected header:</strong> Row {headerDetection.headerRowIndex + 1}
               </span>
               <Badge className={getConfidenceColor(headerDetection.confidence)}>
                 {getConfidenceLabel(headerDetection.confidence)}
@@ -87,9 +93,7 @@ export function HeaderDetectionStep({
               <div className="relative">
                 {/* Generate column letters */}
                 {(() => {
-                  const maxColumns = Math.max(
-                    ...previewRows.map((row) => row.length)
-                  );
+                  const maxColumns = Math.max(...previewRows.map((row) => row.length));
                   const columnLetters: string[] = [];
                   for (let i = 0; i < maxColumns; i++) {
                     columnLetters.push(String.fromCharCode(65 + i)); // A, B, C, etc.
@@ -120,9 +124,7 @@ export function HeaderDetectionStep({
                             <div
                               key={rowIndex}
                               className={`flex border-b border-gray-300 cursor-pointer hover:bg-gray-50 ${
-                                rowIndex === selectedHeaderRow
-                                  ? "bg-blue-50"
-                                  : "bg-white"
+                                rowIndex === selectedHeaderRow ? 'bg-blue-50' : 'bg-white'
                               }`}
                               onClick={() => handleRowSelect(rowIndex)}
                             >
@@ -131,13 +133,7 @@ export function HeaderDetectionStep({
                                 {rowIndex === selectedHeaderRow && (
                                   <div className="absolute left-0.5 w-1 h-1 bg-blue-600 rounded-full"></div>
                                 )}
-                                <span
-                                  className={
-                                    rowIndex === selectedHeaderRow
-                                      ? "ml-1.5"
-                                      : ""
-                                  }
-                                >
+                                <span className={rowIndex === selectedHeaderRow ? 'ml-1.5' : ''}>
                                   {rowIndex + 1}
                                 </span>
                               </div>
@@ -146,13 +142,11 @@ export function HeaderDetectionStep({
                                 <div
                                   key={`${rowIndex}-${cellIndex}`}
                                   className={`w-20 h-6 flex-shrink-0 border-r border-gray-300 px-1 flex items-center text-xs truncate ${
-                                    rowIndex === selectedHeaderRow
-                                      ? "font-semibold"
-                                      : ""
+                                    rowIndex === selectedHeaderRow ? 'font-semibold' : ''
                                   }`}
-                                  title={row[cellIndex] || ""}
+                                  title={row[cellIndex] || ''}
                                 >
-                                  {row[cellIndex] || ""}
+                                  {row[cellIndex] || ''}
                                 </div>
                               ))}
                             </div>
@@ -174,10 +168,7 @@ export function HeaderDetectionStep({
             <div className="p-4 bg-muted/30 rounded-lg">
               <div className="flex flex-wrap gap-2">
                 {rows[selectedHeaderRow].map((header, index) => (
-                  <Badge
-                    key={index}
-                    className="bg-primary text-primary-foreground"
-                  >
+                  <Badge key={index} className="bg-primary text-primary-foreground">
                     {header || `Column ${index + 1}`}
                   </Badge>
                 ))}

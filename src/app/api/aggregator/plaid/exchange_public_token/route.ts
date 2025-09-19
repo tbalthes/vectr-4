@@ -13,12 +13,18 @@ export async function POST(req: Request) {
     data: { session },
     error: sessionError,
   } = await supabase.auth.getSession();
-  if (sessionError) {return NextResponse.json({ error: sessionError.message }, { status: 500 });}
-  if (!session?.user) {return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });}
+  if (sessionError) {
+    return NextResponse.json({ error: sessionError.message }, { status: 500 });
+  }
+  if (!session?.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const body = await req.json().catch(() => null);
   const public_token = body?.public_token as string | undefined;
-  if (!public_token) {return NextResponse.json({ error: 'public_token required' }, { status: 400 });}
+  if (!public_token) {
+    return NextResponse.json({ error: 'public_token required' }, { status: 400 });
+  }
 
   // Validate required environment variables
   if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {

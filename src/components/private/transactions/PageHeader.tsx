@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 
 interface PageHeaderProps {
   title: string;
@@ -8,11 +8,7 @@ interface PageHeaderProps {
   actions?: React.ReactNode;
 }
 
-export default function PageHeader({
-  title,
-  subtitle,
-  actions,
-}: PageHeaderProps) {
+export default function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
     <div className="h-16 flex items-center justify-between">
       <div>

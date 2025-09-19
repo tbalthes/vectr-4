@@ -17,7 +17,6 @@
         "focus": true,
         "panel": "new"
       }
-      
     },
     {
       "label": "Run ESLint Config Inspector",

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 
 // POST /api/aggregator/plaid/sync-account
 // Manually trigger transaction sync for a specific account
@@ -18,40 +18,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: sessionError.message }, { status: 500 });
   }
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
   const { account_link_id, force_full_sync = false } = body;
 
   if (!account_link_id) {
-    return NextResponse.json(
-      { error: "account_link_id required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'account_link_id required' }, { status: 400 });
   }
 
   try {
     // Get account link
     const { data: accountLink, error: linkError } = await supabase
-      .from("account_links")
-      .select("access_token_encrypted, cursor, status, item_id")
-      .eq("id", account_link_id)
-      .eq("user_id", session.user.id)
+      .from('account_links')
+      .select('access_token_encrypted, cursor, status, item_id')
+      .eq('id', account_link_id)
+      .eq('user_id', session.user.id)
       .single();
 
     if (linkError || !accountLink) {
-      return NextResponse.json(
-        { error: "Account link not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Account link not found' }, { status: 404 });
     }
 
-    if (accountLink.status !== "active") {
-      return NextResponse.json(
-        { error: "Account link is not active" },
-        { status: 400 }
-      );
+    if (accountLink.status !== 'active') {
+      return NextResponse.json({ error: 'Account link is not active' }, { status: 400 });
     }
 
     console.log(`🔄 Manual sync requested for account link ${account_link_id}`);
@@ -60,25 +51,22 @@ export async function POST(req: Request) {
     const syncResponse = await fetch(
       `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/plaid/transactions/sync`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Cookie: req.headers.get("cookie") || "",
+          'Content-Type': 'application/json',
+          Cookie: req.headers.get('cookie') || '',
         },
         body: JSON.stringify({
           access_token: accountLink.access_token_encrypted,
           cursor: force_full_sync ? undefined : accountLink.cursor,
           count: 500,
         }),
-      }
+      },
     );
 
     if (!syncResponse.ok) {
       const errorText = await syncResponse.text();
-      return NextResponse.json(
-        { error: `Sync failed: ${errorText}` },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: `Sync failed: ${errorText}` }, { status: 500 });
     }
 
     const result = await syncResponse.json();
@@ -97,17 +85,17 @@ export async function POST(req: Request) {
       const nextSyncResponse = await fetch(
         `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/plaid/transactions/sync`,
         {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            Cookie: req.headers.get("cookie") || "",
+            'Content-Type': 'application/json',
+            Cookie: req.headers.get('cookie') || '',
           },
           body: JSON.stringify({
             access_token: accountLink.access_token_encrypted,
             cursor: currentCursor,
             count: 500,
           }),
-        }
+        },
       );
 
       if (nextSyncResponse.ok) {
@@ -117,7 +105,9 @@ export async function POST(req: Request) {
         totalRemoved += nextResult.removed;
         currentCursor = nextResult.next_cursor;
 
-        if (!nextResult.has_more) {break;}
+        if (!nextResult.has_more) {
+          break;
+        }
       } else {
         console.warn(`⚠️ Batch ${syncCount + 1} failed, stopping sync`);
         break;
@@ -129,15 +119,12 @@ export async function POST(req: Request) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    console.log(
-      `✅ Manual sync complete for account link ${account_link_id}:`,
-      {
-        totalAdded,
-        totalModified,
-        totalRemoved,
-        batches: syncCount,
-      }
-    );
+    console.log(`✅ Manual sync complete for account link ${account_link_id}:`, {
+      totalAdded,
+      totalModified,
+      totalRemoved,
+      batches: syncCount,
+    });
 
     return NextResponse.json({
       success: true,
@@ -149,10 +136,7 @@ export async function POST(req: Request) {
       accounts: result.accounts?.length || 0,
     });
   } catch (error) {
-    console.error("❌ Manual sync error:", error);
-    return NextResponse.json(
-      { error: "Failed to sync account" },
-      { status: 500 }
-    );
+    console.error('❌ Manual sync error:', error);
+    return NextResponse.json({ error: 'Failed to sync account' }, { status: 500 });
   }
 }

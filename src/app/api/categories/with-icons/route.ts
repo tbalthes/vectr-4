@@ -3,10 +3,10 @@
  * Returns all categories used by the current user's transactions, including their icons
  * Endpoint: GET /api/categories/with-icons
  */
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
 const CACHE_HEADERS = {
-  "Cache-Control": "s-maxage=300, stale-while-revalidate=600", // 5 min cache
+  'Cache-Control': 's-maxage=300, stale-while-revalidate=600', // 5 min cache
 };
 
 export interface CategoryWithIcon {
@@ -16,18 +16,16 @@ export interface CategoryWithIcon {
   transaction_count?: number;
 }
 
-const FASTAPI_BASE = process.env.FASTAPI_BASE_URL || "http://localhost:8000";
+const FASTAPI_BASE = process.env.FASTAPI_BASE_URL || 'http://localhost:8000';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("user_id");
+    const userId = searchParams.get('user_id');
 
     // Build FastAPI URL for categories tree; include user_id if provided
     const fastApiUrl = userId
-      ? `${FASTAPI_BASE}/categories/tree?user_id=${encodeURIComponent(
-          userId
-        )}&include_counts=true`
+      ? `${FASTAPI_BASE}/categories/tree?user_id=${encodeURIComponent(userId)}&include_counts=true`
       : `${FASTAPI_BASE}/categories/tree?include_counts=true`;
     const response = await fetch(fastApiUrl);
 
@@ -47,7 +45,9 @@ export async function GET(request: Request) {
           icon: n.icon,
           transaction_count: n.transaction_count || 0,
         });
-        if (n.children && n.children.length > 0) {walk(n.children);}
+        if (n.children && n.children.length > 0) {
+          walk(n.children);
+        }
       }
     };
 
@@ -55,13 +55,13 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ data: flatten }, { headers: CACHE_HEADERS });
   } catch (error) {
-    console.error("Categories API error:", error);
+    console.error('Categories API error:', error);
     return NextResponse.json(
       {
-        error: "Failed to fetch categories",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: 'Failed to fetch categories',
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

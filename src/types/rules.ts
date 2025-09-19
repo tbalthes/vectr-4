@@ -107,30 +107,29 @@ export interface RuleFormErrors {
 
 // Configuration constants
 export const MATCH_FIELDS = [
-  { value: "description", label: "Description" },
-  { value: "clean_description", label: "Clean Description" },
-  { value: "merchant_name", label: "Merchant Name" },
-  { value: "original_description", label: "Original Description" },
-  { value: "amount", label: "Amount" },
+  { value: 'description', label: 'Description' },
+  { value: 'clean_description', label: 'Clean Description' },
+  { value: 'merchant_name', label: 'Merchant Name' },
+  { value: 'original_description', label: 'Original Description' },
+  { value: 'amount', label: 'Amount' },
 ] as const;
 
 export const MATCH_OPERATORS = {
   text: [
-    { value: "equals", label: "Equals" },
-    { value: "contains", label: "Contains" },
-    { value: "startswith", label: "Starts with" },
-    { value: "endswith", label: "Ends with" },
-    { value: "regex", label: "Regex pattern" },
+    { value: 'equals', label: 'Equals' },
+    { value: 'contains', label: 'Contains' },
+    { value: 'startswith', label: 'Starts with' },
+    { value: 'endswith', label: 'Ends with' },
+    { value: 'regex', label: 'Regex pattern' },
   ],
   numeric: [
-    { value: "equals", label: "Equals" },
-    { value: "greater_than", label: "Greater than" },
-    { value: "less_than", label: "Less than" },
+    { value: 'equals', label: 'Equals' },
+    { value: 'greater_than', label: 'Greater than' },
+    { value: 'less_than', label: 'Less than' },
   ],
 } as const;
 
-export type MatchField = (typeof MATCH_FIELDS)[number]["value"];
-export type TextMatchOperator = (typeof MATCH_OPERATORS.text)[number]["value"];
-export type NumericMatchOperator =
-  (typeof MATCH_OPERATORS.numeric)[number]["value"];
+export type MatchField = (typeof MATCH_FIELDS)[number]['value'];
+export type TextMatchOperator = (typeof MATCH_OPERATORS.text)[number]['value'];
+export type NumericMatchOperator = (typeof MATCH_OPERATORS.numeric)[number]['value'];
 export type MatchOperator = TextMatchOperator | NumericMatchOperator;

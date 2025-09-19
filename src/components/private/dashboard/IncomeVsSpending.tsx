@@ -1,5 +1,5 @@
-import React from "react";
-import { Filter } from "lucide-react";
+import React from 'react';
+import { Filter } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -8,16 +8,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface SpendingData {
   month: string;
@@ -35,12 +29,8 @@ export function IncomeVsSpending({ data }: IncomeVsSpendingProps) {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-semibold">
-              Income vs Spending
-            </CardTitle>
-            <CardDescription>
-              Your financial flow over the last 6 months
-            </CardDescription>
+            <CardTitle className="text-lg font-semibold">Income vs Spending</CardTitle>
+            <CardDescription>Your financial flow over the last 6 months</CardDescription>
           </div>
           <Button variant="outline" size="sm">
             <Filter className="h-4 w-4 mr-2" />
@@ -56,20 +46,20 @@ export function IncomeVsSpending({ data }: IncomeVsSpendingProps) {
               dataKey="month"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#6b7280", fontSize: 12 }}
+              tick={{ fill: '#6b7280', fontSize: 12 }}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#6b7280", fontSize: 12 }}
+              tick={{ fill: '#6b7280', fontSize: 12 }}
               tickFormatter={(value) => `$${value / 1000}k`}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                backgroundColor: '#ffffff',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               }}
             />
             <Line
@@ -77,14 +67,14 @@ export function IncomeVsSpending({ data }: IncomeVsSpendingProps) {
               dataKey="income"
               stroke="#059669"
               strokeWidth={2}
-              dot={{ fill: "#059669", strokeWidth: 0, r: 4 }}
+              dot={{ fill: '#059669', strokeWidth: 0, r: 4 }}
             />
             <Line
               type="monotone"
               dataKey="spending"
               stroke="#dc2626"
               strokeWidth={2}
-              dot={{ fill: "#dc2626", strokeWidth: 0, r: 4 }}
+              dot={{ fill: '#dc2626', strokeWidth: 0, r: 4 }}
             />
           </LineChart>
         </ResponsiveContainer>

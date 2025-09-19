@@ -1,29 +1,20 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Lightbulb } from "lucide-react";
+import React from 'react';
+import { Lightbulb } from 'lucide-react';
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import type { AIInsight } from "@/types/vectrai";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import type { AIInsight } from '@/types/vectrai';
 
 interface InsightsCardProps {
   aiInsights: AIInsight[];
   getImpactColor: (impact: string) => string;
 }
 
-export default function InsightsCard({
-  aiInsights,
-  getImpactColor,
-}: InsightsCardProps) {
+export default function InsightsCard({ aiInsights, getImpactColor }: InsightsCardProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {aiInsights.map((insight) => (
@@ -38,25 +29,19 @@ export default function InsightsCard({
                 {insight.impact} impact
               </Badge>
             </div>
-            <CardDescription className="text-sm mt-2">
-              {insight.description}
-            </CardDescription>
+            <CardDescription className="text-sm mt-2">{insight.description}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Potential Savings</span>
-                <span className="font-semibold text-green-600">
-                  ${insight.savings}/month
-                </span>
+                <span className="font-semibold text-green-600">${insight.savings}/month</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">AI Confidence</span>
                 <div className="flex items-center space-x-2">
                   <Progress value={insight.confidence} className="w-16 h-2" />
-                  <span className="text-sm font-medium">
-                    {insight.confidence}%
-                  </span>
+                  <span className="text-sm font-medium">{insight.confidence}%</span>
                 </div>
               </div>
               <div className="flex space-x-2 pt-2">

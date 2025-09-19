@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
+import { useState, useMemo } from 'react';
 import {
   Search,
   ArrowUpDown,
@@ -10,30 +10,24 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { TransactionRow } from "./TransactionRow";
+import { TransactionRow } from './TransactionRow';
 
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import type { FormattedTransaction } from "@/types/transactions";
+} from '@/components/ui/select';
+import type { FormattedTransaction } from '@/types/transactions';
 
 interface AdvancedTransactionTableProps {
   transactions: FormattedTransaction[];
@@ -43,25 +37,25 @@ interface AdvancedTransactionTableProps {
   onDelete: (transaction: FormattedTransaction) => void;
 }
 
-type SortField = "date" | "amount" | "description" | "categoryName";
-type SortDirection = "asc" | "desc";
+type SortField = 'date' | 'amount' | 'description' | 'categoryName';
+type SortDirection = 'asc' | 'desc';
 
 export function AdvancedTransactionTable({
   transactions,
-  title = "Transaction History",
+  title = 'Transaction History',
   className,
   onEdit,
   onDelete,
 }: AdvancedTransactionTableProps) {
   // Search and filter state
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [amountFilter, setAmountFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [amountFilter, setAmountFilter] = useState<string>('all');
 
   // Sorting state
-  const [sortField, setSortField] = useState<SortField>("date");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -69,9 +63,7 @@ export function AdvancedTransactionTable({
 
   // Get unique categories for filter dropdown
   const uniqueCategories = useMemo(() => {
-    const categories = Array.from(
-      new Set(transactions.map((t) => t.categoryName))
-    );
+    const categories = Array.from(new Set(transactions.map((t) => t.categoryName)));
     return categories.sort();
   }, [transactions]);
 
@@ -80,35 +72,26 @@ export function AdvancedTransactionTable({
     const filtered = transactions.filter((transaction) => {
       // Search filter
       const searchMatch =
-        searchTerm === "" ||
-        transaction.description
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        transaction.originalDescription
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        transaction.merchantName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        transaction.transaction_number
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
+        searchTerm === '' ||
+        transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.originalDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.merchantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.transaction_number.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Category filter
-      const categoryMatch =
-        categoryFilter === "all" || transaction.categoryName === categoryFilter;
+      const categoryMatch = categoryFilter === 'all' || transaction.categoryName === categoryFilter;
 
       // Status filter
       const statusMatch =
-        statusFilter === "all" ||
-        (statusFilter === "needs-review" && transaction.needsReview) ||
-        (statusFilter === "verified" && !transaction.needsReview);
+        statusFilter === 'all' ||
+        (statusFilter === 'needs-review' && transaction.needsReview) ||
+        (statusFilter === 'verified' && !transaction.needsReview);
 
       // Amount filter
       const amountMatch =
-        amountFilter === "all" ||
-        (amountFilter === "income" && transaction.amount > 0) ||
-        (amountFilter === "expense" && transaction.amount < 0);
+        amountFilter === 'all' ||
+        (amountFilter === 'income' && transaction.amount > 0) ||
+        (amountFilter === 'expense' && transaction.amount < 0);
 
       return searchMatch && categoryMatch && statusMatch && amountMatch;
     });
@@ -119,19 +102,19 @@ export function AdvancedTransactionTable({
       let bValue: string | number | Date;
 
       switch (sortField) {
-        case "date":
+        case 'date':
           aValue = new Date(a.date);
           bValue = new Date(b.date);
           break;
-        case "amount":
+        case 'amount':
           aValue = Math.abs(a.amount);
           bValue = Math.abs(b.amount);
           break;
-        case "description":
+        case 'description':
           aValue = a.description.toLowerCase();
           bValue = b.description.toLowerCase();
           break;
-        case "categoryName":
+        case 'categoryName':
           aValue = a.categoryName.toLowerCase();
           bValue = b.categoryName.toLowerCase();
           break;
@@ -140,8 +123,12 @@ export function AdvancedTransactionTable({
           bValue = b.date;
       }
 
-      if (aValue < bValue) {return sortDirection === "asc" ? -1 : 1;}
-      if (aValue > bValue) {return sortDirection === "asc" ? 1 : -1;}
+      if (aValue < bValue) {
+        return sortDirection === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortDirection === 'asc' ? 1 : -1;
+      }
       return 0;
     });
 
@@ -157,15 +144,10 @@ export function AdvancedTransactionTable({
   ]);
 
   // Pagination
-  const totalPages = Math.ceil(
-    filteredAndSortedTransactions.length / itemsPerPage
-  );
+  const totalPages = Math.ceil(filteredAndSortedTransactions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedTransactions = filteredAndSortedTransactions.slice(
-    startIndex,
-    endIndex
-  );
+  const paginatedTransactions = filteredAndSortedTransactions.slice(startIndex, endIndex);
 
   // Reset to first page when filters change
   const handleFilterChange = () => {
@@ -174,10 +156,10 @@ export function AdvancedTransactionTable({
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection("asc");
+      setSortDirection('asc');
     }
   };
 
@@ -185,16 +167,14 @@ export function AdvancedTransactionTable({
     if (sortField !== field) {
       return <ArrowUpDown className="h-3 w-3 text-gray-400" />;
     }
-    return sortDirection === "asc" ? (
+    return sortDirection === 'asc' ? (
       <ArrowUp className="h-3 w-3 text-blue-600" />
     ) : (
       <ArrowDown className="h-3 w-3 text-blue-600" />
     );
   };
 
-  const reviewCount = filteredAndSortedTransactions.filter(
-    (t) => t.needsReview
-  ).length;
+  const reviewCount = filteredAndSortedTransactions.filter((t) => t.needsReview).length;
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -220,8 +200,7 @@ export function AdvancedTransactionTable({
                 </Badge>
               )}
               <div className="text-sm text-blue-700 font-semibold bg-blue-100 px-4 py-2 rounded-lg border border-blue-200 shadow-sm">
-                {filteredAndSortedTransactions.length} of {transactions.length}{" "}
-                transactions
+                {filteredAndSortedTransactions.length} of {transactions.length} transactions
               </div>
             </div>
           </div>
@@ -331,38 +310,38 @@ export function AdvancedTransactionTable({
                   <TableRow className="border-b-2 border-gray-200 hover:bg-gray-50">
                     <TableHead
                       className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider w-[120px] cursor-pointer hover:bg-blue-50 transition-colors"
-                      onClick={() => handleSort("date")}
+                      onClick={() => handleSort('date')}
                     >
                       <div className="flex items-center gap-2">
                         DATE
-                        {getSortIcon("date")}
+                        {getSortIcon('date')}
                       </div>
                     </TableHead>
                     <TableHead
                       className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider min-w-[250px] cursor-pointer hover:bg-blue-50 transition-colors"
-                      onClick={() => handleSort("description")}
+                      onClick={() => handleSort('description')}
                     >
                       <div className="flex items-center gap-2">
                         DESCRIPTION
-                        {getSortIcon("description")}
+                        {getSortIcon('description')}
                       </div>
                     </TableHead>
                     <TableHead
                       className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-right w-[140px] cursor-pointer hover:bg-blue-50 transition-colors"
-                      onClick={() => handleSort("amount")}
+                      onClick={() => handleSort('amount')}
                     >
                       <div className="flex items-center justify-end gap-2">
                         AMOUNT
-                        {getSortIcon("amount")}
+                        {getSortIcon('amount')}
                       </div>
                     </TableHead>
                     <TableHead
                       className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[120px] cursor-pointer hover:bg-blue-50 transition-colors"
-                      onClick={() => handleSort("categoryName")}
+                      onClick={() => handleSort('categoryName')}
                     >
                       <div className="flex items-center justify-center gap-2">
                         CATEGORY
-                        {getSortIcon("categoryName")}
+                        {getSortIcon('categoryName')}
                       </div>
                     </TableHead>
                     <TableHead className="h-14 px-4 sm:px-6 text-xs font-bold text-gray-700 uppercase tracking-wider text-center w-[100px]">
@@ -393,9 +372,8 @@ export function AdvancedTransactionTable({
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {startIndex + 1} to{" "}
-              {Math.min(endIndex, filteredAndSortedTransactions.length)} of{" "}
-              {filteredAndSortedTransactions.length} transactions
+              Showing {startIndex + 1} to {Math.min(endIndex, filteredAndSortedTransactions.length)}{' '}
+              of {filteredAndSortedTransactions.length} transactions
             </div>
             <div className="flex items-center gap-2">
               <Button

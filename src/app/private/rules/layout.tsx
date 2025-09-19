@@ -1,25 +1,20 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Plus, Download, Upload } from "lucide-react";
-import Link from "next/link";
-import { useSelectedLayoutSegments } from "next/navigation";
+import React from 'react';
+import { Plus, Download, Upload } from 'lucide-react';
+import Link from 'next/link';
+import { useSelectedLayoutSegments } from 'next/navigation';
 
-import PageHeader from "@/components/private/PageHeader";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { useEnhancedUserRules } from "@/hooks/useEnhancedUserRules";
+import PageHeader from '@/components/private/PageHeader';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedUserRules } from '@/hooks/useEnhancedUserRules';
 
-
-export default function RulesLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RulesLayout({ children }: { children: React.ReactNode }) {
   const segments = useSelectedLayoutSegments();
   const { user, loading: authLoading } = useAuth();
   const { exportRules, importRules } = useEnhancedUserRules({
-    userId: user?.id || "",
+    userId: user?.id || '',
     autoFetch: false,
   });
 
@@ -29,30 +24,30 @@ export default function RulesLayout({
     try {
       const exportData = await exportRules();
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: "application/json",
+        type: 'application/json',
       });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
-      a.download = "user-rules-export.json";
+      a.download = 'user-rules-export.json';
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Failed to export rules:", error);
+      console.error('Failed to export rules:', error);
     }
   };
 
-  const handleImportRules = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleImportRules = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) {return;}
+    if (!file) {
+      return;
+    }
     try {
       const text = await file.text();
       const importData = JSON.parse(text);
       await importRules(importData.rules || importData);
     } catch (error) {
-      console.error("Failed to import rules:", error);
+      console.error('Failed to import rules:', error);
     }
   };
 
@@ -84,7 +79,9 @@ export default function RulesLayout({
                   type="file"
                   accept=".json"
                   className="hidden"
-                  onChange={(e) => { void handleImportRules(e); }}
+                  onChange={(e) => {
+                    void handleImportRules(e);
+                  }}
                 />
               </label>
               <Button asChild>

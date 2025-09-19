@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import * as React from 'react';
+import { Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 // No need for a separate interface, use the type directly
 export function ThemeToggle({
@@ -14,8 +14,8 @@ export function ThemeToggle({
   return (
     <button
       type="button"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className={`relative w-8 h-8 flex items-center justify-center ${className || ""}`}
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className={`relative w-8 h-8 flex items-center justify-center ${className || ''}`}
       {...props}
     >
       <Sun className="w-[18px] h-[18px] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

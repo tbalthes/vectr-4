@@ -1,22 +1,18 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { useAuth } from "@/contexts/AuthContext";
-import { AccountSyncProvider } from "@/contexts/AccountSyncContext";
-import { Sidebar } from "@/components/Sidebar";
+import { useAuth } from '@/contexts/AuthContext';
+import { AccountSyncProvider } from '@/contexts/AccountSyncContext';
+import { Sidebar } from '@/components/Sidebar';
 
-export default function PrivateLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PrivateLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   // Sidebar is open by default on desktop, closed on mobile
   const [sidebarOpen, setSidebarOpen] = useState(
-    typeof window !== "undefined" && window.innerWidth >= 768
+    typeof window !== 'undefined' && window.innerWidth >= 768,
   );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -29,15 +25,15 @@ export default function PrivateLayout({
         setSidebarOpen(false);
       }
     };
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
     // Set initial state
     handleResize();
-    return () => window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/public/login");
+      router.push('/public/login');
     }
   }, [user, loading, router]);
 
@@ -75,11 +71,7 @@ export default function PrivateLayout({
               strokeWidth="2"
               viewBox="0 0 24 24"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
         )}

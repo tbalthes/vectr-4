@@ -1,15 +1,15 @@
 // src/components/private/merchants/MerchantPicker.tsx
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Search, Plus, Building2, ChevronDown, X } from "lucide-react";
-import Image from "next/image";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Search, Plus, Building2, ChevronDown, X } from 'lucide-react';
+import Image from 'next/image';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface MerchantCategory {
   id: string;
@@ -39,14 +39,14 @@ export function MerchantPicker({
   selectedMerchant,
   onMerchantSelect,
   onCreateMerchant,
-  placeholder = "Search merchants...",
+  placeholder = 'Search merchants...',
   className,
   disabled = false,
   allowClear = true,
   maxResults = 20,
 }: MerchantPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,11 +61,11 @@ export function MerchantPicker({
       setError(null);
 
       try {
-        const url = new URL("/api/merchants/search", window.location.origin);
+        const url = new URL('/api/merchants/search', window.location.origin);
         if (query) {
-          url.searchParams.set("q", query);
+          url.searchParams.set('q', query);
         }
-        url.searchParams.set("limit", maxResults.toString());
+        url.searchParams.set('limit', maxResults.toString());
 
         const response = await fetch(url.toString());
 
@@ -76,16 +76,14 @@ export function MerchantPicker({
         const result = await response.json();
         setMerchants(result.data || []);
       } catch (err) {
-        console.error("Error fetching merchants:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch merchants"
-        );
+        console.error('Error fetching merchants:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch merchants');
         setMerchants([]);
       } finally {
         setIsLoading(false);
       }
     },
-    [maxResults]
+    [maxResults],
   );
 
   // Trigger search when query changes
@@ -98,7 +96,7 @@ export function MerchantPicker({
   // Handle opening dropdown
   const handleOpen = useCallback(() => {
     setIsOpen(true);
-    setSearchQuery("");
+    setSearchQuery('');
     setTimeout(() => {
       searchInputRef.current?.focus();
     }, 50);
@@ -107,7 +105,7 @@ export function MerchantPicker({
   // Handle closing dropdown
   const handleClose = useCallback(() => {
     setIsOpen(false);
-    setSearchQuery("");
+    setSearchQuery('');
   }, []);
 
   // Handle merchant selection
@@ -116,7 +114,7 @@ export function MerchantPicker({
       onMerchantSelect(merchant);
       handleClose();
     },
-    [onMerchantSelect, handleClose]
+    [onMerchantSelect, handleClose],
   );
 
   // Handle clear selection
@@ -125,7 +123,7 @@ export function MerchantPicker({
       e.stopPropagation();
       onMerchantSelect(null);
     },
-    [onMerchantSelect]
+    [onMerchantSelect],
   );
 
   // Handle create new merchant
@@ -139,43 +137,39 @@ export function MerchantPicker({
   // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         handleClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isOpen, handleClose]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         handleClose();
-      } else if (e.key === "Enter" && !isOpen) {
+      } else if (e.key === 'Enter' && !isOpen) {
         handleOpen();
       }
     },
-    [isOpen, handleOpen, handleClose]
+    [isOpen, handleOpen, handleClose],
   );
 
   return (
-    <div className={cn("relative", className)} ref={dropdownRef}>
+    <div className={cn('relative', className)} ref={dropdownRef}>
       {/* Trigger Button */}
       <Button
         type="button"
         variant="outline"
         className={cn(
-          "w-full justify-between text-left font-normal",
-          !selectedMerchant && "text-muted-foreground",
-          disabled && "cursor-not-allowed opacity-50"
+          'w-full justify-between text-left font-normal',
+          !selectedMerchant && 'text-muted-foreground',
+          disabled && 'cursor-not-allowed opacity-50',
         )}
         onClick={handleOpen}
         onKeyDown={handleKeyDown}
@@ -186,14 +180,14 @@ export function MerchantPicker({
           {selectedMerchant ? (
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {selectedMerchant.logoUrl &&
-                selectedMerchant.logoUrl.trim() !== "" &&
-                selectedMerchant.logoUrl !== "\\" &&
-                (selectedMerchant.logoUrl.startsWith("http://") ||
-                  selectedMerchant.logoUrl.startsWith("https://")) && (
+                selectedMerchant.logoUrl.trim() !== '' &&
+                selectedMerchant.logoUrl !== '\\' &&
+                (selectedMerchant.logoUrl.startsWith('http://') ||
+                  selectedMerchant.logoUrl.startsWith('https://')) && (
                   <Image
                     src={
-                      selectedMerchant.logoUrl.startsWith("http:")
-                        ? selectedMerchant.logoUrl.replace("http:", "https:")
+                      selectedMerchant.logoUrl.startsWith('http:')
+                        ? selectedMerchant.logoUrl.replace('http:', 'https:')
                         : selectedMerchant.logoUrl
                     }
                     alt={selectedMerchant.name}
@@ -201,11 +195,8 @@ export function MerchantPicker({
                     height={16}
                     className="rounded object-cover flex-shrink-0"
                     onError={(e) => {
-                      console.log(
-                        "Selected merchant image load error:",
-                        selectedMerchant.logoUrl
-                      );
-                      e.currentTarget.style.display = "none";
+                      console.log('Selected merchant image load error:', selectedMerchant.logoUrl);
+                      e.currentTarget.style.display = 'none';
                     }}
                   />
                 )}
@@ -252,16 +243,10 @@ export function MerchantPicker({
           <ScrollArea className="max-h-64 overflow-y-auto">
             <div className="p-2">
               {isLoading && (
-                <div className="text-center py-4 text-muted-foreground">
-                  Searching merchants...
-                </div>
+                <div className="text-center py-4 text-muted-foreground">Searching merchants...</div>
               )}
 
-              {error && (
-                <div className="text-center py-4 text-destructive text-sm">
-                  {error}
-                </div>
-              )}
+              {error && <div className="text-center py-4 text-destructive text-sm">{error}</div>}
 
               {!isLoading && !error && merchants.length === 0 && (
                 <div className="text-center py-4 text-muted-foreground">
@@ -307,21 +292,21 @@ export function MerchantPicker({
                       <button
                         key={merchant.id}
                         className={cn(
-                          "w-full text-left p-2 rounded-sm hover:bg-accent transition-colors",
-                          "flex items-center gap-3"
+                          'w-full text-left p-2 rounded-sm hover:bg-accent transition-colors',
+                          'flex items-center gap-3',
                         )}
                         onClick={() => handleMerchantSelect(merchant)}
                       >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           {merchant.logoUrl &&
-                          merchant.logoUrl.trim() !== "" &&
-                          merchant.logoUrl !== "\\" &&
-                          (merchant.logoUrl.startsWith("http://") ||
-                            merchant.logoUrl.startsWith("https://")) ? (
+                          merchant.logoUrl.trim() !== '' &&
+                          merchant.logoUrl !== '\\' &&
+                          (merchant.logoUrl.startsWith('http://') ||
+                            merchant.logoUrl.startsWith('https://')) ? (
                             <Image
                               src={
-                                merchant.logoUrl.startsWith("http:")
-                                  ? merchant.logoUrl.replace("http:", "https:")
+                                merchant.logoUrl.startsWith('http:')
+                                  ? merchant.logoUrl.replace('http:', 'https:')
                                   : merchant.logoUrl
                               }
                               alt={merchant.name}
@@ -329,11 +314,8 @@ export function MerchantPicker({
                               height={24}
                               className="rounded object-cover flex-shrink-0"
                               onError={(e) => {
-                                console.log(
-                                  "Image load error:",
-                                  merchant.logoUrl
-                                );
-                                e.currentTarget.style.display = "none";
+                                console.log('Image load error:', merchant.logoUrl);
+                                e.currentTarget.style.display = 'none';
                               }}
                             />
                           ) : (
@@ -342,9 +324,7 @@ export function MerchantPicker({
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate">
-                              {merchant.name}
-                            </div>
+                            <div className="font-medium truncate">{merchant.name}</div>
                             {merchant.category && (
                               <div className="text-xs text-muted-foreground truncate">
                                 {merchant.category.name}

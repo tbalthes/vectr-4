@@ -1,27 +1,26 @@
-import React, { useRef, useState } from "react";
-import { FileText, AlertCircle } from "lucide-react";
+import React, { useRef, useState } from 'react';
+import { FileText, AlertCircle } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FileUploadStepProps {
   onFileUpload: (file: File, content: string) => void;
   onDirectProcessing?: (
     file: File,
     mapping: Record<string, string>,
-    accountId: string
+    accountId: string,
   ) => Promise<unknown>;
   enableDirectProcessing?: boolean;
 }
 
 function getDropzoneClassName(isDragging: boolean, isLoading: boolean) {
-  const base =
-    "border-2 border-dashed rounded-lg p-8 text-center transition-colors";
+  const base = 'border-2 border-dashed rounded-lg p-8 text-center transition-colors';
   const drag = isDragging
-    ? "border-zinc-900 bg-zinc-900/5 dark:border-zinc-300 dark:bg-zinc-300/5"
-    : "border-zinc-200 hover:border-zinc-900/50 dark:border-zinc-800 dark:hover:border-zinc-300/50";
-  const loading = isLoading ? "opacity-50 pointer-events-none" : "";
-  return [base, drag, loading].join(" ");
+    ? 'border-zinc-900 bg-zinc-900/5 dark:border-zinc-300 dark:bg-zinc-300/5'
+    : 'border-zinc-200 hover:border-zinc-900/50 dark:border-zinc-800 dark:hover:border-zinc-300/50';
+  const loading = isLoading ? 'opacity-50 pointer-events-none' : '';
+  return [base, drag, loading].join(' ');
 }
 
 export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
@@ -36,32 +35,32 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
 
     try {
       // Validate file type
-      if (!file.name.toLowerCase().endsWith(".csv")) {
-        throw new Error("Please select a CSV file");
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        throw new Error('Please select a CSV file');
       }
 
       // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
-        throw new Error("File size must be less than 10MB");
+        throw new Error('File size must be less than 10MB');
       }
 
       // Read file content
       const content = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          if (e.target && typeof e.target.result === "string") {
+          if (e.target && typeof e.target.result === 'string') {
             resolve(e.target.result);
           } else {
-            reject(new Error("Failed to read file content"));
+            reject(new Error('Failed to read file content'));
           }
         };
-        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.onerror = () => reject(new Error('Failed to read file'));
         reader.readAsText(file);
       });
 
       // Basic validation
       if (!content.trim()) {
-        throw new Error("The CSV file appears to be empty");
+        throw new Error('The CSV file appears to be empty');
       }
 
       onFileUpload(file, content);
@@ -69,7 +68,7 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("An error occurred while reading the file");
+        setError('An error occurred while reading the file');
       }
     } finally {
       setIsLoading(false);
@@ -91,14 +90,14 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
     setIsDragging(false);
 
     if (e.dataTransfer.files.length > 1) {
-      setError("Please drop only one file at a time.");
+      setError('Please drop only one file at a time.');
       return;
     }
 
     const file = e.dataTransfer.files[0];
     if (file) {
-      if (!file.name.toLowerCase().endsWith(".csv")) {
-        setError("Only CSV files are accepted. Please drop a .csv file.");
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        setError('Only CSV files are accepted. Please drop a .csv file.');
         return;
       }
       void handleFileSelect(file);
@@ -137,7 +136,7 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={() => !isLoading && fileInputRef.current?.click()}
-        style={{ cursor: isLoading ? "not-allowed" : "pointer" }}
+        style={{ cursor: isLoading ? 'not-allowed' : 'pointer' }}
       >
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
@@ -148,9 +147,7 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
             <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
               Drag and drop your CSV file here
             </h3>
-            <p className="text-zinc-500 dark:text-zinc-400">
-              or click to browse
-            </p>
+            <p className="text-zinc-500 dark:text-zinc-400">or click to browse</p>
           </div>
 
           <Button
@@ -161,7 +158,7 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
             }}
             disabled={isLoading}
           >
-            {isLoading ? "Reading file..." : "Choose File"}
+            {isLoading ? 'Reading file...' : 'Choose File'}
           </Button>
 
           <input
@@ -177,9 +174,7 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
 
       {/* Supported Formats Info */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground">
-          Supported Formats
-        </h3>
+        <h3 className="text-lg font-semibold text-foreground">Supported Formats</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <h4 className="font-medium text-foreground">File Requirements</h4>
@@ -203,10 +198,9 @@ export function FileUploadStep({ onFileUpload }: FileUploadStepProps) {
 
         <Alert className="relative w-full rounded-lg border border-border bg-muted/30 p-4 text-foreground">
           <AlertDescription className="text-sm">
-            <strong>Note:</strong> Different banks format their CSV files
-            differently. Our intelligent header detection will help identify the
-            correct columns automatically, but you&#39;ll have a chance to
-            review and adjust the mapping.
+            <strong>Note:</strong> Different banks format their CSV files differently. Our
+            intelligent header detection will help identify the correct columns automatically, but
+            you&#39;ll have a chance to review and adjust the mapping.
           </AlertDescription>
         </Alert>
       </div>

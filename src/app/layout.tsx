@@ -1,16 +1,16 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 
-import "./globals.css";
-import "../styles/plaid-fix.css";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ThemeProvider } from "@/components/ui/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
-const inter = Inter({ subsets: ["latin"] });
+import './globals.css';
+import '../styles/plaid-fix.css';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/components/ui/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Vectr-4 Finance",
-  description: "Your financial command center",
+  title: 'Vectr-4 Finance',
+  description: 'Your financial command center',
 };
 
 export default function RootLayout({
@@ -38,16 +38,16 @@ export default function RootLayout({
               visibleToasts={4}
               toastOptions={{
                 style: {
-                  background: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  color: "#1f2937",
-                  opacity: "1",
-                  backdropFilter: "none",
+                  background: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  color: '#1f2937',
+                  opacity: '1',
+                  backdropFilter: 'none',
                   boxShadow:
-                    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                    '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                 },
-                className: "vectr-toast",
-                descriptionClassName: "vectr-toast-description",
+                className: 'vectr-toast',
+                descriptionClassName: 'vectr-toast-description',
               }}
             />
           </AuthProvider>
