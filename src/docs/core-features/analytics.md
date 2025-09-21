@@ -222,7 +222,7 @@ SELECT get_analytics_aggregator('2024-08-18'::date, '2024-08-24'::date, 'user-uu
 ### Next.js Route Implementation Sketch
 ```typescript
 // File: src/app/api/analytics/aggregator/route.ts
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+// Updated to use @supabase/ssr in codebase; docs may reference older helper.
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 

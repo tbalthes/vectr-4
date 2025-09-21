@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 interface CreateCategoryRequest {
   name: string;
@@ -15,15 +15,12 @@ interface CreateCategoryRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const requestCookies = await cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => requestCookies as any,
-    });
+    const supabase = createSupabaseServerClient();
 
     // Check authentication
-    const { data: sessionRes } = await supabase.auth.getSession();
-    const user = sessionRes.session?.user;
-    if (!user) {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const user = userError ? null : userData?.user;
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -144,14 +141,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const requestCookies = await cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => requestCookies as any,
-    });
+    const supabase = createSupabaseServerClient();
 
-    const { data: sessionRes } = await supabase.auth.getSession();
-    const user = sessionRes.session?.user;
-    if (!user) {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const user = userError ? null : userData?.user;
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

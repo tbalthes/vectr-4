@@ -16,11 +16,10 @@
  * Security: Uses createRouteHandlerClient with RLS (auth.uid())
  */
 
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { calculateDateRange, validateAnalyticsParams } from '@/lib/analytics/calculateDateRange';
 
 // Type definitions for API contract
@@ -66,14 +65,7 @@ export async function GET(request: NextRequest) {
     // The Supabase helper may call `cookies()` synchronously internally which
     // Next.js disallows. Resolve the request cookies first and provide a
     // lightweight synchronous cookie store wrapper that exposes `get`/`set`/`delete`.
-    const requestCookies = await cookies();
-
-    // Provide the already-resolved Next.js cookie store directly so the
-    // Supabase helper can synchronously read cookies (getSession will work).
-
-    const supabase = createRouteHandlerClient({
-      cookies: () => requestCookies as any,
-    });
+    const supabase = createSupabaseServerClient();
 
     // Dev-only: log whether any auth headers or cookies appear to be present (no secret values printed)
     try {
@@ -97,11 +89,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify authentication
-    const {
-      data: { session },
-      error: authError,
-    } = await supabase.auth.getSession();
-    if (authError || !session?.user) {
+    const { data: userData, error: authError } = await supabase.auth.getUser();
+    if (authError || !userData?.user) {
       return NextResponse.json(
         {
           error: 'Unauthorized',
@@ -155,7 +144,7 @@ export async function GET(request: NextRequest) {
       p_start: dateRange.startDate.toISOString(),
       p_end: dateRange.endDate.toISOString(),
       p_granularity: finalGranularity,
-      p_user: session.user.id,
+      p_user: userData.user.id,
     };
 
     // DEBUG: print env + request id
@@ -205,15 +194,16 @@ export async function GET(request: NextRequest) {
     // Transform RPC response to API contract format
     const data: AggregateRow[] = rpcData.map((row: Record<string, unknown>) => ({
       // RPC may return 'bucket' or 'bucket_date' depending on SQL — handle both
-      bucket: typeof row.bucket === 'string'
-        ? row.bucket
-        : row.bucket_date instanceof Date
-          ? row.bucket_date.toISOString().split('T')[0]
-          : row.bucket_day instanceof Date
-            ? row.bucket_day.toISOString().split('T')[0]
-            : typeof row.bucket_day === 'string'
-              ? row.bucket_day
-              : '',
+      bucket:
+        typeof row.bucket === 'string'
+          ? row.bucket
+          : row.bucket_date instanceof Date
+            ? row.bucket_date.toISOString().split('T')[0]
+            : row.bucket_day instanceof Date
+              ? row.bucket_day.toISOString().split('T')[0]
+              : typeof row.bucket_day === 'string'
+                ? row.bucket_day
+                : '',
       income: Number(row.income ?? row.income_amount ?? 0),
       spending: Number(row.spending ?? row.spending_amount ?? 0),
       tx_count: Number(row.tx_count ?? row.count ?? 0),

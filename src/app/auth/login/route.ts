@@ -1,7 +1,7 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 // This is the crucial line that fixes the issue.
 // It tells Next.js to always run this route dynamically on the server.
@@ -15,46 +15,9 @@ export async function POST(request: NextRequest) {
     const passwordValue = formData.get('password');
     const password = typeof passwordValue === 'string' ? passwordValue : '';
 
-    // Prepare a JSON response so the client fetch receives a predictable
-    // JSON body while we still attach cookies to the same response.
-    const response = NextResponse.json({ success: true });
+    // Prepare predictable JSON body for client fetch response
 
-    // Resolve request-scoped cookies (some runtimes return a Promise, others return directly)
-    const requestCookies = await cookies();
-
-    // Minimal cookieStore wrapper expected by Supabase helper at runtime.
-    const cookieStore = {
-      get: (name: string) => {
-        const c = requestCookies.get(name);
-        return c ? c.value : undefined;
-      },
-      set: (name: string, value: string, options?: unknown) => {
-        try {
-          if (options && typeof options === 'object') {
-            // pass through options to NextResponse cookies
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            response.cookies.set({ name, value, ...options });
-          } else {
-            response.cookies.set(name, value);
-          }
-        } catch (e) {
-          console.warn('cookie set failed', e);
-        }
-      },
-      delete: (name: string) => {
-        try {
-          response.cookies.delete(name);
-        } catch (e) {
-          console.warn('cookie delete failed', e);
-        }
-      },
-    };
-
-    // Pass a function that returns the cookieStore wrapper as expected by createRouteHandlerClient
-    const supabase = createRouteHandlerClient({
-      cookies: () => cookieStore as any,
-    });
+    const supabase = createSupabaseServerClient();
 
     console.log('Auth route: attempting sign in for', email);
 
@@ -73,7 +36,7 @@ export async function POST(request: NextRequest) {
       console.warn('Login failed:', error);
       return NextResponse.json(
         { error: typeof error === 'string' ? error : error?.message || JSON.stringify(error) },
-        { status: 401 }
+        { status: 401 },
       );
     }
 

@@ -1,7 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-
+import { supabase } from "@/lib/supabase/supabase";
 import { Button } from "@/components/ui/button";
 // Step 1: Import the correct, cookie-aware client hook
 // Optional: Import specific icons if you have them as components
@@ -9,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 export function SocialLoginButtons() {
   // Step 2: Create the cookie-aware Supabase client inside the component
-  const supabase = createClientComponentClient();
+  // use shared browser client
 
   const handleOAuthSignIn = async (provider: "google" | "github" | "facebook") => {
     try {

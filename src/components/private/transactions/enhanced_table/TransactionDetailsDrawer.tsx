@@ -1,40 +1,29 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { format } from "date-fns";
-import {
-  X,
-  Calendar as CalendarIcon,
-  AlertTriangle,
-  Edit3,
-  Trash2,
-  RotateCcw,
-} from "lucide-react";
+import { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
+import { X, Calendar as CalendarIcon, AlertTriangle, Edit3, Trash2, RotateCcw } from 'lucide-react';
 
-import CategoryIcon from "./CategoryIcon";
-import MerchantLogo from "./MerchantLogo";
+import CategoryIcon from './CategoryIcon';
+import MerchantLogo from './MerchantLogo';
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Drawer,
   DrawerClose,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-} from "@/components/ui/drawer";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils/utils";
-import { MerchantPicker } from "@/components/private/merchants/MerchantPicker";
-import CategorySingleSelectPopover from "@/components/private/categories/CategorySingleSelectPopover";
+} from '@/components/ui/drawer';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils/utils';
+import { MerchantPicker } from '@/components/private/merchants/MerchantPicker';
+import CategorySingleSelectPopover from '@/components/private/categories/CategorySingleSelectPopover';
 
 // Category type now comes from CategorySingleSelectPopover callback
 
@@ -76,28 +65,27 @@ export function TransactionDetailsDrawer({
   onEdit,
   onDelete,
 }: TransactionDetailsDrawerProps) {
-  const [transaction, setTransaction] = useState<DetailedTransaction | null>(
-    null
-  );
+  const [transaction, setTransaction] = useState<DetailedTransaction | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedTransaction, setEditedTransaction] =
-    useState<DetailedTransaction | null>(null);
+  const [editedTransaction, setEditedTransaction] = useState<DetailedTransaction | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Get authenticated user for category loading
   const { user } = useAuth();
 
   const fetchTransactionDetails = useCallback(async () => {
-    if (!transactionId) {return;}
+    if (!transactionId) {
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await fetch(`/api/transactions/${transactionId}`, {
-        credentials: "include",
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -108,12 +96,8 @@ export function TransactionDetailsDrawer({
       setTransaction(data.data);
       setEditedTransaction(data.data);
     } catch (err) {
-      console.error("Error fetching transaction details:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load transaction details"
-      );
+      console.error('Error fetching transaction details:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load transaction details');
     } finally {
       setIsLoading(false);
     }
@@ -135,10 +119,7 @@ export function TransactionDetailsDrawer({
     }
   };
 
-  const updateEditedField = (
-    field: keyof DetailedTransaction,
-    value: string | number | null
-  ) => {
+  const updateEditedField = (field: keyof DetailedTransaction, value: string | number | null) => {
     if (editedTransaction) {
       const updatedTransaction = {
         ...editedTransaction,
@@ -161,22 +142,22 @@ export function TransactionDetailsDrawer({
 
   const formatAmount = (amount: number) => {
     const isCredit = amount > 0;
-    const formattedAmount = Math.abs(amount).toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
+    const formattedAmount = amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
     });
 
     return {
       amount: formattedAmount,
       isCredit,
-      display: `${isCredit ? "+" : ""}${formattedAmount}`,
+      display: formattedAmount,
     };
   };
 
   const formatBalance = (balance: number) => {
-    const formattedBalance = Math.abs(balance).toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
+    const formattedBalance = balance.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
     });
 
     return balance < 0 ? `-${formattedBalance}` : formattedBalance;
@@ -184,20 +165,20 @@ export function TransactionDetailsDrawer({
 
   const formatDate = (dateString: string) => {
     // Parse the date string as local time to avoid timezone issues
-    const [year, month, day] = dateString.split("-").map(Number);
+    const [year, month, day] = dateString.split('-').map(Number);
     const date = new Date(year, month - 1, day); // Month is 0-indexed
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
   const formatFieldName = (key: string) => {
     return key
-      .replace(/_/g, " ")
-      .replace(/([A-Z])/g, " $1")
+      .replace(/_/g, ' ')
+      .replace(/([A-Z])/g, ' $1')
       .trim()
       .replace(/\b\w/g, (l) => l.toUpperCase());
   };
@@ -243,17 +224,12 @@ export function TransactionDetailsDrawer({
         <DrawerHeader className="border-b px-4 py-3">
           <div className="flex items-center justify-between">
             <DrawerTitle className="text-lg font-semibold">
-              {isEditing ? "Edit Transaction" : "Transaction Details"}
+              {isEditing ? 'Edit Transaction' : 'Transaction Details'}
             </DrawerTitle>
             <div className="flex items-center gap-2">
               {!isEditing && transaction && (
                 <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleEdit}
-                    className="h-8 w-8"
-                  >
+                  <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8">
                     <Edit3 className="w-4 h-4" />
                   </Button>
                   <Button
@@ -274,10 +250,7 @@ export function TransactionDetailsDrawer({
             </div>
           </div>
           {currentTransaction?.needs_review && (
-            <Badge
-              variant="outline"
-              className="w-fit mt-2 text-amber-600 border-amber-300"
-            >
+            <Badge variant="outline" className="w-fit mt-2 text-amber-600 border-amber-300">
               <AlertTriangle className="w-3 h-3 mr-1" />
               Needs Review
             </Badge>
@@ -294,9 +267,7 @@ export function TransactionDetailsDrawer({
           {error && (
             <div className="flex items-center justify-center py-8">
               <div className="text-center">
-                <p className="text-sm font-medium text-destructive">
-                  Error loading transaction
-                </p>
+                <p className="text-sm font-medium text-destructive">Error loading transaction</p>
                 <p className="text-xs text-muted-foreground mt-1">{error}</p>
               </div>
             </div>
@@ -314,27 +285,15 @@ export function TransactionDetailsDrawer({
                     type="number"
                     step="0.01"
                     value={currentTransaction.amount}
-                    onChange={(e) =>
-                      updateEditedField(
-                        "amount",
-                        parseFloat(e.target.value) || 0
-                      )
-                    }
-                    onBlur={(e) =>
-                      updateEditedField(
-                        "amount",
-                        parseFloat(e.target.value) || 0
-                      )
-                    }
+                    onChange={(e) => updateEditedField('amount', parseFloat(e.target.value) || 0)}
+                    onBlur={(e) => updateEditedField('amount', parseFloat(e.target.value) || 0)}
                     className="text-center text-2xl font-light h-auto py-2"
                   />
                 ) : (
                   <div
                     className={cn(
-                      "text-3xl font-light",
-                      currentTransaction.amount > 0
-                        ? "text-emerald-600"
-                        : "text-foreground"
+                      'text-3xl font-light',
+                      currentTransaction.amount > 0 ? 'text-emerald-600' : 'text-foreground',
                     )}
                   >
                     {formatAmount(currentTransaction.amount).display}
@@ -357,13 +316,12 @@ export function TransactionDetailsDrawer({
                           {currentTransaction.date ? (
                             format(
                               (() => {
-                                const [year, month, day] =
-                                  currentTransaction.date
-                                    .split("-")
-                                    .map(Number);
+                                const [year, month, day] = currentTransaction.date
+                                  .split('-')
+                                  .map(Number);
                                 return new Date(year, month - 1, day);
                               })(),
-                              "PPP"
+                              'PPP',
                             )
                           ) : (
                             <span>Pick a date</span>
@@ -375,16 +333,13 @@ export function TransactionDetailsDrawer({
                           mode="single"
                           selected={(() => {
                             const [year, month, day] = currentTransaction.date
-                              .split("-")
+                              .split('-')
                               .map(Number);
                             return new Date(year, month - 1, day);
                           })()}
                           onSelect={(date) => {
                             if (date) {
-                              updateEditedField(
-                                "date",
-                                date.toISOString().split("T")[0]
-                              );
+                              updateEditedField('date', date.toISOString().split('T')[0]);
                             }
                           }}
                           initialFocus
@@ -399,18 +354,12 @@ export function TransactionDetailsDrawer({
                 </div>
 
                 <div className="flex justify-between items-center py-2 border-b border-border/50">
-                  <span className="text-sm text-muted-foreground">
-                    Transaction #
-                  </span>
+                  <span className="text-sm text-muted-foreground">Transaction #</span>
                   {isEditing ? (
                     <Input
                       value={currentTransaction.transaction_number}
-                      onChange={(e) =>
-                        updateEditedField("transaction_number", e.target.value)
-                      }
-                      onBlur={(e) =>
-                        updateEditedField("transaction_number", e.target.value)
-                      }
+                      onChange={(e) => updateEditedField('transaction_number', e.target.value)}
+                      onBlur={(e) => updateEditedField('transaction_number', e.target.value)}
                       className="w-32 text-sm font-mono text-right"
                     />
                   ) : (
@@ -422,25 +371,17 @@ export function TransactionDetailsDrawer({
 
                 {currentTransaction.balance !== null && (
                   <div className="flex justify-between items-center py-2 border-b border-border/50">
-                    <span className="text-sm text-muted-foreground">
-                      Balance
-                    </span>
+                    <span className="text-sm text-muted-foreground">Balance</span>
                     {isEditing ? (
                       <Input
                         type="number"
                         step="0.01"
                         value={currentTransaction.balance || 0}
                         onChange={(e) =>
-                          updateEditedField(
-                            "balance",
-                            parseFloat(e.target.value) || 0
-                          )
+                          updateEditedField('balance', parseFloat(e.target.value) || 0)
                         }
                         onBlur={(e) =>
-                          updateEditedField(
-                            "balance",
-                            parseFloat(e.target.value) || 0
-                          )
+                          updateEditedField('balance', parseFloat(e.target.value) || 0)
                         }
                         className="w-32 text-sm text-right"
                       />
@@ -453,9 +394,7 @@ export function TransactionDetailsDrawer({
                 )}
 
                 <div className="flex justify-between items-start py-2 border-b border-border/50">
-                  <span className="text-sm text-muted-foreground">
-                    Merchant
-                  </span>
+                  <span className="text-sm text-muted-foreground">Merchant</span>
                   {isEditing ? (
                     <div className="w-48 text-right">
                       <MerchantPicker
@@ -470,7 +409,9 @@ export function TransactionDetailsDrawer({
                             : null
                         }
                         onMerchantSelect={(merchant) => {
-                          if (!editedTransaction) {return;}
+                          if (!editedTransaction) {
+                            return;
+                          }
 
                           if (merchant) {
                             const merged = {
@@ -485,7 +426,7 @@ export function TransactionDetailsDrawer({
                             // Clear merchant
                             const merged = {
                               ...editedTransaction,
-                              merchant_name: "",
+                              merchant_name: '',
                               merchant_logo_url: null,
                               merchant_id: undefined,
                             } as unknown as DetailedTransaction;
@@ -526,9 +467,7 @@ export function TransactionDetailsDrawer({
                 </div>
 
                 <div className="flex justify-between items-start py-2 border-b border-border/50">
-                  <span className="text-sm text-muted-foreground">
-                    Category
-                  </span>
+                  <span className="text-sm text-muted-foreground">Category</span>
                   {isEditing ? (
                     <div className="w-48 text-right">
                       <CategorySingleSelectPopover
@@ -540,15 +479,17 @@ export function TransactionDetailsDrawer({
                             id?: string;
                             name?: string;
                             icon?: string | null;
-                          } | null
+                          } | null,
                         ) => {
-                          if (!editedTransaction) {return;}
+                          if (!editedTransaction) {
+                            return;
+                          }
                           if (categoryId) {
                             const merged = {
                               ...editedTransaction,
                               category_id: categoryId,
-                              category_name: category?.name || "",
-                              category_icon: category?.icon || "",
+                              category_name: category?.name || '',
+                              category_icon: category?.icon || '',
                             } as unknown as DetailedTransaction;
                             setEditedTransaction(merged);
                             setTransaction(merged);
@@ -556,8 +497,8 @@ export function TransactionDetailsDrawer({
                             const merged = {
                               ...editedTransaction,
                               category_id: undefined,
-                              category_name: "",
-                              category_icon: "",
+                              category_name: '',
+                              category_icon: '',
                             } as unknown as DetailedTransaction;
                             setEditedTransaction(merged);
                             setTransaction(merged);
@@ -575,13 +516,9 @@ export function TransactionDetailsDrawer({
                       />
                       <div className="text-sm">
                         {currentTransaction.parent_category_name ? (
-                          <span className="font-medium">
-                            {currentTransaction.category_name}
-                          </span>
+                          <span className="font-medium">{currentTransaction.category_name}</span>
                         ) : (
-                          <span className="font-medium">
-                            {currentTransaction.category_name}
-                          </span>
+                          <span className="font-medium">{currentTransaction.category_name}</span>
                         )}
                       </div>
                     </div>
@@ -596,13 +533,9 @@ export function TransactionDetailsDrawer({
                 </div>
                 {isEditing ? (
                   <Input
-                    value={currentTransaction.clean_description || ""}
-                    onChange={(e) =>
-                      updateEditedField("clean_description", e.target.value)
-                    }
-                    onBlur={(e) =>
-                      updateEditedField("clean_description", e.target.value)
-                    }
+                    value={currentTransaction.clean_description || ''}
+                    onChange={(e) => updateEditedField('clean_description', e.target.value)}
+                    onBlur={(e) => updateEditedField('clean_description', e.target.value)}
                     className="text-sm"
                     placeholder="Clean description"
                   />
@@ -621,12 +554,8 @@ export function TransactionDetailsDrawer({
                 {isEditing ? (
                   <Textarea
                     value={currentTransaction.original_description}
-                    onChange={(e) =>
-                      updateEditedField("original_description", e.target.value)
-                    }
-                    onBlur={(e) =>
-                      updateEditedField("original_description", e.target.value)
-                    }
+                    onChange={(e) => updateEditedField('original_description', e.target.value)}
+                    onBlur={(e) => updateEditedField('original_description', e.target.value)}
                     className="text-sm font-mono resize-none"
                     rows={3}
                   />
@@ -644,19 +573,9 @@ export function TransactionDetailsDrawer({
                 </div>
                 {isEditing ? (
                   <Textarea
-                    value={currentTransaction.transaction_note || ""}
-                    onChange={(e) =>
-                      updateEditedField(
-                        "transaction_note",
-                        e.target.value || null
-                      )
-                    }
-                    onBlur={(e) =>
-                      updateEditedField(
-                        "transaction_note",
-                        e.target.value || null
-                      )
-                    }
+                    value={currentTransaction.transaction_note || ''}
+                    onChange={(e) => updateEditedField('transaction_note', e.target.value || null)}
+                    onBlur={(e) => updateEditedField('transaction_note', e.target.value || null)}
                     placeholder="Add a note..."
                     className="text-sm resize-none"
                     rows={2}
@@ -666,9 +585,7 @@ export function TransactionDetailsDrawer({
                     {currentTransaction.transaction_note}
                   </div>
                 ) : (
-                  <div className="text-sm text-muted-foreground italic">
-                    No notes
-                  </div>
+                  <div className="text-sm text-muted-foreground italic">No notes</div>
                 )}
               </div>
 
@@ -679,21 +596,12 @@ export function TransactionDetailsDrawer({
                     Additional Fields
                   </div>
                   <div className="space-y-2">
-                    {Object.entries(currentTransaction.custom_fields).map(
-                      ([key, value]) => (
-                        <div
-                          key={key}
-                          className="flex justify-between items-center py-2 text-sm"
-                        >
-                          <span className="text-muted-foreground">
-                            {formatFieldName(key)}
-                          </span>
-                          <span className="font-mono text-right">
-                            {String(value)}
-                          </span>
-                        </div>
-                      )
-                    )}
+                    {Object.entries(currentTransaction.custom_fields).map(([key, value]) => (
+                      <div key={key} className="flex justify-between items-center py-2 text-sm">
+                        <span className="text-muted-foreground">{formatFieldName(key)}</span>
+                        <span className="font-mono text-right">{String(value)}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -720,11 +628,7 @@ export function TransactionDetailsDrawer({
                     >
                       Save Changes
                     </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleCancel}
-                      className="w-full"
-                    >
+                    <Button variant="outline" onClick={handleCancel} className="w-full">
                       <RotateCcw className="w-4 h-4 mr-2" />
                       Cancel Changes
                     </Button>
@@ -745,17 +649,11 @@ export function TransactionDetailsDrawer({
                 </div>
                 <div>
                   <h3 className="font-semibold">Delete Transaction</h3>
-                  <p className="text-sm text-muted-foreground">
-                    This action cannot be undone.
-                  </p>
+                  <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
                 </div>
               </div>
               <div className="flex gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowDeleteConfirm(false)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>
                   Cancel
                 </Button>
                 <Button variant="destructive" size="sm" onClick={handleDelete}>

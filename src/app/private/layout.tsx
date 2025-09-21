@@ -1,22 +1,18 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { useAuth } from "@/contexts/AuthContext";
-import { AccountSyncProvider } from "@/contexts/AccountSyncContext";
-import { Sidebar } from "@/components/Sidebar";
+import { useAuth } from '@/contexts/AuthContext';
+import { AccountSyncProvider } from '@/contexts/AccountSyncContext';
+import { Sidebar } from '@/components/Sidebar';
 
-export default function PrivateLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PrivateLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   // Sidebar is open by default on desktop, closed on mobile
   const [sidebarOpen, setSidebarOpen] = useState(
-    typeof window !== "undefined" && window.innerWidth >= 768
+    typeof window !== 'undefined' && window.innerWidth >= 768,
   );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -29,15 +25,15 @@ export default function PrivateLayout({
         setSidebarOpen(false);
       }
     };
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
     // Set initial state
     handleResize();
-    return () => window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/public/login");
+      router.push('/public/login');
     }
   }, [user, loading, router]);
 
@@ -51,42 +47,46 @@ export default function PrivateLayout({
 
   return (
     <AccountSyncProvider>
-      <div className="flex min-h-screen">
-        {/* Sidebar: overlays on mobile, static on desktop */}
-        <Sidebar
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          collapsible={true}
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
+      {/* Sidebar: fixed on all screens */}
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsible={true}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
 
-        {/* Hamburger button for mobile */}
-        {!sidebarOpen && (
-          <button
-            className="md:hidden fixed top-4 left-4 z-[50] bg-background rounded-full shadow p-2 border border-border"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open sidebar"
+      {/* Hamburger button for mobile */}
+      {!sidebarOpen && (
+        <button
+          className="md:hidden fixed top-4 left-4 z-[50] bg-background rounded-full shadow p-2 border border-border"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open sidebar"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
           >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
-        )}
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      )}
 
-        {/* Main content: full width on mobile, adjusted on desktop */}
-        <main className="flex-1 min-w-0">{children}</main>
-      </div>
+      {/* Main content: adjusted for sidebar */}
+      <main
+        className={`h-screen overflow-y-auto transition-all duration-200 ${
+          sidebarOpen && !sidebarCollapsed
+            ? 'ml-64'
+            : sidebarOpen && sidebarCollapsed
+              ? 'ml-16'
+              : ''
+        }`}
+      >
+        {children}
+      </main>
     </AccountSyncProvider>
   );
 }

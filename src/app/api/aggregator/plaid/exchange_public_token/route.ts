@@ -1,24 +1,22 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { Configuration, PlaidApi, PlaidEnvironments, CountryCode } from 'plaid';
+
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 // POST /api/aggregator/plaid/exchange_public_token
 // Body: { public_token: string }
 export async function POST(req: Request) {
-  const supabase = createRouteHandlerClient({
-    cookies: cookies,
-  });
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-  if (sessionError) {return NextResponse.json({ error: sessionError.message }, { status: 500 });}
-  if (!session?.user) {return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });}
+  const supabase = createSupabaseServerClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    return NextResponse.json({ error: userError?.message || 'Unauthorized' }, { status: 401 });
+  }
 
   const body = await req.json().catch(() => null);
   const public_token = body?.public_token as string | undefined;
-  if (!public_token) {return NextResponse.json({ error: 'public_token required' }, { status: 400 });}
+  if (!public_token) {
+    return NextResponse.json({ error: 'public_token required' }, { status: 400 });
+  }
 
   // Validate required environment variables
   if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
@@ -153,7 +151,7 @@ export async function POST(req: Request) {
     // Store account_link (encrypted access token)
     console.log('Storing account link in database...');
     const { error: linkError } = await supabase.from('account_links').insert({
-      user_id: session.user.id,
+      user_id: userData.user.id,
       provider: 'plaid',
       item_id,
       access_token_encrypted: access_token, // TODO: Encrypt this in production
@@ -170,7 +168,7 @@ export async function POST(req: Request) {
     // Store accounts
     console.log('Storing accounts in database...');
     const accountsToInsert = plaidAccounts.map((account) => ({
-      user_id: session.user.id,
+      user_id: userData.user.id,
       name: account.name,
       mask: account.mask || null,
       type: account.type.toLowerCase(),
@@ -232,7 +230,7 @@ export async function POST(req: Request) {
             Cookie: req.headers.get('cookie') || '',
           },
           body: JSON.stringify({
-            user_id: session.user.id, // ADD THIS - was missing!
+            user_id: userData.user.id, // ADD THIS - was missing!
             access_token,
             count: 500, // Get more transactions on initial sync
           }),

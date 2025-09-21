@@ -2,10 +2,10 @@ import crypto from 'crypto';
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 
 import { CleanPlaidTransactionProcessor, type PlaidTransaction } from '../clean-processor';
+
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,10 +60,7 @@ export async function POST(request: NextRequest) {
       console.log('🔧 Internal service call for user:', userId);
     } else {
       // Regular cookie-based authentication
-      const requestCookies = await cookies();
-      const supabase = createRouteHandlerClient({
-        cookies: () => requestCookies as any,
-      });
+      const supabase = createSupabaseServerClient();
 
       const {
         data: { user },

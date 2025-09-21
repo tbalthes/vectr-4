@@ -30,7 +30,7 @@ const isDateHeader = (item: TransactionItem): item is DateHeader => {
 // Date Header Component - returns cells for Virtuoso
 const DateHeaderRow = ({ dateHeader }: { dateHeader: DateHeader }) => {
   const formatAmount = (amount: number) => {
-    return Math.abs(amount).toLocaleString('en-US', {
+    return amount.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
     });

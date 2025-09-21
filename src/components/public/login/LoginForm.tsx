@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Image from "next/image";
 
+import { supabase } from "@/lib/supabase/supabase";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +31,7 @@ export function LoginForm({
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  // use shared browser client
 
   const handleInputChange =
     (field: keyof LoginFormData) =>

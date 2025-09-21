@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 interface DetailedTransaction {
   id: string;
@@ -27,10 +27,7 @@ interface DetailedTransaction {
 export async function GET(request: Request) {
   try {
     // Get the authenticated user from the client
-    const requestCookies = await cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => requestCookies as any,
-    });
+    const supabase = createSupabaseServerClient();
 
     const {
       data: { user },
@@ -254,10 +251,7 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     // Get the authenticated user from the client
-    const requestCookies = await cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => requestCookies as any,
-    });
+    const supabase = createSupabaseServerClient();
 
     const {
       data: { user },
@@ -763,10 +757,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     // Get the authenticated user from the client
-    const requestCookies = await cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => requestCookies as any,
-    });
+    const supabase = createSupabaseServerClient();
 
     const {
       data: { user },

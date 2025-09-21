@@ -90,15 +90,13 @@ export function Sidebar({
       <aside
         className={`
           h-screen bg-background border-r border-border flex flex-col transition-all duration-200
-          fixed top-0 left-0 z-[101] md:static md:z-auto
+           top-0 left-0 z-[101] fixed
           ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
         style={{
           width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
         }}
       >
-        {/* ...existing code... */}
-        {/* Premium Logo and Toggle (rest of your header, if needed) */}
         <div
           className={`h-16 flex items-center px-3 border-b border-border ${
             collapsed ? 'justify-center' : 'justify-between'

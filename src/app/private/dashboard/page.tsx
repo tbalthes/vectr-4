@@ -1,20 +1,20 @@
-"use client";
-import React from "react";
-import { Plus, Download, Calendar } from "lucide-react";
-import { useRouter } from "next/navigation";
+'use client';
+import React from 'react';
+import { Plus, Download, Calendar } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-import { StatCards } from "@/components/private/dashboard/StatCards";
-import { SpendingByCategory } from "@/components/private/dashboard/SpendingByCategory";
-import { dashboardData } from "@/data/dashboard-data";
-import { RecentTransactions } from "@/components/private/dashboard/RecentTransactions";
-import PageHeader from "@/components/private/PageHeader";
-import { Button } from "@/components/ui/button";
-import IncomeSpendingOverTimeChart from "@/components/private/dashboard/IncomeSpendingOverTime";
-import { BudgetCompositionChart } from "@/components/private/dashboard/BudgetCompositionChart";
-import { Spending90v90 } from "@/components/private/dashboard/Spending90v90";
-import { NetWorthOverTime } from "@/components/private/dashboard/NetWorthOverTime";
-import { CategorySpending } from "@/components/private/dashboard/CategorySpendingChart";
-import SpendingHeatmap from "@/components/private/dashboard/SpendingHeatmap";
+import { StatCards } from '@/components/private/dashboard/StatCards';
+import { SpendingByCategory } from '@/components/private/dashboard/SpendingByCategory';
+import { dashboardData } from '@/data/dashboard-data';
+import { RecentTransactions } from '@/components/private/dashboard/RecentTransactions';
+import PageHeader from '@/components/private/PageHeader';
+import { Button } from '@/components/ui/button';
+import IncomeSpendingOverTimeChart from '@/components/private/dashboard/IncomeSpendingOverTime';
+import { BudgetCompositionChart } from '@/components/private/dashboard/BudgetCompositionChart';
+import { Spending90v90 } from '@/components/private/dashboard/Spending90v90';
+import { NetWorthOverTime } from '@/components/private/dashboard/NetWorthOverTime';
+import { CategorySpending } from '@/components/private/dashboard/CategorySpendingChart';
+import SpendingHeatmap from '@/components/private/dashboard/SpendingHeatmap';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -34,18 +34,14 @@ export default function Dashboard() {
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <Button
-              size="sm"
-              className="text-white"
-              onClick={() => router.push("/private/upload")}
-            >
+            <Button size="sm" className="text-white" onClick={() => router.push('/private/upload')}>
               <Plus className="mr-2 h-4 w-4" />
               Add Transactions
             </Button>
           </div>
         }
       />
-      <div className="flex-1 space-y-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto animate-fade-in">
+      <div className="h-full overflow-y-auto space-y-6 px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
         {/* Stats Cards */}
         <StatCards />
 

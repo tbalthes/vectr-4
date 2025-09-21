@@ -458,7 +458,7 @@ export function AdvancedFilterPanel({
           break;
         }
         case 'merchants': {
-          const allMerchantIds = merchants.map((m) => m.name);
+          const allMerchantIds = merchants.map((m) => m.id);
           updateFilters({
             selectedMerchants:
               filters.selectedMerchants.length === allMerchantIds.length ? [] : allMerchantIds,
@@ -613,8 +613,8 @@ export function AdvancedFilterPanel({
                       <div key={merchant.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={merchant.id}
-                          checked={filters.selectedMerchants.includes(merchant.name)}
-                          onCheckedChange={() => handleMerchantToggle(merchant.name)}
+                          checked={filters.selectedMerchants.includes(merchant.id)}
+                          onCheckedChange={() => handleMerchantToggle(merchant.id)}
                         />
                         <label
                           htmlFor={merchant.id}

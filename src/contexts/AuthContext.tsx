@@ -4,8 +4,9 @@ import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User, SupabaseClient } from '@supabase/supabase-js';
+
 // Step 1: Import the correct, cookie-aware client hook
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from '@/lib/supabase/supabase';
 
 interface Profile {
   id: string;
@@ -33,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Step 2: Create the cookie-aware Supabase client inside the provider
   // This client will be used by all logic within the context.
-  const supabase = createClientComponentClient();
+  // use shared browser client
 
   // Fetch profile from public.profiles
   const fetchProfile = useCallback(
@@ -55,12 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      if (session?.user?.id) {
-        void fetchProfile(session.user.id);
+      const { data, error } = await supabase.auth.getUser();
+      const currentUser = error ? null : (data?.user ?? null);
+      setUser(currentUser);
+      if (currentUser?.id) {
+        void fetchProfile(currentUser.id);
       } else {
         setProfile(null);
       }

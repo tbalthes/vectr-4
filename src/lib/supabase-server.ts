@@ -1,31 +1,35 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-// Temporary wrapper to suppress Next.js 15 cookie warnings
 export function createSupabaseServerClient() {
-  // Suppress console errors temporarily
-  const originalError = console.error;
-  console.error = (...args: unknown[]) => {
-    // Only suppress specific cookie-related errors
-    const message =
-      typeof args[0] === 'object' && args[0] !== null && 'toString' in args[0]
-        ? (args[0] as { toString: () => string }).toString()
-        : // eslint-disable-next-line @typescript-eslint/no-base-to-string
-          String(args[0] ?? '');
-    if (message.includes('cookies().get') || message.includes('should be awaited')) {
-      return; // Suppress this error
-    }
-    originalError.apply(console, args);
-  };
+  // Access cookies via next/headers on each call to support route handlers
 
-  const client = createRouteHandlerClient({
-    cookies: cookies,
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      async get(name: string) {
+        // Next 15: cookies() is an async dynamic API and must be awaited
+        const store = (await cookies()) as any;
+        return store.get(name)?.value;
+      },
+      async set(name: string, value: string, options: CookieOptions) {
+        try {
+          const store = (await cookies()) as any;
+          store.set({ name, value, ...options });
+        } catch {
+          // ignore set during render; Next will persist in route handlers
+        }
+      },
+      async remove(name: string) {
+        try {
+          const store = (await cookies()) as any;
+          store.delete(name);
+        } catch {
+          // ignore
+        }
+      },
+    },
   });
-
-  // Restore original console.error after a short delay
-  setTimeout(() => {
-    console.error = originalError;
-  }, 100);
-
-  return client;
 }

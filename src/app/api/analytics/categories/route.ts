@@ -5,11 +5,10 @@
  * Endpoint: GET /api/analytics/categories
  * Query: range (7d|30d|...), namesOnly (true/false), or start/end ISO dates (YYYY-MM-DD)
  */
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { calculateDateRange, validateAnalyticsParams } from '@/lib/analytics/calculateDateRange';
 
 type RangeKey = '7d' | '30d' | '90d' | '1M' | '3M' | '6M' | 'YTD' | '1Y' | 'all';
@@ -28,14 +27,10 @@ const CACHE_HEADERS = {
 export async function GET(request: NextRequest) {
   const requestId = `cat_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   try {
-    const requestCookies = await cookies();
-
-    const supabase = createRouteHandlerClient({
-      cookies: () => requestCookies as any,
-    });
-    const { data: sessionRes } = await supabase.auth.getSession();
-    const user = sessionRes.session?.user;
-    if (!user) {
+    const supabase = createSupabaseServerClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const user = userData?.user;
+    if (userError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Valid authentication required' },
         {

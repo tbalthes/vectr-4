@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 import type { FormattedTransaction } from '@/types/transactions';
 
 export const dynamic = 'force-dynamic';
@@ -117,10 +116,7 @@ function transformToFormattedTransaction(raw: RawSupabaseTransaction): Formatted
 export async function GET(request: NextRequest) {
   try {
     // Get the authenticated user from the client
-    const requestCookies = await cookies();
-    const supabase = createRouteHandlerClient({
-      cookies: () => requestCookies as any,
-    });
+    const supabase = createSupabaseServerClient();
 
     const {
       data: { user },

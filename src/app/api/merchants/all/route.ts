@@ -3,12 +3,14 @@
  * Returns all merchants with transaction counts for the current user
  * Endpoint: GET /api/merchants/all
  */
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 const CACHE_HEADERS = {
-  "Cache-Control": "s-maxage=300, stale-while-revalidate=600", // 5 min cache
+  'Cache-Control': 's-maxage=300, stale-while-revalidate=600', // 5 min cache
 };
 
 export interface MerchantWithCount {
@@ -27,86 +29,112 @@ export interface MerchantWithCount {
 
 export async function GET() {
   try {
-    const requestCookies = await cookies();
-    const supabase = createRouteHandlerClient({
-       
-      cookies: () => requestCookies as any,
-    });
+    // DEBUG: Log all cookies received
+    const allCookies = (await cookies()).getAll();
+    console.log(
+      '[merchants/all] Cookies received:',
+      allCookies.map((c: any) => ({ name: c.name, value: c.value })),
+    );
 
-    const { data: sessionRes } = await supabase.auth.getSession();
-    const user = sessionRes.session?.user;
-
-    if (!user) {
+    const supabase = createSupabaseServerClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const user = userData?.user;
+    console.log('[merchants/all] Supabase user:', user);
+    if (userError || !user) {
       return NextResponse.json(
-        { error: "Unauthorized", message: "Valid authentication required" },
-        { status: 401, headers: CACHE_HEADERS }
+        { error: 'Unauthorized', message: 'Valid authentication required' },
+        { status: 401, headers: CACHE_HEADERS },
       );
     }
 
-    // Query to get merchants with transaction counts for the current user
-    // First get all unique merchants that have transactions for this user
-    const { data: merchantsData, error } = await supabase
-      .from("transactions")
+    // Query to get all merchant_ids from transactions for this user
+    const { data: transactionMerchants, error: txError } = await supabase
+      .from('transactions')
+      .select('merchant_id')
+      .eq('user_id', user.id)
+      .not('merchant_id', 'is', null);
+
+    if (txError) {
+      console.error('Error fetching transaction merchant_ids:', txError);
+      return NextResponse.json(
+        { error: 'Database error', message: txError.message },
+        { status: 500, headers: CACHE_HEADERS },
+      );
+    }
+
+    const merchantIds = Array.from(
+      new Set((transactionMerchants || []).map((row: any) => row.merchant_id)),
+    );
+    if (merchantIds.length === 0) {
+      return NextResponse.json({ data: [], total: 0 }, { status: 200, headers: CACHE_HEADERS });
+    }
+
+    // Fetch merchants by those IDs
+    const { data: merchantsData, error: merchantsError } = await supabase
+      .from('merchants')
       .select(
         `
-        merchants (
-          merchant_id,
+        merchant_id,
+        name,
+        logo_url,
+        categories:default_category_id (
+          category_id,
           name,
-          logo_url,
-          categories:default_category_id (
-            category_id,
-            name,
-            icon
-          )
+          icon
         )
-      `
+      `,
       )
-      .eq("user_id", user.id)
-      .not("merchants", "is", null);
+      .in('merchant_id', merchantIds);
 
-    if (error) {
-      console.error("Error fetching merchants:", error);
+    if (merchantsError) {
+      console.error('Error fetching merchants:', merchantsError);
       return NextResponse.json(
-        { error: "Database error", message: error.message },
-        { status: 500, headers: CACHE_HEADERS }
+        {
+          error: 'Database error',
+          message: merchantsError ? merchantsError.message : 'Unknown error',
+        },
+        { status: 500, headers: CACHE_HEADERS },
       );
     }
 
-    // Group by merchant and count transactions
-    const merchantCounts = new Map<string, MerchantWithCount>();
+    // Count transactions per merchant
+    const merchantTxCount: Record<string, number> = {};
+    (transactionMerchants || []).forEach((row: any) => {
+      if (row.merchant_id) {
+        merchantTxCount[row.merchant_id] = (merchantTxCount[row.merchant_id] || 0) + 1;
+      }
+    });
 
-    if (merchantsData) {
-      merchantsData.forEach((row: Record<string, unknown>) => {
-        const merchant = row.merchants as Record<string, unknown> | null;
-        if (!merchant) {return;}
-
-        const merchantKey = String(merchant.merchant_id);
-
-        if (merchantCounts.has(merchantKey)) {
-          // Increment count
-          const existing = merchantCounts.get(merchantKey)!;
-          existing.transaction_count += 1;
-        } else {
-          // Create new entry
-          merchantCounts.set(merchantKey, {
-            id: String(merchant.merchant_id),
-            name: String(merchant.name),
-            logo_url: merchant.logo_url as string | null,
-            transaction_count: 1,
-            categories: Array.isArray(merchant.categories)
-              ? merchant.categories
-              : merchant.categories
-              ? [merchant.categories]
-              : null,
-          });
+    // Transform the data to a more usable format
+    const merchants = ((merchantsData as any[]) || []).map((merchant) => {
+      // Handle categories - take the first one if multiple exist
+      let category = null;
+      if (merchant.categories) {
+        if (Array.isArray(merchant.categories) && merchant.categories.length > 0) {
+          category = merchant.categories[0];
+        } else if (!Array.isArray(merchant.categories)) {
+          category = merchant.categories;
         }
-      });
-    }
+      }
 
-    // Convert to array and sort by transaction count (descending)
-    const merchants = Array.from(merchantCounts.values()).sort(
-      (a, b) => b.transaction_count - a.transaction_count
-    );
+      return {
+        id: merchant.merchant_id,
+        name: merchant.name,
+        logo_url: merchant.logo_url,
+        transaction_count: merchantTxCount[merchant.merchant_id] || 0,
+        categories: merchant.categories,
+        category: category
+          ? {
+              id: category.category_id,
+              name: category.name,
+              icon: category.icon,
+            }
+          : null,
+      };
+    });
+
+    // Sort by transaction count (descending)
+    merchants.sort((a, b) => b.transaction_count - a.transaction_count);
 
     return NextResponse.json(
       {
@@ -116,16 +144,16 @@ export async function GET() {
       {
         status: 200,
         headers: CACHE_HEADERS,
-      }
+      },
     );
   } catch (error) {
-    console.error("Unexpected error in merchants/all API:", error);
+    console.error('Unexpected error in merchants/all API:', error);
     return NextResponse.json(
       {
-        error: "Internal server error",
-        message: "An unexpected error occurred",
+        error: 'Internal server error',
+        message: 'An unexpected error occurred',
       },
-      { status: 500, headers: CACHE_HEADERS }
+      { status: 500, headers: CACHE_HEADERS },
     );
   }
 }

@@ -43,7 +43,7 @@ export function TransactionRow({
     const isCredit = amount > 0; // Positive amounts are credits (income)
     const isDebit = amount < 0; // Negative amounts are debits (expenses)
 
-    const formattedAmount = Math.abs(amount).toLocaleString('en-US', {
+    const formattedAmount = amount.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
     });
@@ -80,7 +80,7 @@ export function TransactionRow({
     };
   };
 
-  const { amount, isCredit, className: amountClassName } = formatAmount(transaction.amount);
+  const { amount, className: amountClassName } = formatAmount(transaction.amount);
   // dateFormatted reserved for future use
   void formatDate(transaction.date);
 
@@ -158,7 +158,6 @@ export function TransactionRow({
             <Flag className="w-4 h-4 text-yellow-500 dark:text-yellow-400 flex-shrink-0" />
           )}
           <span className={`text-sm font-medium ${amountClassName} dark:text-chart-2`}>
-            {isCredit ? '+' : ''}
             {amount}
           </span>
           <Button

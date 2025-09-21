@@ -1,119 +1,190 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "Start All Dev Servers",
-      "type": "shell",
-      "command": "npm run dev",
-      "isBackground": true,
-      "problemMatcher": [],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "new"
-      }
-      
-    },
-    {
-      "label": "Run ESLint Config Inspector",
-      "type": "shell",
-      "command": "npx @eslint/config-inspector",
-      "group": {
-        "kind": "test",
-        "isDefault": false
-      },
-      "presentation": {
-        "reveal": "always"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "Start Next.js Only",
-      "type": "shell",
-      "command": "npm run dev:next-only",
-      "isBackground": true,
-      "problemMatcher": [],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Start FastAPI Server",
-      "type": "shell",
-      "command": ". .venv/Scripts/Activate.ps1; python -m uvicorn app.main:app",
-      "isBackground": false,
-      "problemMatcher": [],
-      "options": {
-        "cwd": "${workspaceFolder}/python"
-      },
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Start ngrok",
-      "type": "shell",
-      "command": "ngrok http 3000 --domain=lutose-nonponderable-aidyn.ngrok-free.app",
-      "isBackground": true,
-      "problemMatcher": [],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "new"
-      }
-    },
-    {
-      "label": "Restart FastAPI Server",
-      "type": "shell",
-      "command": ". .venv/Scripts/Activate.ps1; taskkill /IM uvicorn.exe /F; python -m uvicorn app.main:app",
-      "isBackground": false,
-      "problemMatcher": [],
-      "options": {
-        "cwd": "${workspaceFolder}/python"
-      },
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Print Project Structure",
-      "type": "shell",
-      "command": "function Write-Tree { param([string]$Path, [string]$Prefix = '') $items = Get-ChildItem -LiteralPath $Path -Force | Where-Object { ($_.Name -notlike '.*' -and $_.Name -ne 'node_modules') }; if ($items) { $count = $items.Count; for ($i = 0; $i -lt $count; $i++) { $item = $items[$i]; $isLast = ($i -eq $count - 1); $pointer = ''; $newPrefix = $Prefix; if ($isLast) { $pointer = '└── '; $newPrefix = $Prefix + '    '; } else { $pointer = '├── '; $newPrefix = $Prefix + '│   '; } Write-Output ($Prefix + $pointer + $($item.Name)); if ($item.PSIsContainer) { Write-Tree -Path $item.FullName -Prefix $newPrefix; } } } } '@ ROOT' | Out-File -Encoding utf8 project_tree.txt; Write-Tree . | Out-File -Encoding utf8 -Append project_tree.txt; '@ PUBLIC' | Out-File -Encoding utf8 -Append project_tree.txt; Write-Tree public | Out-File -Encoding utf8 -Append project_tree.txt; '@ PYTHON' | Out-File -Encoding utf8 -Append project_tree.txt; Write-Tree python | Out-File -Encoding utf8 -Append project_tree.txt; '@ SRC' | Out-File -Encoding utf8 -Append project_tree.txt; Write-Tree src | Out-File -Encoding utf8 -Append project_tree.txt",
-      "args": [],
-      "problemMatcher": [],
-      "group": "build"
-    },
-    {
-      "label": "Refresh Packages",
-      "type": "shell",
-      "command": "Remove-Item -Recurse -Force .\\node_modules -ErrorAction SilentlyContinue; Remove-Item -Force .\\package-lock.json -ErrorAction SilentlyContinue; npm install",
-      "isBackground": false,
-      "problemMatcher": [],
-      "group": "build"
-    },
-    {
-      "label": "Start All Dev Services",
-      "type": "shell",
-      "command": "npm run dev",
-      "isBackground": true,
-      "group": "build"
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start All Dev Servers",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new"
+			}
+		},
+		{
+			"label": "Run ESLint Config Inspector",
+			"type": "shell",
+			"command": "npx @eslint/config-inspector",
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			"presentation": {
+				"reveal": "always"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Next.js Only",
+			"type": "shell",
+			"command": "npm run dev:next-only",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new"
+			}
+		},
+		{
+			"label": "Start FastAPI Server",
+			"type": "shell",
+			"command": ". .venv/Scripts/Activate.ps1; python -m uvicorn app.main:app",
+			"isBackground": false,
+			"problemMatcher": [],
+			"options": {
+				"cwd": "${workspaceFolder}/python"
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Start ngrok",
+			"type": "shell",
+			"command": "ngrok http 3000 --domain=lutose-nonponderable-aidyn.ngrok-free.app",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new"
+			}
+		},
+		{
+			"label": "Restart FastAPI Server",
+			"type": "shell",
+			"command": ". .venv/Scripts/Activate.ps1; taskkill /IM uvicorn.exe /F; python -m uvicorn app.main:app",
+			"isBackground": false,
+			"problemMatcher": [],
+			"options": {
+				"cwd": "${workspaceFolder}/python"
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Print Project Structure",
+			"type": "shell",
+			"command": "function Write-Tree { param([string]$Path, [string]$Prefix = '') $items = Get-ChildItem -LiteralPath $Path -Force | Where-Object { ($_.Name -notlike '.*' -and $_.Name -ne 'node_modules') }; if ($items) { $count = $items.Count; for ($i = 0; $i -lt $count; $i++) { $item = $items[$i]; $isLast = ($i -eq $count - 1); $pointer = ''; $newPrefix = $Prefix; if ($isLast) { $pointer = '└── '; $newPrefix = $Prefix + '    '; } else { $pointer = '├── '; $newPrefix = $Prefix + '│   '; } Write-Output ($Prefix + $pointer + $($item.Name)); if ($item.PSIsContainer) { Write-Tree -Path $item.FullName -Prefix $newPrefix; } } } } '@ ROOT' | Out-File -Encoding utf8 project_tree.txt; Write-Tree . | Out-File -Encoding utf8 -Append project_tree.txt; '@ PUBLIC' | Out-File -Encoding utf8 -Append project_tree.txt; Write-Tree public | Out-File -Encoding utf8 -Append project_tree.txt; '@ PYTHON' | Out-File -Encoding utf8 -Append project_tree.txt; Write-Tree python | Out-File -Encoding utf8 -Append project_tree.txt; '@ SRC' | Out-File -Encoding utf8 -Append project_tree.txt; Write-Tree src | Out-File -Encoding utf8 -Append project_tree.txt",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Refresh Packages",
+			"type": "shell",
+			"command": "Remove-Item -Recurse -Force .\\node_modules -ErrorAction SilentlyContinue; Remove-Item -Force .\\package-lock.json -ErrorAction SilentlyContinue; npm install",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Start All Dev Services",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Typecheck Next.js",
+			"type": "shell",
+			"command": "npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build again after SSR changes",
+			"type": "shell",
+			"command": "npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build after removing old example",
+			"type": "shell",
+			"command": "npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build after commit",
+			"type": "shell",
+			"command": "npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Final build after cleanup",
+			"type": "shell",
+			"command": "npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Retry build",
+			"type": "shell",
+			"command": "npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build after server helper fix",
+			"type": "shell",
+			"command": "npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build once more",
+			"type": "shell",
+			"command": "npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		}
+	]
 }

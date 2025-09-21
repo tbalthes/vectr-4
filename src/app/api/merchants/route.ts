@@ -3,12 +3,12 @@
  * Returns all merchants with their associated categories for transaction editing
  * Endpoint: GET /api/merchants
  */
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 const CACHE_HEADERS = {
-  "Cache-Control": "s-maxage=300, stale-while-revalidate=600", // 5 min cache, 10 min stale
+  'Cache-Control': 's-maxage=300, stale-while-revalidate=600', // 5 min cache, 10 min stale
 };
 
 interface MerchantData {
@@ -30,30 +30,24 @@ interface MerchantData {
 }
 
 export async function GET() {
-  const requestId = `merchants_${Date.now()}_${Math.random()
-    .toString(36)
-    .slice(2, 8)}`;
+  const requestId = `merchants_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   try {
-    const requestCookies = await cookies();
-    const supabase = createRouteHandlerClient({
-       
-      cookies: () => requestCookies as any,
-    });
-    const { data: sessionRes } = await supabase.auth.getSession();
-    const user = sessionRes.session?.user;
-    if (!user) {
+    const supabase = createSupabaseServerClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const user = userData?.user;
+    if (userError || !user) {
       return NextResponse.json(
-        { error: "Unauthorized", message: "Valid authentication required" },
+        { error: 'Unauthorized', message: 'Valid authentication required' },
         {
           status: 401,
-          headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
-        }
+          headers: { ...CACHE_HEADERS, 'X-Request-ID': requestId },
+        },
       );
     }
 
     // Fetch merchants with their categories
     const { data, error } = await supabase
-      .from("merchants")
+      .from('merchants')
       .select(
         `
         merchant_id,
@@ -64,18 +58,18 @@ export async function GET() {
           name,
           icon
         )
-      `
+      `,
       )
-      .order("name");
+      .order('name');
 
     if (error) {
-      console.error("[merchants] Supabase error:", error.message);
+      console.error('[merchants] Supabase error:', error.message);
       return NextResponse.json(
-        { error: "Database Error", message: "Failed to fetch merchants" },
+        { error: 'Database Error', message: 'Failed to fetch merchants' },
         {
           status: 500,
-          headers: { ...CACHE_HEADERS, "X-Request-ID": requestId },
-        }
+          headers: { ...CACHE_HEADERS, 'X-Request-ID': requestId },
+        },
       );
     }
 
@@ -84,10 +78,7 @@ export async function GET() {
       // Handle categories - take the first one if multiple exist
       let category = null;
       if (merchant.categories) {
-        if (
-          Array.isArray(merchant.categories) &&
-          merchant.categories.length > 0
-        ) {
+        if (Array.isArray(merchant.categories) && merchant.categories.length > 0) {
           category = merchant.categories[0];
         } else if (!Array.isArray(merchant.categories)) {
           category = merchant.categories;
@@ -116,16 +107,16 @@ export async function GET() {
           requestId,
         },
       },
-      { headers: { ...CACHE_HEADERS, "X-Request-ID": requestId } }
+      { headers: { ...CACHE_HEADERS, 'X-Request-ID': requestId } },
     );
   } catch (err) {
-    console.error("[merchants] Unexpected error", err);
+    console.error('[merchants] Unexpected error', err);
     return NextResponse.json(
       {
-        error: "Internal Server Error",
-        message: "An unexpected error occurred",
+        error: 'Internal Server Error',
+        message: 'An unexpected error occurred',
       },
-      { status: 500, headers: { ...CACHE_HEADERS, "X-Request-ID": requestId } }
+      { status: 500, headers: { ...CACHE_HEADERS, 'X-Request-ID': requestId } },
     );
   }
 }

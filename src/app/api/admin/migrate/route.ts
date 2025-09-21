@@ -1,19 +1,17 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse } from 'next/server';
+
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 // POST /api/admin/migrate
 // Run database migrations (for development)
 export async function POST() {
-  const supabase = createRouteHandlerClient({
-    cookies: () => cookies(),
-  });
+  const supabase = createSupabaseServerClient();
 
   try {
-    console.log("Running database migration...");
+    console.log('Running database migration...');
 
     // Add new columns to institutions table
-    const { error: institutionsError } = await supabase.rpc("sql", {
+    const { error: institutionsError } = await supabase.rpc('sql', {
       query: `
         ALTER TABLE public.institutions
           ADD COLUMN IF NOT EXISTS url text,
@@ -24,7 +22,7 @@ export async function POST() {
     });
 
     // Add new columns to accounts table
-    const { error: accountsError } = await supabase.rpc("sql", {
+    const { error: accountsError } = await supabase.rpc('sql', {
       query: `
         ALTER TABLE public.accounts
           ADD COLUMN IF NOT EXISTS subtype text,
@@ -33,7 +31,7 @@ export async function POST() {
     });
 
     // Update the view
-    const { error: viewError } = await supabase.rpc("sql", {
+    const { error: viewError } = await supabase.rpc('sql', {
       query: `
         DROP VIEW IF EXISTS public.v_accounts_with_latest_balance;
         
@@ -71,30 +69,30 @@ export async function POST() {
     });
 
     if (institutionsError || accountsError || viewError) {
-      console.error("Migration errors:", {
+      console.error('Migration errors:', {
         institutionsError,
         accountsError,
         viewError,
       });
       return NextResponse.json(
         {
-          error: "Migration failed",
+          error: 'Migration failed',
           details: { institutionsError, accountsError, viewError },
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    console.log("Migration completed successfully");
-    return NextResponse.json({ success: true, message: "Migration completed" });
+    console.log('Migration completed successfully');
+    return NextResponse.json({ success: true, message: 'Migration completed' });
   } catch (error) {
-    console.error("Migration error:", error);
+    console.error('Migration error:', error);
     return NextResponse.json(
       {
-        error: "Migration failed",
+        error: 'Migration failed',
         details: error,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

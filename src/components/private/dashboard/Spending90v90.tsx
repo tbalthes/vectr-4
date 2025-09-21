@@ -13,195 +13,6 @@ import {
 } from '@/components/ui/chart';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
-// --- Step 1: Use the realistic transaction data ---
-const transactionData = [
-  // August 2025
-  { date: '2025-08-29', amount: 2400.0 },
-  { date: '2025-08-28', amount: -42.8 },
-  { date: '2025-08-26', amount: -180.0 },
-  { date: '2025-08-23', amount: -99.0 },
-  { date: '2025-08-21', amount: -12.0 },
-  { date: '2025-08-18', amount: -260.0 },
-  { date: '2025-08-15', amount: -240.0 },
-  { date: '2025-08-15', amount: -35.5 },
-  { date: '2025-08-14', amount: -150.0 },
-  { date: '2025-08-11', amount: -75.0 },
-  { date: '2025-08-08', amount: -22.9 },
-  { date: '2025-08-07', amount: -390.0 },
-  { date: '2025-08-04', amount: -68.0 },
-  { date: '2025-08-01', amount: -105.0 },
-  // July 2025
-  { date: '2025-07-30', amount: -250.0 },
-  { date: '2025-07-29', amount: -125.0 },
-  { date: '2025-07-27', amount: -55.0 },
-  { date: '2025-07-25', amount: -310.0 },
-  { date: '2025-07-23', amount: -22.5 },
-  { date: '2025-07-21', amount: -89.0 },
-  { date: '2025-07-19', amount: -18.0 },
-  { date: '2025-07-17', amount: -175.0 },
-  { date: '2025-07-15', amount: -250.0 },
-  { date: '2025-07-15', amount: -20.0 },
-  { date: '2025-07-13', amount: -98.0 },
-  { date: '2025-07-11', amount: -45.0 },
-  { date: '2025-07-08', amount: -28.0 },
-  { date: '2025-07-07', amount: -400.0 },
-  { date: '2025-07-07', amount: -72.0 },
-  { date: '2025-07-08', amount: -19.5 },
-  { date: '2025-07-02', amount: -89.0 },
-  { date: '2025-07-02', amount: -18.0 },
-  { date: '2025-07-02', amount: -175.0 },
-  // June 2024
-  { date: '2025-06-30', amount: -250.0 },
-  { date: '2025-06-30', amount: -75.5 },
-  { date: '2025-06-29', amount: -120.0 },
-  { date: '2025-06-28', amount: -45.2 },
-  { date: '2025-06-27', amount: -15.8 },
-  { date: '2025-06-25', amount: -210.8 },
-  { date: '2025-06-24', amount: -85.6 },
-  { date: '2025-06-22', amount: -88.0 },
-  { date: '2025-06-21', amount: -35.0 },
-  { date: '2025-06-20', amount: -50.0 },
-  { date: '2025-06-18', amount: -150.0 },
-  { date: '2025-06-17', amount: -22.45 },
-  { date: '2025-06-15', amount: -250.0 },
-  { date: '2025-06-15', amount: -300.0 },
-  { date: '2025-06-14', amount: -18.9 },
-  { date: '2025-06-12', amount: -32.75 },
-  { date: '2025-06-10', amount: -12.5 },
-  { date: '2025-06-08', amount: -95.0 },
-  { date: '2025-06-07', amount: -400.0 },
-  { date: '2025-06-05', amount: -240.0 },
-  { date: '2025-06-03', amount: -65.2 },
-  { date: '2025-06-01', amount: -55.0 },
-  // May 2025
-  { date: '2025-05-30', amount: -250.0 },
-  { date: '2025-05-29', amount: -18.5 },
-  { date: '2025-05-28', amount: -78.9 },
-  { date: '2025-05-26', amount: -110.0 },
-  { date: '2025-05-24', amount: -42.0 },
-  { date: '2025-05-22', amount: -250.0 },
-  { date: '2025-05-20', amount: -15.0 },
-  { date: '2025-05-18', amount: -60.0 },
-  { date: '2025-05-15', amount: -250.0 },
-  { date: '2025-05-15', amount: -280.0 },
-  { date: '2025-05-14', amount: -33.1 },
-  { date: '2025-05-11', amount: -130.0 },
-  { date: '2025-05-09', amount: -25.0 },
-  { date: '2025-05-07', amount: -400.0 },
-  { date: '2025-05-05', amount: -90.0 },
-  { date: '2025-05-08', amount: -19.8 },
-  { date: '2025-05-01', amount: -62.3 },
-  // April 2025
-  { date: '2025-04-30', amount: -250.0 },
-  { date: '2025-04-29', amount: -125.0 },
-  { date: '2025-04-27', amount: -55.0 },
-  { date: '2025-04-25', amount: -310.0 },
-  { date: '2025-04-23', amount: -22.5 },
-  { date: '2025-04-21', amount: -89.0 },
-  { date: '2025-04-19', amount: -18.0 },
-  { date: '2025-04-17', amount: -175.0 },
-  { date: '2025-04-15', amount: 2500.0 },
-  { date: '2025-04-15', amount: -20.0 },
-  { date: '2025-04-13', amount: -98.0 },
-  { date: '2025-04-11', amount: -45.0 },
-  { date: '2025-04-08', amount: -28.0 },
-  { date: '2025-04-04', amount: -400.0 },
-  { date: '2025-04-04', amount: -72.0 },
-  { date: '2025-04-08', amount: -19.5 },
-  // March 2025
-  { date: '2025-03-31', amount: -245.0 },
-  { date: '2025-03-30', amount: -88.0 },
-  { date: '2025-03-28', amount: -12.75 },
-  { date: '2025-03-26', amount: -215.5 },
-  { date: '2025-03-23', amount: -45.0 },
-  { date: '2025-03-21', amount: -95.3 },
-  { date: '2025-03-19', amount: -32.0 },
-  { date: '2025-03-15', amount: 2450.0 },
-  { date: '2025-03-15', amount: -450.0 },
-  { date: '2025-03-12', amount: -120.0 },
-  { date: '2025-03-10', amount: -15.0 },
-  { date: '2025-03-07', amount: -380.0 },
-  { date: '2025-03-05', amount: -76.0 },
-  { date: '2025-03-08', amount: -21.25 },
-  // February 2025
-  { date: '2025-02-29', amount: -240.0 },
-  { date: '2025-02-28', amount: -42.8 },
-  { date: '2025-02-26', amount: -180.0 },
-  { date: '2025-02-23', amount: -99.0 },
-  { date: '2025-02-21', amount: -12.0 },
-  { date: '2025-02-18', amount: -260.0 },
-  { date: '2025-02-15', amount: 2400.0 },
-  { date: '2025-02-15', amount: -35.5 },
-  { date: '2025-02-14', amount: -150.0 },
-  { date: '2025-02-11', amount: -75.0 },
-  { date: '2025-02-02', amount: -22.9 },
-  { date: '2025-02-07', amount: -390.0 },
-  { date: '2025-02-04', amount: -68.0 },
-  { date: '2025-02-01', amount: -105.0 },
-];
-
-// --- Step 2: Define the data processing logic ---
-const calculateDailySpendingComparison = (data: { date: string; amount: number }[]) => {
-  const today = new Date();
-  const endDateCurrent = today;
-  const startDateCurrent = subDays(today, 89); // 90 days including today
-  const endDatePrevious = subDays(today, 90);
-  const startDatePrevious = subDays(today, 179);
-
-  // Helper to get all days in a range
-  function getDateRange(start: Date, end: Date) {
-    const arr = [];
-    const dt = new Date(start);
-    while (dt <= end) {
-      arr.push(format(dt, 'yyyy-MM-dd'));
-      dt.setDate(dt.getDate() + 1);
-    }
-    return arr;
-  }
-
-  // Aggregate spending per day for a given range
-  function spendingByDay(start: Date, end: Date) {
-    const days = getDateRange(start, end);
-    const map = days.reduce(
-      (acc, d) => {
-        acc[d] = 0;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-    data.forEach((tx) => {
-      const txDate = format(new Date(tx.date), 'yyyy-MM-dd');
-      if (tx.amount < 0 && txDate in map) {
-        map[txDate] += Math.abs(tx.amount);
-      }
-    });
-    return map;
-  }
-
-  const currentSpending = spendingByDay(startDateCurrent, endDateCurrent);
-  const previousSpending = spendingByDay(startDatePrevious, endDatePrevious);
-
-  // Build chart data for each period
-  const currentDates = getDateRange(startDateCurrent, endDateCurrent);
-  const previousDates = getDateRange(startDatePrevious, endDatePrevious);
-  const currentChartData = currentDates.map((date) => ({
-    date,
-    value: currentSpending[date] || 0,
-  }));
-  const previousChartData = previousDates.map((date) => ({
-    date,
-    value: previousSpending[date] || 0,
-  }));
-
-  return {
-    currentChartData,
-    previousChartData,
-    totalCurrent: Object.values(currentSpending).reduce((sum, val) => sum + val, 0),
-    totalPrevious: Object.values(previousSpending).reduce((sum, val) => sum + val, 0),
-  };
-};
-
-// --- Step 3: Update Chart Configuration ---
 const chartConfig = {
   current: {
     label: 'Last 90 Days',
@@ -214,7 +25,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function Spending90v90() {
-  // compute the date ranges (90-day windows) and format for API
+  // Compute the date ranges (90-day windows) and format for API
   const today = new Date();
   const startDateCurrent = subDays(today, 89);
   const endDateCurrent = today;
@@ -222,58 +33,54 @@ export function Spending90v90() {
   const endDatePrevious = subDays(today, 90);
   const fmt = (d: Date) => format(d, 'yyyy-MM-dd');
 
-  // Use the shared useAnalytics hook with explicit start/end (aggregator will return zero-filled buckets)
-  const { data: rpcCurrent } = useAnalytics('90d', fmt(startDateCurrent), fmt(endDateCurrent));
-  const { data: rpcPrevious } = useAnalytics('90d', fmt(startDatePrevious), fmt(endDatePrevious));
-
-  // fallback to local calculation if RPC not available
-  const fallback = React.useMemo(() => calculateDailySpendingComparison(transactionData), []);
-
-  if (process.env.NODE_ENV === 'development') {
-    console.debug('[Spending90v90] rpcCurrent preview', rpcCurrent?.slice?.(0, 10));
-    console.debug('[Spending90v90] rpcPrevious preview', rpcPrevious?.slice?.(0, 10));
-  }
-
-  // build chart arrays (API returns spending as numbers per day)
-  const currentChartData =
-    rpcCurrent?.length
-      ? rpcCurrent.map((r) => ({
-          date: r.bucket,
-          value: Number(r.spending ?? 0),
-        }))
-      : fallback.currentChartData;
-
-  const previousChartData =
-    rpcPrevious?.length
-      ? rpcPrevious.map((r) => ({
-          date: r.bucket,
-          value: Number(r.spending ?? 0),
-        }))
-      : fallback.previousChartData;
+  // Use the shared useAnalytics hook with explicit start/end dates
+  const {
+    data: rpcCurrent,
+    loading: loadingCurrent,
+    error: errorCurrent,
+  } = useAnalytics('90d', fmt(startDateCurrent), fmt(endDateCurrent));
+  const {
+    data: rpcPrevious,
+    loading: loadingPrevious,
+    error: errorPrevious,
+  } = useAnalytics('90d', fmt(startDatePrevious), fmt(endDatePrevious));
 
   const [activeChart, setActiveChart] = React.useState<'current' | 'previous'>('current');
 
-  const total = {
-    current:
-      rpcCurrent?.length
-        ? rpcCurrent.reduce((s, r) => s + Number(r.spending ?? 0), 0)
-        : fallback.totalCurrent,
-    previous:
-      rpcPrevious?.length
-        ? rpcPrevious.reduce((s, r) => s + Number(r.spending ?? 0), 0)
-        : fallback.totalPrevious,
-  };
+  // Build chart arrays from API data
+  const currentChartData = React.useMemo(() => {
+    if (!rpcCurrent?.length) {
+      return [];
+    }
+    return rpcCurrent.map((r) => ({
+      date: r.bucket,
+      value: Number(r.spending ?? 0),
+    }));
+  }, [rpcCurrent]);
 
-  if (process.env.NODE_ENV === 'development') {
-    console.debug('[Spending90v90] totals', {
-      current: total.current,
-      previous: total.previous,
-    });
-  }
+  const previousChartData = React.useMemo(() => {
+    if (!rpcPrevious?.length) {
+      return [];
+    }
+    return rpcPrevious.map((r) => ({
+      date: r.bucket,
+      value: Number(r.spending ?? 0),
+    }));
+  }, [rpcPrevious]);
 
-  // Pick the correct chart data and x-axis range for the selected period
+  // Calculate totals
+  const total = React.useMemo(
+    () => ({
+      current: currentChartData.reduce((sum, item) => sum + item.value, 0),
+      previous: previousChartData.reduce((sum, item) => sum + item.value, 0),
+    }),
+    [currentChartData, previousChartData],
+  );
+
+  // Pick the correct chart data for the selected period
   const chartData = activeChart === 'current' ? currentChartData : previousChartData;
-  // loading/error states are available from the hook if needed; omitted here to keep UI simple
+  const loading = activeChart === 'current' ? loadingCurrent : loadingPrevious;
+  const error = activeChart === 'current' ? errorCurrent : errorPrevious;
 
   // For legend: show the 3 months covered by the selected period
   const parseLocal = (d: string | undefined | null) => {
@@ -314,78 +121,82 @@ export function Spending90v90() {
             >
               <span className="text-xs text-muted-foreground">{chartConfig[key].label}</span>
               <span className="text-lg font-bold leading-none sm:text-3xl">
-                {total[key].toLocaleString('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                  maximumFractionDigits: 0,
-                })}
+                {loading
+                  ? '...'
+                  : total[key].toLocaleString('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                      maximumFractionDigits: 0,
+                    })}
               </span>
             </button>
           ))}
         </div>
       </CardHeader>
       <CardContent className="px-2 sm:p-6">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
-          <BarChart
-            accessibilityLayer
-            data={chartData}
-            onMouseMove={(state: unknown) => {
-              if (process.env.NODE_ENV === 'development') {
-                if (typeof state === 'object' && state !== null && 'activePayload' in state) {
-                  const s = state as Record<string, unknown>;
-                  const payload = s.activePayload as unknown[] | undefined;
-                  if (payload?.length) {
-                    console.debug('[Spending90v90] onMouseMove activePayload', payload);
-                  }
+        {loading ? (
+          <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+            Loading data...
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-[250px] text-destructive">
+            Error loading data: {String(error)}
+          </div>
+        ) : chartData.length === 0 ? (
+          <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+            No data available for this period
+          </div>
+        ) : (
+          <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
+            <BarChart accessibilityLayer data={chartData}>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                tickFormatter={(value) => {
+                  // Parse bucket (YYYY-MM-DD) as local date to avoid UTC shift
+                  const str = String(value ?? '');
+                  const date = new Date(str.includes('T') ? str : str + 'T00:00:00');
+                  return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  });
+                }}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    indicator="dot"
+                    formatter={(value) => `$${Number(value).toLocaleString()}`}
+                    labelFormatter={(value) => {
+                      // Ensure ISO bucket strings (YYYY-MM-DD) are treated as local dates
+                      const str = String(value ?? '');
+                      const date = new Date(str.includes('T') ? str : str + 'T00:00:00');
+                      return date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      });
+                    }}
+                  />
                 }
-              }
-            }}
-          >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => {
-                // Parse bucket (YYYY-MM-DD) as local date to avoid UTC shift
-                const str = String(value ?? '');
-                const date = new Date(str.includes('T') ? str : str + 'T00:00:00');
-                return date.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                });
-              }}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  indicator="dot"
-                  formatter={(value) => `$${Number(value).toLocaleString()}`}
-                  labelFormatter={(value) => {
-                    // Ensure ISO bucket strings (YYYY-MM-DD) are treated as local dates
-                    const str = String(value ?? '');
-                    const date = new Date(str.includes('T') ? str : str + 'T00:00:00');
-                    return date.toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    });
-                  }}
-                />
-              }
-            />
-            <Bar
-              dataKey="value"
-              fill="#8b5cf6" // violet-500
-              radius={4}
-              barSize={32}
-            />
-          </BarChart>
-        </ChartContainer>
-        <div className="mt-2 text-xs text-muted-foreground text-center">{legendLabel}</div>
+              />
+              <Bar
+                dataKey="value"
+                fill="#8b5cf6" // violet-500
+                radius={4}
+                barSize={32}
+              />
+            </BarChart>
+          </ChartContainer>
+        )}
+        {chartData.length > 0 && (
+          <div className="mt-2 text-xs text-muted-foreground text-center">{legendLabel}</div>
+        )}
       </CardContent>
     </Card>
   );
