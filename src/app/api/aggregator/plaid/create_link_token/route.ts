@@ -68,7 +68,7 @@ export async function POST() {
         process.env.PLAID_WEBHOOK_URL ||
         `${process.env.NEXT_PUBLIC_APP_URL}/api/aggregator/webhook`,
       transactions: {
-        days_requested: 730, // Maximum transaction history (2 years)
+        days_requested: 20, // Maximum transaction history (70 days)
       },
     };
 

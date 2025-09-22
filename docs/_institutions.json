@@ -1,0 +1,116 @@
+{ "institutions": [
+        {
+            "country_codes": [
+                "US"
+            ],
+            "institution_id": "institutions.institution_id", "ins_102428"
+            "name": "institutions.name", "Delta Schools Federal Credit Union" 
+            "oauth": "institutions.oauth", "true" 
+            "products": "institutions.products" 
+              jsonb[
+                "assets",
+                "auth",
+                "balance",
+                "cra_lend_score",
+                "cra_plaid_credit_score",
+                "identity",
+                "identity_match",
+                "income_verification",
+                "investments",
+                "liabilities",
+                "pay_by_bank",
+                "processor_payments",
+                "recurring_transactions",
+                "signal",
+                "transactions"
+            ],
+            "routing_numbers": "institutions.routing_numbers" 
+              jsonb[
+                "321171391"
+            ]
+        }
+    ],
+  "accounts": [
+    {
+      "account_id": "accounts.aggregator_account_id", "LDrK7y8JxjuxvWl56XGptN61oMmNxdukXoXjd" <-- FKEY
+      "balances": {
+        "available": "balances.available", "745.85"
+        "current": "balances.balance_amount", "750.85"
+        "iso_currency_code": "accounts.currency", "USD"
+        "limit": "balances.limit", "1,000.00"
+        "unofficial_currency_code": "accounts.currency" if and only if iso_currency_code=NULL 
+      },
+      "holder_category": "accounts.holder_category", "personal"
+      "mask": "accounts.mask", "6641"
+      "name": "accounts.name", "Checking"
+      "official_name": "accounts.official_name", "Plaid checking"
+      "subtype": "accounts.subtype", "checking"
+      "type": "accounts.type", "depository"
+    }
+  ],
+  "added": [
+    {
+      "account_id": "accounts.aggregator_account_id", "LDrK7y8JxjuxvWl56XGptN61oMmNxdukXoXjd" <-- FKEY
+      "account_owner": null,
+      "amount": "transctions.amount", "-810"
+      "authorized_date": "transctions.authorized_date", "2025-08-22"
+      "authorized_datetime": null,
+      "category": null,
+      "category_id": null,
+      "check_number": "transactions.check_number",
+      "counterparties": [
+        {
+          "confidence_level": "merchants.confidence_level_category", "VERY_HIGH"
+          "entity_id": "merchants.aggregator_merchant_id", "Do7pjknKqXrQkMr7qdV9JXrQ3Em8nzny5rOE1" if NULL then next see below
+          "logo_url": "merchants.logo_url", "https://plaid-merchant-logos.plaid.com/sweetgreen_986.png" if NULL then next see below
+          "name": "merchants.merchant_name", "Sweetgreen" if NULL then next see below
+          "phone_number": "merchants.merchant_phone", if NULL then next see below
+          "type": "merchants.merchant_type", "merchant" if NULL then next see below
+          "website":"merchants.merchant_website", "sweetgreen.com" if NULL then next see below
+        }
+      ],
+      "date": "transactions.transaction_date", "2025-08-22" iff auth date is NULL
+      "datetime": null,
+      "iso_currency_code": "transactions.iso_currency_code", "USD"
+      "location": merchants.location 
+        jsonb{
+        "address": null,
+        "city": null,
+        "country": null,
+        "lat": null,
+        "lon": null,
+        "postal_code": null,
+        "region": null,
+        "store_number": null
+      },
+      "logo_url": "merchants.logo_url", "https://plaid-merchant-logos.plaid.com/sweetgreen_986.png"
+      "merchant_entity_id": same as counterparty "entity_id" if NULL,  "Do7pjknKqXrQkMr7qdV9JXrQ3Em8nzny5rOE1"
+      "merchant_name": same as counterparty "Sweetgreen" if NULL,
+      "name": "transactions.original_description" , "Sweetgreen inc payroll ppd id"
+      "payment_channel": "transactions.payment_channel", "other"
+      "payment_meta": "transactions.payment_meta" 
+        jsonb if not null {
+        "by_order_of": null,
+        "payee": null,
+        "payer": null,
+        "payment_method": null,
+        "payment_processor": null,
+        "ppd_id": null,
+        "reason": null,
+        "reference_number": null
+      },
+      "pending": "transactions.pending" , "false"
+      "pending_transaction_id": null,
+      "personal_finance_category": {
+        "confidence_level": "transactions.confidence_level_category", "VERY_HIGH"
+        "detailed": "FOOD_AND_DRINK_RESTAURANT",
+        "primary": "FOOD_AND_DRINK"
+      },
+      "personal_finance_category_icon_url": "https://plaid-category-icons.plaid.com/PFC_FOOD_AND_DRINK.png",
+      "transaction_code": null,
+      "transaction_id": "EDpmxEZJlNuBpey5M7awTgoPx5191gT4e96ox",
+      "transaction_type": "place",
+      "unofficial_currency_code": null,
+      "website": "sweetgreen.com"
+    }
+  ]}

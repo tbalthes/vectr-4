@@ -1,15 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Body, Query
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
-import uuid
-import json
-import requests
+from fastapi import APIRouter, Depends, HTTPException, Request
+from typing import Any
 import os
-from datetime import datetime, date
+import requests
 
 # Import dependencies
 from ..dependencies import get_supabase_client
-from core.plaid_transaction_processor import PlaidTransactionProcessor, TransactionSource
 
 router = APIRouter(
     prefix="/plaid",
@@ -21,104 +16,61 @@ router = APIRouter(
     summary="Plaid webhook endpoint",
     description="Receives and processes Plaid webhooks for real-time transaction updates"
 )
-async def plaid_webhook(request: Request):
-    """Plaid webhook handler that processes transactions through clean processor."""
+async def plaid_webhook(request: Request, supabase=Depends(get_supabase_client)):
+    """
+    Plaid webhook handler that processes transactions by calling the Next.js sync endpoint.
+    """
     try:
-        print("🔗 Webhook received - parsing JSON...")
         data = await request.json()
         webhook_type = data.get("webhook_type")
-        webhook_code = data.get("webhook_code") 
+        webhook_code = data.get("webhook_code")
         item_id = data.get("item_id")
-        
-        print(f"✅ Webhook parsed: {webhook_type}.{webhook_code} for item {item_id}")
-        
-        # Only process transaction webhooks
+
         if webhook_type != "TRANSACTIONS":
-            print(f"⏭️ Ignoring {webhook_type} webhook")
-            return {"status": "acknowledged", "message": f"Ignored {webhook_type} webhook"}
-        
-        print("🔌 Creating Supabase client...")
-        # Create Supabase client directly (avoid dependency injection for webhooks)
-        try:
-            from supabase_client.client import get_supabase_client
-            supabase = get_supabase_client()
-            print("✅ Supabase client created")
-        except Exception as client_error:
-            print(f"❌ Failed to create Supabase client: {client_error}")
-            return {"status": "error", "message": f"Database client failed: {str(client_error)}"}
-        
-        print(f"🔍 Looking up account link for item_id: {item_id}")
+            return {"status": "acknowledged", "message": f"Ignoring {webhook_type} webhook"}
+
         # Find user and access token for this item_id
-        account_link = supabase.table("account_links").select(
+        account_link_resp = supabase.table("account_links").select(
             "user_id, access_token_encrypted"
-        ).eq("item_id", item_id).execute()
-        
-        if not account_link.data:
-            print(f"❌ No account link found for item_id: {item_id}")
-            return {"status": "error", "message": f"No account link found for item_id: {item_id}"}
-        
-        user_id = account_link.data[0]['user_id']
-        access_token = account_link.data[0]['access_token_encrypted']
-        
-        print(f"✅ Found user {user_id} for {webhook_code}")
-        
+        ).eq("item_id", item_id).single().execute()
+
+        if not account_link_resp.data:
+            raise HTTPException(status_code=404, detail=f"No account link found for item_id: {item_id}")
+
+        user_id = account_link_resp.data['user_id']
+        access_token = account_link_resp.data['access_token_encrypted']
+
         # Call the Next.js sync endpoint to get the actual transactions
-        print("📡 Calling Next.js sync endpoint...")
-        import requests
-        sync_url = "http://localhost:3000/api/aggregator/plaid/transactions/sync"
+        sync_url = os.getenv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000") + "/api/aggregator/plaid/transactions/sync"
         
         sync_payload = {
             "user_id": user_id,
             "access_token": access_token,
             "cursor": None,  # Start fresh for webhook-triggered syncs
-            "count": 500
         }
         
-        # Get the Supabase service role key from environment
-        import os
         service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
-        
-        # Add service authentication headers
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {service_key}",
-            "x-user-id": user_id
+            "x-user-id": str(user_id)
         }
         
-        print(f"Calling sync endpoint for user {user_id}")
         response = requests.post(sync_url, json=sync_payload, headers=headers, timeout=30)
-        
-        if response.status_code == 200:
-            sync_result = response.json()
-            return {
-                "status": "processed",
-                "message": f"Successfully synced transactions for {webhook_code}",
-                "sync_result": {
-                    "transactions_added": sync_result.get("added", 0),
-                    "transactions_modified": sync_result.get("modified", 0),
-                    "transactions_removed": sync_result.get("removed", 0)
-                }
+        response.raise_for_status()  # Raise an exception for bad status codes
+
+        sync_result = response.json()
+        return {
+            "status": "processed",
+            "message": f"Successfully synced transactions for {webhook_code}",
+            "sync_result": {
+                "added": sync_result.get("added", 0),
+                "modified": sync_result.get("modified", 0),
+                "removed": sync_result.get("removed", 0)
             }
-        else:
-            print(f"Sync endpoint failed: {response.status_code} - {response.text}")
-            return {"status": "error", "message": f"Sync failed: {response.text}"}
+        }
         
     except Exception as e:
-        print(f"❌ Error processing webhook: {e}")
-        import traceback
-        traceback.print_exc()
-        return {"status": "error", "message": f"Failed to process webhook: {str(e)}"}
-
-
-@router.post(
-    "/test",
-    summary="Test endpoint", 
-    description="Test POST endpoint"
-)
-async def test_endpoint(request: Request):
-    """Test POST endpoint."""
-    try:
-        data = await request.json()
-        return {"received": True, "status": "ok", "echo": data}
-    except Exception as e:
-        return {"error": str(e)}
+        # Log the error for debugging
+        print(f"Error processing webhook: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process webhook: {str(e)}")

@@ -21,6 +21,7 @@ import type { NextRequest } from 'next/server';
 
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { calculateDateRange, validateAnalyticsParams } from '@/lib/analytics/calculateDateRange';
+import { getCachedUser } from '@/lib/auth-cache';
 
 // Type definitions for API contract
 interface AggregateRow {
@@ -88,9 +89,9 @@ export async function GET(request: NextRequest) {
       // ignore
     }
 
-    // Verify authentication
-    const { data: userData, error: authError } = await supabase.auth.getUser();
-    if (authError || !userData?.user) {
+    // Verify authentication using cache to reduce auth calls
+    const { user: userData, error: authError } = await getCachedUser(supabase, requestId);
+    if (authError || !userData) {
       return NextResponse.json(
         {
           error: 'Unauthorized',
@@ -144,7 +145,7 @@ export async function GET(request: NextRequest) {
       p_start: dateRange.startDate.toISOString(),
       p_end: dateRange.endDate.toISOString(),
       p_granularity: finalGranularity,
-      p_user: userData.user.id,
+      p_user: userData.id,
     };
 
     // DEBUG: print env + request id

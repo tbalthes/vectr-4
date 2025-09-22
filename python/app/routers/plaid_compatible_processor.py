@@ -4,13 +4,15 @@ This extends your existing Plaid integration (/api/aggregator/plaid/*) to proces
 transactions through the unified transaction processor.
 """
 
+import sentry_sdk
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 
 from ..dependencies import get_supabase_client, get_data_cache
-from core.plaid_transaction_processor import PlaidTransactionProcessor, TransactionSource
+from core.plaid_transaction_processor import PlaidTransactionProcessor
+from core.logger import setup_transaction_logger
 
 router = APIRouter(
     prefix="/plaid-processor",
@@ -64,8 +66,10 @@ def process_plaid_transaction_batch(
     - institutions table with Plaid provider
     - accounts table
     """
+    logger, log_filename = setup_transaction_logger()
+    logger.info(f"Starting Plaid transaction batch processing for user {request.user_id}")
     try:
-        processor = PlaidTransactionProcessor(data_cache)
+        processor = PlaidTransactionProcessor(data_cache, supabase)
         
         total_processed = 0
         total_added = 0
@@ -74,8 +78,8 @@ def process_plaid_transaction_batch(
         errors = []
         
         # Verify the account belongs to the user
-        account_check = supabase.table("accounts").select("id, user_id").eq(
-            "id", request.internal_account_id
+        account_check = supabase.table("accounts").select("account_id, user_id").eq(
+            "account_id", request.internal_account_id
         ).eq("user_id", request.user_id).execute()
         
         if not account_check.data:
@@ -100,10 +104,10 @@ def process_plaid_transaction_batch(
                     "pending": tx_data.pending
                 }
                 
+                logger.info(f"Processing transaction {tx_data.transaction_id}")
                 # Process through unified processor
                 processed_tx = processor.process_transaction(
-                    transaction_data=transaction_input,
-                    source=TransactionSource.PLAID
+                    transaction_data=transaction_input
                 )
                 
                 # Check if transaction already exists
@@ -129,6 +133,7 @@ def process_plaid_transaction_batch(
                     ).execute()
                     
                     total_updated += 1
+                    logger.info(f"Updated existing transaction {tx_data.transaction_id}")
                 else:
                     # Insert new transaction
                     transaction_record = {
@@ -148,20 +153,24 @@ def process_plaid_transaction_batch(
                     
                     supabase.table("transactions").insert(transaction_record).execute()
                     total_added += 1
+                    logger.info(f"Added new transaction {tx_data.transaction_id}")
                 
                 total_processed += 1
                 
                 # Count transactions with merchant matches
                 if processed_tx.get('merchant_id'):
                     total_with_merchants += 1
+                    logger.info(f"Transaction {tx_data.transaction_id} matched to merchant {processed_tx.get('merchant_id')}")
                 
             except Exception as tx_error:
+                sentry_sdk.capture_exception(tx_error)
                 errors.append({
                     "transaction_id": tx_data.transaction_id,
                     "error": str(tx_error)
                 })
-                print(f"❌ Transaction processing error: {tx_error}")
+                logger.error(f"Transaction processing error for {tx_data.transaction_id}: {tx_error}")
         
+        logger.info(f"Finished batch processing. Processed: {total_processed}, Added: {total_added}, Updated: {total_updated}, Errors: {len(errors)}")
         return PlaidProcessingResponse(
             success=len(errors) == 0,
             transactions_processed=total_processed,
@@ -173,7 +182,8 @@ def process_plaid_transaction_batch(
         )
         
     except Exception as e:
-        print(f"❌ Plaid transaction processing error: {e}")
+        sentry_sdk.capture_exception(e)
+        logger.error(f"Plaid transaction processing error: {e}")
         raise HTTPException(
             status_code=500, 
             detail=f"Failed to process Plaid transactions: {str(e)}"
@@ -208,7 +218,7 @@ def get_plaid_processing_stats(
         if user_id:
             # Get user's Plaid accounts using your existing structure
             plaid_accounts = supabase.table("accounts").select(
-                "id, name, provider, aggregator_account_id, institution_id"
+                "account_id, name, provider, aggregator_account_id, institution_id"
             ).eq("user_id", user_id).eq("provider", "plaid").execute()
             
             # Get Plaid transactions count
@@ -247,18 +257,12 @@ def get_user_plaid_accounts(
         # Get Plaid accounts with institution info using your existing structure
         accounts = supabase.table("accounts").select(
             """
-            id,
+            account_id,
             name,
             provider,
             aggregator_account_id,
             institution_id,
-            created_at,
-            institutions (
-                id,
-                name,
-                provider,
-                logo_url
-            )
+            created_at
             """
         ).eq("user_id", user_id).eq("provider", "plaid").execute()
         

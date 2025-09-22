@@ -299,7 +299,10 @@ export function AddManualAccountModal({
                   <SelectContent>
                     <SelectItem value="">No institution</SelectItem>
                     {institutions.map((institution) => (
-                      <SelectItem key={institution.id} value={institution.id}>
+                      <SelectItem
+                        key={institution.id ?? institution.name}
+                        value={institution.id ?? ''}
+                      >
                         {institution.name}
                       </SelectItem>
                     ))}

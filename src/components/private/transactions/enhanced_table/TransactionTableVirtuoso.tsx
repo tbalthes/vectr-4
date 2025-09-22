@@ -8,23 +8,23 @@ import { TransactionRow } from './TransactionRow';
 // CardNp and CardNpContent imports are not used in this component. Kept commented for future layout.
 // import { CardNp, CardNpContent } from "@/components/ui/card-zero-pad";
 import type { FormattedTransaction } from '@/types/transactions';
-import type { TransactionItem, DateHeader } from '@/hooks/useInfiniteTransactions';
+import type { DateHeader, GroupedTransactionItem } from '@/hooks/useInfiniteTransactions';
 
 interface TransactionTableVirtuosoProps {
-  transactions: TransactionItem[];
+  transactions: GroupedTransactionItem[];
   className?: string;
   onEdit: (transaction: FormattedTransaction) => void;
   onDelete: (transaction: FormattedTransaction) => void;
   onUpdateNote?: (transactionId: string, note: string) => Promise<void>;
   loadMore?: () => void;
   isReachingEnd?: boolean;
-  isLoadingMore?: boolean;
+  isLoading?: boolean;
   onOpenDetails?: (transactionId: string) => void;
 }
 
 // Helper function to check if item is a date header
-const isDateHeader = (item: TransactionItem): item is DateHeader => {
-  return 'type' in item && item.type === 'date-header';
+const isDateHeader = (item: GroupedTransactionItem): item is DateHeader => {
+  return (item as DateHeader).type === 'date-header';
 };
 
 // Date Header Component - returns cells for Virtuoso
@@ -47,7 +47,7 @@ const DateHeaderRow = ({ dateHeader }: { dateHeader: DateHeader }) => {
             {dateHeader.displayDate}
           </div>
           <div className="text-xs font-medium text-foreground dark:text-foreground">
-            {formatAmount(dateHeader.dailyTotal)}
+            {formatAmount(dateHeader.dailyTotal ?? 0)}
           </div>
         </div>
       </td>
@@ -63,19 +63,18 @@ export function TransactionTableVirtuoso({
   onUpdateNote,
   loadMore,
   isReachingEnd,
-  isLoadingMore,
+  isLoading,
   onOpenDetails,
 }: TransactionTableVirtuosoProps) {
   console.log('TransactionTableVirtuoso render:', {
     transactionsCount: transactions.length,
     hasTransactions: transactions.length > 0,
     firstItem: transactions[0]
-      ? {
-          id: isDateHeader(transactions[0]) ? transactions[0].id : transactions[0].id,
-          type: isDateHeader(transactions[0]) ? 'date-header' : 'transaction',
-        }
+      ? isDateHeader(transactions[0])
+        ? { id: transactions[0].id, type: 'date-header' }
+        : { id: transactions[0].data.transactionId, type: 'transaction' }
       : null,
-    isLoadingMore,
+    isLoading,
     isReachingEnd,
     loadMore: !!loadMore,
     transactionsArray: transactions,
@@ -145,15 +144,16 @@ export function TransactionTableVirtuoso({
         itemContent={(index, item) => {
           if (isDateHeader(item)) {
             console.log(`Rendering date header ${index}:`, item.displayDate);
-            return <DateHeaderRow key={item.id} dateHeader={item} />;
+            return <DateHeaderRow key={item.id ?? `date-header-${index}`} dateHeader={item} />;
           }
 
-          const transaction = item;
-          console.log(`Rendering transaction ${index}:`, transaction.description);
+          // item is TransactionItem here (narrowed by isDateHeader above)
+          const tx = item.data;
+          console.log(`Rendering transaction ${index}:`, tx.description);
           return (
             <TransactionRow
-              key={transaction.id}
-              transaction={transaction}
+              key={tx.transactionId}
+              transaction={tx}
               onEdit={onEdit}
               onDelete={onDelete}
               onUpdateNote={onUpdateNote}
@@ -166,11 +166,11 @@ export function TransactionTableVirtuoso({
           console.log('Virtuoso endReached called:', {
             hasLoadMore: !!loadMore,
             isReachingEnd,
-            isLoadingMore,
+            isLoading,
             currentTransactionCount: transactions.length,
           });
 
-          if (loadMore && !isReachingEnd && !isLoadingMore) {
+          if (loadMore && !isReachingEnd && !isLoading) {
             console.log('Virtuoso: Loading more transactions...');
             // Add 400ms delay before loading more transactions
             setTimeout(() => {
@@ -186,17 +186,17 @@ export function TransactionTableVirtuoso({
         totalCount={transactions.length}
       />
 
-      {transactions.length === 0 && !isLoadingMore && (
+      {transactions.length === 0 && !isLoading && (
         <div className="flex justify-center py-8 text-muted-foreground">No transactions found</div>
       )}
 
-      {isLoadingMore && (
+      {isLoading && (
         <div className="flex justify-center py-4 text-muted-foreground">
           Loading more transactions...
         </div>
       )}
 
-      {!isLoadingMore && isReachingEnd && transactions.length > 0 && (
+      {!isLoading && isReachingEnd && transactions.length > 0 && (
         <div className="flex justify-center py-4 text-muted-foreground">
           All transactions loaded ({transactions.length} total)
         </div>

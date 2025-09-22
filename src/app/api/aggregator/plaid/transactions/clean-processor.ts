@@ -113,14 +113,14 @@ export interface ProcessedTransaction {
   pending: boolean;
   primary_category: string | null;
   detailed_category: string | null;
-  confidence_level_category: string | null;
+  category_confidence_level: string | null;
 
   // Counterparty/merchant fields - from counterparties[0] if confidence = VERY_HIGH
   transaction_type: string | null;
   merchant_name: string | null;
   logo_url: string | null;
   confidence_level_merchant: string | null;
-  website_url: string | null;
+  website: string | null;
   plaid_entity_id: string | null;
 
   // Foreign keys for existing tables
@@ -138,7 +138,6 @@ export interface ProcessedTransaction {
  * Maps Plaid transaction data 1:1 to database schema
  */
 export class CleanPlaidTransactionProcessor {
-   
   private supabase: any; // Using any to avoid complex Supabase typing issues
 
   constructor() {
@@ -166,7 +165,7 @@ export class CleanPlaidTransactionProcessor {
       pending: plaidTransaction.pending,
       primary_category: plaidTransaction.personal_finance_category?.primary || null,
       detailed_category: plaidTransaction.personal_finance_category?.detailed || null,
-      confidence_level_category:
+      category_confidence_level:
         plaidTransaction.personal_finance_category?.confidence_level || null,
       account_id: plaidTransaction.account_id,
       plaid_transaction_id: plaidTransaction.transaction_id,
@@ -177,7 +176,7 @@ export class CleanPlaidTransactionProcessor {
       merchant_name: null,
       logo_url: null,
       confidence_level_merchant: null,
-      website_url: null,
+      website: null,
       plaid_entity_id: null,
       merchant_id: null,
       category_id: null,
@@ -188,7 +187,7 @@ export class CleanPlaidTransactionProcessor {
     if (counterparty) {
       baseTransaction.transaction_type = counterparty.type;
       baseTransaction.confidence_level_merchant = counterparty.confidence_level;
-      baseTransaction.website_url = counterparty.website;
+      baseTransaction.website = counterparty.website;
       baseTransaction.plaid_entity_id = counterparty.entity_id;
 
       // Handle merchant matching based on confidence level
@@ -422,12 +421,14 @@ export class CleanPlaidTransactionProcessor {
       // Map Plaid account ID to internal account ID
       const { data: accountMapping } = await this.supabase
         .from('accounts')
-        .select('id')
+        .select('account_id')
         .eq('aggregator_account_id', transaction.account_id)
         .eq('user_id', userId)
         .single();
 
-      if (!accountMapping) {
+      const internalAccountId = (accountMapping as { account_id?: string } | null)?.account_id;
+
+      if (!internalAccountId) {
         console.error('❌ No internal account found for Plaid account:', transaction.account_id);
         return false;
       }
@@ -435,7 +436,7 @@ export class CleanPlaidTransactionProcessor {
       const { error } = await this.supabase.from('transactions').upsert(
         {
           user_id: userId,
-          account_id: accountMapping.id, // Use internal UUID, not Plaid account ID
+          account_id: internalAccountId, // Use internal UUID, not Plaid account ID
           merchant_id: transaction.merchant_id,
           category_id: transaction.category_id,
           date: transaction.date,
@@ -445,16 +446,17 @@ export class CleanPlaidTransactionProcessor {
           pending: transaction.pending,
           primary_category: transaction.primary_category,
           detailed_category: transaction.detailed_category,
-          confidence_level_category: transaction.confidence_level_category,
+          category_confidence_level: transaction.category_confidence_level,
           transaction_type: transaction.transaction_type,
           merchant_name: transaction.merchant_name,
           logo_url: transaction.logo_url,
-          confidence_level_merchant: transaction.confidence_level_merchant,
-          website_url: transaction.website_url,
+          // confidence_level_merchant is not a DB column; include in metadata only
+          website: transaction.website,
           plaid_entity_id: transaction.plaid_entity_id,
           aggregator_transaction_id: transaction.plaid_transaction_id,
           user_metadata: {
             plaid_data: transaction.plaid_data,
+            confidence_level_merchant: transaction.confidence_level_merchant,
             processed_at: new Date().toISOString(),
           },
           needs_review: transaction.confidence_level_merchant === 'LOW' || !transaction.merchant_id,

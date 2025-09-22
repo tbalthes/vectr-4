@@ -104,7 +104,7 @@ export async function POST(req: Request) {
     let institutionRecord = null;
     if (institution) {
       console.log('Institution data to store:', {
-        id: institution.institution_id,
+        institution_id: institution.institution_id,
         name: institution.name,
         logo_url: institution.logo || null,
         has_logo: !!institution.logo,
@@ -114,18 +114,18 @@ export async function POST(req: Request) {
       const { data: existingInstitution } = await supabase
         .from('institutions')
         .select()
-        .eq('id', institution.institution_id)
+        .eq('institution_id', institution.institution_id)
         .single();
 
       if (existingInstitution) {
-        console.log('Institution already exists:', existingInstitution.id);
+        console.log('Institution already exists:', existingInstitution.institution_id);
         institutionRecord = existingInstitution;
       } else {
         // Create new institution with Plaid ID
         const { data, error } = await supabase
           .from('institutions')
           .insert({
-            id: institution.institution_id, // Use Plaid institution ID directly
+            institution_id: institution.institution_id, // Use Plaid institution ID directly
             provider: 'plaid',
             name: institution.name,
             logo_url: institution.logo || null,
@@ -144,20 +144,25 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: error.message }, { status: 500 });
         }
         institutionRecord = data;
-        console.log('Institution stored successfully:', institutionRecord.id);
+        console.log('Institution stored successfully:', institutionRecord.institution_id);
       }
     }
 
     // Store account_link (encrypted access token)
     console.log('Storing account link in database...');
-    const { error: linkError } = await supabase.from('account_links').insert({
-      user_id: userData.user.id,
-      provider: 'plaid',
-      item_id,
-      access_token_encrypted: access_token, // TODO: Encrypt this in production
-      status: 'active',
-      last_synced_at: new Date().toISOString(),
-    });
+    const { data: accountLinkData, error: linkError } = await supabase
+      .from('account_links')
+      .insert({
+        user_id: userData.user.id,
+        provider: 'plaid',
+        item_id,
+        access_token_encrypted: access_token, // TODO: Encrypt this in production
+        status: 'active',
+        last_synced_at: new Date().toISOString(),
+        institution_id: institutionRecord?.institution_id || null,
+      })
+      .select()
+      .single();
 
     if (linkError) {
       console.error('Account link insert error:', linkError);
@@ -171,14 +176,14 @@ export async function POST(req: Request) {
       user_id: userData.user.id,
       name: account.name,
       mask: account.mask || null,
-      type: account.type.toLowerCase(),
+      type: account.type?.toLowerCase?.() || account.type,
       subtype: account.subtype || null,
+      official_name: account.official_name || null,
       currency: account.balances.iso_currency_code || 'USD',
       provider: 'plaid',
       aggregator_account_id: account.account_id,
-      institution_id: institutionRecord?.id || null,
-      plaid_access_token: access_token, // Add the access token for each account
-      last_synced_at: new Date().toISOString(),
+      account_link_id: accountLinkData.id,
+      institution_id: institutionRecord?.institution_id || null,
     }));
 
     console.log('Accounts to insert:', accountsToInsert.length);
@@ -195,23 +200,53 @@ export async function POST(req: Request) {
 
     // Store balances
     console.log('Storing balances in database...');
-    const balancesToInsert =
-      createdAccounts?.map((account, index) => {
-        const plaidAccount = plaidAccounts[index];
+    // Build a lookup to ensure we map the right Plaid account to the created DB account by aggregator_account_id
+    const plaidById = new Map(plaidAccounts.map((p) => [p.account_id, p] as const));
+    const balancesToInsert = (createdAccounts || [])
+      .map((account) => {
+        const dbAcc = account as unknown as { account_id: string; aggregator_account_id?: string };
+        const plaidAcc = plaidById.get(dbAcc.aggregator_account_id || '');
+        if (!plaidAcc) {
+          return null;
+        }
         return {
-          account_id: account.id,
-          balance_amount: plaidAccount.balances.current || 0,
-          available: plaidAccount.balances.available || plaidAccount.balances.current || 0,
+          account_id: dbAcc.account_id,
+          current: plaidAcc.balances.current ?? 0,
+          available: plaidAcc.balances.available ?? plaidAcc.balances.current ?? 0,
+          iso_currency_code: plaidAcc.balances.iso_currency_code || 'USD',
           as_of: new Date().toISOString(),
         };
-      }) || [];
+      })
+      .filter(Boolean) as {
+      account_id: string;
+      current: number;
+      available: number;
+      iso_currency_code: string;
+      as_of: string;
+    }[];
 
     if (balancesToInsert.length > 0) {
       const { error: balancesError } = await supabase.from('balances').insert(balancesToInsert);
 
       if (balancesError) {
         console.error('Balances insert error:', balancesError);
-        console.warn('Failed to create balances, but continuing...');
+        console.warn('Falling back to updating accounts current/available balances...');
+
+        // Fallback: update accounts table balances if balances table insert fails
+        for (const b of balancesToInsert) {
+          const { error: acctUpdateError } = await supabase
+            .from('accounts')
+            .update({
+              current_balance: b.current,
+              available_balance: b.available,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('account_id', b.account_id);
+
+          if (acctUpdateError) {
+            console.warn('Accounts balance update failed for', b.account_id, acctUpdateError);
+          }
+        }
       } else {
         console.log('Balances stored successfully, count:', balancesToInsert.length);
       }
@@ -232,7 +267,7 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             user_id: userData.user.id, // ADD THIS - was missing!
             access_token,
-            count: 500, // Get more transactions on initial sync
+            count: 50, // Get more transactions on initial sync
           }),
         },
       );

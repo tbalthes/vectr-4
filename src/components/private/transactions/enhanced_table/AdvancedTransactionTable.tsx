@@ -71,7 +71,7 @@ export function AdvancedTransactionTable({
   const uniqueCategories = useMemo(() => {
     const categories = Array.from(
       new Set(transactions.map((t) => t.categoryName))
-    );
+    ).filter((c): c is string => typeof c === "string" && c !== null);
     return categories.sort();
   }, [transactions]);
 
@@ -87,10 +87,10 @@ export function AdvancedTransactionTable({
         transaction.originalDescription
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        transaction.merchantName
+        (transaction.merchantName ?? "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        transaction.transaction_number
+        transaction.transactionId
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
 
@@ -132,8 +132,8 @@ export function AdvancedTransactionTable({
           bValue = b.description.toLowerCase();
           break;
         case "categoryName":
-          aValue = a.categoryName.toLowerCase();
-          bValue = b.categoryName.toLowerCase();
+          aValue = (a.categoryName ?? "").toLowerCase();
+          bValue = (b.categoryName ?? "").toLowerCase();
           break;
         default:
           aValue = a.date;
@@ -376,7 +376,7 @@ export function AdvancedTransactionTable({
                 <TableBody>
                   {paginatedTransactions.map((transaction, index) => (
                     <TransactionRow
-                      key={transaction.id}
+                      key={transaction.transactionId}
                       transaction={transaction}
                       onEdit={onEdit}
                       onDelete={onDelete}

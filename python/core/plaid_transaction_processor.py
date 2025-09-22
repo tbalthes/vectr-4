@@ -1,520 +1,271 @@
 """
-Enhanced unified transaction processor for both Plaid and CSV data sources.
-This processor maintains backward compatibility with existing merchant references
-while adding support for Plaid's merchant data enrichment.
+Unified transaction processor for Plaid data source.
+This processor is designed to work with the new database schema,
+focusing on processing Plaid transactions and enriching them with
+merchant and category data.
 """
 
-from typing import Dict, Any, Optional, Literal
-import re
+from typing import Dict, Any, Optional
 from enum import Enum
+import re
 
 class TransactionSource(str, Enum):
     """Enumeration of transaction data sources"""
     PLAID = "plaid"
-    CSV = "csv" 
-    MANUAL = "manual"
 
 class PlaidTransactionProcessor:
     """
-    Unified transaction processor that handles:
-    1. Plaid transactions with merchant_name field
-    2. CSV uploads with description parsing
-    3. Manual entries with user-specified data
-    
-    Maintains all existing merchant relationships and references.
+    Processes Plaid transactions, enriches them with merchant and category data,
+    and prepares them for insertion into the database.
     """
     
-    def __init__(self, data_cache):
-        """Initialize with data cache containing merchants, categories, etc."""
-        self.data_cache = data_cache
-    
-    def process_transaction(
-        self, 
-        transaction_data: Dict[str, Any], 
-        source: TransactionSource = TransactionSource.CSV,
-        user_rules: Optional[list] = None
-    ) -> Dict[str, Any]:
+    def __init__(self, data_cache, supabase_client):
         """
-        Main entry point for processing transactions from any source.
+        Initialize with data cache and Supabase client.
+        """
+        self.data_cache = data_cache
+        self.supabase = supabase_client
+    
+    def process_transactions_batch(self, transactions: list[Dict[str, Any]], user_id: str) -> list[Dict[str, Any]]:
+        """
+        Main entry point for processing a batch of Plaid transactions.
+        """
+        if not transactions:
+            return []
+
+        # 1. Batch fetch all required data
+        account_id_map = self._get_account_id_map(transactions, user_id)
+
+        # 2. Process each transaction using the cached data
+        processed_transactions = []
+        for transaction_data in transactions:
+            try:
+                processed_transaction = self._process_single_transaction(transaction_data, account_id_map)
+                processed_transactions.append(processed_transaction)
+            except Exception as e:
+                print(f"Error processing transaction {transaction_data.get('transaction_id')}: {e}")
+                fallback_record = self._create_fallback_response(transaction_data)
+                processed_transactions.append(fallback_record)
         
-        Args:
-            transaction_data: Raw transaction data
-            source: Source of the transaction (plaid, csv, manual)
-            user_rules: User-defined rules for categorization
-            
-        Returns:
-            Enriched transaction with merchant_id, category_id, etc.
+        return processed_transactions
+
+    def _get_account_id_map(self, transactions: list[Dict[str, Any]], user_id: str) -> Dict[str, str]:
+        """
+        Fetches all necessary accounts from the database in a single batch
+        and returns a map of Plaid account ID to internal account ID.
+        """
+        plaid_account_ids = {t['account_id'] for t in transactions if isinstance(t, dict) and 'account_id' in t}
+        if not plaid_account_ids:
+            return {}
+
+        response = self.supabase.table('accounts').select('account_id, aggregator_account_id') \
+            .in_('aggregator_account_id', list(plaid_account_ids)) \
+            .eq('user_id', user_id) \
+            .execute()
+
+        if response.data:
+            return {
+                account['aggregator_account_id']: account['account_id']
+                for account in response.data
+                if account.get('aggregator_account_id') and account.get('account_id')
+            }
+
+        return {}
+
+    def _process_single_transaction(self, transaction_data: Dict[str, Any], account_id_map: Dict[str, str]) -> Dict[str, Any]:
+        """
+        Processes a single transaction using pre-fetched data.
+        """
+        # 1. Extract key fields
+        original_description = transaction_data.get('name', '')
+        plaid_merchant_name = transaction_data.get('merchant_name')
+        counterparties = transaction_data.get('counterparties', [])
+        
+        # 2. Determine the best merchant name
+        merchant_name = self._get_best_merchant_name(plaid_merchant_name, counterparties, original_description)
+        
+        # 3. Match or create merchant
+        merchant_match = self._find_or_create_merchant(merchant_name, counterparties)
+        
+        # 4. Determine category
+        category_id = self._determine_category(transaction_data, merchant_match)
+        
+        # 5. Get internal account_id from the map
+        plaid_account_id = transaction_data.get('account_id')
+        internal_account_id = account_id_map.get(plaid_account_id) if isinstance(plaid_account_id, str) else None
+
+        if not internal_account_id:
+            print(f"❌ No internal account found for Plaid account: {plaid_account_id}")
+            # Decide how to handle this - skip, or insert with null account_id, etc.
+            # For now, we'll allow it to be null and proceed.
+        
+        # 6. Build the final transaction record
+        return self._build_transaction_record(transaction_data, merchant_match, category_id, internal_account_id)
+
+    def process_transaction(self, transaction_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Main entry point for processing a single Plaid transaction.
         """
         try:
-            print(f"DEBUG: Processing {source} transaction: {transaction_data.get('description', 'No description')}")
+            # 1. Extract key fields from Plaid payload
+            original_description = transaction_data.get('name', '')
+            plaid_merchant_name = transaction_data.get('merchant_name')
+            counterparties = transaction_data.get('counterparties', [])
             
-            if source == TransactionSource.PLAID:
-                return self._process_plaid_transaction(transaction_data, user_rules)
-            elif source == TransactionSource.CSV:
-                return self._process_csv_transaction(transaction_data, user_rules)
-            elif source == TransactionSource.MANUAL:
-                return self._process_manual_transaction(transaction_data, user_rules)
-            else:
-                raise ValueError(f"Unsupported transaction source: {source}")
-                
+            # 2. Determine the best merchant name
+            merchant_name = self._get_best_merchant_name(plaid_merchant_name, counterparties, original_description)
+            
+            # 3. Match or create merchant
+            merchant_match = self._find_or_create_merchant(merchant_name, counterparties)
+            
+            # 4. Determine category
+            category_id = self._determine_category(transaction_data, merchant_match)
+            
+            # 5. Build the final transaction record for insertion
+            # Note: without a user context map, internal_account_id may be unknown here
+            return self._build_transaction_record(transaction_data, merchant_match, category_id, None)
+            
         except Exception as e:
-            print(f"ERROR in process_transaction: {e}")
-            return self._create_fallback_response(transaction_data, source)
-    
-    def _process_plaid_transaction(
-        self, 
-        transaction_data: Dict[str, Any], 
-        user_rules: Optional[list] = None
-    ) -> Dict[str, Any]:
+            print(f"Error processing transaction: {e}")
+            return self._create_fallback_response(transaction_data)
+
+    def _get_best_merchant_name(self, plaid_merchant_name, counterparties, original_description):
+        if counterparties and counterparties[0].get('name'):
+            return counterparties[0]['name']
+        if plaid_merchant_name:
+            return plaid_merchant_name
+        return original_description
+
+    def _find_or_create_merchant(self, merchant_name: str, counterparties: list) -> Optional[Dict[str, Any]]:
         """
-        Process Plaid transaction using merchant_name and category data.
-        
-        Plaid provides:
-        - merchant_name: Clean merchant name 
-        - category: Array of category strings
-        - account_id: Plaid account ID
-        - transaction_id: Plaid transaction ID
-        """
-        print(f"DEBUG: Processing Plaid transaction")
-        
-        # Extract Plaid-specific fields
-        plaid_merchant_name = transaction_data.get('merchant_name')
-        plaid_category = transaction_data.get('category', [])
-        plaid_transaction_id = transaction_data.get('transaction_id')
-        
-        # Use merchant_name if available, otherwise fall back to name/description
-        merchant_source = plaid_merchant_name or transaction_data.get('name') or transaction_data.get('description', '')
-        
-        print(f"DEBUG: Plaid merchant source: {merchant_source}")
-        print(f"DEBUG: Plaid category: {plaid_category}")
-        
-        # Strategy 1: Try to match existing merchant by name
-        merchant_match = self._find_or_create_plaid_merchant(
-            merchant_name=merchant_source,
-            plaid_category=plaid_category,
-            plaid_transaction_id=plaid_transaction_id
-        )
-        
-        # Strategy 2: Apply user rules override if present
-        if user_rules:
-            user_rule_result = self._apply_user_rules(transaction_data, user_rules)
-            if user_rule_result:
-                if merchant_match:
-                    merchant_match.update(user_rule_result)
-                    merchant_match['match_method'] = 'user_rule_override'
-                else:
-                    merchant_match = user_rule_result
-                    merchant_match['match_method'] = 'user_rule_override'
-        
-        # Build final response
-        return self._build_transaction_response(
-            transaction_data=transaction_data,
-            merchant_match=merchant_match,
-            source=TransactionSource.PLAID
-        )
-    
-    def _process_csv_transaction(
-        self, 
-        transaction_data: Dict[str, Any], 
-        user_rules: Optional[list] = None
-    ) -> Dict[str, Any]:
-        """
-        Process CSV transaction using existing regex matching logic.
-        Maintains backward compatibility with current system.
-        """
-        print(f"DEBUG: Processing CSV transaction")
-        
-        # Use existing transaction processor logic
-        from core.transaction_processor import process_transaction
-        
-        result = process_transaction(transaction_data, self.data_cache, user_rules)
-        
-        # Add account_id and user_id from transaction_data to result
-        result['account_id'] = transaction_data.get('account_id')
-        result['user_id'] = transaction_data.get('user_id')
-        
-        # Ensure response format consistency
-        return self._normalize_transaction_response(result, TransactionSource.CSV)
-    
-    def _process_manual_transaction(
-        self, 
-        transaction_data: Dict[str, Any], 
-        user_rules: Optional[list] = None
-    ) -> Dict[str, Any]:
-        """
-        Process manually entered transaction.
-        Allows user to specify merchant and category directly.
-        """
-        print(f"DEBUG: Processing manual transaction")
-        
-        # For manual transactions, user may provide:
-        # - merchant_name or merchant_id
-        # - category_name or category_id
-        # - description
-        
-        merchant_match = None
-        
-        # Check if user provided merchant_id directly
-        if transaction_data.get('merchant_id'):
-            merchant_match = self._get_merchant_by_id(transaction_data['merchant_id'])
-        
-        # Check if user provided merchant_name
-        elif transaction_data.get('merchant_name'):
-            merchant_match = self._find_merchant_by_name(transaction_data['merchant_name'])
-        
-        # Fall back to description matching
-        else:
-            description = transaction_data.get('description', '')
-            merchant_match = self._match_merchant_by_regex(description)
-        
-        # Apply user rules if present
-        if user_rules:
-            user_rule_result = self._apply_user_rules(transaction_data, user_rules)
-            if user_rule_result:
-                if merchant_match:
-                    merchant_match.update(user_rule_result)
-                else:
-                    merchant_match = user_rule_result
-                merchant_match['match_method'] = 'user_rule_override'
-        
-        return self._build_transaction_response(
-            transaction_data=transaction_data,
-            merchant_match=merchant_match,
-            source=TransactionSource.MANUAL
-        )
-    
-    def _find_or_create_plaid_merchant(
-        self, 
-        merchant_name: str, 
-        plaid_category: list, 
-        plaid_transaction_id: Optional[str] = None
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Find existing merchant or create new one from Plaid data.
-        
-        This maintains the merchant database while enriching it with Plaid data.
+        Find an existing merchant or create a new one based on Plaid data.
+        If a high-confidence counterparty is available, use it to enrich the merchants table.
         """
         if not merchant_name:
             return None
-        
-        # First, try exact match by name
-        existing_merchant = self._find_merchant_by_name(merchant_name)
-        
-        if existing_merchant:
-            print(f"DEBUG: Found existing merchant: {existing_merchant.get('name')}")
+
+        # Use Plaid's entity_id for the most reliable matching
+        plaid_entity_id = counterparties[0].get('entity_id') if counterparties else None
+        if plaid_entity_id:
+            merchant = self._find_merchant_by_plaid_entity_id(plaid_entity_id)
+            if merchant:
+                return merchant
+
+        # Fallback to name matching
+        merchant = self._find_merchant_by_name(merchant_name)
+        if merchant:
+            # If we found a merchant by name, but now have a plaid_entity_id, update it
+            if plaid_entity_id and not merchant.get('plaid_entity_id'):
+                self._update_merchant_plaid_entity_id(merchant['merchant_id'], plaid_entity_id)
+            return merchant
+
+        # If no merchant is found, create a new one, especially if we have high-confidence data
+        if counterparties and counterparties[0].get('confidence_level') == 'VERY_HIGH':
+            return self._create_merchant_from_plaid_data(counterparties[0])
             
-            # Update merchant with Plaid category if not set
-            self._update_merchant_with_plaid_data(existing_merchant, plaid_category)
-            
-            return existing_merchant
-        
-        # If no exact match, try fuzzy matching by regex patterns
-        fuzzy_match = self._match_merchant_by_regex(merchant_name)
-        
-        if fuzzy_match:
-            print(f"DEBUG: Fuzzy matched to existing merchant: {fuzzy_match.get('merchant_name')}")
-            return fuzzy_match
-        
-        # Create new merchant from Plaid data
-        print(f"DEBUG: Creating new merchant from Plaid data: {merchant_name}")
-        return self._create_merchant_from_plaid(merchant_name, plaid_category)
-    
-    def _find_merchant_by_name(self, merchant_name: str) -> Optional[Dict[str, Any]]:
-        """Find merchant by exact name match"""
-        if not merchant_name or not self.data_cache.merchants:
-            return None
-        
-        merchant_name_lower = merchant_name.lower().strip()
-        
-        for merchant in self.data_cache.merchants:
-            if merchant.get('name', '').lower().strip() == merchant_name_lower:
-                return self._format_merchant_response(merchant)
-        
         return None
-    
-    def _get_merchant_by_id(self, merchant_id: str) -> Optional[Dict[str, Any]]:
-        """Get merchant by ID"""
-        if not merchant_id or not self.data_cache.merchants:
-            return None
-        
-        for merchant in self.data_cache.merchants:
-            if str(merchant.get('merchant_id')) == str(merchant_id):
-                return self._format_merchant_response(merchant)
-        
-        return None
-    
-    def _match_merchant_by_regex(self, description: str) -> Optional[Dict[str, Any]]:
-        """Use existing regex matching logic"""
-        from core.matching import match_merchant_by_regex
-        
-        if not description or not self.data_cache.merchants:
-            return None
-        
-        return match_merchant_by_regex(description, self.data_cache.merchants)
-    
-    def _update_merchant_with_plaid_data(self, merchant: Dict[str, Any], plaid_category: list):
-        """
-        Update existing merchant with Plaid category data if beneficial.
-        This could be done asynchronously in a background task.
-        """
-        # For now, just log that we could update
-        # In production, you might want to update the merchant's metadata
-        print(f"DEBUG: Could update merchant {merchant.get('name')} with Plaid category: {plaid_category}")
-        
-        # Example: Update merchant's plaid_category field
-        # merchant['plaid_category'] = plaid_category
-        pass
-    
-    def _create_merchant_from_plaid(self, merchant_name: str, plaid_category: list) -> Dict[str, Any]:
-        """
-        Create a new merchant entry from Plaid data.
-        This should create a new merchant in the database.
-        """
-        print(f"DEBUG: Would create new merchant: {merchant_name} with category: {plaid_category}")
-        
-        # Map Plaid category to our category system
-        category_id = self._map_plaid_category_to_internal(plaid_category)
-        
-        # For now, return a temporary merchant object
-        # In production, you'd insert into the merchants table
+
+    def _find_merchant_by_plaid_entity_id(self, plaid_entity_id: str) -> Optional[Dict[str, Any]]:
+        """Find a merchant by their Plaid entity ID."""
+        res = self.supabase.table("merchants").select("*").eq("plaid_entity_id", plaid_entity_id).single().execute()
+        return res.data if res.data else None
+
+    def _find_merchant_by_name(self, name: str) -> Optional[Dict[str, Any]]:
+        """Find a merchant by name (case-insensitive)."""
+        res = self.supabase.table("merchants").select("*").ilike("name", f"%{name}%").limit(1).execute()
+        return res.data[0] if res.data else None
+
+    def _update_merchant_plaid_entity_id(self, merchant_id: str, plaid_entity_id: str):
+        """Update an existing merchant with a Plaid entity ID."""
+        self.supabase.table("merchants").update({"plaid_entity_id": plaid_entity_id}).eq("merchant_id", merchant_id).execute()
+
+    def _create_merchant_from_plaid_data(self, counterparty: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Create a new merchant in the database from high-confidence Plaid counterparty data."""
         new_merchant = {
-            "merchant_id": None,  # Would be generated by database
-            "merchant_name": merchant_name,
-            "name": merchant_name,
-            "category_id": category_id,
-            "confidence": 0.9,  # High confidence for Plaid data
-            "match_method": "plaid_new_merchant",
-            "logo_url": None,  # Could be enriched later
-            "is_plaid_merchant": True
+            "name": counterparty['name'],
+            "plaid_entity_id": counterparty.get('entity_id'),
+            "logo_url": counterparty.get('logo_url'),
+            "website": counterparty.get('website'),
+            # You might want to map Plaid's category to your default_category_id here
         }
+        res = self.supabase.table("merchants").insert(new_merchant).execute()
+        return res.data[0] if res.data else None
+
+    def _determine_category(self, transaction_data: Dict[str, Any], merchant_match: Optional[Dict[str, Any]]) -> Optional[str]:
+        """Determine the category for the transaction."""
+        # 1. If merchant has a default category, use it.
+        if merchant_match and merchant_match.get('default_category_id'):
+            return merchant_match['default_category_id']
         
-        return new_merchant
-    
-    def _map_plaid_category_to_internal(self, plaid_category: list) -> Optional[str]:
-        """
-        Map Plaid Personal Finance Category to internal category system.
-        
-        Plaid categories are hierarchical: ["Food and Drink", "Restaurants", "Coffee Shop"]
-        """
-        if not plaid_category or not self.data_cache.categories:
-            return None
-        
-        # Try to find category by Plaid category name
-        for category_level in plaid_category:
-            for internal_category in self.data_cache.categories:
-                # Check if internal category name matches any Plaid category level
-                internal_name = internal_category.get('name', '').lower()
-                plaid_name = category_level.lower()
-                
-                if internal_name == plaid_name or plaid_name in internal_name:
-                    return internal_category.get('category_id')
-        
-        # Fallback: look for partial matches
-        for category_level in plaid_category:
-            for internal_category in self.data_cache.categories:
-                internal_name = internal_category.get('name', '').lower()
-                plaid_name = category_level.lower()
-                
-                # Check for common category mappings
-                if self._categories_are_similar(internal_name, plaid_name):
-                    return internal_category.get('category_id')
-        
-        return None
-    
-    def _categories_are_similar(self, internal_name: str, plaid_name: str) -> bool:
-        """Check if category names are similar enough to map"""
-        # Common mappings between Plaid and internal categories
-        mappings = {
-            'food and drink': ['food', 'dining', 'restaurant', 'grocery'],
-            'restaurants': ['dining', 'restaurant', 'food'],
-            'coffee shop': ['coffee', 'cafe'],
-            'gas stations': ['gas', 'fuel', 'gasoline'],
-            'grocery': ['grocery', 'food', 'supermarket'],
-            'shopping': ['retail', 'shopping'],
-            'entertainment': ['entertainment', 'fun', 'recreation'],
-            'transportation': ['transport', 'travel', 'uber', 'lyft']
-        }
-        
-        # Check direct mappings
-        if plaid_name in mappings:
-            return any(keyword in internal_name for keyword in mappings[plaid_name])
-        
-        # Check reverse mappings
-        for plaid_key, keywords in mappings.items():
-            if any(keyword in internal_name for keyword in keywords):
-                return plaid_key in plaid_name
-        
-        return False
-    
-    def _apply_user_rules(self, transaction_data: Dict[str, Any], user_rules: list) -> Optional[Dict[str, Any]]:
-        """Apply user-defined rules to override automatic categorization"""
-        if not user_rules:
-            return None
-        
-        from core.transaction_processor import _match_by_user_rules
-        
-        return _match_by_user_rules(transaction_data, user_rules, self.data_cache.categories)
-    
-    def _format_merchant_response(self, merchant: Dict[str, Any]) -> Dict[str, Any]:
-        """Format merchant data for consistent response structure"""
-        category_name = None
-        if merchant.get('default_category_id'):
-            category = self._get_category_by_id(merchant['default_category_id'])
-            category_name = category.get('name') if category else None
-        
-        return {
-            "merchant_id": merchant.get('merchant_id'),
-            "merchant_name": merchant.get('name'),
-            "category_id": merchant.get('default_category_id'),
-            "category_name": category_name,
-            "logo_url": merchant.get('logo_url'),
-            "confidence": 1.0,
-            "match_method": "exact_match"
-        }
-    
-    def _get_category_by_id(self, category_id: str) -> Optional[Dict[str, Any]]:
-        """Get category by ID from cache"""
-        if not category_id or not self.data_cache.categories:
-            return None
-        
-        for category in self.data_cache.categories:
-            if str(category.get('category_id')) == str(category_id):
-                return category
-        
-        return None
-    
-    def _build_transaction_response(
-        self, 
-        transaction_data: Dict[str, Any], 
-        merchant_match: Optional[Dict[str, Any]], 
-        source: TransactionSource
-    ) -> Dict[str, Any]:
-        """Build standardized transaction response"""
-        
-        # Handle user_metadata
-        user_metadata = transaction_data.get('user_metadata', {})
-        if not isinstance(user_metadata, dict):
-            user_metadata = {}
-        
-        # Add source tracking to metadata
-        user_metadata['source'] = source.value
-        
-        # Build clean description
-        if merchant_match and merchant_match.get('merchant_name'):
-            clean_description = merchant_match['merchant_name']
-        else:
-            # Fall back to parsing the original description
-            from core.transaction_processor import _parse_merchant_name
-            raw_desc = transaction_data.get('description', '')
-            clean_description = _parse_merchant_name(raw_desc).title() or "Unknown Merchant"
-        
-        response = {
-            # Core transaction fields
-            "date": transaction_data.get('date'),
-            "transaction_number": transaction_data.get('transaction_number'),
-            "description": transaction_data.get('description'),
-            "amount": transaction_data.get('amount'),
-            "balance": transaction_data.get('balance'),
-            "account_id": transaction_data.get('account_id'),
-            "user_id": transaction_data.get('user_id'),
+        # 2. Use Plaid's personal finance category
+        pfc = transaction_data.get('personal_finance_category')
+        if pfc and pfc.get('detailed'):
+            # This is where you would map Plaid's detailed category string 
+            # (e.g., "FOOD_AND_DRINK_RESTAURANT") to your internal UUID-based category_id.
+            # This typically requires a lookup table in your database or a hardcoded map.
             
-            # Enriched fields
+            # Example using the data_cache:
+            category_mapping = self.data_cache.get_plaid_category_map() # Assuming this method exists
+            internal_category_id = category_mapping.get(pfc['detailed'])
+            if internal_category_id:
+                return internal_category_id
+            
+        return None
+
+    def _build_transaction_record(self, transaction_data: Dict[str, Any], merchant_match: Optional[Dict[str, Any]], category_id: Optional[str], internal_account_id: Optional[str]) -> Dict[str, Any]:
+        """Build the final dictionary to be inserted into the transactions table."""
+        counterparty = transaction_data.get('counterparties', [{}])[0]
+
+        record = {
+            "user_id": transaction_data.get('user_id'), # Make sure user_id is passed in
+            "account_id": internal_account_id,
+            "original_description": transaction_data.get('name'),
+            "amount": transaction_data.get('amount'),
+            "currency": transaction_data.get('iso_currency_code'),
+            "date": transaction_data.get('date'),
+            "authorized_date": transaction_data.get('authorized_date'),
+            "pending": transaction_data.get('pending', False),
+            "aggregator_transaction_id": transaction_data.get('transaction_id'),
+            
             "merchant_id": merchant_match.get('merchant_id') if merchant_match else None,
-            "merchant_name": merchant_match.get('merchant_name') if merchant_match else None,
-            "category_id": merchant_match.get('category_id') if merchant_match else None,
-            "category_name": merchant_match.get('category_name') if merchant_match else None,
-            "clean_description": clean_description,
-            "original_description": transaction_data.get('description'),
+            "merchant_name": merchant_match.get('name') if merchant_match else self._get_best_merchant_name(transaction_data.get('merchant_name'), transaction_data.get('counterparties', []), transaction_data.get('name')),
             
-            # Metadata fields
-            "confidence": merchant_match.get('confidence', 0.0) if merchant_match else 0.0,
-            "match_method": merchant_match.get('match_method', 'no_match') if merchant_match else 'no_match',
-            "needs_review": not merchant_match or merchant_match.get('confidence', 0.0) < 0.9,
-            "user_metadata": user_metadata,
+            "category_id": category_id,
             
-            # Plaid-specific fields (if applicable)
-            "aggregator_transaction_id": transaction_data.get('transaction_id') if source == TransactionSource.PLAID else None,
+            "transaction_type": counterparty.get('type'),
+            "logo_url": counterparty.get('logo_url'),
+            "website": counterparty.get('website'),
+            "plaid_entity_id": counterparty.get('entity_id'),
+            
+            "primary_category": transaction_data.get('personal_finance_category', {}).get('primary'),
+            "detailed_category": transaction_data.get('personal_finance_category', {}).get('detailed'),
+            "category_confidence_level": transaction_data.get('personal_finance_category', {}).get('confidence_level'),
+            
+            "payment_channel": transaction_data.get('payment_channel'),
+            "check_number": transaction_data.get('check_number'),
+            "location": transaction_data.get('location'),
+            "payment_meta": transaction_data.get('payment_meta'),
+            
+            "needs_review": not merchant_match or not category_id,
         }
-        
-        return response
-    
-    def _normalize_transaction_response(self, result: Dict[str, Any], source: TransactionSource) -> Dict[str, Any]:
-        """Normalize response from existing transaction processor"""
-        # Ensure user_metadata includes source
-        user_metadata = result.get('user_metadata', {})
-        if not isinstance(user_metadata, dict):
-            user_metadata = {}
-        user_metadata['source'] = source.value
-        result['user_metadata'] = user_metadata
-        
-        # Ensure all required fields are present with defaults
-        required_fields = {
-            'aggregator_transaction_id': None,
-            'account_id': None,
-            'user_id': None,
-            'transaction_number': None,
-            'balance': None,
-            'merchant_id': None,
-            'merchant_name': None,
-            'category_id': None,
-            'category_name': None,
-            'clean_description': result.get('clean_description', result.get('description', 'Unknown')),
-            'original_description': result.get('original_description', result.get('description', '')),
-            'confidence': 0.0,
-            'match_method': 'no_match',
-            'needs_review': True
-        }
-        
-        # Fill in any missing fields
-        for field, default_value in required_fields.items():
-            if field not in result:
-                result[field] = default_value
-        
-        return result
-    
-    def _create_fallback_response(self, transaction_data: Dict[str, Any], source: TransactionSource) -> Dict[str, Any]:
-        """Create fallback response when processing fails"""
+        return record
+
+    def _create_fallback_response(self, transaction_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Creates a fallback transaction record when processing fails, 
+        ensuring essential data is still captured.
+        """
         return {
-            "date": transaction_data.get('date'),
-            "transaction_number": transaction_data.get('transaction_number'),
-            "description": transaction_data.get('description'),
-            "amount": transaction_data.get('amount'),
-            "balance": transaction_data.get('balance'),
-            "account_id": transaction_data.get('account_id'),
             "user_id": transaction_data.get('user_id'),
-            "merchant_id": None,
-            "merchant_name": None,
+            "account_id": None, # Cannot determine internal account_id
+            "original_description": transaction_data.get('name'),
+            "amount": transaction_data.get('amount'),
+            "currency": transaction_data.get('iso_currency_code'),
+            "date": transaction_data.get('date'),
+            "pending": transaction_data.get('pending', False),
+            "aggregator_transaction_id": transaction_data.get('transaction_id'),
+            "merchant_name": transaction_data.get('merchant_name') or transaction_data.get('name'),
             "category_id": None,
-            "category_name": None,
-            "clean_description": transaction_data.get('description', 'Unknown'),
-            "original_description": transaction_data.get('description'),
-            "confidence": 0.0,
-            "match_method": "error",
-            "needs_review": True,
-            "user_metadata": {"source": source.value, "error": "processing_failed"},
-            "aggregator_transaction_id": transaction_data.get('transaction_id') if source == TransactionSource.PLAID else None,
+            "status": "needs_review", # Add a status field
+            "raw_data": transaction_data # Store the original payload for later inspection
         }
-
-
-# Convenience function for backward compatibility
-def process_transaction_unified(
-    transaction_data: Dict[str, Any], 
-    data_cache, 
-    source: str = "csv",
-    user_rules: Optional[list] = None
-) -> Dict[str, Any]:
-    """
-    Unified transaction processing function.
-    
-    Args:
-        transaction_data: Raw transaction data
-        data_cache: Data cache instance
-        source: Transaction source ("plaid", "csv", "manual")
-        user_rules: User-defined rules
-        
-    Returns:
-        Enriched transaction data
-    """
-    processor = PlaidTransactionProcessor(data_cache)
-    source_enum = TransactionSource(source.lower())
-    return processor.process_transaction(transaction_data, source_enum, user_rules)

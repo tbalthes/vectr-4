@@ -4,6 +4,13 @@ import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
+  
+  // FIXED: Skip auth check for API routes - they handle their own auth
+  // This prevents middleware from adding extra auth calls on every API request
+  if (req.nextUrl.pathname.startsWith('/api')) {
+    return res;
+  }
+  
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

@@ -9,11 +9,21 @@ load_dotenv(_PROJECT_ROOT / ".env.local")
 load_dotenv(_PROJECT_ROOT / ".env")
 \
 
+
+import os
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import categorize, transactions, user_rules, merchants, retroactive_rules, categories
 from .routers import data_status
 from .routers import transaction_upload, csv_processor, normalize, plaid_transactions, plaid_compatible_processor, plaid_api
+
+# --- SENTRY SETUP ---
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN", "https://da2b886dc958a8b541c06333efe5344a@o4510058699620352.ingest.us.sentry.io/4510058726883328"),
+    send_default_pii=True,
+    traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.2")),
+)
 
 app = FastAPI()
 

@@ -49,7 +49,7 @@ export function PlaidLinkButton({
       }
 
       // Redirect to Plaid Link page
-      window.location.href = `/link-account?token=${encodeURIComponent(link_token)}`;
+      window.location.href = `/plaid-link?token=${encodeURIComponent(link_token)}`;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to start account linking';
       setError(errorMessage);

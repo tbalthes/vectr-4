@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -24,7 +25,7 @@ interface DetailedTransaction {
   custom_fields: Record<string, string | number | boolean>;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: Request, params: { params: Promise<{ id: string }> }) {
   try {
     // Get the authenticated user from the client
     const supabase = createSupabaseServerClient();
@@ -248,7 +249,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Get the authenticated user from the client
     const supabase = createSupabaseServerClient();
@@ -754,7 +755,7 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Get the authenticated user from the client
     const supabase = createSupabaseServerClient();

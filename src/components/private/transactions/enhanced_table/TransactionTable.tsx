@@ -45,9 +45,13 @@ export function TransactionTable({
   const observer = useRef<IntersectionObserver | null>(null);
 
   const uniqueCategories = useMemo(() => {
-    return Array.from(new Set(transactions.map((t) => t.categoryName)))
-      .filter(Boolean)
-      .sort();
+    const set = new Set<string>();
+    for (const t of transactions) {
+      if (t.categoryName) {
+        set.add(t.categoryName);
+      }
+    }
+    return Array.from(set).sort();
   }, [transactions]);
 
   // Intersection Observer callback for infinite scroll
@@ -207,7 +211,10 @@ export function TransactionTable({
               {displayedTransactions.map((transaction, index) => {
                 const isLast = index === displayedTransactions.length - 1;
                 return (
-                  <TableRow key={transaction.id} ref={isLast ? lastTransactionRef : undefined}>
+                  <TableRow
+                    key={transaction.transactionId}
+                    ref={isLast ? lastTransactionRef : undefined}
+                  >
                     <TransactionRow
                       transaction={transaction}
                       onEdit={onEdit}

@@ -1,7 +1,7 @@
 /* Fix for Plaid Link input focus issues in modals */
 
 /* Ensure Plaid Link iframe has high z-index and proper positioning */
-iframe[src*="plaid"] {
+iframe[src*='plaid'] {
   z-index: 99999 !important;
   position: fixed !important;
   top: 0 !important;
@@ -21,7 +21,7 @@ iframe[src*="plaid"] {
 }
 
 /* Ensure modal doesn't interfere with Plaid Link */
-[data-state="open"] {
+[data-state='open'] {
   pointer-events: auto !important;
 }
 
@@ -31,7 +31,7 @@ iframe[src*="plaid"] {
 }
 
 /* Override any modal focus trap */
-[role="dialog"] {
+[role='dialog'] {
   isolation: auto !important;
 }
 
@@ -39,3 +39,4 @@ iframe[src*="plaid"] {
 [data-radix-dialog-overlay] {
   z-index: 1000 !important;
 }
+/* end plaid fix */

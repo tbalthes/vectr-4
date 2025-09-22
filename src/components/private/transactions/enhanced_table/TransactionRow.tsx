@@ -86,9 +86,79 @@ export function TransactionRow({
 
   const handleOpenDetails = () => {
     if (onOpenDetails) {
-      onOpenDetails(transaction.id);
+      // FormattedTransaction uses transactionId as the identifier
+      onOpenDetails(transaction.transactionId);
     }
   };
+
+  // Fallback: derive an icon from category name/code if backend didn't supply one
+  const mapCategoryToIcon = (name?: string | null): string | undefined => {
+    if (!name) {
+      return undefined;
+    }
+    const n = String(name).trim();
+    const upper = n.toUpperCase().replace(/\s+/g, '_');
+    const table: Record<string, string> = {
+      // Common Plaid-style machine keys
+      FOOD_AND_DRINK: 'Utensils',
+      GROCERIES: 'ShoppingCart',
+      TRANSPORTATION: 'Car',
+      TRAVEL: 'Plane',
+      RENT_AND_UTILITIES: 'Home',
+      HOME: 'Home',
+      ENTERTAINMENT: 'Ticket',
+      SHOPPING: 'ShoppingBag',
+      HEALTHCARE: 'HeartPulse',
+      BANK_FEES: 'Receipt',
+      TRANSFER: 'ArrowLeftRight',
+      INCOME: 'DollarSign',
+      PAYCHECK: 'BadgeDollarSign',
+      SUBSCRIPTIONS: 'Repeat',
+      EDUCATION: 'GraduationCap',
+      GIFTS_AND_DONATIONS: 'Gift',
+      TAXES: 'FileText',
+      INVESTMENTS: 'LineChart',
+      // Human-readable fallbacks
+      'FOOD & DRINK': 'Utensils',
+      GROCERIES_TXT: 'ShoppingCart',
+      TRANSPORT: 'Car',
+      UTILITIES: 'Home',
+      ENTERTAINMENT_TXT: 'Ticket',
+      SHOPPING_TXT: 'ShoppingBag',
+    };
+    // Try exact machine key
+    if (table[upper]) {
+      return table[upper];
+    }
+    // Try contains-based heuristics
+    if (/FOOD|DRINK|RESTAURANT|DINING/i.test(n)) {
+      return 'Utensils';
+    }
+    if (/GROCERY|SUPERMARKET/i.test(n)) {
+      return 'ShoppingCart';
+    }
+    if (/TRAVEL|FLIGHT|HOTEL/i.test(n)) {
+      return 'Plane';
+    }
+    if (/TRANSPORT|UBER|LYFT|GAS|FUEL|CAR/i.test(n)) {
+      return 'Car';
+    }
+    if (/RENT|MORTGAGE|UTILIT|HOME/i.test(n)) {
+      return 'Home';
+    }
+    if (/FEE|CHARGE/i.test(n)) {
+      return 'Receipt';
+    }
+    if (/INCOME|PAY/i.test(n)) {
+      return 'DollarSign';
+    }
+    if (/TRANSFER/i.test(n)) {
+      return 'ArrowLeftRight';
+    }
+    return undefined;
+  };
+
+  const resolvedIconName = transaction.categoryIcon ?? mapCategoryToIcon(transaction.categoryName);
 
   return (
     <>
@@ -96,8 +166,8 @@ export function TransactionRow({
       <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
         <div className="flex items-center justify-center">
           <MerchantLogo
-            merchantName={transaction.merchantName}
-            logoUrl={transaction.merchantLogoUrl}
+            merchantName={transaction.merchantName ?? ''}
+            logoUrl={transaction.merchantLogoUrl ?? undefined}
             className="w-7 h-7 flex-shrink-0"
           />
         </div>
@@ -108,7 +178,7 @@ export function TransactionRow({
         <div className="flex flex-col">
           <div className="font-medium text-foreground dark:text-foreground truncate flex items-center gap-2 text-xs">
             {transaction.description}
-            {transaction.note && (
+            {transaction.notes && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="inline-flex items-center ml-1" tabIndex={0}>
@@ -116,7 +186,7 @@ export function TransactionRow({
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs break-words">
-                  {transaction.note}
+                  {transaction.notes}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -131,7 +201,7 @@ export function TransactionRow({
       <td className="px-3 py-2 bg-background dark:bg-background border-b border-gray-50 dark:border-gray-800">
         <div className="flex items-center justify-center">
           <CategoryIcon
-            iconName={transaction.categoryIcon}
+            iconName={resolvedIconName}
             className="w-6 h-6 text-primary dark:text-primary"
           />
         </div>
@@ -144,7 +214,7 @@ export function TransactionRow({
             <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground dark:bg-muted-foreground"></div>
           </div>
           <span className="text-xs text-foreground dark:text-foreground truncate">
-            {transaction.account || 'Unknown Account'}
+            {transaction.accountName || 'Unknown Account'}
           </span>
         </div>
       </td>

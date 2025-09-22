@@ -13,7 +13,11 @@ import type { DateRange } from '@/components/private/transactions/filters/DateRa
 import { DateRangePicker } from '@/components/private/transactions/filters/DateRangePicker';
 import type { AdvancedFilterState } from '@/components/private/transactions/filters/AdvancedFilterPanel';
 import { AdvancedFilterPanel } from '@/components/private/transactions/filters/AdvancedFilterPanel';
-import { useInfiniteTransactions, type TransactionItem } from '@/hooks/useInfiniteTransactions';
+import {
+  useInfiniteTransactions,
+  type TransactionItem,
+  type GroupedTransactionItem,
+} from '@/hooks/useInfiniteTransactions';
 import PageHeader from '@/components/private/PageHeader';
 import {
   Sheet,
@@ -129,7 +133,7 @@ export default function TransactionsPage() {
   // Infinite loading hook with server-side filtering
   const {
     transactions: allTransactions,
-    isLoadingMore,
+    isLoading,
     isReachingEnd,
     loadMore,
     error,
@@ -141,16 +145,18 @@ export default function TransactionsPage() {
   const filteredTransactions = allTransactions;
 
   // Rebuild the transaction list with proper date headers
-  const rebuildWithDateHeaders = (transactions: TransactionItem[]) => {
-    const result: TransactionItem[] = [];
+  const rebuildWithDateHeaders = (items: GroupedTransactionItem[]) => {
+    const result: GroupedTransactionItem[] = [];
     let currentDate = '';
 
-    for (const transaction of transactions) {
-      if ('type' in transaction && transaction.type === 'date-header') {
-        continue; // Skip old date headers
+    for (const item of items) {
+      // Skip explicit date-header items coming from the hook
+      if (item.type === 'date-header') {
+        continue;
       }
 
-      const tx = transaction;
+      // item is a TransactionItem
+      const tx = item.data;
       const transactionDate = new Date(tx.date).toDateString();
 
       if (transactionDate !== currentDate) {
@@ -174,9 +180,10 @@ export default function TransactionsPage() {
           });
         }
 
-        // Calculate daily total for this date
-        const dailyTotal = transactions
-          .filter((t) => !('type' in t) || t.type !== 'date-header')
+        // Calculate daily total for this date by summing amounts of transaction items
+        const dailyTotal = items
+          .filter((it): it is TransactionItem => it.type === 'transaction')
+          .map((it) => it.data)
           .filter((t) => new Date(t.date).toDateString() === transactionDate)
           .reduce((sum, t) => sum + t.amount, 0);
 
@@ -189,7 +196,7 @@ export default function TransactionsPage() {
         });
       }
 
-      result.push(tx);
+      result.push({ type: 'transaction', data: tx });
     }
 
     return result;
@@ -200,7 +207,7 @@ export default function TransactionsPage() {
   console.log('TransactionsPage render:', {
     transactionsCount: finalTransactions.length,
     allTransactionsCount: allTransactions.length,
-    isLoadingMore,
+    isLoading,
     isReachingEnd,
     error,
     firstTransaction: finalTransactions[0],
@@ -242,7 +249,7 @@ export default function TransactionsPage() {
 
       // Apply optimistic update first
       if (updateTransactionOptimistic) {
-        updateTransactionOptimistic(transaction as Record<string, unknown>);
+        updateTransactionOptimistic(transaction.id, transaction as Record<string, unknown>);
         didOptimisticallyUpdate = true;
         console.log('Applied optimistic update for transaction:', transaction.id);
       }
@@ -352,7 +359,7 @@ export default function TransactionsPage() {
         body {
           overflow: hidden;
         }
-
+            isLoading={isLoading}
         /* Ensure the page content can scroll */
         #__next {
           height: 100vh;
@@ -443,7 +450,7 @@ export default function TransactionsPage() {
             Failed to load transactions.
           </div>
         ) : null}
-        {!error && finalTransactions.length === 0 && !isLoadingMore && (
+        {!error && finalTransactions.length === 0 && !isLoading && (
           <div className="flex justify-center items-center h-full text-muted-foreground dark:text-muted-foreground">
             No transactions found.
           </div>
@@ -457,7 +464,7 @@ export default function TransactionsPage() {
           onOpenDetails={handleOpenDetails}
           loadMore={loadMore}
           isReachingEnd={isReachingEnd}
-          isLoadingMore={isLoadingMore}
+          isLoading={isLoading}
         />
       </div>
 
@@ -466,8 +473,12 @@ export default function TransactionsPage() {
         transactionId={drawerTransactionId}
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}
-        onEdit={(transaction) => { void handleDrawerEdit(transaction); }}
-        onDelete={(transactionId) => { void handleDrawerDelete(transactionId); }}
+        onEdit={(transaction) => {
+          void handleDrawerEdit(transaction);
+        }}
+        onDelete={(transactionId) => {
+          void handleDrawerDelete(transactionId);
+        }}
       />
     </>
   );

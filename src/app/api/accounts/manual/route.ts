@@ -48,8 +48,8 @@ export async function POST(req: Request) {
     if (institution_id) {
       const { data: institution, error: instError } = await supabase
         .from('institutions')
-        .select('id, name')
-        .eq('id', institution_id)
+        .select('institution_id, name')
+        .eq('institution_id', institution_id)
         .single();
 
       if (instError || !institution) {
@@ -105,10 +105,12 @@ export async function POST(req: Request) {
 
     // Create initial balance if provided
     if (initial_balance !== undefined && initial_balance !== null) {
+      const internalAccountId = (account as { account_id: string }).account_id;
       const balanceData = {
-        account_id: account.id,
-        balance_amount: Number(initial_balance),
+        account_id: internalAccountId,
+        current: Number(initial_balance),
         available: Number(initial_balance), // For manual accounts, available = current
+        iso_currency_code: account.currency || 'USD',
         as_of: new Date().toISOString(),
       };
 
@@ -126,7 +128,7 @@ export async function POST(req: Request) {
     const { data: fullAccount, error: fetchError } = await supabase
       .from('v_accounts_with_latest_balance')
       .select('*')
-      .eq('account_id', account.id)
+      .eq('account_id', (account as { account_id: string }).account_id)
       .single();
 
     if (fetchError) {

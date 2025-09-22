@@ -48,12 +48,37 @@ export async function POST(req: Request) {
     eventId,
   });
 
+  // Compute a stable hash of the raw body for idempotency
+  const bodySha256 = crypto.createHash('sha256').update(rawBody, 'utf8').digest('hex');
+
   // Store webhook event for idempotency and audit trail
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
+    // Upsert into dedup table; if already exists, short-circuit processing
+    const { error: dedupErr } = await supabase.rpc('upsert_webhook_dedup', {
+      p_body_sha256: bodySha256,
+    });
+    if (dedupErr) {
+      console.warn('[webhook] dedup RPC error (continuing):', dedupErr);
+    } else {
+      // Check if this hash was seen before
+      const { data: dedupRow, error: fetchErr } = await supabase
+        .from('webhook_event_dedup')
+        .select('first_seen_at, last_seen_at, seen_count')
+        .eq('body_sha256', bodySha256)
+        .single();
+      if (!fetchErr && dedupRow && (dedupRow as any).seen_count > 1) {
+        const firstSeen = new Date((dedupRow as any).first_seen_at).getTime();
+        const ageMs = Date.now() - firstSeen;
+        // If we've seen this exact body before recently, skip processing
+        if (ageMs < 5 * 60 * 1000) {
+          return NextResponse.json({ ok: true, duplicate: true });
+        }
+      }
+    }
 
     await supabase.from('webhook_events').insert({
       event_id: eventId,
@@ -379,6 +404,18 @@ async function triggerTransactionSync(itemId: string | undefined, syncType: stri
 
     if (!accountLink) {
       console.warn(`[webhook] No active account link found for item ${itemId}`);
+      return;
+    }
+
+    // Debounce per-item syncs: acquire a short lock (e.g., 30 seconds). If not acquired, skip.
+    const { data: lockAcquired, error: lockErr } = await supabase.rpc('try_acquire_item_lock', {
+      p_item_id: itemId,
+      p_ttl_seconds: 30,
+    });
+    if (lockErr) {
+      console.warn('[webhook] lock RPC error (continuing without lock):', lockErr);
+    } else if (lockAcquired === false) {
+      console.log(`[webhook] Skip ${syncType} sync for ${itemId}: lock held`);
       return;
     }
 

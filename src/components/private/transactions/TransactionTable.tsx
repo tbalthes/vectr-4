@@ -16,19 +16,19 @@ interface TransactionTableProps {
 
 // Helper that checks multiple possible note fields safely
 const hasTransactionNote = (t: FormattedTransaction) => {
-  if (t.note) {
+  if (t.notes) {
     return true;
   }
   const u = t as unknown as Record<string, unknown>;
   if (
     Object.prototype.hasOwnProperty.call(u, 'transaction_note') &&
-    typeof u.transaction_note === 'string'
+    typeof (u as any).transaction_note === 'string'
   ) {
     return true;
   }
   if (
     Object.prototype.hasOwnProperty.call(u, 'transactionNote') &&
-    typeof u.transactionNote === 'string'
+    typeof (u as any).transactionNote === 'string'
   ) {
     return true;
   }
@@ -36,21 +36,21 @@ const hasTransactionNote = (t: FormattedTransaction) => {
 };
 
 const getTransactionNote = (t: FormattedTransaction): string | undefined => {
-  if (typeof t.note === 'string' && t.note.length > 0) {
-    return t.note;
+  if (typeof t.notes === 'string' && t.notes.length > 0) {
+    return t.notes;
   }
   const u = t as unknown as Record<string, unknown>;
   if (
     Object.prototype.hasOwnProperty.call(u, 'transaction_note') &&
-    typeof u.transaction_note === 'string'
+    typeof (u as any).transaction_note === 'string'
   ) {
-    return u.transaction_note;
+    return (u as any).transaction_note;
   }
   if (
     Object.prototype.hasOwnProperty.call(u, 'transactionNote') &&
-    typeof u.transactionNote === 'string'
+    typeof (u as any).transactionNote === 'string'
   ) {
-    return u.transactionNote;
+    return (u as any).transactionNote;
   }
   return undefined;
 };
@@ -91,7 +91,7 @@ export default function TransactionTable({ transactions, allCount }: Transaction
             const colorClasses = getTransactionColorClasses(transaction.type);
             return (
               <div
-                key={transaction.id}
+                key={transaction.transactionId}
                 className="flex items-center justify-between p-4 hover:bg-muted/30 transition-smooth"
               >
                 <div className="flex items-center space-x-4">
@@ -122,9 +122,9 @@ export default function TransactionTable({ transactions, allCount }: Transaction
                     </p>
                     <div className="flex items-center space-x-3 mt-1">
                       <Badge variant="secondary" className="text-xs">
-                        {transaction.category}
+                        {transaction.categoryName}
                       </Badge>
-                      <span className="text-xs text-muted">{transaction.account}</span>
+                      <span className="text-xs text-muted">{transaction.accountName}</span>
                       <span className="text-xs text-muted">{transaction.date}</span>
                       <Badge
                         variant={transaction.status === 'completed' ? 'default' : 'outline'}

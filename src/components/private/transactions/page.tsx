@@ -64,24 +64,37 @@ interface RawTransaction {
 // Converter function from Transaction to FormattedTransaction for mock data
 function convertToFormattedTransaction(transaction: RawTransaction): FormattedTransaction {
   return {
-    id: transaction.id.toString(),
-    transaction_number: `TXN-${transaction.id}`,
+    // Core fields
+    transactionId: transaction.id.toString(),
+    originalDescription: transaction.description,
+    accountId: '',
     date: transaction.date,
     description: transaction.description,
     amount: transaction.amount,
-    originalDescription: transaction.description,
-    balance: null,
-    userMetadata: null,
-    needsReview: false,
+    currency: null,
+    pending: false,
+
+    // Enriched/UI fields
     merchantName: transaction.description,
     merchantLogoUrl: null,
     categoryName: transaction.category,
-    categoryIcon: 'Utensils', // Default icon
-    type: transaction.type as 'income' | 'expense',
-    category: transaction.category,
-    account: transaction.account,
-    status: transaction.status as 'completed' | 'pending',
-    note: undefined,
+    categoryIcon: 'Utensils',
+
+    // Account info
+    accountName: transaction.account,
+    accountMask: null,
+
+    // UI state
+    needsReview: false,
+    isHidden: false,
+    notes: null,
+
+    // Compatibility
+    type: (transaction.type as 'income' | 'expense') ?? 'expense',
+    status: (transaction.status as 'completed' | 'pending') ?? 'completed',
+
+    // Raw data placeholder
+    originalData: {} as any,
   };
 }
 
@@ -97,15 +110,21 @@ export default function Transactions() {
   const allTransactions = rawTransactions.map(convertToFormattedTransaction);
   const filteredTransactions = allTransactions.filter((transaction) => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || transaction.category === selectedCategory;
-    const matchesAccount = selectedAccount === 'all' || transaction.account === selectedAccount;
+    const matchesCategory =
+      selectedCategory === 'all' || transaction.categoryName === selectedCategory;
+    const matchesAccount = selectedAccount === 'all' || transaction.accountName === selectedAccount;
     return matchesSearch && matchesCategory && matchesAccount;
   });
 
   // Use fetched categories, fallback to mock data categories if API fails
-  const categories =
-    allCategories.length > 0 ? allCategories : [...new Set(allTransactions.map((t) => t.category))];
-  const accounts = [...new Set(allTransactions.map((t) => t.account))];
+  const rawCategories =
+    allCategories.length > 0
+      ? allCategories
+      : [...new Set(allTransactions.map((t) => t.categoryName))];
+  const categories: string[] = rawCategories.filter((c): c is string => !!c);
+  const accounts = [...new Set(allTransactions.map((t) => t.accountName))].filter(
+    (a): a is string => !!a,
+  );
 
   return (
     <div className="flex-1 space-y-6 p-6 animate-fade-in">

@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm:dev:next\" \"npm:dev:api\" \"npm:dev:ngrok\"",
+    "dev": "concurrently \"npm:dev:next-stable\" \"npm:dev:api\" \"npm:dev:ngrok\"",
     "dev:next": "next dev --turbopack",
+    "dev:next-stable": "next dev",
     "dev:api": "start-api.bat",
     "dev:ngrok": "ngrok http 3000 --domain=lutose-nonponderable-aidyn.ngrok-free.app",
     "dev:ngrok-simple": "ngrok http 3000 --domain=lutose-nonponderable-aidyn.ngrok-free.app",
@@ -52,6 +53,7 @@
     "@radix-ui/react-toggle": "^1.1.9",
     "@radix-ui/react-toggle-group": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.2.7",
+    "@sentry/nextjs": "^10.12.0",
     "@supabase/ssr": "^0.5.1",
     "@supabase/supabase-js": "^2.55.0",
     "@tailwindcss/typography": "^0.5.16",

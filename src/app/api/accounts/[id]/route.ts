@@ -3,11 +3,10 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 // DELETE /api/accounts/[id]
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const resolvedParams = params;
-
-    if (!resolvedParams.id || resolvedParams.id === 'undefined') {
+    const { id } = await params;
+    if (!id || id === 'undefined') {
       return NextResponse.json({ error: 'Invalid account ID' }, { status: 400 });
     }
     const supabase = createSupabaseServerClient();
@@ -16,7 +15,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const userId = userData.user.id;
-    const accountId = resolvedParams.id;
+    const accountId = id;
 
     // First, delete all transactions for this account
     const { error: transactionDeleteError } = await supabase

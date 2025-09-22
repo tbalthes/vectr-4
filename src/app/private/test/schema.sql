@@ -5,43 +5,47 @@ CREATE TABLE public.account_links (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   provider text NOT NULL CHECK (provider = ANY (ARRAY['plaid'::text, 'mx'::text])),
-  item_id text NOT NULL,
+  item_id text NOT NULL UNIQUE,
   access_token_encrypted text NOT NULL,
   cursor text,
   status text NOT NULL DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'revoked'::text, 'error'::text])),
   last_synced_at timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  last_webhook_received_at timestamp with time zone,
+  last_webhook_event_id uuid,
+  institution_id text,
+  institution_name text,
+  linked_at timestamp with time zone,
+  last_sync_at timestamp with time zone,
+  unlinked_at timestamp with time zone,
+  error_details jsonb,
+  last_error_at timestamp with time zone,
+  expires_at timestamp with time zone,
   CONSTRAINT account_links_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_last_webhook_event FOREIGN KEY (last_webhook_event_id) REFERENCES public.webhook_events(id),
   CONSTRAINT account_links_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.accounts (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  user_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  account_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  account_link_id uuid,
+  user_id uuid NOT NULL,
+  aggregator_account_id text UNIQUE,
   name text NOT NULL,
+  official_name text,
+  mask character,
   type text NOT NULL,
-  balance numeric NOT NULL DEFAULT '0'::numeric,
-  plaid_access_token text NOT NULL,
-  account_logo text,
-  provider text CHECK (provider = ANY (ARRAY['plaid'::text, 'mx'::text, 'manual'::text])),
-  aggregator_account_id text,
-  institution_id uuid,
-  last_synced_at timestamp with time zone,
-  mask character varying,
-  currency character varying,
-  CONSTRAINT accounts_pkey PRIMARY KEY (id),
-  CONSTRAINT fk_accounts_institution_id FOREIGN KEY (institution_id) REFERENCES public.institutions(id)
-);
-CREATE TABLE public.balances (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  account_id uuid NOT NULL,
-  balance_amount numeric NOT NULL,
-  available numeric,
-  as_of timestamp with time zone NOT NULL DEFAULT now(),
+  subtype text,
+  currency character,
+  current_balance numeric,
+  available_balance numeric,
+  verification_status text,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT balances_pkey PRIMARY KEY (id),
-  CONSTRAINT balances_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.accounts(id)
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp with time zone,
+  CONSTRAINT accounts_pkey PRIMARY KEY (account_id),
+  CONSTRAINT accounts_account_link_id_fkey FOREIGN KEY (account_link_id) REFERENCES public.account_links(id),
+  CONSTRAINT accounts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.budget_categories (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -65,14 +69,20 @@ CREATE TABLE public.budgets (
   CONSTRAINT budgets_user_id_fkey1 FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.categories (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid DEFAULT auth.uid(),
-  name text NOT NULL UNIQUE,
+  category_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  category text NOT NULL,
+  parent_category text,
   parent_id uuid,
   icon_kebab text,
+  name text,
+  plain_name text NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
   icon text,
-  CONSTRAINT categories_pkey PRIMARY KEY (id)
+  lucide_icon text,
+  description text,
+  CONSTRAINT categories_pkey PRIMARY KEY (category_id),
+  CONSTRAINT categories_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.categories(category_id)
 );
 CREATE TABLE public.chat_messages (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -94,26 +104,6 @@ CREATE TABLE public.chat_sessions (
   CONSTRAINT chat_sessions_pkey PRIMARY KEY (id),
   CONSTRAINT chat_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
-CREATE TABLE public.contact_requests (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  updated_at timestamp with time zone,
-  first_name text,
-  last_name text,
-  email text,
-  phone text,
-  company_name text,
-  message_body text,
-  CONSTRAINT contact_requests_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.global_regex_rules (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  merchant_id uuid NOT NULL,
-  regex_pattern text NOT NULL,
-  pattern_type text NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT global_regex_rules_pkey PRIMARY KEY (id),
-  CONSTRAINT global_regex_rules_merchant_id_fkey FOREIGN KEY (merchant_id) REFERENCES public.merchants(id)
-);
 CREATE TABLE public.goals (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL DEFAULT auth.uid(),
@@ -125,72 +115,59 @@ CREATE TABLE public.goals (
   CONSTRAINT goals_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.institutions (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  provider text NOT NULL CHECK (provider = ANY (ARRAY['plaid'::text, 'mx'::text, 'manual'::text])),
+  institution_id text NOT NULL,
+  provider text NOT NULL,
   name text NOT NULL,
   logo_url text,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT institutions_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.insurance_policies (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL DEFAULT auth.uid(),
-  policy_type text NOT NULL DEFAULT 'life'::text,
-  provider text NOT NULL,
-  coverage_amount numeric NOT NULL DEFAULT '0'::numeric,
-  premium numeric NOT NULL DEFAULT '0'::numeric,
-  premium_frequency text NOT NULL DEFAULT 'monthly'::text,
-  CONSTRAINT insurance_policies_pkey PRIMARY KEY (id),
-  CONSTRAINT insurance_policies_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
-);
-CREATE TABLE public.loans (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  account_id uuid NOT NULL,
-  original_amount numeric NOT NULL DEFAULT '0'::numeric,
-  interest_rate numeric NOT NULL DEFAULT '0'::numeric,
-  term_months smallint,
-  minimum_payment numeric NOT NULL DEFAULT '0'::numeric,
-  loan_type text NOT NULL DEFAULT 'personal'::text,
-  CONSTRAINT loans_pkey PRIMARY KEY (id),
-  CONSTRAINT loans_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.accounts(id)
-);
-CREATE TABLE public.manual_assets (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL DEFAULT auth.uid(),
-  name text NOT NULL,
-  type text NOT NULL,
-  estimated_value numeric NOT NULL,
-  date_acquired date,
-  CONSTRAINT manual_assets_pkey PRIMARY KEY (id),
-  CONSTRAINT manual_assets_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  url text,
+  primary_color text,
+  country_codes ARRAY,
+  metadata jsonb,
+  oauth text,
+  products jsonb,
+  dtc_numbers text,
+  routing_numbers jsonb,
+  CONSTRAINT institutions_pkey PRIMARY KEY (institution_id)
 );
 CREATE TABLE public.mcc_category_map (
   mcc smallint NOT NULL,
   description text,
   category_id uuid NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT mcc_category_map_pkey PRIMARY KEY (mcc),
-  CONSTRAINT mcc_category_map_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id)
+  CONSTRAINT mcc_category_map_pkey PRIMARY KEY (mcc)
 );
 CREATE TABLE public.merchants (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  merchant_id uuid NOT NULL DEFAULT gen_random_uuid(),
   name text NOT NULL,
-  logo_url text,
-  default_category_id uuid,
   created_at timestamp with time zone DEFAULT now(),
+  default_category_id uuid,
+  logo_url text,
   aliases text,
-  CONSTRAINT merchants_pkey PRIMARY KEY (id),
-  CONSTRAINT merchants_default_category_id_fkey FOREIGN KEY (default_category_id) REFERENCES public.categories(id)
+  regex_match text NOT NULL,
+  confidence_score numeric DEFAULT 1.0,
+  is_active boolean DEFAULT true,
+  last_matched_at timestamp with time zone,
+  match_count integer DEFAULT 0,
+  user_id uuid,
+  CONSTRAINT merchants_pkey PRIMARY KEY (merchant_id),
+  CONSTRAINT fk_merchants_default_category_id FOREIGN KEY (default_category_id) REFERENCES public.categories(category_id)
 );
-CREATE TABLE public.net_worth_snapshots (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL DEFAULT auth.uid(),
-  snapshot_date date NOT NULL DEFAULT now(),
-  total_assets numeric NOT NULL DEFAULT '0'::numeric,
-  total_liabilities numeric NOT NULL DEFAULT '0'::numeric,
-  net_worth numeric NOT NULL DEFAULT '0'::numeric,
-  CONSTRAINT net_worth_snapshots_pkey PRIMARY KEY (id),
-  CONSTRAINT net_worth_snapshots_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+CREATE TABLE public.merchants_backup (
+  merchant_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  default_category_id uuid,
+  logo_url text,
+  aliases text,
+  regex_match text NOT NULL,
+  confidence_score numeric DEFAULT 1.0,
+  is_active boolean DEFAULT true,
+  last_matched_at timestamp with time zone,
+  match_count integer DEFAULT 0,
+  user_id uuid,
+  CONSTRAINT merchants_backup_pkey PRIMARY KEY (merchant_id),
+  CONSTRAINT merchants_backup_default_category_id_fkey FOREIGN KEY (default_category_id) REFERENCES public.categories(category_id)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
@@ -211,26 +188,6 @@ CREATE TABLE public.profiles (
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
   CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
-CREATE TABLE public.secure_documents (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL DEFAULT auth.uid(),
-  file_name text NOT NULL,
-  document_type text NOT NULL,
-  storage_path text NOT NULL,
-  related_account_id uuid DEFAULT gen_random_uuid(),
-  CONSTRAINT secure_documents_pkey PRIMARY KEY (id),
-  CONSTRAINT secure_documents_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
-  CONSTRAINT secure_documents_related_account_id_fkey FOREIGN KEY (related_account_id) REFERENCES public.accounts(id)
-);
-CREATE TABLE public.securities (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  ticker_symbol text NOT NULL,
-  name text NOT NULL,
-  type text NOT NULL,
-  last_price numeric,
-  price_updated_at timestamp with time zone,
-  CONSTRAINT securities_pkey PRIMARY KEY (id)
-);
 CREATE TABLE public.stripe_customers (
   user_id uuid NOT NULL,
   updated_at timestamp with time zone,
@@ -248,13 +205,10 @@ CREATE TABLE public.tags (
 CREATE TABLE public.transaction_categories (
   transaction_id uuid NOT NULL,
   category_id uuid NOT NULL,
-  created_at timestamp with time zone DEFAULT now(),
-  confidence numeric DEFAULT 1.00,
   source text DEFAULT 'manual'::text,
-  is_primary boolean DEFAULT false,
   CONSTRAINT transaction_categories_pkey PRIMARY KEY (transaction_id, category_id),
-  CONSTRAINT transaction_categories_new_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transactions(id),
-  CONSTRAINT transaction_categories_new_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id)
+  CONSTRAINT transaction_categories_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transactions(transaction_id),
+  CONSTRAINT transaction_categories_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(category_id)
 );
 CREATE TABLE public.transaction_edits (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -262,54 +216,53 @@ CREATE TABLE public.transaction_edits (
   user_id uuid NOT NULL,
   changed_at timestamp with time zone NOT NULL DEFAULT now(),
   changes jsonb NOT NULL,
-  note text,
-  source text NOT NULL DEFAULT 'manual'::text,
   CONSTRAINT transaction_edits_pkey PRIMARY KEY (id),
-  CONSTRAINT transaction_edits_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transactions(id),
-  CONSTRAINT transaction_edits_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
-  CONSTRAINT fk_te_user FOREIGN KEY (user_id) REFERENCES public.profiles(id),
-  CONSTRAINT fk_te_transaction FOREIGN KEY (transaction_id) REFERENCES public.transactions(id)
+  CONSTRAINT transaction_edits_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transactions(transaction_id),
+  CONSTRAINT transaction_edits_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.transaction_tags (
   transaction_id uuid NOT NULL,
   tag_id uuid NOT NULL,
-  CONSTRAINT transaction_tags_pkey PRIMARY KEY (transaction_id),
-  CONSTRAINT transaction_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id),
-  CONSTRAINT transaction_tags_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transactions(id)
+  CONSTRAINT transaction_tags_pkey PRIMARY KEY (tag_id, transaction_id),
+  CONSTRAINT transaction_tags_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transactions(transaction_id),
+  CONSTRAINT transaction_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id)
 );
 CREATE TABLE public.transactions (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  user_id uuid NOT NULL DEFAULT auth.uid(),
-  account_id uuid NOT NULL DEFAULT gen_random_uuid(),
-  amount numeric NOT NULL,
-  clean_description text,
-  date date NOT NULL,
-  embedding USER-DEFINED,
+  transaction_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  account_id uuid NOT NULL,
+  aggregator_transaction_id text UNIQUE,
   merchant_id uuid,
+  category_id uuid,
   original_description text,
-  transaction_number text,
+  merchant_name text,
+  amount numeric NOT NULL,
+  currency character,
+  date date NOT NULL,
+  authorized_date date,
+  pending boolean DEFAULT false,
+  transaction_type text,
+  logo_url text,
+  website text,
+  plaid_entity_id text,
+  primary_category text,
+  detailed_category text,
+  category_confidence_level text,
+  payment_channel text,
+  check_number text,
+  location jsonb,
+  payment_meta jsonb,
   user_metadata jsonb,
-  balance numeric,
-  transaction_note text,
-  manual_edit boolean NOT NULL DEFAULT false,
-  edited_at timestamp with time zone,
-  edited_by uuid,
-  primary_category_id uuid,
-  needs_review boolean NOT NULL,
-  merchant_name_override text,
-  goal_id uuid,
-  hidden boolean DEFAULT false,
-  review_status USER-DEFINED DEFAULT 'unreviewed'::review_status,
-  aggregator_transaction_id text,
-  CONSTRAINT transactions_pkey PRIMARY KEY (id),
+  needs_review boolean DEFAULT false,
+  is_hidden boolean DEFAULT false,
+  notes text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT transactions_pkey PRIMARY KEY (transaction_id),
   CONSTRAINT transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
-  CONSTRAINT transactions_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.accounts(id),
-  CONSTRAINT transactions_merchant_id_fkey FOREIGN KEY (merchant_id) REFERENCES public.merchants(id),
-  CONSTRAINT fk_transactions_edited_by_profiles FOREIGN KEY (edited_by) REFERENCES public.profiles(id),
-  CONSTRAINT fk_transactions_primary_category FOREIGN KEY (primary_category_id) REFERENCES public.categories(id),
-  CONSTRAINT fk_transactions_edited_by FOREIGN KEY (edited_by) REFERENCES public.profiles(id),
-  CONSTRAINT transactions_goal_id_fkey FOREIGN KEY (goal_id) REFERENCES public.goals(id)
+  CONSTRAINT transactions_account_id_fkey FOREIGN KEY (account_id) REFERENCES public.accounts(account_id),
+  CONSTRAINT transactions_merchant_id_fkey FOREIGN KEY (merchant_id) REFERENCES public.merchants(merchant_id),
+  CONSTRAINT transactions_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(category_id)
 );
 CREATE TABLE public.user_rules (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -332,25 +285,22 @@ CREATE TABLE public.webhook_events (
   payload_json jsonb NOT NULL,
   received_at timestamp with time zone NOT NULL DEFAULT now(),
   processed_at timestamp with time zone,
-  status text NOT NULL DEFAULT 'received'::text CHECK (status = ANY (ARRAY['received'::text, 'processed'::text, 'error'::text])),
+  status text NOT NULL DEFAULT 'received'::text CHECK (status = ANY (ARRAY['received'::text, 'processing'::text, 'processed'::text, 'error'::text])),
   error text,
+  item_id text,
+  webhook_type text,
+  webhook_code text,
+  dedupe_key text,
+  processing_claimed_at timestamp with time zone,
+  processed_by text,
+  retry_count integer DEFAULT 0,
+  last_error text,
+  event_id text,
+  created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT webhook_events_pkey PRIMARY KEY (id)
 );
-CREATE TABLE public.zAI_chats_backup (
-  id uuid,
-  user_id uuid,
-  title text,
-  created_at timestamp with time zone
-);
-CREATE TABLE public.zAI_messages_backup (
-  id uuid,
-  created_at timestamp with time zone,
-  conversation_id uuid,
-  role text,
-  content text
-);
 CREATE TABLE public.zcategories_plaid (
-  id uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid DEFAULT auth.uid(),
   category text NOT NULL,
   parent_id uuid,
@@ -361,19 +311,4 @@ CREATE TABLE public.zcategories_plaid (
   description text,
   plain_name text,
   CONSTRAINT zcategories_plaid_pkey PRIMARY KEY (id)
-);
-CREATE TABLE public.ztransaction_categories_backup (
-  transaction_id uuid,
-  category_id uuid,
-  created_at timestamp with time zone
-);
-CREATE TABLE public.ztransaction_categories_old (
-  transaction_id uuid NOT NULL,
-  category_id uuid NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT ztransaction_categories_old_pkey PRIMARY KEY (transaction_id, category_id),
-  CONSTRAINT transaction_categories_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id),
-  CONSTRAINT fk_tc_category FOREIGN KEY (category_id) REFERENCES public.categories(id),
-  CONSTRAINT transaction_categories_transaction_id_fkey FOREIGN KEY (transaction_id) REFERENCES public.transactions(id),
-  CONSTRAINT fk_tc_transaction FOREIGN KEY (transaction_id) REFERENCES public.transactions(id)
 );

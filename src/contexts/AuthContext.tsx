@@ -37,38 +37,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // use shared browser client
 
   // Fetch profile from public.profiles
-  const fetchProfile = useCallback(
-    async (userId: string) => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .eq('id', userId)
-        .single();
-      if (error) {
-        setProfile(null);
-      } else {
-        setProfile(data);
-      }
-    },
-    [supabase],
-  );
+  const fetchProfile = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('id', userId)
+      .single();
+    if (error) {
+      setProfile(null);
+    } else {
+      setProfile(data);
+    }
+  }, []);
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      const currentUser = error ? null : (data?.user ?? null);
-      setUser(currentUser);
-      if (currentUser?.id) {
-        void fetchProfile(currentUser.id);
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
-    };
-
-    void getInitialSession();
-
+    // FIXED: Remove redundant getUser() call - onAuthStateChange handles initial session
     // onAuthStateChange is the most reliable way to get session changes
     const {
       data: { subscription },
@@ -85,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, router, fetchProfile]);
+  }, [router, fetchProfile]);
 
   const signOut = async () => {
     setLoading(true);

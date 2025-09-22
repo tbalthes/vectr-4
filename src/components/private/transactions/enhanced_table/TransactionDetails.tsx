@@ -15,13 +15,13 @@ interface TransactionDetailsProps {
 
 export function TransactionDetails({ transaction, onUpdateNote }: TransactionDetailsProps) {
   const [isEditingNote, setIsEditingNote] = useState(false);
-  const [noteValue, setNoteValue] = useState(transaction.note || '');
+  const [noteValue, setNoteValue] = useState(transaction.notes || '');
   const [isSaving, setIsSaving] = useState(false);
 
   // Keep local noteValue in sync if parent updates the transaction prop
   useEffect(() => {
-    setNoteValue(transaction.note || '');
-  }, [transaction.note]);
+    setNoteValue(transaction.notes || '');
+  }, [transaction.notes]);
 
   // Save on blur: if the note changed, call the parent update handler.
   const handleBlurSave = async () => {
@@ -31,7 +31,7 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
     }
 
     // If nothing changed, just close editor.
-    if ((transaction.note || '') === noteValue) {
+    if ((transaction.notes || '') === noteValue) {
       setIsEditingNote(false);
       return;
     }
@@ -39,11 +39,11 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
     setIsSaving(true);
     try {
       // Trim here: empty string means delete the note per UX
-      await onUpdateNote(transaction.id, noteValue.trim());
+      await onUpdateNote(transaction.transactionId, noteValue.trim());
     } catch (error) {
       console.error('Failed to save note:', error);
       // Revert to original on error
-      setNoteValue(transaction.note || '');
+      setNoteValue(transaction.notes || '');
     } finally {
       setIsSaving(false);
       setIsEditingNote(false);
@@ -51,7 +51,7 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
   };
   // Step 2: Handle category display dynamically.
   // If the transaction has multiple categories, use them. Otherwise, use the single main category.
-  const categoriesToShow = transaction.allCategories || [transaction.categoryName];
+  const categoriesToShow = transaction.categoryName ? [transaction.categoryName] : [];
 
   return (
     <div className="border-t border-border/30 py-2">
@@ -65,12 +65,8 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
 
           <div className="space-y-2 pl-6">
             <div>
-              <div className="text-xs font-medium text-muted-foreground mb-1">
-                Transaction Number
-              </div>
-              <div className="font-mono text-sm text-foreground">
-                {transaction.transaction_number}
-              </div>
+              <div className="text-xs font-medium text-muted-foreground mb-1">Transaction ID</div>
+              <div className="font-mono text-sm text-foreground">{transaction.transactionId}</div>
             </div>
 
             <div>
@@ -78,8 +74,7 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
                 Original Description
               </div>
               <div className="text-sm text-foreground bg-background border border-border rounded-lg p-2 font-mono break-all max-w-full overflow-x-auto whitespace-nowrap">
-                {/* Step 3: Use camelCase prop */}
-                {transaction.originalDescription}
+                {transaction.originalData.original_description}
               </div>
             </div>
 
@@ -132,7 +127,7 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
             <div>
               <div className="text-xs font-medium text-muted-foreground mb-1">Categories</div>
               <div className="flex flex-wrap gap-1">
-                {categoriesToShow.map((category, index) => (
+                {categoriesToShow.map((category: string, index: number) => (
                   <Badge
                     key={index}
                     variant="outline"
@@ -145,19 +140,19 @@ export function TransactionDetails({ transaction, onUpdateNote }: TransactionDet
             </div>
 
             {/* Dynamically render User Metadata / Custom Fields */}
-            {transaction.userMetadata &&
-              typeof transaction.userMetadata === 'object' &&
-              transaction.userMetadata !== null &&
-              Object.keys(transaction.userMetadata).length > 0 && (
+            {transaction.originalData.user_metadata &&
+              typeof transaction.originalData.user_metadata === 'object' &&
+              transaction.originalData.user_metadata !== null &&
+              Object.keys(transaction.originalData.user_metadata).length > 0 && (
                 <div>
                   <div className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
                     <span>Custom Fields</span>
                     <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
-                      {Object.keys(transaction.userMetadata).length}
+                      {Object.keys(transaction.originalData.user_metadata).length}
                     </span>
                   </div>
                   <div className="space-y-1">
-                    {Object.entries(transaction.userMetadata).map(([key, value]) => {
+                    {Object.entries(transaction.originalData.user_metadata).map(([key, value]) => {
                       // Skip internal fields like _rowIndex, formattedAmount, and other system fields
                       const isSystemField =
                         key.startsWith('_') ||
