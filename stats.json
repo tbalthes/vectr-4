@@ -1,0 +1,89 @@
+{
+  "hash": "e7f470bc293de7df3ff0",
+  "version": "5.101.3",
+  "time": 47,
+  "builtAt": 1758507225899,
+  "publicPath": "auto",
+  "outputPath": "C:\\Users\\Travis\\vectr-4\\dist",
+  "assetsByChunkName": {},
+  "assets": [],
+  "chunks": [
+    {
+      "rendered": false,
+      "initial": true,
+      "entry": true,
+      "recorded": false,
+      "size": 0,
+      "sizes": {},
+      "names": ["main"],
+      "idHints": [],
+      "runtime": ["main"],
+      "files": [],
+      "auxiliaryFiles": [],
+      "hash": "fffb946f07723106b74a",
+      "childrenByOrder": {},
+      "id": 792,
+      "siblings": [],
+      "parents": [],
+      "children": [],
+      "modules": [],
+      "origins": [
+        {
+          "module": "",
+          "moduleIdentifier": "",
+          "moduleName": "",
+          "loc": "main",
+          "request": "./src"
+        }
+      ]
+    }
+  ],
+  "modules": [],
+  "entrypoints": {
+    "main": {
+      "name": "main",
+      "chunks": [792],
+      "assets": [],
+      "filteredAssets": 0,
+      "assetsSize": 0,
+      "auxiliaryAssets": [],
+      "filteredAuxiliaryAssets": 0,
+      "auxiliaryAssetsSize": 0,
+      "children": {},
+      "childAssets": {},
+      "isOverSizeLimit": false
+    }
+  },
+  "namedChunkGroups": {
+    "main": {
+      "name": "main",
+      "chunks": [792],
+      "assets": [],
+      "filteredAssets": 0,
+      "assetsSize": 0,
+      "auxiliaryAssets": [],
+      "filteredAuxiliaryAssets": 0,
+      "auxiliaryAssetsSize": 0,
+      "children": {},
+      "childAssets": {},
+      "isOverSizeLimit": false
+    }
+  },
+  "errors": [
+    {
+      "loc": "main",
+      "message": "Module not found: Error: Can't resolve './src' in 'C:\\Users\\Travis\\vectr-4'",
+      "details": "resolve './src' in 'C:\\Users\\Travis\\vectr-4'\n  using description file: C:\\Users\\Travis\\vectr-4\\package.json (relative path: .)\n    Field 'browser' doesn't contain a valid alias configuration\n    using description file: C:\\Users\\Travis\\vectr-4\\package.json (relative path: ./src)\n      no extension\n        Field 'browser' doesn't contain a valid alias configuration\n        C:\\Users\\Travis\\vectr-4\\src is not a file\n      .js\n        Field 'browser' doesn't contain a valid alias configuration\n        C:\\Users\\Travis\\vectr-4\\src.js doesn't exist\n      .json\n        Field 'browser' doesn't contain a valid alias configuration\n        C:\\Users\\Travis\\vectr-4\\src.json doesn't exist\n      .wasm\n        Field 'browser' doesn't contain a valid alias configuration\n        C:\\Users\\Travis\\vectr-4\\src.wasm doesn't exist\n      as directory\n        existing directory C:\\Users\\Travis\\vectr-4\\src\n          using description file: C:\\Users\\Travis\\vectr-4\\package.json (relative path: ./src)\n            using path: C:\\Users\\Travis\\vectr-4\\src\\index\n              using description file: C:\\Users\\Travis\\vectr-4\\package.json (relative path: ./src/index)\n                no extension\n                  Field 'browser' doesn't contain a valid alias configuration\n                  C:\\Users\\Travis\\vectr-4\\src\\index doesn't exist\n                .js\n                  Field 'browser' doesn't contain a valid alias configuration\n                  C:\\Users\\Travis\\vectr-4\\src\\index.js doesn't exist\n                .json\n                  Field 'browser' doesn't contain a valid alias configuration\n                  C:\\Users\\Travis\\vectr-4\\src\\index.json doesn't exist\n                .wasm\n                  Field 'browser' doesn't contain a valid alias configuration\n                  C:\\Users\\Travis\\vectr-4\\src\\index.wasm doesn't exist",
+      "stack": "ModuleNotFoundError: Module not found: Error: Can't resolve './src' in 'C:\\Users\\Travis\\vectr-4'\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\Compilation.js:2265:28\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\NormalModuleFactory.js:949:13\n    at eval (eval at create (C:\\Users\\Travis\\vectr-4\\node_modules\\tapable\\lib\\HookCodeFactory.js:31:10), <anonymous>:10:1)\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\NormalModuleFactory.js:347:22\n    at eval (eval at create (C:\\Users\\Travis\\vectr-4\\node_modules\\tapable\\lib\\HookCodeFactory.js:31:10), <anonymous>:9:1)\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\NormalModuleFactory.js:532:22\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\NormalModuleFactory.js:163:10\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\NormalModuleFactory.js:807:25\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\NormalModuleFactory.js:1034:8\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\NormalModuleFactory.js:1163:5"
+    }
+  ],
+  "errorsCount": 1,
+  "warnings": [
+    {
+      "message": "configuration\nThe 'mode' option has not been set, webpack will fallback to 'production' for this value.\nSet 'mode' option to 'development' or 'production' to enable defaults for each environment.\nYou can also set it to 'none' to disable any default behavior. Learn more: https://webpack.js.org/configuration/mode/",
+      "stack": "NoModeWarning: configuration\nThe 'mode' option has not been set, webpack will fallback to 'production' for this value.\nSet 'mode' option to 'development' or 'production' to enable defaults for each environment.\nYou can also set it to 'none' to disable any default behavior. Learn more: https://webpack.js.org/configuration/mode/\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\WarnNoModeSetPlugin.js:22:30\n    at Hook.eval [as call] (eval at create (C:\\Users\\Travis\\vectr-4\\node_modules\\tapable\\lib\\HookCodeFactory.js:19:10), <anonymous>:17:1)\n    at Hook.CALL_DELEGATE [as _call] (C:\\Users\\Travis\\vectr-4\\node_modules\\tapable\\lib\\Hook.js:16:14)\n    at Compiler.newCompilation (C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\Compiler.js:1302:30)\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\Compiler.js:1347:29\n    at Hook.eval [as callAsync] (eval at create (C:\\Users\\Travis\\vectr-4\\node_modules\\tapable\\lib\\HookCodeFactory.js:31:10), <anonymous>:6:1)\n    at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (C:\\Users\\Travis\\vectr-4\\node_modules\\tapable\\lib\\Hook.js:21:14)\n    at Compiler.compile (C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\Compiler.js:1342:28)\n    at C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\Compiler.js:618:12\n    at Compiler.readRecords (C:\\Users\\Travis\\vectr-4\\node_modules\\webpack\\lib\\Compiler.js:1143:4)"
+    }
+  ],
+  "warningsCount": 1,
+  "children": []
+}

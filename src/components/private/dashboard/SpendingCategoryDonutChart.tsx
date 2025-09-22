@@ -1,9 +1,16 @@
 'use client';
 import React, { useMemo, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
-import * as echarts from 'echarts';
+import { use as registerECharts } from 'echarts/core';
+import type { EChartsOption } from 'echarts/types/dist/echarts';
+import { PieChart } from 'echarts/charts';
+import { TitleComponent, TooltipComponent, LegendComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
 
 import type { FlatCategoryRow } from '@/lib/analytics/toSunburst';
+
+// Register only the components we need
+registerECharts([PieChart, TitleComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
 export interface SpendingCategoryDonutChartProps {
   data: FlatCategoryRow[];
@@ -150,14 +157,13 @@ export default function SpendingCategoryDonutChart({
           ],
         },
       ],
-    } as echarts.EChartsOption;
+    } as EChartsOption;
   }, [data, isDark, brandHex]);
 
   return (
     <div className="w-full flex items-center justify-center" style={{ height }}>
       <ReactECharts
         ref={chartRef}
-        echarts={echarts}
         option={option}
         notMerge={true}
         style={{ height: '100%', width: '100%', maxWidth: '450px' }}

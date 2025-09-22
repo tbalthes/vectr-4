@@ -254,8 +254,8 @@ class MerchantCentricProcessor:
         
         # Use existing matching logic from the original transaction processor
         try:
-            from core.matching import match_merchant_by_regex
-            return match_merchant_by_regex(merchant_name, self.data_cache.merchants, user_id)
+            from core.merchant_regex_matching import match_merchant_by_regex
+            return match_merchant_by_regex(merchant_name, self.data_cache.merchants)
         except ImportError:
             # Fallback to simple substring matching
             return self._simple_fuzzy_match(merchant_name, user_id)

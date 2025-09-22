@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
-from core.matching import categorize_transaction
+from core.merchant_regex_matching import categorize_transaction
 
 router = APIRouter(tags=["categorize"])
 

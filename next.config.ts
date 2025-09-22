@@ -1,5 +1,10 @@
 import { withSentryConfig } from '@sentry/nextjs';
+import bundleAnalyzer from '@next/bundle-analyzer';
 import type { NextConfig } from 'next';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 const nextConfig: NextConfig = {
   images: {
@@ -74,4 +79,4 @@ const configToExport = disableSentry
       automaticVercelMonitors: true,
     });
 
-export default configToExport;
+export default withBundleAnalyzer(configToExport);

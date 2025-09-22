@@ -23,7 +23,7 @@ export async function GET() {
     const { data: accounts, error: accountsError } = await supabase
       .from('accounts')
       .select(
-        `account_id, user_id, name, mask, type, subtype, currency, provider, aggregator_account_id, institution_id, account_logo, last_synced_at, current_balance, available_balance, account_link_id`,
+        `account_id, user_id, name, mask, type, subtype, currency, provider, aggregator_account_id, institution_id, last_synced_at, current_balance, available_balance, account_link_id`,
       )
       .eq('user_id', userId)
       .order('name', { ascending: true });
@@ -39,7 +39,7 @@ export async function GET() {
 
     const accountIds = accountList.map((a) => a.account_id);
     const linkIds = accountList.map((a) => a.account_link_id).filter(Boolean) as string[];
-    const institutionIds = Array.from(
+    const directInstitutionIds = Array.from(
       new Set(accountList.map((a) => a.institution_id).filter(Boolean) as string[]),
     );
 
@@ -52,7 +52,7 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (balancesError) {
-      console.warn('balances fetch error:', balancesError.message);
+      console.warn('balances fetch error:', (balancesError as any).message);
     }
 
     const latestBalanceByAccount = new Map<
@@ -70,23 +70,38 @@ export async function GET() {
     }
 
     // 3) Fetch institutions either directly by institution_id or via account_links when missing
-    const [institutionsRes, linksRes] = await Promise.all([
-      institutionIds.length
-        ? supabase
-            .from('institutions')
-            .select('institution_id, name, logo_url, url, primary_color')
-            .in('institution_id', institutionIds)
-        : Promise.resolve({ data: [], error: null } as any),
-      linkIds.length
-        ? supabase.from('account_links').select('id, institution_id').in('id', linkIds)
-        : Promise.resolve({ data: [], error: null } as any),
-    ]);
+    const { data: links, error: linksError } = linkIds.length
+      ? await supabase.from('account_links').select('id, institution_id').in('id', linkIds)
+      : { data: [], error: null };
 
-    const institutions = institutionsRes?.data ?? [];
-    const links = linksRes?.data ?? [];
-    const instById = new Map<string, any>(institutions.map((i: any) => [i.institution_id, i]));
+    if (linksError) {
+      console.warn('account_links fetch error:', (linksError as any).message);
+    }
+
+    const linkInstitutionIds = Array.from(
+      new Set((links || []).map((l: any) => l.institution_id).filter(Boolean) as string[]),
+    );
+
+    const institutionIds = Array.from(
+      new Set<string>([...directInstitutionIds, ...linkInstitutionIds]),
+    );
+
+    const { data: institutions, error: institutionsError } = institutionIds.length
+      ? await supabase
+          .from('institutions')
+          .select('institution_id, name, logo_url, url')
+          .in('institution_id', institutionIds)
+      : { data: [], error: null };
+
+    if (institutionsError) {
+      console.warn('institutions fetch error:', (institutionsError as any).message);
+    }
+
+    const instById = new Map<string, any>(
+      (institutions ?? []).map((i: any) => [i.institution_id, i]),
+    );
     const linkInstByLinkId = new Map<string, string>(
-      links.map((l: any) => [l.id, l.institution_id]),
+      (links ?? []).map((l: any) => [l.id, l.institution_id]),
     );
 
     // 4) Compose response
@@ -109,8 +124,6 @@ export async function GET() {
         institution_name: inst?.name || null,
         institution_logo_url: inst?.logo_url || null,
         institution_url: inst?.url || null,
-        institution_primary_color: inst?.primary_color || null,
-        account_logo: a.account_logo,
         last_synced_at: a.last_synced_at,
         balance_amount: lb?.current ?? a.current_balance ?? 0,
         available: lb?.available ?? a.available_balance ?? 0,

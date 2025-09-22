@@ -230,6 +230,74 @@ export async function POST(req: Request) {
         .eq('user_id', userId);
     }
 
+    // If Plaid included accounts with balances in the sync response, persist latest balances
+    if (allData.accounts && allData.accounts.length > 0) {
+      try {
+        // Build lookup of internal accounts by aggregator_account_id
+        const aggregatorIds = allData.accounts
+          .map((a: any) => a.account_id)
+          .filter(Boolean) as string[];
+
+        if (aggregatorIds.length > 0) {
+          const { data: internalAccounts, error: accountsLookupError } = await supabase
+            .from('accounts')
+            .select('account_id, aggregator_account_id')
+            .in('aggregator_account_id', aggregatorIds);
+
+          if (!accountsLookupError && internalAccounts && internalAccounts.length > 0) {
+            const byAggId = new Map(
+              internalAccounts.map((a: any) => [a.aggregator_account_id, a.account_id] as const),
+            );
+
+            const balancesToInsert = allData.accounts
+              .map((acc: any) => {
+                const internalId = byAggId.get(acc.account_id);
+                const bal = acc.balances;
+                if (!internalId || !bal) {
+                  return null;
+                }
+                return {
+                  account_id: internalId,
+                  current: bal.current ?? 0,
+                  available: bal.available ?? bal.current ?? 0,
+                  iso_currency_code: bal.iso_currency_code || 'USD',
+                  as_of: new Date().toISOString(),
+                };
+              })
+              .filter(Boolean) as {
+              account_id: string;
+              current: number;
+              available: number;
+              iso_currency_code: string;
+              as_of: string;
+            }[];
+
+            if (balancesToInsert.length > 0) {
+              const { error: balancesError } = await supabase
+                .from('balances')
+                .insert(balancesToInsert);
+
+              if (balancesError) {
+                console.warn('Balances insert failed in sync route, falling back to accounts update');
+                for (const b of balancesToInsert) {
+                  await supabase
+                    .from('accounts')
+                    .update({
+                      current_balance: b.current,
+                      available_balance: b.available,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq('account_id', b.account_id);
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Balance persistence during sync failed:', e);
+      }
+    }
+
     console.log('✅ Transaction sync complete', {
       stored_added,
       stored_modified,

@@ -2,7 +2,20 @@
 
 import React, { useMemo, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
-import * as echarts from 'echarts';
+import { use as registerECharts } from 'echarts/core';
+import type { EChartsOption } from 'echarts/types/dist/echarts';
+import { HeatmapChart } from 'echarts/charts';
+import { TooltipComponent, VisualMapComponent, CalendarComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+
+// Register only the components we need for calendar heatmap
+registerECharts([
+  HeatmapChart,
+  TooltipComponent,
+  VisualMapComponent,
+  CalendarComponent,
+  CanvasRenderer,
+]);
 
 /**
  * Reusable calendar heatmap (ECharts calendar coordinate).
@@ -247,8 +260,8 @@ export default function SpendingCalendarHeatmap({
                 ? 1
                 : 0.25
               : (it.value as number[])[1] <= 10
-                ? 1
-                : 0.25,
+              ? 1
+              : 0.25,
         },
       }));
     }
@@ -262,8 +275,8 @@ export default function SpendingCalendarHeatmap({
               ? 1
               : 0.25
             : (it.value as number[])[2] <= p10Abs
-              ? 1
-              : 0.25,
+            ? 1
+            : 0.25,
       },
     }));
   }, [processedData, focus, mode, p10Abs, p90Abs]);
@@ -288,7 +301,7 @@ export default function SpendingCalendarHeatmap({
     [],
   );
 
-  const option: echarts.EChartsOption = {
+  const option: EChartsOption = {
     backgroundColor: 'transparent',
     textStyle: { color: colorFg },
     tooltip: {
@@ -367,7 +380,7 @@ export default function SpendingCalendarHeatmap({
 
   return (
     <div className="flex flex-col gap-2">
-      <ReactECharts option={option} style={{ height, width: '100%' }} echarts={echarts} />
+      <ReactECharts option={option} style={{ height, width: '100%' }} />
       {/* Footer controls: focus toggles only */}
       <div className="flex items-center justify-end px-2 pb-1">
         <div className="flex items-center gap-1">
