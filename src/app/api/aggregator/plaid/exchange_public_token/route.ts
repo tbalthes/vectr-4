@@ -202,28 +202,47 @@ export async function POST(req: Request) {
     console.log('Storing balances in database...');
     // Build a lookup to ensure we map the right Plaid account to the created DB account by aggregator_account_id
     const plaidById = new Map(plaidAccounts.map((p) => [p.account_id, p] as const));
-    const balancesToInsert = (createdAccounts || [])
-      .map((account) => {
-        const dbAcc = account as unknown as { account_id: string; aggregator_account_id?: string };
-        const plaidAcc = plaidById.get(dbAcc.aggregator_account_id || '');
-        if (!plaidAcc) {
-          return null;
-        }
-        return {
-          account_id: dbAcc.account_id,
-          current: plaidAcc.balances.current ?? 0,
-          available: plaidAcc.balances.available ?? plaidAcc.balances.current ?? 0,
-          iso_currency_code: plaidAcc.balances.iso_currency_code || 'USD',
-          as_of: new Date().toISOString(),
-        };
-      })
-      .filter(Boolean) as {
+    interface CreatedAccount {
+      account_id: string;
+      aggregator_account_id?: string;
+      [key: string]: any;
+    }
+
+    interface PlaidAccount {
+      account_id: string;
+      balances: {
+        current?: number | null;
+        available?: number | null;
+        iso_currency_code?: string | null;
+        [key: string]: any;
+      };
+      [key: string]: any;
+    }
+
+    interface BalanceToInsert {
       account_id: string;
       current: number;
       available: number;
       iso_currency_code: string;
       as_of: string;
-    }[];
+    }
+
+    const balancesToInsert: BalanceToInsert[] = (createdAccounts || [])
+      .map((account: CreatedAccount) => {
+      const dbAcc: CreatedAccount = account;
+      const plaidAcc: PlaidAccount | undefined = plaidById.get(dbAcc.aggregator_account_id || '');
+      if (!plaidAcc) {
+        return null;
+      }
+      return {
+        account_id: dbAcc.account_id,
+        current: plaidAcc.balances.current ?? 0,
+        available: plaidAcc.balances.available ?? plaidAcc.balances.current ?? 0,
+        iso_currency_code: plaidAcc.balances.iso_currency_code || 'USD',
+        as_of: new Date().toISOString(),
+      };
+      })
+      .filter(Boolean) as BalanceToInsert[];
 
     if (balancesToInsert.length > 0) {
       const { error: balancesError } = await supabase.from('balances').insert(balancesToInsert);

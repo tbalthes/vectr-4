@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { TableVirtuoso } from 'react-virtuoso';
 
 import { TransactionRow } from './TransactionRow';
@@ -67,7 +67,6 @@ export function TransactionTableVirtuoso({
   onOpenDetails,
 }: TransactionTableVirtuosoProps) {
   // Add a ref to track if we're already loading to prevent duplicate calls
-  const isLoadingMore = useRef(false);
 
   console.log('TransactionTableVirtuoso render:', {
     transactionsCount: transactions.length,

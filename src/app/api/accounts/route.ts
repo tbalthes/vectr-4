@@ -37,11 +37,28 @@ export async function GET() {
       return NextResponse.json({ accounts: [] });
     }
 
-    const accountIds = accountList.map((a) => a.account_id);
-    const linkIds = accountList.map((a) => a.account_link_id).filter(Boolean) as string[];
+    interface Account {
+      account_id: string;
+      user_id: string;
+      name: string;
+      mask: string | null;
+      type: string | null;
+      subtype: string | null;
+      currency: string | null;
+      provider: string | null;
+      aggregator_account_id: string | null;
+      institution_id: string | null;
+      last_synced_at: string | null;
+      current_balance: number | null;
+      available_balance: number | null;
+      account_link_id: string | null;
+    }
+
+    const linkIds: string[] = accountList.map((a: Account) => a.account_link_id).filter(Boolean) as string[];
     const directInstitutionIds = Array.from(
-      new Set(accountList.map((a) => a.institution_id).filter(Boolean) as string[]),
+      new Set(accountList.map((a: Account) => a.institution_id).filter(Boolean) as string[]),
     );
+    const accountIds: string[] = accountList.map((a: Account) => a.account_id);
 
     // 2) Fetch latest balances for all accounts (reduce in memory)
     const { data: balances, error: balancesError } = await supabase
@@ -105,29 +122,63 @@ export async function GET() {
     );
 
     // 4) Compose response
-    const mappedAccounts = accountList.map((a) => {
-      const lb = latestBalanceByAccount.get(a.account_id);
-      const instId = a.institution_id || linkInstByLinkId.get(a.account_link_id) || null;
-      const inst = instId ? instById.get(instId) : null;
+    interface Institution {
+      institution_id: string;
+      name: string;
+      logo_url: string | null;
+      url: string | null;
+    }
+
+    interface LatestBalance {
+      current: number | null;
+      available: number | null;
+      as_of: string | null;
+    }
+
+    interface MappedAccount {
+      id: string;
+      account_id: string;
+      user_id: string;
+      name: string;
+      mask: string | null;
+      type: string | null;
+      subtype: string | null;
+      currency: string | null;
+      provider: string | null;
+      aggregator_account_id: string | null;
+      institution_id: string | null;
+      institution_name: string | null;
+      institution_logo_url: string | null;
+      institution_url: string | null;
+      last_synced_at: string | null;
+      balance_amount: number;
+      available: number;
+      balance_as_of: string | null;
+    }
+
+    const mappedAccounts: MappedAccount[] = accountList.map((a: Account): MappedAccount => {
+      const lb: LatestBalance | undefined = latestBalanceByAccount.get(a.account_id);
+      const instId: string | null = a.institution_id || linkInstByLinkId.get(a.account_link_id ?? '') || null;
+      const inst: Institution | undefined | null = instId ? instById.get(instId) : null;
       return {
-        id: a.account_id,
-        account_id: a.account_id,
-        user_id: a.user_id,
-        name: a.name,
-        mask: a.mask,
-        type: a.type,
-        subtype: a.subtype,
-        currency: a.currency,
-        provider: a.provider,
-        aggregator_account_id: a.aggregator_account_id,
-        institution_id: instId,
-        institution_name: inst?.name || null,
-        institution_logo_url: inst?.logo_url || null,
-        institution_url: inst?.url || null,
-        last_synced_at: a.last_synced_at,
-        balance_amount: lb?.current ?? a.current_balance ?? 0,
-        available: lb?.available ?? a.available_balance ?? 0,
-        balance_as_of: lb?.as_of ?? null,
+      id: a.account_id,
+      account_id: a.account_id,
+      user_id: a.user_id,
+      name: a.name,
+      mask: a.mask,
+      type: a.type,
+      subtype: a.subtype,
+      currency: a.currency,
+      provider: a.provider,
+      aggregator_account_id: a.aggregator_account_id,
+      institution_id: instId,
+      institution_name: inst?.name || null,
+      institution_logo_url: inst?.logo_url || null,
+      institution_url: inst?.url || null,
+      last_synced_at: a.last_synced_at,
+      balance_amount: lb?.current ?? a.current_balance ?? 0,
+      available: lb?.available ?? a.available_balance ?? 0,
+      balance_as_of: lb?.as_of ?? null,
       };
     });
 
