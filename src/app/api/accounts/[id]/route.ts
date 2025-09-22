@@ -33,7 +33,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     const { error: deleteError } = await supabase
       .from('accounts')
       .delete()
-      .eq('id', accountId)
+      .eq('account_id', accountId)
       .eq('user_id', userId);
 
     if (deleteError) {

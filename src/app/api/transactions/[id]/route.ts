@@ -58,7 +58,7 @@ export async function GET(request: Request, params: { params: Promise<{ id: stri
       .from('transactions')
       .select(
         `
-        id,
+        transaction_id,
         transaction_number,
         date,
         clean_description,
@@ -84,7 +84,7 @@ export async function GET(request: Request, params: { params: Promise<{ id: stri
         )
       `,
       )
-      .eq('id', transactionId)
+      .eq('transaction_id', transactionId)
       .eq('user_id', user.id)
       .single();
 
@@ -220,7 +220,7 @@ export async function GET(request: Request, params: { params: Promise<{ id: stri
     }
 
     const detailedTransaction: DetailedTransaction = {
-      id: transactionData.id,
+      id: transactionData.transaction_id,
       transaction_number: transactionData.transaction_number,
       date: transactionData.date,
       clean_description: transactionData.clean_description,
@@ -230,7 +230,7 @@ export async function GET(request: Request, params: { params: Promise<{ id: stri
       user_metadata: transactionData.user_metadata,
       needs_review: transactionData.needs_review,
       transaction_note: transactionData.transaction_note,
-      merchant_name: merchant?.name || 'Unknown',
+      merchant_name: merchant?.name || transactionData.merchant_name || 'Unknown',
       merchant_logo_url: merchant?.logo_url || null,
       merchant_id: merchant?.merchant_id || (transactionData.merchant_id ?? null),
       category_name: category?.name || 'Uncategorized',

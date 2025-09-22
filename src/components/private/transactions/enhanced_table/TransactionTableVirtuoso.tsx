@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { TableVirtuoso } from 'react-virtuoso';
 
 import { TransactionRow } from './TransactionRow';
@@ -66,6 +66,9 @@ export function TransactionTableVirtuoso({
   isLoading,
   onOpenDetails,
 }: TransactionTableVirtuosoProps) {
+  // Add a ref to track if we're already loading to prevent duplicate calls
+  const isLoadingMore = useRef(false);
+
   console.log('TransactionTableVirtuoso render:', {
     transactionsCount: transactions.length,
     hasTransactions: transactions.length > 0,
@@ -162,28 +165,43 @@ export function TransactionTableVirtuoso({
             />
           );
         }}
-        endReached={() => {
-          console.log('Virtuoso endReached called:', {
-            hasLoadMore: !!loadMore,
-            isReachingEnd,
-            isLoading,
-            currentTransactionCount: transactions.length,
-          });
+        // Temporarily disabled endReached to debug infinite loop
+        // endReached={() => {
+        //   console.log('Virtuoso endReached called:', {
+        //     hasLoadMore: !!loadMore,
+        //     isReachingEnd,
+        //     isLoading,
+        //     currentTransactionCount: transactions.length,
+        //   });
 
-          if (loadMore && !isReachingEnd && !isLoading) {
-            console.log('Virtuoso: Loading more transactions...');
-            // Add 400ms delay before loading more transactions
-            setTimeout(() => {
-              console.log('Virtuoso: Calling loadMore after delay');
-              loadMore();
-            }, 400);
-          } else {
-            console.log('Virtuoso: Not loading more - conditions not met');
-          }
-        }}
+        //   // Prevent rapid firing and infinite loops
+        //   if (loadMore && !isReachingEnd && !isLoading && !isLoadingMore.current) {
+        //     console.log('Virtuoso: Loading more transactions...');
+        //     isLoadingMore.current = true;
+
+        //     // Add delay to prevent rapid firing
+        //     setTimeout(() => {
+        //       // Double-check conditions before calling loadMore
+        //       if (!isReachingEnd && !isLoading) {
+        //         console.log('Virtuoso: Calling loadMore after delay');
+        //         loadMore();
+        //       }
+        //       // Reset the flag after a longer delay
+        //       setTimeout(() => {
+        //         isLoadingMore.current = false;
+        //       }, 1000);
+        //     }, 400);
+        //   } else {
+        //     console.log('Virtuoso: Not loading more - conditions not met', {
+        //       hasLoadMore: !!loadMore,
+        //       isReachingEnd,
+        //       isLoading,
+        //       isLoadingMore: isLoadingMore.current,
+        //     });
+        //   }
+        // }}
         increaseViewportBy={200}
         overscan={5}
-        totalCount={transactions.length}
       />
 
       {transactions.length === 0 && !isLoading && (
